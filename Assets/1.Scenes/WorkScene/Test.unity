@@ -619,7 +619,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1735351249}
-  - component: {fileID: 1735351248}
+  - component: {fileID: 1735351250}
   m_Layer: 0
   m_Name: SoundManager
   m_TagString: Untagged
@@ -627,39 +627,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &1735351248
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1735351247}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a42d409a435396d44992953325469667, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  memo: "\uC0AC\uC6A9\uC2DC SoundManager.Instance.\uD568\uC218\uBA85\n=== \uC0AC\uC6A9
-    \uAC00\uB2A5\uD55C \uD568\uC218 \uBAA9\uB85D ===\n1. PlayBGM(SOUND_TYPE) - \uBC30\uACBD\uC74C
-    \uC7AC\uC0DD\uD568\n2. PlayUISFX(SOUND_TYPE) - UI(2D)\uD6A8\uACFC\uC74C \uC7AC\uC0DD\uD568\n3.
-    Play3DSFXAtPosition(SOUND_TYPE, Vector3) - 3D \uD6A8\uACFC\uC74C \uC7AC\uC0DD\uD568\n\u203B
-    \uD50C\uB808\uC774 \uD568\uC218 \uB4A4\uC5D0 \uD53C\uCE58\uAC12(float\uD615 min,
-    max) \uCD94\uAC00 \uC2DC \uB79C\uB364 \uC7AC\uC0DD\uB428(\uC624\uBC84\uB85C\uB529)\n4.
-    StopBGM() - \uBC30\uACBD\uC74C \uC815\uC9C0\uD568\n5. StopAll() - \uBAA8\uB4E0
-    \uC18C\uB9AC \uC815\uC9C0\uD568\n=== \uBCF8\uC778\uC774 \uD544\uC694\uD55C \uBA54\uBAA8
-    \uC0AC\uC6A9 \uBC11\uC73C\uB85C \uCD94\uAC00 ===\n"
-  soundList:
-  - type: 2
-    clip: {fileID: 8300000, guid: 86b964999062391498f3b49a3215cdf7, type: 3}
-  - type: 0
-    clip: {fileID: 8300000, guid: 6273a8bf5e7514848aa2b6871cb327ad, type: 3}
-  - type: 6
-    clip: {fileID: 8300000, guid: 3e75b22970d93cf4ba186e1d52c9224f, type: 3}
-  bgmSource: {fileID: 1148806544}
-  sfxUiSource: {fileID: 1240019451}
-  bgmVolume: 1
-  sfxVolume: 1
-  initialPoolSize: 20
 --- !u!4 &1735351249
 Transform:
   m_ObjectHideFlags: 0
@@ -677,6 +644,51 @@ Transform:
   - {fileID: 1240019450}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1735351250
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1735351247}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a42d409a435396d44992953325469667, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  memo: "\uC0AC\uC6A9\uC2DC SoundManager.Instance.\uD568\uC218\uBA85\n\uC0AC\uC6B4\uB4DC
+    \uB370\uC774\uD130 \uB4F1\uB85D\uC2DC \uD544\uC694\uD55C\uB9CC\uD07C \uB9AC\uC2A4\uD2B8
+    \uC6B0\uCE21 \uC22B\uC790\uBCC0\uACBD\n=== \uC0AC\uC6A9 \uAC00\uB2A5\uD55C \uD568\uC218
+    \uBAA9\uB85D ===\n1. PlayBGM(SOUND_TYPE) - \uBC30\uACBD\uC74C \uC7AC\uC0DD\uD568\n2.
+    PlayUISFX(SOUND_TYPE) - UI(2D)\uD6A8\uACFC\uC74C \uC7AC\uC0DD\uD568\n3. Play3DSFXAtPosition(SOUND_TYPE,
+    Vector3) - 3D \uD6A8\uACFC\uC74C \uC7AC\uC0DD\uD568\n\u203B \uD50C\uB808\uC774
+    \uD568\uC218 \uB4A4\uC5D0 \uD53C\uCE58\uAC12(float\uD615 min, max) \uCD94\uAC00
+    \uC2DC \uB79C\uB364 \uC7AC\uC0DD\uB428(\uC624\uBC84\uB85C\uB529)\n4. StopBGM()
+    - \uBC30\uACBD\uC74C \uC815\uC9C0\uD568\n5. StopAll() - \uBAA8\uB4E0 \uC18C\uB9AC
+    \uC815\uC9C0\uD568\n=== \uBCF8\uC778\uC774 \uD544\uC694\uD55C \uBA54\uBAA8 \uC0AC\uC6A9
+    \uBC11\uC73C\uB85C \uCD94\uAC00 ===\n"
+  soundList:
+  - type: 0
+    clip: {fileID: 8300000, guid: 6273a8bf5e7514848aa2b6871cb327ad, type: 3}
+    volumeScale: 0.25
+    minDistance: 0
+    maxDistance: 0
+  - type: 2
+    clip: {fileID: 8300000, guid: 86b964999062391498f3b49a3215cdf7, type: 3}
+    volumeScale: 1
+    minDistance: 1
+    maxDistance: 200
+  - type: 6
+    clip: {fileID: 8300000, guid: 3e75b22970d93cf4ba186e1d52c9224f, type: 3}
+    volumeScale: 1
+    minDistance: 1
+    maxDistance: 200
+  bgmSource: {fileID: 1148806544}
+  sfxUISource: {fileID: 0}
+  bgmVolume: 1
+  sfxUIVolume: 1
+  sfx3DVolume: 1
+  initialPoolSize: 15
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

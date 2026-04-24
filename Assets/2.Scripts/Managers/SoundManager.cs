@@ -8,9 +8,9 @@ using UnityEngine;
 
 // ####실제 사용 함수는 맨 밑에~~#####
 
+
 // 게임 내 모든 사운드 종류를 정의
 // 차후 STATE 등등 맞춰서 더추가
-
 public enum SOUND_TYPE
 {
 	BGM_LOBBY,      // 정거장(상점) 배경음
@@ -30,6 +30,19 @@ public class SoundTypeClip
 	public SOUND_TYPE type; // 사운드 종류
 	[Tooltip("연결할 오디오 클립(.wav, .mp3 등)을 할당")]
 	public AudioClip clip;// 실제 사운드 파일
+
+
+
+
+	[Header("3D 사운드 설정 (BGM,UI등 2D 사운드는 적용 안 됨)")]
+	[Tooltip("3D 효과음 전용.이 거리 안에서는 소리가 최대유지")]
+	public float minDistance = 1.0f;
+	[Tooltip("3D 효과음 전용.이 거리 밖에서는 소리 X")]
+	public float maxDistance = 50.0f;
+	[Range(0f, 1f)]
+	[Tooltip("3D 사운드 해당클립 볼륨 개별 배율(3D용) (0~1)")]
+	public float volumeScale = 1.0f; // 기본값은 1 (최대)
+
 }
 
 public class SoundManager : MonoBehaviour
@@ -37,6 +50,8 @@ public class SoundManager : MonoBehaviour
 	[TextArea(1, 999), SerializeField]
 	private string memo =
 		"사용시 SoundManager.Instance.함수명\n" +
+		"사운드 데이터 등록시 필요한만큼 리스트 우측 숫자변경\n" +
+		"" +
 		"=== 사용 가능한 함수 목록 ===\n" +
 		"1. PlayBGM(SOUND_TYPE) - 배경음 재생함\n" +
 		"2. PlayUISFX(SOUND_TYPE) - UI(2D)효과음 재생함\n" +
@@ -46,7 +61,7 @@ public class SoundManager : MonoBehaviour
 		"5. StopAll() - 모든 소리 정지함\n" +
 		"=== 본인이 필요한 메모 사용 밑으로 추가 ===\n";
 
-	
+
 
 	private static SoundManager instance = null;
 	public static SoundManager Instance
@@ -55,7 +70,7 @@ public class SoundManager : MonoBehaviour
 		{
 			if (instance == null)
 			{
-				
+
 				instance = FindObjectOfType<SoundManager>();
 				if (instance == null)
 				{
@@ -72,21 +87,23 @@ public class SoundManager : MonoBehaviour
 	[SerializeField] private SoundTypeClip[] soundList;
 
 	[Space(10)]
-	[Header("2. 오디오 소스 설정 (출력 장치)")]
+	[Header("2. 오디오 소스 설정 BGM&UI(2D)")]
 	[SerializeField]
 	[Tooltip("배경음악(BGM) 재생을 전담하는 소스. Loop(반복 재생)가 자동으로 활성화")]
 	private AudioSource bgmSource; // BGM 전용 스피커 (반복 재생 켜두기)
 
 	[SerializeField]
 	[Tooltip("UI(2D)용")]
-	private AudioSource sfxUiSource; // UI/일반 효과음 전용 스피커 (2D)
+	private AudioSource sfxUISource; // UI/일반 효과음 전용 스피커 (2D)
 
 	[Space(10)]
 	[Header("3. 기본 볼륨 설정")]
 	[Range(0f, 1f)]
 	public float bgmVolume = 1.0f;
 	[Range(0f, 1f)]
-	public float sfxVolume = 1.0f;
+	public float sfxUIVolume = 1.0f;
+	[Range(0f, 1f)]
+	public float sfx3DVolume = 1.0f;
 
 	[Space(10)]
 	[Header("4. 3D 사운드 풀링 사이즈 설정")]
@@ -94,8 +111,12 @@ public class SoundManager : MonoBehaviour
 	[SerializeField]
 	private uint initialPoolSize = 20;
 
+	
+
+
 	//열거형으로 빠르게 클립p을 찾기 위한 딕셔너리
-	private Dictionary<SOUND_TYPE, AudioClip> soundDict = new Dictionary<SOUND_TYPE, AudioClip>();
+	//사운드타입을 키로받고, 클래스를 값으로
+	private Dictionary<SOUND_TYPE, SoundTypeClip> soundDict = new Dictionary<SOUND_TYPE, SoundTypeClip>();
 	// 3D 효과음 재생을 위한 오디오 소스 풀(Pool)
 	private List<AudioSource> sfx3DPool = new List<AudioSource>();
 
@@ -112,12 +133,12 @@ public class SoundManager : MonoBehaviour
 		}
 		else if (instance != this)
 		{
-			
+
 			Debug.LogWarning("중복된 SoundManager 발견. 파괴 후 실행");
 			Destroy(gameObject);
 		}
 	}
-	
+
 	//인스펙터에 올린거 딕셔너리로 자동으로 옮겨 담는작업
 	private void InitializeDictionary()
 	{
@@ -126,7 +147,8 @@ public class SoundManager : MonoBehaviour
 			// 중복 방지: 딕셔너리에 같은 키가 이미 있는지 확인
 			if (!soundDict.ContainsKey(item.type))
 			{
-				soundDict.Add(item.type, item.clip);
+				//클래스내의 타입멤버를 키로, 클래스자체를 값으로더하기
+				soundDict.Add(item.type, item);
 			}
 			else
 			{
@@ -151,7 +173,7 @@ public class SoundManager : MonoBehaviour
 	// 새로운 오디오 소스 생성 및 풀 리스트에 추가
 	private AudioSource CreateNewAudioSourceToPool()
 	{
-		GameObject go = new GameObject($"SFX_Pool_Speaker_{sfx3DPool.Count}");
+		GameObject go = new GameObject($"SFX_Pool_Speaker_{sfx3DPool.Count}");//이름번호매기기
 		go.transform.SetParent(this.transform); // 매니저의 자식 오브젝트로 정리
 
 		AudioSource source = go.AddComponent<AudioSource>();
@@ -177,18 +199,43 @@ public class SoundManager : MonoBehaviour
 		return CreateNewAudioSourceToPool();
 	}
 
-	//재생용 오디오클립을  꺼내오기(여기서만사용)
-	private AudioClip GetClip(SOUND_TYPE type)
+
+	//private AudioClip GetClip(SOUND_TYPE type)
+	//{
+	//	if (soundDict.TryGetValue(type, out AudioClip clip))
+	//	{
+	//		return clip;
+	//	}
+	//	//디버깅
+	//	Debug.LogError($"[SoundManager] {type}에 해당하는 사운드 파일누락! 인스펙터 확인ㅇ망.");
+	//	return null;
+	//}
+
+	//재생용, 클래스  꺼내오기(여기서만사용)
+	private SoundTypeClip GetSoundData(SOUND_TYPE type)
 	{
-		if (soundDict.TryGetValue(type, out AudioClip clip))
+		if (soundDict.TryGetValue(type, out SoundTypeClip data))
 		{
-			return clip;
+			return data;
 		}
-		//디버깅
-		Debug.LogError($"[SoundManager] {type}에 해당하는 사운드 파일누락! 인스펙터 확인ㅇ망.");
+		Debug.LogError($"[SoundManager] {type} 데이터 누락됨");
 		return null;
 	}
 
+	//// ================== [실시간 배율 추적 함수] ==================//미사용
+	//// 현재3D 스피커에서 재생 중인 소리 파일이 무엇인지 확인하여 각자맞춰둔 배율갖고오기
+	//private float GetSFX3DVolumeScale(AudioClip targetClip)
+	//{
+	//	if (targetClip == null)
+	//	{
+	//		return 1.0f;
+	//	}
+	//	foreach (var item in soundList)
+	//	{
+	//		if (item.clip == targetClip) return item.volumeScale;
+	//	}
+	//	return 1.0f;
+	//}
 
 
 
@@ -210,11 +257,12 @@ public class SoundManager : MonoBehaviour
 
 	public void PlayBGM(SOUND_TYPE type)
 	{
-		AudioClip clip = GetClip(type);
-		if (clip != null)
+		SoundTypeClip data = GetSoundData(type);
+		if (data != null)
 		{
+
 			bgmSource.volume = bgmVolume;
-			bgmSource.clip = clip;
+			bgmSource.clip = data.clip;
 			bgmSource.loop = true; // BGM은 무한반복
 			bgmSource.Play();
 		}
@@ -228,14 +276,14 @@ public class SoundManager : MonoBehaviour
 
 	// UI 클릭, 주사위 굴리기 등 화면 전체에서 들려야 하는 2D 효과음
 
-	public void PlayUISFX(SOUND_TYPE type)
+	public void PlaySFXUI(SOUND_TYPE type)
 	{
-		AudioClip clip = GetClip(type);
-		if (clip != null)
+		SoundTypeClip data = GetSoundData(type);
+		if (data != null)
 		{
-			sfxUiSource.volume = sfxVolume;
-			sfxUiSource.pitch = 1.0f; // 기본 피치로 초기화
-			sfxUiSource.PlayOneShot(clip);
+
+			sfxUISource.pitch = 1.0f; // 기본 피치로 초기화
+			sfxUISource.PlayOneShot(data.clip, sfxUIVolume * data.volumeScale);
 		}
 	}
 	// 사용예
@@ -246,32 +294,35 @@ public class SoundManager : MonoBehaviour
 	// 단조로움을 방지하기 위해 랜덤한 피치(음높이)로 2D 효과음 재생
 	// 사용 예: PlaySFX(SOUND_TYPE.SFX_SHOOT, 0.9f, 1.1f);
 	// </summary>
-	public void PlayUISFX(SOUND_TYPE type, float pitchMin, float pitchMax)
+	public void PlaySFXUI(SOUND_TYPE type, float pitchMin, float pitchMax)
 	{
-		AudioClip clip = GetClip(type);
-		if (clip != null)
+		SoundTypeClip data = GetSoundData(type);
+		if (data != null)
 		{
-			sfxUiSource.volume = sfxVolume;
-			sfxUiSource.pitch = Random.Range(pitchMin, pitchMax);
-			sfxUiSource.PlayOneShot(clip);
-			
+
+			sfxUISource.pitch = Random.Range(pitchMin, pitchMax);
+			sfxUISource.PlayOneShot(data.clip, sfxUIVolume * data.volumeScale);
+
 		}
 	}
 
 
 	// 총소리, 폭발음,이동 등 특정 위치에서 나야 하는 3D 효과음을 재생(랜덤x)
 	// 타입과 좌표받기
-	public void Play3DSFXAtPosition(SOUND_TYPE type, Vector3 position)
+	public void PlaySFX3DAtPosition(SOUND_TYPE type, Vector3 position)
 	{
-		AudioClip clip = GetClip(type);
-		if (clip != null)
+		SoundTypeClip data = GetSoundData(type);
+		if (data != null)
 		{
-			
+
 			// 지정된 위치에 임시 스피커를 만들고, 소리가 끝나면 알아서 삭제됨
 			AudioSource source = GetAvailableSource();//가능한 소스 풀에서 갖고오기
 			source.transform.position = position;// 입력한좌표로 출력할 좌표지정
-			source.clip = clip;//타입으로 갖고온 클립을 출력할 클립으로 지정
-			source.volume = sfxVolume;//볼ㄹ뮤지정
+			source.clip = data.clip;//타입으로 갖고온 클립을 출력할 클립으로 지정
+
+			source.minDistance = data.minDistance;
+			source.maxDistance = data.maxDistance;
+			source.volume = sfx3DVolume * data.volumeScale;//볼ㄹ뮤지정
 			source.pitch = 1.0f;//랜덤 아니므로 기본설정
 			source.Play();
 
@@ -281,18 +332,21 @@ public class SoundManager : MonoBehaviour
 	//Soundmanager.Instance.PlaySFXAtPosition(SOUND_TYPE.SFX_SHOOT, transform.position);
 
 	//랜덤 재생(오버로딩)
-	public void Play3DSFXAtPosition(SOUND_TYPE type, Vector3 position, float pitchMin, float pitchMax)
+	public void PlaySFX3DAtPosition(SOUND_TYPE type, Vector3 position, float pitchMin, float pitchMax)
 	{
-		AudioClip clip = GetClip(type);
-		if (clip != null)
+		SoundTypeClip data = GetSoundData(type);
+		if (data != null)
 		{
 
 			// 지정된 위치에 임시 스피커를 만들고, 소리가 끝나면 알아서 삭제됨
 			AudioSource source = GetAvailableSource();//가능한 소스갖고오기
 			source.transform.position = position;// 입력한좌표로 출력할 좌표지정
-			source.clip = clip;//타입으로 갖고온 클립을 출력할 클립으로 지정
-			source.volume = sfxVolume;//볼ㄹ뮤지정
-			source.pitch = Random.Range(pitchMin,pitchMax);//랜덤
+			source.clip = data.clip;//타입으로 갖고온 클립을 출력할 클립으로 지정
+			source.minDistance = data.minDistance;
+			source.maxDistance = data.maxDistance;
+			source.volume = sfx3DVolume * data.volumeScale;//볼ㄹ뮤지정
+
+			source.pitch = Random.Range(pitchMin, pitchMax);//랜덤
 			source.Play();
 
 		}
@@ -304,7 +358,7 @@ public class SoundManager : MonoBehaviour
 
 
 	// 재생 중인 BGM 정지
-	
+
 	public void StopBGM()
 	{
 		if (bgmSource.isPlaying)
@@ -319,7 +373,7 @@ public class SoundManager : MonoBehaviour
 	public void StopAll()
 	{
 		bgmSource.Stop();
-		sfxUiSource.Stop();
+		sfxUISource.Stop();
 
 		// 풀링된 3D 스피커들도 모두 재생 정지
 		for (int i = 0; i < sfx3DPool.Count; i++)
@@ -330,7 +384,63 @@ public class SoundManager : MonoBehaviour
 			}
 		}
 	}
+
+	// ================== [실시간 볼륨 조절 함수 (UI 옵션 창 연동용)] ==================
+
+	// 차후 UI팀이 환경설정 창의 슬라이더(OnValueChanged)에 연결할 함수
+
+
+	public void SetBGMVolume(float volume)
+	{
+		bgmVolume = volume;//입력한 볼륨값 현재설정에 저장
+		if (bgmSource != null && bgmSource.clip != null)
+		{
+			bgmSource.volume = bgmVolume; //현재설정을 실제로 반영
+		}
+	}
+
+	public void SetSFXUIVolume(float volume)
+	{
+		sfxUIVolume = volume;//입력한 볼륨값 현재설정에 저장
+		if (sfxUISource != null)
+		{
+			sfxUISource.volume = sfxUIVolume;//현재설정을 실제로 반영
+		}
+	}
+
+	public void SetSFX3DVolume(float volume)
+	{
+		sfx3DVolume = volume;//입력한 볼륨값 현재설정에 저장
+		foreach (var src in sfx3DPool)
+		{
+			if (src.isPlaying)//혹여나 실행되고있는게있따면
+			{
+				src.volume = sfx3DVolume;
+			}
+		}
+	}
+	
+
+
+
+#if UNITY_EDITOR
+	private void OnValidate()
+	{
+		// 에디터 플레이 중 인스펙터 조작 시 세 가지 볼륨 모두 실시간 갱신
+		if (Application.isPlaying)
+		{
+			SetBGMVolume(bgmVolume);
+			SetSFXUIVolume(sfxUIVolume);
+			SetSFX3DVolume(sfx3DVolume);
+		}
+	}
+#endif
 }
+
+
+
+
+
 
 
 //빈 오브젝트 생성: 하이어라키(Hierarchy) 창에서 우클릭 후 Create Empty를 눌러 빈 게임 오브젝트를 만들고,

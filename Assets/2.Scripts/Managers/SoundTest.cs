@@ -26,13 +26,13 @@ public class SoundTest : MonoBehaviour
 		if (sfx3DTimer >= sfx3DDelay)
 		{
 			sfx3DTimer = 0;
-			_soundManager.Play3DSFXAtPosition(SOUND_TYPE.SFX_SHOOT, transform.position);
+			_soundManager.PlaySFX3DAtPosition(SOUND_TYPE.SFX_SHOOT, transform.position);
 
 		}
 		if (sfxUiTimer >= sfxUiDelay)
 		{
 			sfxUiTimer = 0;
-			_soundManager.PlayUISFX(SOUND_TYPE.SFX_UI_CLICK);
+			_soundManager.PlaySFXUI(SOUND_TYPE.SFX_UI_CLICK);
 		}
 	}
 }
