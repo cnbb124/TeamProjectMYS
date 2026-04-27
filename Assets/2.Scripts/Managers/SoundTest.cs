@@ -26,7 +26,7 @@ public class SoundTest : MonoBehaviour
 		if (sfx3DTimer >= sfx3DDelay)
 		{
 			sfx3DTimer = 0;
-			_soundManager.PlaySFX3DAtPosition(SOUND_TYPE.SFX_SHOOT, transform.position);
+			
 
 		}
 		if (sfxUiTimer >= sfxUiDelay)

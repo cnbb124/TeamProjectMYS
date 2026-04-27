@@ -11,16 +11,7 @@ using UnityEngine;
 
 // 게임 내 모든 사운드 종류를 정의
 // 차후 STATE 등등 맞춰서 더추가
-public enum SOUND_TYPE
-{
-	BGM_LOBBY,      // 정거장(상점) 배경음
-	BGM_BATTLE,     // 우주 전투 배경음
-	SFX_SHOOT,      // 기본 미사일 발사음
-	SFX_HIT,        // 피격음
-	SFX_EXPLOSION,  // 폭발음
-	SFX_DICE_ROLL,  // 주사위 굴리는 소리
-	SFX_UI_CLICK    // 버튼 클릭음
-}
+
 
 //인스펙터에 노출하기 위한 클래스
 [System.Serializable]
