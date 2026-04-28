@@ -38,8 +38,8 @@ public class SoundTypeClip
 
 public class SoundManager : MonoBehaviour
 {
-	[TextArea(1, 999), SerializeField]
-	private string memo =
+	[TextArea(1, 999)]
+	public string memo =
 		"사용시 SoundManager.Instance.함수명\n" +
 		"사운드 데이터 등록시 필요한만큼 리스트 우측 숫자변경\n" +
 		"" +

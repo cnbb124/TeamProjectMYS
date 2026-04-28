@@ -17,16 +17,30 @@ public enum SHOOT_TYPE
 {
 	BULLET, //총알
 	LASER, //레이저(스킬로 변경하거나 스킬을이걸로)
-	MISSILE, //(미사일)
+	
+	//(미사일)
+	MISSILE_LEFT,
+	MISSILE_RIGHT,
+	MISSILE_BOTH,
+	
+	//전체동시
+	ALL,
 	
 }
-
-public enum UNIT_STATE
+public enum FIREPOS_TYPE
 {
-	IDLE,
-	DIE,
-	MOVING,
-	DODGE,
+	BULLET_LEFT,
+	BULLET_RIGHT,
+	MISSILE_LEFT,
+	MISSILE_RIGHT,
+	LASER,
+}
+public enum BOOSTPOS_TYPE
+{
+	LEFT,
+	RIGHT,
+	FRONT,
+	BACK,
 }
 
 public enum SOUND_TYPE
