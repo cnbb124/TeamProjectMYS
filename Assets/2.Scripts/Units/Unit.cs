@@ -88,7 +88,10 @@ public abstract class Unit : MonoBehaviour, IDamageable
 
 	protected Transform GetFirePos(FIREPOS_TYPE type)
 	{
-		if (_firePosDict.TryGetValue(type, out Transform pos)) return pos;
+		if (_firePosDict.TryGetValue(type, out Transform pos))
+		{
+			return pos;
+		}
 		Debug.LogWarning($"[Unit] FirePos ¹Ì¼³Á¤: {type}");
 		return null;
 	}
