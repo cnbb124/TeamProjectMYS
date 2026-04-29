@@ -2,6 +2,9 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+
+//플레이어의 키보드/마우스 입력을 매 프레임 수집하여 저장하는 싱글톤 매니저.
+// 다른 클래스에서 InputManager.Instance.필드명 으로 접근해서 사용.
 //모든 키입력, 마우스입력 담당
 public class InputManager : MonoBehaviour
 {
@@ -21,7 +24,9 @@ public class InputManager : MonoBehaviour
 			return instance;
 		}
 	}
-	public Vector3 MoveInput;
+	[Header("이동 입력")]
+	public Vector3 MoveInput;//이동
+	[Tooltip("WASD 입력값. x=좌우, z=앞뒤, ")]
     public Vector2 LookInput;
 
 	private void Awake()
