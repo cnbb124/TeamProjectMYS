@@ -2,7 +2,9 @@ public enum UNIT_STATE
 {
 	IDLE,
 	DIE,
-	MOVING,
-	DODGE,
+	MOVING,//필요한가?
+	BOOSTING,//필요한가?
+	DODGE,//무적로직 회피
+	HIT,//필요한가?
 }
 

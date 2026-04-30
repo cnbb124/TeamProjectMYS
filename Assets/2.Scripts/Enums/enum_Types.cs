@@ -21,10 +21,10 @@ public enum SHOOT_TYPE
 	//(미사일)
 	MISSILE_LEFT,
 	MISSILE_RIGHT,
-	MISSILE_BOTH,
+	//MISSILE_BOTH,//현재미사용
 	
 	//전체동시
-	ALL,
+	ALL,//필요한가?
 	
 }
 public enum FIREPOS_TYPE

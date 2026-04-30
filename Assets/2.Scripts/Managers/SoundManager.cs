@@ -1,9 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
-
-
-
-
+using UnityEngine.UI;
 
 
 // ####실제 사용 함수는 맨 밑에~~#####
@@ -38,22 +35,6 @@ public class SoundTypeClip
 
 public class SoundManager : MonoBehaviour
 {
-	[TextArea(1, 999)]
-	public string memo =
-		"사용시 SoundManager.Instance.함수명\n" +
-		"사운드 데이터 등록시 필요한만큼 리스트 우측 숫자변경\n" +
-		"" +
-		"=== 사용 가능한 함수 목록 ===\n" +
-		"1. PlayBGM(SOUND_TYPE) - 배경음 재생함\n" +
-		"2. PlayUISFX(SOUND_TYPE) - UI(2D)효과음 재생함\n" +
-		"3. Play3DSFXAtPosition(SOUND_TYPE, Vector3) - 3D 효과음 재생함\n" +
-		"※ 플레이 함수 뒤에 피치값(float형 min, max) 추가 시 랜덤 재생됨(오버로딩)\n" +
-		"4. StopBGM() - 배경음 정지함\n" +
-		"5. StopAll() - 모든 소리 정지함\n" +
-		"=== 본인이 필요한 메모 사용 밑으로 추가 ===\n";
-
-
-
 	private static SoundManager instance = null;
 	public static SoundManager Instance
 	{
@@ -71,6 +52,20 @@ public class SoundManager : MonoBehaviour
 			return instance;
 		}
 	}
+
+
+	[Header("사용시 SoundManager.Instance.메서드명\n" +
+		"사운드 데이터 등록시 필요한만큼 리스트 우측 숫자변경\n" +
+		"" +
+		"====== 사용 가능한 메서드 목록 ======\n" +
+		"1. PlayBGM(SOUND_TYPE) - 배경음 재생함\n" +
+		"2. PlaySFXUI(SOUND_TYPE) - UI(2D)효과음 재생함\n" +
+		"3. PlaySFX3DAtPosition(SOUND_TYPE, Vector3) - 3D 효과음 재생함\n" +
+		"※ 플레이 함수 뒤에 피치값(float형 min, max) 추가 시 랜덤 재생됨(오버로딩)\n" +
+		"4. StopBGM() - 배경음 정지함\n" +
+		"5. StopAll() - 모든 소리 정지함\n" + 
+		"6. SetBGM,SFX등 메서드 - 차후 UI옵션창과 연동")]
+
 
 	[Space(10)]
 	[Header("1. 사운드 데이터 등록")]
