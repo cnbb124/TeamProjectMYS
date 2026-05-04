@@ -67,7 +67,7 @@ public abstract class Unit : MonoBehaviour, IDamageable
 	public float fireDelay = 0.1f; // 총알 발사 간격 (초)
 	protected float lastFireTime = 0f;
 
-	// 크리 판정은 투사체가 담당 → DamageInfo.isCritical로 전달받음
+	// 크리여부 판정은 투사체가 담당 크확은 유닛이. → DamageInfo.isCritical로 전달받음
 	// criChance는 투사체 생성 시 attacker에서 복사해서 사용
 	//데미지 계산식
 	//shield>armor>hp순 실드없고 armor있을때는 경감수치만큼 데미지 경감
@@ -122,8 +122,9 @@ public abstract class Unit : MonoBehaviour, IDamageable
 	}
 
 
-	[HideInInspector]
-	public Transform curFirePos;//밑에서 총구스위칭용
+	//[HideInInspector]
+	//public Transform curFirePos;//밑에서 총구스위칭용 
+	//필요없음.
 
 	[Header("현재 상태")]
 	public int curHpRemaining;
@@ -361,7 +362,7 @@ public abstract class Unit : MonoBehaviour, IDamageable
 
 
 		//info.isCritical = Random.Range(0f, 100f) < criChance; //크리판정은 투사체에서 직접담당.
-		int damageAmount = info.isCritical ? Mathf.RoundToInt(info.damage * criDamageMultiplier) : info.damage;
+		int damageAmount = info.isCritical ? Mathf.RoundToInt(info.damageAmount * criDamageMultiplier) : info.damageAmount;
 		//실드회복중지, 타이머 초기화
 		shieldRegainTimer = 0f;
 		isShieldRegaining = false;
@@ -475,8 +476,8 @@ public abstract class Unit : MonoBehaviour, IDamageable
 			case SHOOT_TYPE.LASER:
 				return SOUND_TYPE.SFX_LASERSHOOT;
 
-			case SHOOT_TYPE.MISSILE_LEFT:
-			case SHOOT_TYPE.MISSILE_RIGHT:
+			case SHOOT_TYPE.MISSILE:
+			//	case SHOOT_TYPE.MISSILE_RIGHT:
 			//case SHOOT_TYPE.MISSILE_BOTH:
 				return SOUND_TYPE.SFX_MISSILESHOOT;
 			//case SHOOT_TYPE.ALL://전체쏘는키를 구현할지...근데 그러면 소리를어케해야되나?그냥 다 누르면 다 재생되지않나

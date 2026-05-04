@@ -1098,6 +1098,52 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1172545583}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1576889994
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1576889995}
+  - component: {fileID: 1576889996}
+  m_Layer: 9
+  m_Name: TestProjectile_Bullet
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1576889995
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1576889994}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1576889996
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1576889994}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 997d0b0b1b7b940499daccebfb128777, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  speed: 0
+  maxRange: 0
 --- !u!1 &1763485124
 GameObject:
   m_ObjectHideFlags: 0
@@ -1216,7 +1262,6 @@ MonoBehaviour:
     pos: {fileID: 0}
   - type: 0
     pos: {fileID: 0}
-  curFirePos: {fileID: 0}
   curHpRemaining: 0
   curShieldRemaining: 0
   curArmorRemaining: 0
@@ -1460,3 +1505,4 @@ SceneRoots:
   - {fileID: 1822366092}
   - {fileID: 1082646686}
   - {fileID: 2032305755}
+  - {fileID: 1576889995}

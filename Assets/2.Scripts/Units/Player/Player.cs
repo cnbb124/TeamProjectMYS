@@ -94,7 +94,7 @@ public class Player : Unit
 	protected override void FixedUpdate()
 	{
 		
-		//항상 회전이먼저
+		//항상 회전이먼저!!!
 		RotateByInput();
 		MovingByInput();
 	
@@ -145,6 +145,7 @@ public class Player : Unit
 
 	//================InputManager에서 입력받을시 작동할 조작관련 메서드=============
 
+	// 늘 회전후 이동하게 rotate부터 호출할것
 
 	//	발사 (Update에서 호출)
 	// 입력 기반 발사 명령 처리.
@@ -155,7 +156,7 @@ public class Player : Unit
 	{
 		//혹여나 버그걸릴시 다시 매니저 직접인스턴스할것. 스타트속도등으로 버그날수있따함.
 		// 총알발사 입력
-		if(_input.fireBullet && Time.time >= lastFireTime + fireDelay)//딜레이
+		if (_input.fireBullet && Time.time >= lastFireTime + fireDelay)//딜레이
 		{
 			lastFireTime = Time.time;
 			Shoot(SHOOT_TYPE.BULLET);
@@ -163,14 +164,7 @@ public class Player : Unit
 		//미사일 발사 입력
 		if (_input.fireMissile)
 		{
-			if (isMissile_EquippedLeft)
-			{
-				Shoot(SHOOT_TYPE.MISSILE_LEFT);
-			}
-			if (isMissile_EquippedRight)
-			{
-				Shoot(SHOOT_TYPE.MISSILE_RIGHT);
-			}
+			Shoot(SHOOT_TYPE.MISSILE);
 		}
 		//레이저발사입력
 		if (_input.fireLaser)
@@ -180,17 +174,12 @@ public class Player : Unit
 		//전체발사(총알제외.총알은 좌클릭으로유지)입력
 		if (_input.fireAll)
 		{
-			if (isMissile_EquippedLeft)
-			{
-				Shoot(SHOOT_TYPE.MISSILE_LEFT);
-			}
-			if (isMissile_EquippedRight)
-			{
-				Shoot(SHOOT_TYPE.MISSILE_RIGHT);
-			}
+			Shoot(SHOOT_TYPE.MISSILE);
 			Shoot(SHOOT_TYPE.LASER);
 		}
+	}
 
+	//전에사용
 		//if (InputManager.Instance.fireBullet)
 		//{
 		//	Shoot(SHOOT_TYPE.BULLET);
@@ -223,7 +212,7 @@ public class Player : Unit
 		//	
 		//	Shoot(SHOOT_TYPE.LASER);
 		//}
-	}
+
 
 	// ==================회전 (FixedUpdate에서 호출)==================
 
@@ -365,14 +354,18 @@ public class Player : Unit
 				_sound.PlaySFX3DAtPosition(_playSoundType, transform.position);
 				ShootLaser();
 				break;
-			case SHOOT_TYPE.MISSILE_LEFT:
-				_sound.PlaySFX3DAtPosition(_playSoundType, transform.position);
-				ShootMissile(FIREPOS_TYPE.MISSILE_LEFT);
+			case SHOOT_TYPE.MISSILE://소리 너무 크면 가운데서 실행되게 아래로 빼기.
+				if (isMissile_EquippedLeft)
+				{ _sound.PlaySFX3DAtPosition(_playSoundType, transform.position);
+					ShootMissile(FIREPOS_TYPE.MISSILE_LEFT);
+				}
+				if(isMissile_EquippedRight)
+				{
+					_sound.PlaySFX3DAtPosition(_playSoundType, transform.position);
+					ShootMissile(FIREPOS_TYPE.MISSILE_RIGHT);
+				}
 				break;
-			case SHOOT_TYPE.MISSILE_RIGHT:
-				_sound.PlaySFX3DAtPosition(_playSoundType, transform.position);
-				ShootMissile(FIREPOS_TYPE.MISSILE_RIGHT);
-				break;
+			
 
 				//미사용. 차후 다시 사용할수도?
 				//case SHOOT_TYPE.MISSILE_BOTH://소리클경우 양쪽말고 한쪽이나 중간점 으로 따로만들어서진행
@@ -448,7 +441,7 @@ public class Player : Unit
 	private void ShootBullet()
 	{
 		FIREPOS_TYPE[] bulletTypes = { FIREPOS_TYPE.BULLET_LEFT, FIREPOS_TYPE.BULLET_RIGHT };
-		curFirePos = GetFirePos(bulletTypes[_bulletFireIndex]);
+		Transform curFirePos = GetFirePos(bulletTypes[_bulletFireIndex]);
 		if (curFirePos == null)
 		{
 			return;
@@ -462,13 +455,13 @@ public class Player : Unit
 	// 미사일 - 타입으로 좌우선택. 총구타입선택(좌우)
 	private void ShootMissile(FIREPOS_TYPE firePosType)
 	{
-		curFirePos = GetFirePos(firePosType);
+		Transform curFirePos = GetFirePos(firePosType);
 		if (curFirePos == null)
 		{
 			return;
 		}
 
-		//실제발사로직필요// poolmanager 구현 뒤 넣기
+		// curFirePos에서 실제발사로직필요// poolmanager 구현 뒤 넣기
 		//ex.PoolManager.Instance.GetMissile(curFirePos.position, curFirePos.forward, this);
 	}
 
@@ -478,7 +471,11 @@ public class Player : Unit
 	private void ShootLaser()
 	{
 
-		curFirePos = GetFirePos(FIREPOS_TYPE.LASER);
+		Transform curFirePos = GetFirePos(FIREPOS_TYPE.LASER);
+		if (curFirePos == null)
+		{
+			return;
+		}
 
 		//발사로직필요// poolmanager 구현 뒤 넣기
 		//ex.PoolManager.Instance.GetLaser(curFirePos.position, curFirePos.forward, this);
