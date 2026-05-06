@@ -2,19 +2,69 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+
+
+//
+// 플레이어 전용 컴포넌트.
+// Unit을 상속받아 스탯/FSM/데미지 처리는 Unit에서,
+// 플레이어 입력을 받는 이동/회전/사격 입력 처리는 여기서 담당.
+
+
+
 public class Player : Unit
 {
-	// =====================[추가]======================
+	
+
 	// 총알 교대 발사용 인덱스 (0=왼쪽, 1=오른쪽 → 0→1→0 순환)
 	// bulletFirePos는 Unit에 있는 배열 그대로 사용
 	// missileFirePos, laserFirePos도 Unit 그대로 사용
 	private int _bulletFireIndex = 0;
 	// =================================================
 
+	//매니저 할당용 레퍼런스
+	private InputManager _input;
+
+	//미사일 장착 여부 인풋은 getkeydown이라 누른 그순간만 true 타고 false로 다시바뀜.
+	private bool isMissile_EquippedLeft = false;
+	private bool isMissile_EquippedRight = false;
+
+	// ==================회전 감도==================
+
+	[Header("회전 감도")]
+	[Tooltip("마우스 좌우 회전(Yaw) 감도")]
+	public float xSensitivity = 120f;
+
+	[Tooltip("마우스 상하 회전(Pitch) 감도")]
+	public float ySensitivity = 120f;
+
+	[Tooltip("Q/E 롤(Z축 회전) 감도")]
+	public float rollSensitivity = 120f;
+
+
+	// ==================플레이어용 레벨관련 스탯==================
+	[Header("경험치/레벨")]
+	[Tooltip("현재 레벨. 최소 1")]
+	public int level = 1;//차후 mathf.max치로 조정
+
+	[Tooltip("현재 보유 경험치. 음수 불가")]
+	public int exp = 0;//차후 mathf.max치로 조정
+
+	[Tooltip("현재 레벨에서 다음 레벨까지 필요한 경험치")]
+	public int expToNextLevel = 100;
+
+
+	protected override void Awake()
+	{
+		base.Awake();
+		// 우주 공간 = 중력 없음. 회전은 직접 제어하므로 물리 회전 고정
+		_rb.useGravity = false;
+		_rb.freezeRotation = true;
+	}
 	// Start is called before the first frame update
 	protected override void Start()
 	{
 		base.Start(); //유닛 초기화 호출
+		_input = InputManager.Instance;
 	}
 
 	// Update is called once per frame
@@ -23,11 +73,36 @@ public class Player : Unit
 		base.Update(); //FSM, 실드/부스트 회복 호출
 					   // 입력처리 - InputManager 구현 뒤 여기서 호출
 					   // ex. InputManager.Instance.HandleInput(this);
+
+		if (_input == null)
+		{
+			return;
+		}
+		//==========혹여나 업뎃이 입력없을때도 필요한게ㅐ 있으면 이 위로 입력학ㄹ것=========
+		//미사일 장착 토글 처리(온오프) 상태변화 관련이므로 즉시 Update로
+		if (_input.equipMissileL)
+		{
+			isMissile_EquippedLeft = !isMissile_EquippedLeft;
+		}
+		if (_input.equipMissileR)
+		{
+			isMissile_EquippedRight = !isMissile_EquippedRight;
+		}
+		ShootByInput();
+	}
+
+	protected override void FixedUpdate()
+	{
+		
+		//항상 회전이먼저!!!
+		RotateByInput();
+		MovingByInput();
+	
 	}
 
 
 
-	//===============자식에서 직접 override==================
+	//===============override 메서드 FSM==================
 	protected override void OnStateEnter(UNIT_STATE state)
 	{
 		switch (state)
@@ -57,63 +132,316 @@ public class Player : Unit
 		// ex. GameManager.Instance.OnPlayerDie();
 	}
 
+
+
 	// ===========================================
 	// Shoot - Unit의 배열 총구 사용
 	// 총알: 좌우 교대 고정
-	// 미사일: 좌/우/동시 선택
+	// 미사일: 좌/우
 	// 레이저: 머리 중앙 고정
-	// ALL: 전체 동시
+	// ALL: 전체 동시(총알제외)
 	// =================================================
 
+
+	//================InputManager에서 입력받을시 작동할 조작관련 메서드=============
+
+	// 늘 회전후 이동하게 rotate부터 호출할것
+
+	//	발사 (Update에서 호출)
+	// 입력 기반 발사 명령 처리.
+	// 실제 투사체 생성은 Shoot() 내부에서 PoolManager 호출 예정.
+	// GetKeyDown 씹힘 방지를 위해 Update에서 호출.
+
+	void ShootByInput()
+	{
+		//혹여나 버그걸릴시 다시 매니저 직접인스턴스할것. 스타트속도등으로 버그날수있따함.
+		// 총알발사 입력
+		if (_input.fireBullet && Time.time >= lastFireTime + fireDelay)//딜레이
+		{
+			lastFireTime = Time.time;
+			Shoot(SHOOT_TYPE.BULLET);
+		}
+		//미사일 발사 입력
+		if (_input.fireMissile)
+		{
+			Shoot(SHOOT_TYPE.MISSILE);
+		}
+		//레이저발사입력
+		if (_input.fireLaser)
+		{
+			Shoot(SHOOT_TYPE.LASER);
+		}
+		//전체발사(총알제외.총알은 좌클릭으로유지)입력
+		if (_input.fireAll)
+		{
+			Shoot(SHOOT_TYPE.MISSILE);
+			Shoot(SHOOT_TYPE.LASER);
+		}
+	}
+
+	//전에사용
+		//if (InputManager.Instance.fireBullet)
+		//{
+		//	Shoot(SHOOT_TYPE.BULLET);
+		//}
+		//if(InputManager.Instance.fireMissile)
+		//{
+		//	if(isMissile_EquippedLeft)
+		//	{
+		//		Shoot(SHOOT_TYPE.MISSILE_LEFT);
+		//	}
+		//	if(isMissile_EquippedRight)
+		//	{
+		//		Shoot(SHOOT_TYPE.MISSILE_RIGHT);
+		//	}
+		//}
+		//if(InputManager.Instance.fireLaser)
+		//{
+		//	Shoot(SHOOT_TYPE.LASER);
+		//}
+		//if(InputManager.Instance.fireAll)
+		//{
+		//	if(isMissile_EquippedLeft)
+		//	{
+		//		Shoot(SHOOT_TYPE.MISSILE_LEFT);
+		//	}
+		//	if(isMissile_EquippedRight)
+		//	{
+		//		Shoot(SHOOT_TYPE.MISSILE_RIGHT);
+		//	}
+		//	
+		//	Shoot(SHOOT_TYPE.LASER);
+		//}
+
+
+	// ==================회전 (FixedUpdate에서 호출)==================
+
+	
+	// 마우스/키보드 입력으로 오브젝트 자체를 3축 회전.
+	// Rigidbody.freezeRotation = true이므로 transform.Rotate 직접 사용.
+	//
+	// Yaw  (Y축): 마우스 X → 좌우 회전. Space.World 기준
+	// Pitch(X축): 마우스 Y → 상하 회전. Space.Self 기준
+	// Roll (Z축): Q/E      → 좌우 스핀. Space.Self 기준
+	// 
+	// Space.Self 사용 이유: 어느 방향 바라봐도 직관적으로 상하/롤 회전됨.
+	// Yaw만 World 기준인 이유: 완전 뒤집혔을 때도 마우스 좌우가 자연스럽게 동작.
+
+	private void RotateByInput()
+	{
+		float yaw = _input.lookInput.x * xSensitivity * Time.fixedDeltaTime;
+		float pitch = -_input.lookInput.y * ySensitivity * Time.fixedDeltaTime;
+		// lookInput.y 반전: 마우스 위로 올리면 기수가 올라가야 하므로
+		float roll = -_input.rollInput * rollSensitivity * Time.fixedDeltaTime;
+		// rollInput 반전: E키 눌렀을 때 오른쪽으로 기우는 방향
+
+		transform.Rotate(Vector3.up, yaw, Space.World);
+		transform.Rotate(Vector3.right, pitch, Space.Self);
+		transform.Rotate(Vector3.forward, roll, Space.Self);
+	}
+
+
+
+	// ==================이동 (FixedUpdate에서 호출)==================
+
+	
+	// 오브젝트가 바라보는 방향(로컬축) 기준으로 6방향 물리 이동.
+	// RotateByInput() 이후 호출되므로 이미 회전된 방향 기준으로 이동.
+
+	// transform.forward = 오브젝트가 바라보는 방향 (W/S)
+	// transform.right   = 오브젝트 기준 오른쪽    (A/D)
+	// transform.up      = 오브젝트 기준 위쪽      (Mouse4/Mouse3)
+
+	// 부스트: LeftShift + 잔량 있을 때 boostSpeed 적용.
+	//         Unit.UseBoost()로 잔량 소모 및 회복 타이머 초기화.
+	// maxSpeed: 속도 초과 시 방향 유지하고 크기만 클램프.
+	
+	private void MovingByInput()
+	{
+		// 로컬 축 기준 6방향 합산
+		Vector3 dir =
+			transform.forward * _input.moveInput.z +
+			transform.right * _input.moveInput.x +
+			transform.up * _input.moveInput.y;
+
+		// 대각선 이동 시 속도 튀는 것 방지
+		if (dir.magnitude > 1f)
+		{
+			dir.Normalize();
+		}
+		
+			
+		//float 오차 패딩값
+		bool isMoving = dir.sqrMagnitude > 0.001f;
+
+		// 부스트 조건: Shift 누름 + 잔량 남아있음
+		bool canBoost = _input.isBoosting && curBoostRemaining > 0f;
+
+		if (canBoost)
+		{
+			// Unit.UseBoost(): 잔량 감소 + 회복 타이머 초기화
+			UseBoost(20f * Time.fixedDeltaTime);
+		}
+
+		float speed = canBoost ? boostSpeed : baseMoveSpeed;
+		// speedMultiPlier: 피격/HP에 따른 속도 감소용. 0이면 1배율 적용
+		float multiplier = speedMultiPlier > 0f ? speedMultiPlier : 1f;
+
+		// 최종 가해질 힘의 크기 계산
+		float finalForce = speed * multiplier;
+
+		// AddForce를 이용한 물리 기반 가속 및 역분사 제어
+		if (isMoving)
+		{
+			// 입력이 있을 때 해당 방향으로 가속
+			_rb.AddForce(dir * finalForce, ForceMode.Acceleration);
+		}
+		else
+		{
+			// 방향키 입력이 없지만, 우주선의 물리적 속도가 남아있어 미끄러지는 중일 때
+			if (_rb.velocity.sqrMagnitude > 0.1f)
+			{
+				// 역분사 이펙트 활성화 및 애니메이션 트리거 로직을 작성
+				//ex PlayReverseThrusterEffect();
+				// ex anim.SetBool("isReverseThrusting", true);
+			}
+			else
+			{
+				//우주선이 완전히 정지했을 때 역분사 이펙트 끄기
+				// ex StopReverseThrusterEffect();
+				// ex anim.SetBool("isReverseThrusting", false);
+			}
+		}
+
+		// maxSpeed 클램프 (초과 시 방향 유지하고 크기만 제한)
+		float maxV = maxSpeed;
+		if (_rb.velocity.magnitude > maxV)
+		{
+			_rb.velocity = _rb.velocity.normalized * maxV;
+		}
+
+		// FSM 상태 전환
+		if (_input.isDodging)
+		{
+			CurState = UNIT_STATE.DODGE;
+		}
+		else if (isMoving)
+		{
+			CurState = UNIT_STATE.MOVING;
+		}
+		else
+		{
+			CurState = UNIT_STATE.IDLE;
+		}
+
+	}
+
 	//사격및 소리재생
+	//실제 InputManager에서 받아오면 작동할 명령
 	public override void Shoot(SHOOT_TYPE type)
 	{
+
+		//혹여나 버그걸릴시 다시 매니저 직접인스턴스할것. 스타트속도등으로 버그날수있따함.
 		_playSoundType = GetPlaySoundType(type);
+
 		switch (type)
 		{
 			case SHOOT_TYPE.BULLET:
-				_soundManager.PlaySFX3DAtPosition(_playSoundType, transform.position, 0.9f, 1.1f);
+				_sound.PlaySFX3DAtPosition(_playSoundType, transform.position, 0.9f, 1.1f);//총알소리 살짝랜덤하게
 				ShootBullet();
 				break;
 			case SHOOT_TYPE.LASER:
-				_soundManager.PlaySFX3DAtPosition(_playSoundType, transform.position);
+				_sound.PlaySFX3DAtPosition(_playSoundType, transform.position);
 				ShootLaser();
 				break;
-			case SHOOT_TYPE.MISSILE_LEFT:
-				_soundManager.PlaySFX3DAtPosition(_playSoundType, transform.position);
-				ShootMissile(FIREPOS_TYPE.MISSILE_LEFT);
+			case SHOOT_TYPE.MISSILE://소리 너무 크면 가운데서 실행되게 아래로 빼기.
+				if (isMissile_EquippedLeft)
+				{ _sound.PlaySFX3DAtPosition(_playSoundType, transform.position);
+					ShootMissile(FIREPOS_TYPE.MISSILE_LEFT);
+				}
+				if(isMissile_EquippedRight)
+				{
+					_sound.PlaySFX3DAtPosition(_playSoundType, transform.position);
+					ShootMissile(FIREPOS_TYPE.MISSILE_RIGHT);
+				}
 				break;
-			case SHOOT_TYPE.MISSILE_RIGHT:
-				_soundManager.PlaySFX3DAtPosition(_playSoundType, transform.position);
-				ShootMissile(FIREPOS_TYPE.MISSILE_RIGHT);
-				break;
-			case SHOOT_TYPE.MISSILE_BOTH://소리클경우 양쪽말고 한쪽이나 중간점 으로 따로만들어서진행
-				_soundManager.PlaySFX3DAtPosition(_playSoundType, GetFirePos(FIREPOS_TYPE.MISSILE_LEFT).position);
-				_soundManager.PlaySFX3DAtPosition(_playSoundType, GetFirePos(FIREPOS_TYPE.MISSILE_RIGHT).position);
-				ShootMissile(FIREPOS_TYPE.MISSILE_LEFT);
-				ShootMissile(FIREPOS_TYPE.MISSILE_RIGHT);
-				break;
-			case SHOOT_TYPE.ALL:
-				_soundManager.PlaySFX3DAtPosition(GetPlaySoundType(SHOOT_TYPE.BULLET), transform.position, 0.9f, 1.1f);
-				_soundManager.PlaySFX3DAtPosition(GetPlaySoundType(SHOOT_TYPE.MISSILE_LEFT), transform.position);
-				_soundManager.PlaySFX3DAtPosition(GetPlaySoundType(SHOOT_TYPE.LASER), transform.position);
-				ShootBullet();
-				ShootMissile(FIREPOS_TYPE.MISSILE_LEFT);
-				ShootMissile(FIREPOS_TYPE.MISSILE_RIGHT);
-				ShootLaser();
-				break;
+			
+
+				//미사용. 차후 다시 사용할수도?
+				//case SHOOT_TYPE.MISSILE_BOTH://소리클경우 양쪽말고 한쪽이나 중간점 으로 따로만들어서진행
+				//	_sound.PlaySFX3DAtPosition(_playSoundType, GetFirePos(FIREPOS_TYPE.MISSILE_LEFT).position);
+				//	_sound.PlaySFX3DAtPosition(_playSoundType, GetFirePos(FIREPOS_TYPE.MISSILE_RIGHT).position);
+				//	ShootMissile(FIREPOS_TYPE.MISSILE_LEFT);
+				//	ShootMissile(FIREPOS_TYPE.MISSILE_RIGHT);
+				//	break;
+				//case SHOOT_TYPE.ALL:
+				//	_sound.PlaySFX3DAtPosition(GetPlaySoundType(SHOOT_TYPE.BULLET), transform.position, 0.9f, 1.1f);
+				//	_sound.PlaySFX3DAtPosition(GetPlaySoundType(SHOOT_TYPE.MISSILE_LEFT), transform.position);
+				//	_sound.PlaySFX3DAtPosition(GetPlaySoundType(SHOOT_TYPE.LASER), transform.position);
+				//	ShootBullet();
+				//	ShootMissile(FIREPOS_TYPE.MISSILE_LEFT);
+				//	ShootMissile(FIREPOS_TYPE.MISSILE_RIGHT);
+				//	ShootLaser();
+				//	break;
 		}
+		// 인스턴스 직접접근
+		//switch (type)
+		//{
+		//	case SHOOT_TYPE.BULLET:
+		//		SoundManager.Instance.PlaySFX3DAtPosition(_playSoundType, transform.position, 0.9f, 1.1f);
+		//		ShootBullet();
+		//		break;
+		//	case SHOOT_TYPE.LASER:
+		//		SoundManager.Instance.PlaySFX3DAtPosition(_playSoundType, transform.position);
+		//		ShootLaser();
+		//		break;
+		//	case SHOOT_TYPE.MISSILE_LEFT:
+		//		SoundManager.Instance.PlaySFX3DAtPosition(_playSoundType, transform.position);
+		//		ShootMissile(FIREPOS_TYPE.MISSILE_LEFT);
+		//		break;
+		//	case SHOOT_TYPE.MISSILE_RIGHT:
+		//		SoundManager.Instance.PlaySFX3DAtPosition(_playSoundType, transform.position);
+		//		ShootMissile(FIREPOS_TYPE.MISSILE_RIGHT);
+		//		break;
+
+		//	//미사용. 차후 다시 사용할수도?
+		//	//case SHOOT_TYPE.MISSILE_BOTH://소리클경우 양쪽말고 한쪽이나 중간점 으로 따로만들어서진행
+		//	//	SoundManager.Instance.PlaySFX3DAtPosition(_playSoundType, GetFirePos(FIREPOS_TYPE.MISSILE_LEFT).position);
+		//	//	SoundManager.Instance.PlaySFX3DAtPosition(_playSoundType, GetFirePos(FIREPOS_TYPE.MISSILE_RIGHT).position);
+		//	//	ShootMissile(FIREPOS_TYPE.MISSILE_LEFT);
+		//	//	ShootMissile(FIREPOS_TYPE.MISSILE_RIGHT);
+		//	//	break;
+		//	//case SHOOT_TYPE.ALL:
+		//	//	SoundManager.Instance.PlaySFX3DAtPosition(GetPlaySoundType(SHOOT_TYPE.BULLET), transform.position, 0.9f, 1.1f);
+		//	//	SoundManager.Instance.PlaySFX3DAtPosition(GetPlaySoundType(SHOOT_TYPE.MISSILE_LEFT), transform.position);
+		//	//	SoundManager.Instance.PlaySFX3DAtPosition(GetPlaySoundType(SHOOT_TYPE.LASER), transform.position);
+		//	//	ShootBullet();
+		//	//	ShootMissile(FIREPOS_TYPE.MISSILE_LEFT);
+		//	//	ShootMissile(FIREPOS_TYPE.MISSILE_RIGHT);
+		//	//	ShootLaser();
+		//	//	break;
+		//}
+
+
 	}
 
 	// =====================[추가]======================
 	// 총알 - 좌우 교대 발사
 	// bulletFirePos[0]=왼쪽, bulletFirePos[1]=오른쪽
 	// =================================================
-	//사격시 사용메서드
+
+
+
+
+
+
+
+	//Shoot 메서드에있는  사격시 사용메서드
+	//총알
 	private void ShootBullet()
 	{
 		FIREPOS_TYPE[] bulletTypes = { FIREPOS_TYPE.BULLET_LEFT, FIREPOS_TYPE.BULLET_RIGHT };
-		curFirePos = GetFirePos(bulletTypes[_bulletFireIndex]);
+		Transform curFirePos = GetFirePos(bulletTypes[_bulletFireIndex]);
 		if (curFirePos == null)
 		{
 			return;
@@ -124,33 +452,74 @@ public class Player : Unit
 		//ex.PoolManager.Instance.GetBullet(curFirePos.position, curFirePos.forward, this);
 	}
 
-
-
-	// =====================[추가]======================
-	// 미사일 - 타입으로 좌우선택
-	//
-	// =================================================
+	// 미사일 - 타입으로 좌우선택. 총구타입선택(좌우)
 	private void ShootMissile(FIREPOS_TYPE firePosType)
 	{
-		curFirePos = GetFirePos(firePosType);
+		Transform curFirePos = GetFirePos(firePosType);
+		if (curFirePos == null)
+		{
+			return;
+		}
+
+		// curFirePos에서 실제발사로직필요// poolmanager 구현 뒤 넣기
+		//ex.PoolManager.Instance.GetMissile(curFirePos.position, curFirePos.forward, this);
+	}
+
+	
+	// 레이저 - 머리 중앙 고정 (laserFirePos 단일 Transform)
+	
+	private void ShootLaser()
+	{
+
+		Transform curFirePos = GetFirePos(FIREPOS_TYPE.LASER);
 		if (curFirePos == null)
 		{
 			return;
 		}
 
 		//발사로직필요// poolmanager 구현 뒤 넣기
-		//ex.PoolManager.Instance.GetMissile(curFirePos.position, curFirePos.forward, this);
+		//ex.PoolManager.Instance.GetLaser(curFirePos.position, curFirePos.forward, this);
 	}
 
-	// =====================[추가]======================
-	// 레이저 - 머리 중앙 고정 (laserFirePos 단일 Transform)
-	// =================================================
-	private void ShootLaser()
+
+
+
+	// ==================플레이어 레벨관련================== 차후 수정필요
+
+	//
+	// 경험치 획득. 음수 방지 처리 포함.
+	// 레벨업 조건 충족 시 LevelUp() 호출.
+	// Enemy 사망 시 Enemy.Die()에서 호출 예정.
+	//
+	public void GainExp(int amount)
 	{
+		// 음수 방지
+		exp += Mathf.Max(0, amount);
 
-		curFirePos = GetFirePos(FIREPOS_TYPE.LASER);
+		// 레벨업 체크
+		if (exp >= expToNextLevel)
+			LevelUp();
+	}
 
-		//발사로직필요// poolmanager 구현 뒤 넣기
-		//ex.PoolManager.Instance.GetLaser(curFirePos.position, curFirePos.forward, this);
+	// 
+	// 레벨업 처리.
+	// 경험치 초과분 이월, 레벨 증가, 다음 레벨 필요 경험치 갱신.
+	// 레벨업 시 스탯 증가는 추후 장비/스탯 시스템 구현 후 여기서 처리.
+	//
+	private void LevelUp()
+	{
+		// 초과 경험치 이월
+		exp = exp - expToNextLevel;
+		exp = Mathf.Max(0, exp);
+
+		level++;
+
+		// 다음 레벨 필요 경험치 증가 (예시: 레벨당 50씩 증가. 수치는 추후 조정)
+		expToNextLevel += 50;
+
+		Debug.Log($"[Player] 레벨업! 현재 레벨: {level}");
+
+		// 레벨업 시 스탯 증가 예정
+		// OnLevelUp();
 	}
 }
