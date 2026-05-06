@@ -48,6 +48,7 @@ public abstract class Projectile : MonoBehaviour
 	// Update is called once per frame
 	protected virtual void Update()
 	{
+		//사거리 벗어날시
 		//출발지점과 현재지점이>=최대사거리 도달혹은초과시
 		if (Vector3.Distance(startPos, transform.position) >= maxRange)
 		{
