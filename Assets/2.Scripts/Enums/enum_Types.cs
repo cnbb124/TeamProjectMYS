@@ -19,12 +19,11 @@ public enum SHOOT_TYPE
 	LASER, //레이저(스킬로 변경하거나 스킬을이걸로)
 	
 	//(미사일)
-	MISSILE_LEFT,
-	MISSILE_RIGHT,
-	MISSILE_BOTH,
+	MISSILE,
+	//MISSILE_BOTH,//현재미사용
 	
 	//전체동시
-	ALL,
+	ALL,//필요한가?
 	
 }
 public enum FIREPOS_TYPE

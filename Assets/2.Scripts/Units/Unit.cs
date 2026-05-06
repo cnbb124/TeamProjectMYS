@@ -1,13 +1,21 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-
+using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.PlayerLoop;
 
 [System.Serializable]
 public class FirePosEntry
 {
 	public FIREPOS_TYPE type;
+	public Transform pos;
+}
+
+[System.Serializable]
+public class BoostPosEntry
+{
+	public BOOSTPOS_TYPE type;
 	public Transform pos;
 }
 
@@ -17,9 +25,12 @@ public abstract class Unit : MonoBehaviour, IDamageable
 
 
 	//==================레퍼런스==================//
-	protected SoundManager _soundManager;
+
+
+
+
 	//==================유닛데이터==================//
-	 
+
 	[Header("기본 스탯 설정창")]
 	[Space(10)]
 	[Header("HP")]
@@ -52,7 +63,11 @@ public abstract class Unit : MonoBehaviour, IDamageable
 	public float criChance;
 	public float criDamageMultiplier;
 
-	// 크리 판정은 투사체가 담당 → DamageInfo.isCritical로 전달받음
+	[Header("사격(총알) 설정")]
+	public float fireDelay = 0.1f; // 총알 발사 간격 (초)
+	protected float lastFireTime = 0f;
+
+	// 크리여부 판정은 투사체가 담당 크확은 유닛이. → DamageInfo.isCritical로 전달받음
 	// criChance는 투사체 생성 시 attacker에서 복사해서 사용
 	//데미지 계산식
 	//shield>armor>hp순 실드없고 armor있을때는 경감수치만큼 데미지 경감
@@ -83,8 +98,9 @@ public abstract class Unit : MonoBehaviour, IDamageable
 	
 	[Header("이펙트 위치(총구,부스터등)")]
 	public FirePosEntry[] firePos; // 인스펙터에서 타입+Transform 쌍으로 등록
-	public Transform[] boosterEffectPos;//옆무빙시 부스터이펙트 추가필요.enum에 타입등추가필요.left,right,역분사,정분사,부스트상태등
+	public BoostPosEntry[] boosterEffectPos;//옆무빙시 부스터이펙트 추가필요.enum에 타입등추가필요.left,right,역분사,정분사,부스트상태등
 	private Dictionary<FIREPOS_TYPE, Transform> _firePosDict= new Dictionary<FIREPOS_TYPE, Transform>();
+	private Dictionary<BOOSTPOS_TYPE, Transform> _boostPosDict = new Dictionary<BOOSTPOS_TYPE, Transform>();
 
 	protected Transform GetFirePos(FIREPOS_TYPE type)
 	{
@@ -95,10 +111,20 @@ public abstract class Unit : MonoBehaviour, IDamageable
 		Debug.LogWarning($"[Unit] FirePos 미설정: {type}");
 		return null;
 	}
+	protected Transform GetBoostPos(BOOSTPOS_TYPE type)
+	{
+		if (_boostPosDict.TryGetValue(type, out Transform pos))
+		{
+			return pos;
+		}
+		Debug.LogWarning($"[Unit] BoostPos 미설정: {type}");
+		return null;
+	}
 
 
-	[HideInInspector]
-	public Transform curFirePos;//밑에서 총구스위칭용
+	//[HideInInspector]
+	//public Transform curFirePos;//밑에서 총구스위칭용 
+	//필요없음.
 
 	[Header("현재 상태")]
 	public int curHpRemaining;
@@ -123,9 +149,16 @@ public abstract class Unit : MonoBehaviour, IDamageable
 	[HideInInspector]
 	public SOUND_TYPE _playSoundType;
 
+
+	//=============기타 레퍼런스===============
+	//리지드바디 할당용 레퍼런스
+	protected Rigidbody _rb;
+	//매니저 할당용 레퍼런스
+	protected SoundManager _sound;
+
 	protected virtual void Awake()
 	{
-		_soundManager = SoundManager.Instance;
+		_rb = GetComponent<Rigidbody>();
 	}
 
 
@@ -134,6 +167,7 @@ public abstract class Unit : MonoBehaviour, IDamageable
 	// Start is called before the first frame update
 	protected virtual void Start()
 	{
+		_sound = SoundManager.Instance;
 		//인스펙터에서 입력된 값 현재 스탯으로 설정
 		//저장 기능 생길시 변경필요.
 		curHpRemaining = maxHpRemaining;
@@ -161,7 +195,15 @@ public abstract class Unit : MonoBehaviour, IDamageable
 		UpdateFSM();
 		UpdateShieldRegen();
 		UpdateBoostRegen();
+		
+		
 	}
+
+	protected virtual void FixedUpdate()
+	{
+		
+	}
+
 
 	//===================FSM======================
 	protected UNIT_STATE curState = UNIT_STATE.IDLE;
@@ -313,14 +355,14 @@ public abstract class Unit : MonoBehaviour, IDamageable
 		//피격 애니메이션재생 필요
 		//피격 사운드재생 필요
 		_playSoundType = GetPlaySoundType(info);
-		_soundManager.PlaySFX3DAtPosition(_playSoundType, info.hitPosition);
+		_sound.PlaySFX3DAtPosition(_playSoundType, info.hitPosition);
 		//피격 카메라무빙필요
 
 		//크리면 데미지 배율, 아니면 그냥 데미지
 
 
 		//info.isCritical = Random.Range(0f, 100f) < criChance; //크리판정은 투사체에서 직접담당.
-		int damageAmount = info.isCritical ? Mathf.RoundToInt(info.damage * criDamageMultiplier) : info.damage;
+		int damageAmount = info.isCritical ? Mathf.RoundToInt(info.damageAmount * criDamageMultiplier) : info.damageAmount;
 		//실드회복중지, 타이머 초기화
 		shieldRegainTimer = 0f;
 		isShieldRegaining = false;
@@ -434,9 +476,9 @@ public abstract class Unit : MonoBehaviour, IDamageable
 			case SHOOT_TYPE.LASER:
 				return SOUND_TYPE.SFX_LASERSHOOT;
 
-			case SHOOT_TYPE.MISSILE_LEFT:
-			case SHOOT_TYPE.MISSILE_RIGHT:
-			case SHOOT_TYPE.MISSILE_BOTH:
+			case SHOOT_TYPE.MISSILE:
+			//	case SHOOT_TYPE.MISSILE_RIGHT:
+			//case SHOOT_TYPE.MISSILE_BOTH:
 				return SOUND_TYPE.SFX_MISSILESHOOT;
 			//case SHOOT_TYPE.ALL://전체쏘는키를 구현할지...근데 그러면 소리를어케해야되나?그냥 다 누르면 다 재생되지않나
 			//	break;
