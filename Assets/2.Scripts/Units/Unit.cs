@@ -31,8 +31,8 @@ public abstract class Unit : MonoBehaviour, IDamageable
 
 	//==================유닛데이터==================//
 
-	[Header("기본 스탯 설정창")]
-	[Space(10)]
+	[Header("<size=18>기본 스탯 설정창</size>")]
+	
 	[Header("HP")]
 	public int maxHpRemaining; //최대,현재HP수치
 	
@@ -63,7 +63,8 @@ public abstract class Unit : MonoBehaviour, IDamageable
 	public float criChance;
 	public float criDamageMultiplier;
 
-	[Header("사격(총알) 설정")]
+
+	[Header("사격 관련 설정")]
 	public float fireDelay = 0.1f; // 총알 발사 간격 (초)
 	protected float lastFireTime = 0f;
 
