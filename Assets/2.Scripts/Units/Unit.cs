@@ -98,8 +98,8 @@ public abstract class Unit : MonoBehaviour, IDamageable
 
 	
 	[Header("이펙트 위치(총구,부스터등)")]
-	public FirePosEntry[] firePos; // 인스펙터에서 타입+Transform 쌍으로 등록
-	public BoostPosEntry[] boosterEffectPos;//옆무빙시 부스터이펙트 추가필요.enum에 타입등추가필요.left,right,역분사,정분사,부스트상태등
+	public FirePosEntry[] firePositions; // 인스펙터에서 타입+Transform 쌍으로 등록
+	public BoostPosEntry[] boosterEffectPositions;//옆무빙시 부스터이펙트 추가필요.enum에 타입등추가필요.left,right,역분사,정분사,부스트상태등
 	private Dictionary<FIREPOS_TYPE, Transform> _firePosDict= new Dictionary<FIREPOS_TYPE, Transform>();
 	private Dictionary<BOOSTPOS_TYPE, Transform> _boostPosDict = new Dictionary<BOOSTPOS_TYPE, Transform>();
 
@@ -128,11 +128,12 @@ public abstract class Unit : MonoBehaviour, IDamageable
 	//필요없음.
 
 	[Header("현재 상태")]
+	public UNIT_STATE curState = UNIT_STATE.IDLE;
 	public int curHpRemaining;
 	public int curShieldRemaining;
 	public int curArmorRemaining;
 	public float curBoostRemaining;//부스트잔량
-
+	
 
 	// ==================레이어==================
 	[HideInInspector]
@@ -184,7 +185,7 @@ public abstract class Unit : MonoBehaviour, IDamageable
 		enemyProjectileLayer = LayerMask.NameToLayer("EnemyProjectile");
 
 		CurState = UNIT_STATE.IDLE;
-		foreach (var entry in firePos)
+		foreach (FirePosEntry entry in firePositions)
 		{
 			_firePosDict[entry.type] = entry.pos;
 		}
@@ -196,8 +197,6 @@ public abstract class Unit : MonoBehaviour, IDamageable
 		UpdateFSM();
 		UpdateShieldRegen();
 		UpdateBoostRegen();
-		
-		
 	}
 
 	protected virtual void FixedUpdate()
@@ -206,8 +205,8 @@ public abstract class Unit : MonoBehaviour, IDamageable
 	}
 
 
-	//===================FSM======================
-	protected UNIT_STATE curState = UNIT_STATE.IDLE;
+	//===================FSM======================d
+	
 
 	public UNIT_STATE CurState
 	{

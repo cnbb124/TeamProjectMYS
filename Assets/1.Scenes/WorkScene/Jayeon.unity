@@ -1384,16 +1384,13 @@ MonoBehaviour:
   speedMultiPlier: 0
   viewDistance: 0
   lockOnDistance: 0
-  firePos:
+  firePositions:
   - type: 0
     pos: {fileID: 0}
+  boosterEffectPositions:
   - type: 0
     pos: {fileID: 0}
-  boosterEffectPos:
-  - type: 0
-    pos: {fileID: 0}
-  - type: 0
-    pos: {fileID: 0}
+  curState: 0
   curHpRemaining: 0
   curShieldRemaining: 0
   curArmorRemaining: 0
@@ -1423,8 +1420,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 27971c665aad53343a032118e9ebf86a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  minDistance: 1
-  maxDistance: 20
+  minDistance: 4.94
+  maxDistance: 35.2
 --- !u!4 &1822366092
 Transform:
   m_ObjectHideFlags: 0

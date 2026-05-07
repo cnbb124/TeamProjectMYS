@@ -32,8 +32,8 @@ public class InputManager : MonoBehaviour
 
 
 
-	[Header("사용시 InputManager.Instance.메서드 명\n" +
-	"모든 키 입력 및 마우스 입력 상태를 반환함\n" +
+	[Header("<size=18>사용시 InputManager.Instance.필드 명</size>\n\n" +
+	"플레이어 스크립트 등에서 사용\n" +
 	"\n" +
 	"====== 이동 및 시야 조작 ======\n" +
 	"W / S : 전진 및 후진 (moveInput.z)\n" +
