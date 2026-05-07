@@ -29,8 +29,9 @@ public class Player : Unit
 	private bool isMissile_EquippedRight = false;
 
 	// ==================회전 감도==================
-
-	[Header("회전 감도")]
+	[Space(5)]
+	[Header("<size=18>플레이어 설정<size>")]
+	[Header("마우스 감도")]
 	[Tooltip("마우스 좌우 회전(Yaw) 감도")]
 	public float xSensitivity = 120f;
 

@@ -10,7 +10,7 @@ using UnityEngine;
 public abstract class Projectile : MonoBehaviour
 {
 
-	[Header("투사체 공통스탯 기본 설정")]
+	[Header("<size=18>[투사체 공통 스탯 기본 설정]</size>")]
 	//스피드설정
 	[Header("속도 설정")]
 	public float speed;
@@ -48,6 +48,7 @@ public abstract class Projectile : MonoBehaviour
 	// Update is called once per frame
 	protected virtual void Update()
 	{
+		//사거리 벗어날시
 		//출발지점과 현재지점이>=최대사거리 도달혹은초과시
 		if (Vector3.Distance(startPos, transform.position) >= maxRange)
 		{
@@ -75,7 +76,7 @@ public abstract class Projectile : MonoBehaviour
 
 	}
 
-	//온콜리전에서 호출할함수
+	//온트리거에서 호출할함수
 	protected virtual void OnHit(Collider other)
 	{
 		IDamageable target = other.GetComponent<IDamageable>();

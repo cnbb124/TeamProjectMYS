@@ -54,7 +54,7 @@ public class SoundManager : MonoBehaviour
 	}
 
 
-	[Header("사용시 SoundManager.Instance.메서드명\n" +
+	[Header("<size=18>사용시 SoundManager.Instance.메서드명</size>\n\n" +
 		"사운드 데이터 등록시 필요한만큼 리스트 우측 숫자변경\n" +
 		"" +
 		"====== 사용 가능한 메서드 목록 ======\n" +
