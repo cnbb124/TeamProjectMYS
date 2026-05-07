@@ -33,10 +33,11 @@ public class cs_Map_AsteroidSpawner : MonoBehaviour
         };
 
         /// 스폰 포인트 자동 넣기
-        GameObject[] points = GameObject.FindGameObjectsWithTag("SpawnPoint");
-        spawnPoints = new Transform[points.Length];
-        for (int i = 0; i < points.Length; i++)
-            spawnPoints[i] = points[i].transform;
+        
+        Transform[] all = GetComponentsInChildren<Transform>();
+        spawnPoints = new Transform[all.Length - 1];
+        for (int i = 0; i < spawnPoints.Length; i++)
+            spawnPoints[i] = all[i + 1];
 
         /// 머티리얼 자동 넣기
         asteroidMaterial = Resources.Load<Material>("Materials/Mat_AsteroidMaterial");
