@@ -10,7 +10,7 @@ using UnityEngine;
 public abstract class Projectile : MonoBehaviour
 {
 
-	[Header("투사체 공통스탯 기본 설정")]
+	[Header("<size=18>[투사체 공통 스탯 기본 설정]</size>")]
 	//스피드설정
 	[Header("속도 설정")]
 	public float speed;
@@ -29,11 +29,15 @@ public abstract class Projectile : MonoBehaviour
 	[Header("공격한 유닛(발사)")]
 	public Unit attacker;
 
+	//풀매니저에서 식별할 투사체 타입
+	[HideInInspector]
+	public PROJECTILE_TYPE projectileType;
+
 	// 크리티컬 여부. Init()에서 attacker의 criChance로 판정.
 	// 투사체가 크리 판정 담당 → DamageInfo.isCritical로 전달.
 	protected bool critical;
 	//발사좌표(사거리계산용.)
-	private Vector3 startPos;
+	protected Vector3 startPos;
 
 	protected virtual void Awake()
 	{
@@ -48,6 +52,7 @@ public abstract class Projectile : MonoBehaviour
 	// Update is called once per frame
 	protected virtual void Update()
 	{
+		//사거리 벗어날시
 		//출발지점과 현재지점이>=최대사거리 도달혹은초과시
 		if (Vector3.Distance(startPos, transform.position) >= maxRange)
 		{
@@ -55,27 +60,26 @@ public abstract class Projectile : MonoBehaviour
 		}
 	}
 
-	//풀매니저에서 활성화시 넣을 정보.
+	//활성화시 넣을 정보. 플레이어에서 호출
 	//꺼낼 때 호출. 매 발사마다 재초기화.
 	//자식에서 오버라이드 시 base.Init() 반드시 호출.
-	//출발좌표(firePos),향할방향, 공격자
-	public virtual void Init(Vector3 pos, Vector3 dir, Unit attacker)
+	//출발좌표(firePos),향할방향, 공격자(쏜사람)
+	public virtual void Init(Vector3 startPos, Vector3 dir, Unit attacker)
 	{
-		startPos = pos;//출발할좌표
-		this.attacker = attacker;//공격자
+		this.startPos = startPos;//출발할좌표
+		this.attacker = attacker;//공격자(쏜사람)
 
 		critical = Random.Range(0f, 100f) < attacker.criChance;//크리여부
 
 		//출발할좌표로 초기화
-		transform.position = pos;
+		transform.position = startPos;
 		//향할 방향초기화
 		transform.forward = dir;
-		//활성화.
-		gameObject.SetActive(true);
+		
 
 	}
 
-	//온콜리전에서 호출할함수
+	//온트리거에서 호출할함수
 	protected virtual void OnHit(Collider other)
 	{
 		IDamageable target = other.GetComponent<IDamageable>();
@@ -112,7 +116,8 @@ public abstract class Projectile : MonoBehaviour
 
 	protected void ReturnToPool()
 	{
-		gameObject.SetActive(false);
+		//gameObject.SetActive(false);풀매니저에서 비활성화로 변경
+		PoolManager.Instance.ReturnProjectile(this);
 	}
 
 	protected virtual void OnDisable()

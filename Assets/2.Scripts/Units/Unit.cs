@@ -31,8 +31,8 @@ public abstract class Unit : MonoBehaviour, IDamageable
 
 	//==================유닛데이터==================//
 
-	[Header("기본 스탯 설정창")]
-	[Space(10)]
+	[Header("<size=18>기본 스탯 설정창</size>")]
+	
 	[Header("HP")]
 	public int maxHpRemaining; //최대,현재HP수치
 	
@@ -63,7 +63,8 @@ public abstract class Unit : MonoBehaviour, IDamageable
 	public float criChance;
 	public float criDamageMultiplier;
 
-	[Header("사격(총알) 설정")]
+
+	[Header("사격 관련 설정")]
 	public float fireDelay = 0.1f; // 총알 발사 간격 (초)
 	protected float lastFireTime = 0f;
 
@@ -97,8 +98,8 @@ public abstract class Unit : MonoBehaviour, IDamageable
 
 	
 	[Header("이펙트 위치(총구,부스터등)")]
-	public FirePosEntry[] firePos; // 인스펙터에서 타입+Transform 쌍으로 등록
-	public BoostPosEntry[] boosterEffectPos;//옆무빙시 부스터이펙트 추가필요.enum에 타입등추가필요.left,right,역분사,정분사,부스트상태등
+	public FirePosEntry[] firePositions; // 인스펙터에서 타입+Transform 쌍으로 등록
+	public BoostPosEntry[] boosterEffectPositions;//옆무빙시 부스터이펙트 추가필요.enum에 타입등추가필요.left,right,역분사,정분사,부스트상태등
 	private Dictionary<FIREPOS_TYPE, Transform> _firePosDict= new Dictionary<FIREPOS_TYPE, Transform>();
 	private Dictionary<BOOSTPOS_TYPE, Transform> _boostPosDict = new Dictionary<BOOSTPOS_TYPE, Transform>();
 
@@ -127,11 +128,12 @@ public abstract class Unit : MonoBehaviour, IDamageable
 	//필요없음.
 
 	[Header("현재 상태")]
+	public UNIT_STATE curState = UNIT_STATE.IDLE;
 	public int curHpRemaining;
 	public int curShieldRemaining;
 	public int curArmorRemaining;
 	public float curBoostRemaining;//부스트잔량
-
+	
 
 	// ==================레이어==================
 	[HideInInspector]
@@ -155,6 +157,7 @@ public abstract class Unit : MonoBehaviour, IDamageable
 	protected Rigidbody _rb;
 	//매니저 할당용 레퍼런스
 	protected SoundManager _sound;
+	protected PoolManager _pool;
 
 	protected virtual void Awake()
 	{
@@ -168,6 +171,7 @@ public abstract class Unit : MonoBehaviour, IDamageable
 	protected virtual void Start()
 	{
 		_sound = SoundManager.Instance;
+		_pool = PoolManager.Instance;
 		//인스펙터에서 입력된 값 현재 스탯으로 설정
 		//저장 기능 생길시 변경필요.
 		curHpRemaining = maxHpRemaining;
@@ -183,7 +187,7 @@ public abstract class Unit : MonoBehaviour, IDamageable
 		enemyProjectileLayer = LayerMask.NameToLayer("EnemyProjectile");
 
 		CurState = UNIT_STATE.IDLE;
-		foreach (var entry in firePos)
+		foreach (FirePosEntry entry in firePositions)
 		{
 			_firePosDict[entry.type] = entry.pos;
 		}
@@ -195,8 +199,6 @@ public abstract class Unit : MonoBehaviour, IDamageable
 		UpdateFSM();
 		UpdateShieldRegen();
 		UpdateBoostRegen();
-		
-		
 	}
 
 	protected virtual void FixedUpdate()
@@ -205,8 +207,8 @@ public abstract class Unit : MonoBehaviour, IDamageable
 	}
 
 
-	//===================FSM======================
-	protected UNIT_STATE curState = UNIT_STATE.IDLE;
+	//===================FSM======================d
+	
 
 	public UNIT_STATE CurState
 	{
@@ -345,7 +347,7 @@ public abstract class Unit : MonoBehaviour, IDamageable
 	//반올림할것. 0.5->1 0.4->0
 
 	//자식에서 오버라이드
-	public virtual void Shoot(SHOOT_TYPE type)
+	public virtual void Shoot(PROJECTILE_TYPE type)
 	{
 		
 	}
@@ -467,16 +469,16 @@ public abstract class Unit : MonoBehaviour, IDamageable
 		return SOUND_TYPE.SFX_NONE;
 	}
 	//사격
-	protected SOUND_TYPE GetPlaySoundType(SHOOT_TYPE type)
+	protected SOUND_TYPE GetPlaySoundType(PROJECTILE_TYPE type)
 	{
 		switch (type)
 		{
-			case SHOOT_TYPE.BULLET:
+			case PROJECTILE_TYPE.BULLET:
 				return SOUND_TYPE.SFX_BULLETSHOOT;
-			case SHOOT_TYPE.LASER:
+			case PROJECTILE_TYPE.LASER:
 				return SOUND_TYPE.SFX_LASERSHOOT;
 
-			case SHOOT_TYPE.MISSILE:
+			case PROJECTILE_TYPE.MISSILE:
 			//	case SHOOT_TYPE.MISSILE_RIGHT:
 			//case SHOOT_TYPE.MISSILE_BOTH:
 				return SOUND_TYPE.SFX_MISSILESHOOT;

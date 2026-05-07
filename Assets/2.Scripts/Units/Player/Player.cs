@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 
 
@@ -13,7 +14,7 @@ using UnityEngine;
 
 public class Player : Unit
 {
-	
+
 
 	// 총알 교대 발사용 인덱스 (0=왼쪽, 1=오른쪽 → 0→1→0 순환)
 	// bulletFirePos는 Unit에 있는 배열 그대로 사용
@@ -24,13 +25,16 @@ public class Player : Unit
 	//매니저 할당용 레퍼런스
 	private InputManager _input;
 
+
+
 	//미사일 장착 여부 인풋은 getkeydown이라 누른 그순간만 true 타고 false로 다시바뀜.
 	private bool isMissile_EquippedLeft = false;
 	private bool isMissile_EquippedRight = false;
 
 	// ==================회전 감도==================
-
-	[Header("회전 감도")]
+	[Space(5)]
+	[Header("<size=18>플레이어 설정<size>")]
+	[Header("마우스 감도")]
 	[Tooltip("마우스 좌우 회전(Yaw) 감도")]
 	public float xSensitivity = 120f;
 
@@ -93,11 +97,11 @@ public class Player : Unit
 
 	protected override void FixedUpdate()
 	{
-		
+
 		//항상 회전이먼저!!!
 		RotateByInput();
 		MovingByInput();
-	
+
 	}
 
 
@@ -159,64 +163,64 @@ public class Player : Unit
 		if (_input.fireBullet && Time.time >= lastFireTime + fireDelay)//딜레이
 		{
 			lastFireTime = Time.time;
-			Shoot(SHOOT_TYPE.BULLET);
+			Shoot(PROJECTILE_TYPE.BULLET);
 		}
 		//미사일 발사 입력
 		if (_input.fireMissile)
 		{
-			Shoot(SHOOT_TYPE.MISSILE);
+			Shoot(PROJECTILE_TYPE.MISSILE);
 		}
 		//레이저발사입력
 		if (_input.fireLaser)
 		{
-			Shoot(SHOOT_TYPE.LASER);
+			Shoot(PROJECTILE_TYPE.LASER);
 		}
 		//전체발사(총알제외.총알은 좌클릭으로유지)입력
 		if (_input.fireAll)
 		{
-			Shoot(SHOOT_TYPE.MISSILE);
-			Shoot(SHOOT_TYPE.LASER);
+			Shoot(PROJECTILE_TYPE.MISSILE);
+			Shoot(PROJECTILE_TYPE.LASER);
 		}
 	}
 
 	//전에사용
-		//if (InputManager.Instance.fireBullet)
-		//{
-		//	Shoot(SHOOT_TYPE.BULLET);
-		//}
-		//if(InputManager.Instance.fireMissile)
-		//{
-		//	if(isMissile_EquippedLeft)
-		//	{
-		//		Shoot(SHOOT_TYPE.MISSILE_LEFT);
-		//	}
-		//	if(isMissile_EquippedRight)
-		//	{
-		//		Shoot(SHOOT_TYPE.MISSILE_RIGHT);
-		//	}
-		//}
-		//if(InputManager.Instance.fireLaser)
-		//{
-		//	Shoot(SHOOT_TYPE.LASER);
-		//}
-		//if(InputManager.Instance.fireAll)
-		//{
-		//	if(isMissile_EquippedLeft)
-		//	{
-		//		Shoot(SHOOT_TYPE.MISSILE_LEFT);
-		//	}
-		//	if(isMissile_EquippedRight)
-		//	{
-		//		Shoot(SHOOT_TYPE.MISSILE_RIGHT);
-		//	}
-		//	
-		//	Shoot(SHOOT_TYPE.LASER);
-		//}
+	//if (InputManager.Instance.fireBullet)
+	//{
+	//	Shoot(SHOOT_TYPE.BULLET);
+	//}
+	//if(InputManager.Instance.fireMissile)
+	//{
+	//	if(isMissile_EquippedLeft)
+	//	{
+	//		Shoot(SHOOT_TYPE.MISSILE_LEFT);
+	//	}
+	//	if(isMissile_EquippedRight)
+	//	{
+	//		Shoot(SHOOT_TYPE.MISSILE_RIGHT);
+	//	}
+	//}
+	//if(InputManager.Instance.fireLaser)
+	//{
+	//	Shoot(SHOOT_TYPE.LASER);
+	//}
+	//if(InputManager.Instance.fireAll)
+	//{
+	//	if(isMissile_EquippedLeft)
+	//	{
+	//		Shoot(SHOOT_TYPE.MISSILE_LEFT);
+	//	}
+	//	if(isMissile_EquippedRight)
+	//	{
+	//		Shoot(SHOOT_TYPE.MISSILE_RIGHT);
+	//	}
+	//	
+	//	Shoot(SHOOT_TYPE.LASER);
+	//}
 
 
 	// ==================회전 (FixedUpdate에서 호출)==================
 
-	
+
 	// 마우스/키보드 입력으로 오브젝트 자체를 3축 회전.
 	// Rigidbody.freezeRotation = true이므로 transform.Rotate 직접 사용.
 	//
@@ -244,7 +248,7 @@ public class Player : Unit
 
 	// ==================이동 (FixedUpdate에서 호출)==================
 
-	
+
 	// 오브젝트가 바라보는 방향(로컬축) 기준으로 6방향 물리 이동.
 	// RotateByInput() 이후 호출되므로 이미 회전된 방향 기준으로 이동.
 
@@ -255,7 +259,7 @@ public class Player : Unit
 	// 부스트: LeftShift + 잔량 있을 때 boostSpeed 적용.
 	//         Unit.UseBoost()로 잔량 소모 및 회복 타이머 초기화.
 	// maxSpeed: 속도 초과 시 방향 유지하고 크기만 클램프.
-	
+
 	private void MovingByInput()
 	{
 		// 로컬 축 기준 6방향 합산
@@ -269,8 +273,8 @@ public class Player : Unit
 		{
 			dir.Normalize();
 		}
-		
-			
+
+
 		//float 오차 패딩값
 		bool isMoving = dir.sqrMagnitude > 0.001f;
 
@@ -338,7 +342,7 @@ public class Player : Unit
 
 	//사격및 소리재생
 	//실제 InputManager에서 받아오면 작동할 명령
-	public override void Shoot(SHOOT_TYPE type)
+	public override void Shoot(PROJECTILE_TYPE type)
 	{
 
 		//혹여나 버그걸릴시 다시 매니저 직접인스턴스할것. 스타트속도등으로 버그날수있따함.
@@ -346,26 +350,27 @@ public class Player : Unit
 
 		switch (type)
 		{
-			case SHOOT_TYPE.BULLET:
+			case PROJECTILE_TYPE.BULLET:
 				_sound.PlaySFX3DAtPosition(_playSoundType, transform.position, 0.9f, 1.1f);//총알소리 살짝랜덤하게
 				ShootBullet();
 				break;
-			case SHOOT_TYPE.LASER:
+			case PROJECTILE_TYPE.LASER:
 				_sound.PlaySFX3DAtPosition(_playSoundType, transform.position);
 				ShootLaser();
 				break;
-			case SHOOT_TYPE.MISSILE://소리 너무 크면 가운데서 실행되게 아래로 빼기.
+			case PROJECTILE_TYPE.MISSILE://소리 너무 크면 가운데서 실행되게 아래로 빼기.
 				if (isMissile_EquippedLeft)
-				{ _sound.PlaySFX3DAtPosition(_playSoundType, transform.position);
+				{
+					_sound.PlaySFX3DAtPosition(_playSoundType, transform.position);
 					ShootMissile(FIREPOS_TYPE.MISSILE_LEFT);
 				}
-				if(isMissile_EquippedRight)
+				if (isMissile_EquippedRight)
 				{
 					_sound.PlaySFX3DAtPosition(_playSoundType, transform.position);
 					ShootMissile(FIREPOS_TYPE.MISSILE_RIGHT);
 				}
 				break;
-			
+
 
 				//미사용. 차후 다시 사용할수도?
 				//case SHOOT_TYPE.MISSILE_BOTH://소리클경우 양쪽말고 한쪽이나 중간점 으로 따로만들어서진행
@@ -450,6 +455,9 @@ public class Player : Unit
 
 		//발사로직필요// poolmanager 구현 뒤 넣기
 		//ex.PoolManager.Instance.GetBullet(curFirePos.position, curFirePos.forward, this);
+		Bullet newBullet = _pool.GetBullet();
+		newBullet.Init(curFirePos.position, curFirePos.forward, this);
+
 	}
 
 	// 미사일 - 타입으로 좌우선택. 총구타입선택(좌우)
@@ -463,11 +471,13 @@ public class Player : Unit
 
 		// curFirePos에서 실제발사로직필요// poolmanager 구현 뒤 넣기
 		//ex.PoolManager.Instance.GetMissile(curFirePos.position, curFirePos.forward, this);
+		Missile newMissile = _pool.GetMissile();
+		newMissile.Init(curFirePos.position, curFirePos.forward, this);
 	}
 
-	
+
 	// 레이저 - 머리 중앙 고정 (laserFirePos 단일 Transform)
-	
+
 	private void ShootLaser()
 	{
 
@@ -479,6 +489,9 @@ public class Player : Unit
 
 		//발사로직필요// poolmanager 구현 뒤 넣기
 		//ex.PoolManager.Instance.GetLaser(curFirePos.position, curFirePos.forward, this);
+		Laser newLaser = _pool.GetLaser();
+		newLaser.Init(curFirePos.position, curFirePos.forward, this);
+
 	}
 
 
