@@ -1,3 +1,5 @@
+//적종류
+
 public enum ENEMY_TYPE
 {
 	DROPSHIP,
@@ -5,7 +7,7 @@ public enum ENEMY_TYPE
 	MISSLIESHIP,
 	BOSS,
 }
-
+//피해종류
 public enum DAMAGE_TYPE
 {
 	BULLET, //총알
@@ -13,7 +15,9 @@ public enum DAMAGE_TYPE
 	EXPLOSION, //폭발형(미사일)
 	CONTACT, //충돌뎀(빡치기)
 }
-public enum SHOOT_TYPE
+
+//쏘는종류(투사체)
+public enum PROJECTILE_TYPE
 {
 	BULLET, //총알
 	LASER, //레이저(스킬로 변경하거나 스킬을이걸로)
@@ -26,6 +30,8 @@ public enum SHOOT_TYPE
 	ALL,//필요한가?
 	
 }
+
+//총구종류
 public enum FIREPOS_TYPE
 {
 	BULLET_LEFT,

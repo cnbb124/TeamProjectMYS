@@ -157,6 +157,7 @@ public abstract class Unit : MonoBehaviour, IDamageable
 	protected Rigidbody _rb;
 	//매니저 할당용 레퍼런스
 	protected SoundManager _sound;
+	protected PoolManager _pool;
 
 	protected virtual void Awake()
 	{
@@ -170,6 +171,7 @@ public abstract class Unit : MonoBehaviour, IDamageable
 	protected virtual void Start()
 	{
 		_sound = SoundManager.Instance;
+		_pool = PoolManager.Instance;
 		//인스펙터에서 입력된 값 현재 스탯으로 설정
 		//저장 기능 생길시 변경필요.
 		curHpRemaining = maxHpRemaining;
@@ -345,7 +347,7 @@ public abstract class Unit : MonoBehaviour, IDamageable
 	//반올림할것. 0.5->1 0.4->0
 
 	//자식에서 오버라이드
-	public virtual void Shoot(SHOOT_TYPE type)
+	public virtual void Shoot(PROJECTILE_TYPE type)
 	{
 		
 	}
@@ -467,16 +469,16 @@ public abstract class Unit : MonoBehaviour, IDamageable
 		return SOUND_TYPE.SFX_NONE;
 	}
 	//사격
-	protected SOUND_TYPE GetPlaySoundType(SHOOT_TYPE type)
+	protected SOUND_TYPE GetPlaySoundType(PROJECTILE_TYPE type)
 	{
 		switch (type)
 		{
-			case SHOOT_TYPE.BULLET:
+			case PROJECTILE_TYPE.BULLET:
 				return SOUND_TYPE.SFX_BULLETSHOOT;
-			case SHOOT_TYPE.LASER:
+			case PROJECTILE_TYPE.LASER:
 				return SOUND_TYPE.SFX_LASERSHOOT;
 
-			case SHOOT_TYPE.MISSILE:
+			case PROJECTILE_TYPE.MISSILE:
 			//	case SHOOT_TYPE.MISSILE_RIGHT:
 			//case SHOOT_TYPE.MISSILE_BOTH:
 				return SOUND_TYPE.SFX_MISSILESHOOT;

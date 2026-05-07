@@ -8,7 +8,7 @@ using UnityEngine;
 //락온가능. 유도성능있음.
 public class Missile : Projectile, IExplodable
 {
-	
+
 	public ExplosionInfo explosionInfo;
 	//const string sMissileHeader = "<size=20>["+"미사일 설정"+"]</size>";
 	[Space(5)]
@@ -17,13 +17,14 @@ public class Missile : Projectile, IExplodable
 	public float explosionRadius;
 	[Header("유도 각도 세팅")]
 	public float chaseMax;//차후 이름 변경필요
-
+	[Header("락온 목표")]
+	public Transform targetTr;
 
 	protected override void Awake()
 	{
 		base.Awake();
 		dmgType = DAMAGE_TYPE.EXPLOSION;
-		
+
 	}
 	// Start is called before the first frame update
 	protected override void Start()
@@ -37,6 +38,7 @@ public class Missile : Projectile, IExplodable
 	protected override void Update()
 	{
 		base.Update();
+		
 	}
 
 	private void OnTriggerEnter(Collider other)
