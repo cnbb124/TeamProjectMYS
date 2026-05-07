@@ -11,12 +11,14 @@ public class Bullet : Projectile
 	protected override void Awake()
 	{
 		base.Awake();
+
 		dmgType = DAMAGE_TYPE.BULLET;
+		projectileType = PROJECTILE_TYPE.BULLET;
 	}
 	// Start is called before the first frame update
 	protected override void Start()
 	{
-		
+
 	}
 
 	// Update is called once per frame
@@ -37,7 +39,7 @@ public class Bullet : Projectile
 			return;
 		}
 		//부딪힌놈 레이어랑 발사자의 레이어가 같으면. 즉 같은팀일시. 무시
-		if(other.gameObject.layer==attacker.gameObject.layer)
+		if (other.gameObject.layer == attacker.gameObject.layer)
 		{
 			return;
 		}
