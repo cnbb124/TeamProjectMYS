@@ -40,14 +40,24 @@ public class PoolManager : MonoBehaviour
 	[Tooltip("레이저 풀 초기 생성 개수. 부족 시 자동 확장")]
 	public int laserPoolSize = 5;
 
+	[Tooltip("적 건쉽 풀 초기 생성 개수. 부족 시 자동 확장")]
+	public int enemy_GunshipPoolSize = 10;
+
+	[Tooltip("적 드랍쉽 풀 초기 생성 개수. 부족 시 자동 확장")]
+	public int enmey_DropshipPoolSize = 5;
+
+	[Tooltip("적 미사일쉽 풀 초기 생성 개수. 부족 시 자동 확장")]
+	public int enmey_MissileShipPoolSize = 5;
+	
 	//======================오브젝트 풀===================
 	//차후 필요한만큼 추가
 	private List<Bullet> bulletPool = new List<Bullet>();
 	private List<Missile> missilePool = new List<Missile>();
 	private List<Laser> laserPool = new List<Laser>();
+	//에너미 풀링용
+	//private List<>
 
-
-
+	//아이템 풀링용
 
 
 	//
@@ -58,6 +68,15 @@ public class PoolManager : MonoBehaviour
 	public Bullet bulletPrefab;
 	public Missile missilePrefab;
 	public Laser laserPrefab;
+
+	[Header("Enemy Prefabs(적 프리펩 연결)")]
+	public GameObject enemy_DropshipPrefab;
+	public GameObject enemy_GunshipPrefab;
+	public GameObject enemy_MissileshipPrefab;
+
+	[Header("Item Prefabs(아이템 프리펩 연결)")]
+	public GameObject Item_;
+
 	
 
 	private void Awake()

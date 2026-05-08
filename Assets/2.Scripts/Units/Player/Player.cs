@@ -155,7 +155,7 @@ public class Player : Unit
 	// 입력 기반 발사 명령 처리.
 	// 실제 투사체 생성은 Shoot() 내부에서 PoolManager 호출 예정.
 	// GetKeyDown 씹힘 방지를 위해 Update에서 호출.
-
+	
 	void ShootByInput()
 	{
 		//혹여나 버그걸릴시 다시 매니저 직접인스턴스할것. 스타트속도등으로 버그날수있따함.
@@ -218,6 +218,28 @@ public class Player : Unit
 	//}
 
 
+
+
+	//부스트 로직
+//W(전진)     → BACK 부스터(뒤에서 밀어줌)
+//S(후진)     → FRONT 부스터(앞에서 밀어줌)
+//A(좌이동)   → RIGHT 부스터(오른쪽에서 밀어줌)
+//D(우이동)   → LEFT 부스터(왼쪽에서 밀어줌)
+//Mouse4(상승) → 없음 or 하단 부스터(추후 추가)
+//Mouse3(하강) → 없음 or 상단 부스터(추후 추가)
+//Q(좌롤)     → 윙 rightdown부스터, leftup부스터
+//E(우롤)     → 윙 rightup 부스터  leftdown부스터
+//마우스 상하  → FRONT or BACK 부스터
+//손 뗌        → 역분사(모두 켜거나 반대 부스터)
+
+	//==============부스트이펙트====================
+
+
+
+	private void UpdateBoostEffect()
+	{
+
+	}
 	// ==================회전 (FixedUpdate에서 호출)==================
 
 
@@ -230,6 +252,9 @@ public class Player : Unit
 	// 
 	// Space.Self 사용 이유: 어느 방향 바라봐도 직관적으로 상하/롤 회전됨.
 	// Yaw만 World 기준인 이유: 완전 뒤집혔을 때도 마우스 좌우가 자연스럽게 동작.
+
+
+
 
 	private void RotateByInput()
 	{

@@ -24,6 +24,7 @@ public class Missile : Projectile, IExplodable
 	{
 		base.Awake();
 		dmgType = DAMAGE_TYPE.EXPLOSION;
+		projectileType = PROJECTILE_TYPE.MISSILE;
 
 	}
 	// Start is called before the first frame update
