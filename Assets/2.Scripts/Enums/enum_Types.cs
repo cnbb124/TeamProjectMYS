@@ -1,15 +1,16 @@
 public enum LAYER_TYPE
 {
-	Default,
-	TransparentFX,
-	IgnoreRaycast,
-	Water,
-	UI,
-	Unit_Player,
-	Unit_Enemy,
-	Projectile_Player,
-	Projectile_Enemy,
-	Environment,
+	Default = 0,
+	TransparentFX = 1,
+	IgnoreRaycast = 2,
+	None = 3,
+	Water = 4,
+	UI = 5,
+	Unit_Player = 6,
+	Unit_Enemy = 7,
+	Projectile_Player = 8,
+	Projectile_Enemy = 9,
+	Environment = 10,
 }
 
 
@@ -35,14 +36,14 @@ public enum PROJECTILE_TYPE
 {
 	BULLET, //총알
 	LASER, //레이저(스킬로 변경하거나 스킬을이걸로)
-	
+
 	//(미사일)
 	MISSILE,
 	//MISSILE_BOTH,//현재미사용
-	
+
 	//전체동시
 	ALL,//필요한가?
-	
+
 }
 
 //총구종류

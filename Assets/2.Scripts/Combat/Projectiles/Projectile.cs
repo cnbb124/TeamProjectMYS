@@ -29,7 +29,8 @@ public abstract class Projectile : MonoBehaviour
 	[Header("투사체 기본 데미지")]
 	public int baseDamage;
 	//스탯과 버프가 적용된 실제 적용 데미지 (변동 값)
-	protected int curDamage;
+	[Header("투사체 현재 실제 데미지")]
+	public int curDamage;
 	//공격자
 	[Header("공격한 유닛(발사)")]
 	public Unit attacker;
@@ -74,6 +75,8 @@ public abstract class Projectile : MonoBehaviour
 		this.startPos = startPos;//출발할좌표
 		this.attacker = attacker;//공격자(쏜사람)
 
+
+		
 		//투사체 데미지 최신화 (풀링오염방지)
 
 		curDamage = baseDamage;//차후 로직 추가 필요.
@@ -128,6 +131,7 @@ public abstract class Projectile : MonoBehaviour
 
 	protected virtual void OnTriggerEnter(Collider other)
 	{
+		
 		//다른 시야감지용 트리거와 충돌방지.차후 수정필요할수도.
 		if (other.isTrigger)
 		{
@@ -142,8 +146,12 @@ public abstract class Projectile : MonoBehaviour
 		// 부딪힌 대상에 대한 타격 처리 (적, 아군, 지형지물 구분 없이 실행)
 		OnHit(other);
 	}
+
 	//온트리거 재정의할 함수들
-	protected virtual void OnHit(Collider other) { }
+	protected virtual void OnHit(Collider other)
+	{
+		Debug.Log($"[OnHit 발생] 충돌 대상: {other.gameObject.name} | 레이어: {LayerMask.LayerToName(other.gameObject.layer)}");
+	}
 
 	//데미지 허용 메서드
 	protected void ApplyDamage(Collider targetCollider, int damage, DAMAGE_TYPE currentDmgType)

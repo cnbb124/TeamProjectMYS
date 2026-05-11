@@ -52,6 +52,7 @@ public class Missile : Projectile, IExplodable
 
 	protected override void OnHit(Collider other)
 	{
+		base.OnHit(other);
 		// 폭발 실행 후 투사체 소멸
 		Explode(explosionInfo);
 		ReturnToPool();
