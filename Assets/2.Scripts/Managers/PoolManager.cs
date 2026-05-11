@@ -77,7 +77,7 @@ public class PoolManager : MonoBehaviour
 	[Header("Item Prefabs(아이템 프리펩 연결)")]
 	public GameObject Item_;
 
-	
+	//이펙트도 추가할것.
 
 	private void Awake()
 	{

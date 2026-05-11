@@ -135,19 +135,21 @@ public abstract class Unit : MonoBehaviour, IDamageable
 	public float curBoostRemaining;//부스트잔량
 	
 
-	// ==================레이어==================
-	[HideInInspector]
-	public int playerLayer;
-	[HideInInspector]
-	public int enemyLayer;
-	[HideInInspector]
-	public int groundLayer;//행성등 지형지물, 차후 수정필요
-	[HideInInspector]
-	public int ItemLayer;//아이템레이어 추가필요
-	[HideInInspector]
-	public int playerProjectileLayer;
-	[HideInInspector]
-	public int enemyProjectileLayer;
+	//// ==================레이어==================
+	//[HideInInspector]
+	//public int playerLayer;
+	//[HideInInspector]
+	//public int enemyLayer;
+	//[HideInInspector]
+	//public int groundLayer;//행성등 지형지물, 차후 수정필요
+	//[HideInInspector]
+	//public int ItemLayer;//아이템레이어 추가필요
+	//[HideInInspector]
+	//public int playerProjectileLayer;
+	//[HideInInspector]
+	//public int enemyProjectileLayer;
+
+
 	[HideInInspector]
 	public SOUND_TYPE _playSoundType;
 
@@ -179,12 +181,12 @@ public abstract class Unit : MonoBehaviour, IDamageable
 		curArmorRemaining = maxArmor;
 		curBoostRemaining = maxBoostRemaining;
 
-		playerLayer = LayerMask.NameToLayer("UNIT_Player");
-		enemyLayer = LayerMask.NameToLayer("UNIT_Enemy");
-		groundLayer = LayerMask.NameToLayer("Environment");
-		//아이템 레이어 추가필요ItemLayer = LayerMask.NameToLayer("");
-		playerProjectileLayer = LayerMask.NameToLayer("PlayerProjectile");
-		enemyProjectileLayer = LayerMask.NameToLayer("EnemyProjectile");
+		//playerLayer = LayerMask.NameToLayer("UNIT_Player");
+		//enemyLayer = LayerMask.NameToLayer("UNIT_Enemy");
+		//groundLayer = LayerMask.NameToLayer("Environment");
+		////아이템 레이어 추가필요ItemLayer = LayerMask.NameToLayer("");
+		//playerProjectileLayer = LayerMask.NameToLayer("PlayerProjectile");
+		//enemyProjectileLayer = LayerMask.NameToLayer("EnemyProjectile");
 
 		CurState = UNIT_STATE.IDLE;
 		foreach (FirePosEntry entry in firePositions)
@@ -370,7 +372,7 @@ public abstract class Unit : MonoBehaviour, IDamageable
 		isShieldRegaining = false;
 
 		//피격 데미지수치필요(실드있을시, 없을시)
-		calculDamage(damageAmount);
+		calculTakeDamage(damageAmount);
 
 
 		//피격 방향에 따른 이동(반동)피요
@@ -400,7 +402,7 @@ public abstract class Unit : MonoBehaviour, IDamageable
 	//	return rand < criChance;
 	//}
 
-	void calculDamage(int damageAmount)
+	protected void calculTakeDamage(int damageAmount)
 	{
 		if (curShieldRemaining > 0)
 		{
@@ -428,12 +430,9 @@ public abstract class Unit : MonoBehaviour, IDamageable
 
 
 
-	public void OnCollisionEnter(Collision collision)
+	public virtual void OnCollisionEnter(Collision collision)
 	{
-		if (collision.gameObject.CompareTag("Player"))
-		{
-
-		}
+		
 	}
 
 

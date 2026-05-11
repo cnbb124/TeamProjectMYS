@@ -1,5 +1,19 @@
-//적종류
+public enum LAYER_TYPE
+{
+	Default,
+	TransparentFX,
+	IgnoreRaycast,
+	Water,
+	UI,
+	Unit_Player,
+	Unit_Enemy,
+	Projectile_Player,
+	Projectile_Enemy,
+	Environment,
+}
 
+
+//적종류
 public enum ENEMY_TYPE
 {
 	DROPSHIP,

@@ -27,72 +27,59 @@ public class Missile : Projectile, IExplodable
 		projectileType = PROJECTILE_TYPE.MISSILE;
 
 	}
-	// Start is called before the first frame update
-	protected override void Start()
-	{
-		base.Start();
-		explosionInfo.explosionDamage = this.damage;
-		explosionInfo.explosionRadius = this.explosionRadius;
-	}
 
 	// Update is called once per frame
 	protected override void Update()
 	{
-		base.Update();
-		
+		base.Update();//최대사거리로직
+					  //이동로직, 추적로직 추가필요
+	}
+	// Start is called before the first frame update
+
+	public override void Init(Vector3 startPos, Vector3 dir, Unit attacker)
+	{
+		base.Init(startPos, dir, attacker);
+
+		// 풀에서 꺼낼 때마다 인스펙터의 최신 damage 값으로 갱신
+		explosionInfo.explosionDamage = this.curDamage;
+		explosionInfo.explosionRadius = this.explosionRadius;
 	}
 
-	private void OnTriggerEnter(Collider other)
+
+
+
+	//온트리거에 쓸 재정의함수
+
+	protected override void OnHit(Collider other)
 	{
-		//공격자가 없는거일시 무시
-		if (attacker == null)
-		{
-			return;
-		}
-		//부딪힌놈 레이어랑 발사자의 레이어가 같으면. 즉 같은팀일시. 무시
-		if (other.gameObject.layer == attacker.gameObject.layer)
-		{
-			return;
-		}
-		//
+		// 폭발 실행 후 투사체 소멸
 		Explode(explosionInfo);
-
+		ReturnToPool();
 	}
 
-	public virtual void Explode(ExplosionInfo explosionInfo)
+
+	public void Explode(ExplosionInfo explosionInfo)
 	{
+		//이펙트 출력 로직 추가
+
 		//맞은것들의 충돌박스 싹다가져오기
 		Collider[] hits = Physics.OverlapSphere(transform.position, explosionInfo.explosionRadius);
 
-		//맞은것들
+
+		// 중복 타격 방지를 위한 HashSet 추가//차후 확인및보강필요
+		HashSet<IDamageable> damagedTargets = new HashSet<IDamageable>();
+
+
+		//맞은것들 전부처리
 		foreach (Collider hit in hits)
 		{
-
 			IDamageable target = hit.GetComponent<IDamageable>();
-			//데미지를 받지않는애면 건뛰
-			if (target == null)
-			{
-				continue;
-			}
-			//데미지를 받는애면
-			//데미지인포구조체 임시생성
-			DamageInfo damageInfo = new DamageInfo
-			{
-				//피해유형
-				type = dmgType,
-				//데미지수치
-				damageAmount = explosionInfo.explosionDamage,
-				//크리티컬여부
-				isCritical = critical,
-				//맞은좌표=현재오브젝트(투사체,projectile,this)좌표
-				hitPosition = transform.position,
-				//맞은방향=현재오브젝트(투사체,projectile,this)의 앞방향에서. 폭발이라 조금더 다르게
-				hitDiriection = (hit.transform.position - transform.position).normalized,
-				//공격자정보=현재오브젝트의 gameobject
-				attacker = this.attacker.gameObject
-			};
 
-			target.TakeDamage(damageInfo);
+			if (target != null && !damagedTargets.Contains(target))
+			{
+				ApplyDamage(hit, explosionInfo.explosionDamage, this.dmgType);
+				damagedTargets.Add(target); // 타격 대상 기록 차후확인및보강필요
+			}
 		}
 	}
 }

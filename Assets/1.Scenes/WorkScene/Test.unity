@@ -1206,7 +1206,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 48672769f4d2501448f438691a36dbcb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxHpRemaining: 0
+  maxHpRemaining: 3000
   maxShieldRemaining: 0
   shieldRegainDelay: 0
   shieldRegainRate: 0
@@ -1261,7 +1261,7 @@ Rigidbody:
     m_Bits: 0
   m_ImplicitCom: 1
   m_ImplicitTensor: 1
-  m_UseGravity: 1
+  m_UseGravity: 0
   m_IsKinematic: 0
   m_Interpolate: 0
   m_Constraints: 0
@@ -1412,6 +1412,14 @@ PrefabInstance:
     - target: {fileID: 6433512454957104831, guid: a7897ad853ae9d6458830c653646215c, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8714862202856907223, guid: a7897ad853ae9d6458830c653646215c, type: 3}
+      propertyPath: maxDistance
+      value: 14.4
+      objectReference: {fileID: 0}
+    - target: {fileID: 8714862202856907223, guid: a7897ad853ae9d6458830c653646215c, type: 3}
+      propertyPath: minDistance
+      value: 1.04
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

@@ -16,36 +16,30 @@ public class Bullet : Projectile
 		projectileType = PROJECTILE_TYPE.BULLET;
 	}
 	// Start is called before the first frame update
-	protected override void Start()
-	{
-
-	}
+	
 
 	// Update is called once per frame
 	protected override void Update()
 	{
-		//기본 업데이트 실행
+		//기본 업데이트 실행(사거리 업뎃)
 		base.Update();
 		//이동 로직
 		transform.Translate(Vector3.forward * speed * Time.deltaTime);
 	}
 
 
-	private void OnTriggerEnter(Collider other)
-	{
-		//공격자가 없는거일시 무시
-		if (attacker == null)
-		{
-			return;
-		}
-		//부딪힌놈 레이어랑 발사자의 레이어가 같으면. 즉 같은팀일시. 무시
-		if (other.gameObject.layer == attacker.gameObject.layer)
-		{
-			return;
-		}
 
-		//
-		OnHit(other);
+	
+	//온트리거에 쓸 재정의함수
+	protected override void OnHit(Collider other)
+	{
+		// 이펙트 출력 로직추가 
+
+		// 부모의 공통 데미지 함수 호출 (단일 대상)
+		ApplyDamage(other, this.curDamage, this.dmgType);
+
+		// 이펙트 및 데미지 연산 후 투사체 소멸
+		ReturnToPool();
 	}
 
 }
