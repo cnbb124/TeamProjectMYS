@@ -404,6 +404,7 @@ public abstract class Unit : MonoBehaviour, IDamageable
 
 	protected void calculTakeDamage(int damageAmount)
 	{
+		
 		if (curShieldRemaining > 0)
 		{
 			int shieldDamage = Mathf.Min(curShieldRemaining, damageAmount);//현지실드량보다 초과해서 -가되면 안됨

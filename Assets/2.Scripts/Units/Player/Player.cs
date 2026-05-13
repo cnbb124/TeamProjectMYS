@@ -151,11 +151,14 @@ public class Player : Unit
 
 	// 늘 회전후 이동하게 rotate부터 호출할것
 
-	//	발사 (Update에서 호출)
-	// 입력 기반 발사 명령 처리.
-	// 실제 투사체 생성은 Shoot() 내부에서 PoolManager 호출 예정.
-	// GetKeyDown 씹힘 방지를 위해 Update에서 호출.
-	
+	/// <summary>
+	/// 	발사 (Update에서 호출)
+	/// 	입력 기반 발사 명령 처리.
+	/// </summary>
+
+	/// 실제 투사체 생성은 Shoot() 내부에서 PoolManager 호출 예정.
+	/// GetKeyDown 씹힘 방지를 위해 Update에서 호출.
+
 	void ShootByInput()
 	{
 		//혹여나 버그걸릴시 다시 매니저 직접인스턴스할것. 스타트속도등으로 버그날수있따함.
@@ -365,7 +368,10 @@ public class Player : Unit
 
 	}
 
-	//사격및 소리재생
+	/// <summary>
+	/// 사격및 소리재생
+	/// </summary>
+	/// <param name="type"></param>
 	//실제 InputManager에서 받아오면 작동할 명령
 	public override void Shoot(PROJECTILE_TYPE type)
 	{
@@ -466,7 +472,9 @@ public class Player : Unit
 
 
 
-	//Shoot 메서드에있는  사격시 사용메서드
+	/// <summary>
+	/// Shoot 메서드에있는  사격시 사용메서드
+	/// </summary>
 	//총알
 	private void ShootBullet()
 	{

@@ -18,6 +18,15 @@ public abstract class Projectile : MonoBehaviour
 	[Header("최대 사거리 설정")]
 	public float maxRange;
 
+
+	//발사좌표(사거리계산용.)
+	protected Vector3 startPos;
+	//이동거리 구하기위한 이전좌표
+	protected Vector3 prevPos;
+	//실제 투사체가 이동한거리
+	protected float traveledDistance = 0f;
+
+
 	[Header("팀킬 가능 여부")]
 	public bool friendlyFire = false;
 	//데미지타입
@@ -42,8 +51,7 @@ public abstract class Projectile : MonoBehaviour
 	// 크리티컬 여부. Init()에서 attacker의 criChance로 판정.
 	// 투사체가 크리 판정 담당 → DamageInfo.isCritical로 전달.
 	protected bool critical;
-	//발사좌표(사거리계산용.)
-	protected Vector3 startPos;
+
 
 	protected virtual void Awake()
 	{
@@ -58,12 +66,22 @@ public abstract class Projectile : MonoBehaviour
 	// Update is called once per frame
 	protected virtual void Update()
 	{
+
 		//사거리 벗어날시
-		//출발지점과 현재지점이>=최대사거리 도달혹은초과시
-		if (Vector3.Distance(startPos, transform.position) >= maxRange)
+		//출발지점과 현재이동한거리가>=최대사거리 도달혹은초과시
+		traveledDistance += (transform.position - prevPos).magnitude;
+		prevPos = transform.position;
+
+		if (traveledDistance >= maxRange)
 		{
-			ReturnToPool();//풀로 돌리기.
+			ReturnToPool();
 		}
+	
+		//직선투사체에만 현재 사용안함.
+		//if (Vector3.Distance(startPos, transform.position) >= maxRange)
+		//{
+		//	ReturnToPool();//풀로 돌리기.
+		//}
 	}
 
 	//활성화시 넣을 정보. 플레이어에서 호출
@@ -74,9 +92,11 @@ public abstract class Projectile : MonoBehaviour
 	{
 		this.startPos = startPos;//출발할좌표
 		this.attacker = attacker;//공격자(쏜사람)
+		traveledDistance = 0f;
+		prevPos = startPos;
 
 
-		
+
 		//투사체 데미지 최신화 (풀링오염방지)
 
 		curDamage = baseDamage;//차후 로직 추가 필요.
@@ -131,6 +151,7 @@ public abstract class Projectile : MonoBehaviour
 
 	protected virtual void OnTriggerEnter(Collider other)
 	{
+		//Debug.Log("OnTrigger발생");
 		
 		//다른 시야감지용 트리거와 충돌방지.차후 수정필요할수도.
 		if (other.isTrigger)
@@ -150,26 +171,37 @@ public abstract class Projectile : MonoBehaviour
 	//온트리거 재정의할 함수들
 	protected virtual void OnHit(Collider other)
 	{
-		Debug.Log($"[OnHit 발생] 충돌 대상: {other.gameObject.name} | 레이어: {LayerMask.LayerToName(other.gameObject.layer)}");
+		//Debug.Log($"[OnHit 발생] 충돌 대상: {other.gameObject.name} | 레이어: {LayerMask.LayerToName(other.gameObject.layer)}");
 	}
 
-	//데미지 허용 메서드
+
+	
+	/// <summary>
+	/// 데미지 허용 메서드(온힛에서호출)
+	///  </summary>
+	/// <param name="targetCollider"> 충돌대상의 collider정보</param>
+	/// <param name="damage"> 계산된 최종 데미지</param>
+	/// <param name="currentDmgType"> 데미지 타입정보</param>
+	///
 	protected void ApplyDamage(Collider targetCollider, int damage, DAMAGE_TYPE currentDmgType)
 	{
-		IDamageable target = targetCollider.GetComponent<IDamageable>();
+		
+		IDamageable target = targetCollider.GetComponentInParent<IDamageable>();
 
 		// 데미지를 받을 수 없는 대상(벽 등)이면 데미지 로직 생략
 		if (target == null)
 		{
+			Debug.Log("ApplyDamage 상대가 null");
 			return;
 		}
 
 		// 아군 타격 방지 (오인사격 Off 상태일 때 데미지 생략)
 		if (IsSameTeam(targetCollider) && !friendlyFire)
 		{
+			Debug.Log("ApplyDamage 상대가 같은팀");
 			return;
 		}
-
+		Debug.Log("ApplyDamage 실제 데미지발생");
 		// 데미지 정보 생성 및 전달
 		DamageInfo damageInfo = new DamageInfo
 		{
