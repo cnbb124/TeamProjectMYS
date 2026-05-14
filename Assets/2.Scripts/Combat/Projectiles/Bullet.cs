@@ -8,6 +8,11 @@ using UnityEngine;
 
 public class Bullet : Projectile
 {
+	//스피드설정
+	[Header("총알 속도 설정")]
+	public float speed;
+
+
 	protected override void Awake()
 	{
 		base.Awake();
@@ -37,9 +42,10 @@ public class Bullet : Projectile
 	protected override void OnHit(Collider other)
 	{
 		base.OnHit(other);
-		// 이펙트 출력 로직추가 
+		// 이펙트 출력 (사운드,파티클)로직추가 
+
 		SoundManager.Instance.PlaySFX3DAtPosition(SOUND_TYPE.SFX_BULLETHIT, this.transform.position);
-		//부모의 공통 데미지 함수 호출 (단일 대상)
+		//공통 데미지 함수 호출 (단일 대상)
 		ApplyDamage(other, this.curDamage, this.dmgType);
 
 		// 이펙트 및 데미지 연산 후 투사체 소멸

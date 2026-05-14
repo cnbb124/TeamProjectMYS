@@ -25,11 +25,15 @@ using UnityEngine;
 // =====================================================================
 public class Missile : Projectile, IExplodable
 {
-
+	//[SerializeField]
+	//private int hitsArraySize = 30;
 	[Space(5)]
 	[Header("<size=18>[미사일 설정]</size>")]
 	[Header("폭발 범위 세팅")]
 	public float explosionRadius = 8f;
+
+	private Collider[] explosionHits = new Collider[30]; //맞은것들 콜라이더 체크할배열 필요하면 스타트나 이닛쪽으로
+	private HashSet<IDamageable> damagedTargets = new HashSet<IDamageable>(); //중복데미지를 방지하기위한 해쉬셋
 
 	[Space(5)]
 	[Header("--유도 설정--")]
@@ -56,8 +60,9 @@ public class Missile : Projectile, IExplodable
 	[Tooltip("발사 시작 속도. accelerateTime 동안 maxSpeed로 가속.")]
 	public float launchSpeed = 10f;
 
-	[Tooltip("최고 속도.")]
-	public float maxSpeed = 60f;
+	//스피드설정
+	[Header("최대 도달 속도 설정")]
+	public float maxSpeed;
 
 	//현재속도
 	private float curSpeed;
@@ -84,7 +89,12 @@ public class Missile : Projectile, IExplodable
 
 	}
 
-	//미사일 기본 Init (락온x)
+	/// <summary>
+	/// 미사일 기본 Init (락온x)
+	/// </summary>
+	/// <param name="startPos"> 발사되는좌표</param>
+	/// <param name="dir"> 발사되는방향</param>
+	/// <param name="attacker">쏜유닛</param>
 	public override void Init(Vector3 startPos, Vector3 dir, Unit attacker)
 	{
 		base.Init(startPos, dir, attacker);
@@ -105,7 +115,13 @@ public class Missile : Projectile, IExplodable
 
 	}
 
-	// 타겟까지 같이 넘기는 오버로드(락온o)
+	/// <summary>
+	/// 타겟까지 같이 넘기는 오버로드(락온o)
+	/// </summary>
+	/// <param name="startPos"> 발사되는좌표</param>
+	/// <param name="dir"> 발사되는방향</param>
+	/// <param name="attacker">쏜유닛</param>
+	/// <param name="target"> 락온된 타겟, null허용.</param>
 	public void Init(Vector3 startPos, Vector3 dir, Unit attacker, Transform target)
 	{
 		targetTr = target;
@@ -187,6 +203,7 @@ public class Missile : Projectile, IExplodable
 	protected override void OnHit(Collider other)
 	{
 		base.OnHit(other);
+		//Debug.Log("미사일 OnHit발동");
 		// 폭발 실행 후 투사체 소멸
 		Explode(explosionInfo);
 		ReturnToPool();
@@ -195,26 +212,44 @@ public class Missile : Projectile, IExplodable
 
 	public void Explode(ExplosionInfo explosionInfo)
 	{
-		//이펙트 출력 로직 추가
+		
+		//이펙트 출력 로직 추가(사운드,파티클)
 
-		//맞은것들의 충돌박스 싹다가져오기
-		Collider[] hits = Physics.OverlapSphere(transform.position, explosionInfo.explosionRadius);
-
-
-		// 중복 타격 방지를 위한 HashSet 추가//차후 확인및보강필요
-		HashSet<IDamageable> damagedTargets = new HashSet<IDamageable>();
+		//맞은것들의 충돌박스 갯수 카운트
+		int hitCount = Physics.OverlapSphereNonAlloc(transform.position, explosionInfo.explosionRadius, explosionHits);
+		//Debug.Log($"hitCount: {hitCount}, radius: {explosionInfo.explosionRadius}");
+		// 중복 타격 방지를 위한 HashSet 초기화
+		damagedTargets.Clear();
+		
+		
 
 
 		//맞은것들 전부처리
-		foreach (Collider hit in hits)
+		for (int i =0; i< hitCount;i++)
 		{
-			IDamageable target = hit.GetComponentInParent<IDamageable>();
-
+			//맞은것들중 부모에 데미지받는애들 갖고오기
+			IDamageable target = explosionHits[i].GetComponentInParent<IDamageable>();
+			
+			// 타격 대상 기록 . 중복이없으면
 			if (target != null && !damagedTargets.Contains(target))
 			{
-				ApplyDamage(hit, explosionInfo.explosionDamage, this.dmgType);
-				damagedTargets.Add(target); // 타격 대상 기록 차후확인및보강필요
+
+				// 거리 비례 데미지 감쇠 (중심 100%, 외곽 50%)
+				float distRatio = 1f - (Vector3.Distance(transform.position, explosionHits[i].transform.position)/explosionInfo.explosionRadius);
+				int finalDamage = Mathf.RoundToInt(explosionInfo.explosionDamage * Mathf.Lerp(0.5f, 1f, distRatio));
+				//데미지 실제적용
+				ApplyDamage(target,explosionHits[i], finalDamage, this.dmgType);
+				//중복체크용 해쉬셋ADd
+				damagedTargets.Add(target);
 			}
 		}
+	}
+
+
+	protected override void OnDisable()
+	{
+		base.OnDisable();
+		targetTr = null;
+		aliveTime = 0f;
 	}
 }

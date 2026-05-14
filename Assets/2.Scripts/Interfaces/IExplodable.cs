@@ -7,6 +7,7 @@ public struct ExplosionInfo
 	public float explosionRadius;//Æø¹ß¹Ý°æ
 	public int explosionDamage;//Æø¹ßÇÇÇØ
 	
+	
 }
 public interface IExplodable
 {

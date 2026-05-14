@@ -1,19 +1,20 @@
 using System.Collections;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
-using Unity.VisualScripting;
+
 using UnityEngine;
-using UnityEngine.PlayerLoop;
+
 
 [System.Serializable]
-public class FirePosEntry
+
+public class FirePosEntry///총구 좌표 연결용
 {
 	public FIREPOS_TYPE type;
 	public Transform pos;
 }
 
 [System.Serializable]
-public class BoostPosEntry
+
+public class BoostPosEntry///부스터(추진기 쓰러스터)좌표 연결용
 {
 	public BOOSTPOS_TYPE type;
 	public Transform pos;

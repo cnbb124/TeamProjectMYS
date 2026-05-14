@@ -11,9 +11,7 @@ public abstract class Projectile : MonoBehaviour
 {
 
 	[Header("<size=18>[투사체 공통 스탯 기본 설정]</size>")]
-	//스피드설정
-	[Header("속도 설정")]
-	public float speed;
+	
 	//최대사거리
 	[Header("최대 사거리 설정")]
 	public float maxRange;
@@ -90,11 +88,16 @@ public abstract class Projectile : MonoBehaviour
 	//출발좌표(firePos),향할방향, 공격자(쏜사람)
 	public virtual void Init(Vector3 startPos, Vector3 dir, Unit attacker)
 	{
-		this.startPos = startPos;//출발할좌표
-		this.attacker = attacker;//공격자(쏜사람)
+		//출발한 좌표 저장
+		this.startPos = startPos;
+		//공격자 저장
+		this.attacker = attacker;
 		traveledDistance = 0f;
 		prevPos = startPos;
-
+		//출발할좌표로 현재좌표 초기화
+		transform.position = startPos;
+		//향할 방향초기화
+		transform.forward = dir;
 
 
 		//투사체 데미지 최신화 (풀링오염방지)
@@ -114,10 +117,7 @@ public abstract class Projectile : MonoBehaviour
 		{
 			gameObject.layer = (int)LAYER_TYPE.Projectile_Enemy;
 		}
-		//출발할좌표로 초기화
-		transform.position = startPos;
-		//향할 방향초기화
-		transform.forward = dir;
+		
 
 
 	}
@@ -179,7 +179,7 @@ public abstract class Projectile : MonoBehaviour
 	/// <summary>
 	/// 데미지 허용 메서드(온힛에서호출)
 	///  </summary>
-	/// <param name="targetCollider"> 충돌대상의 collider정보</param>
+	/// <param name="targetCollider"> 피격대상의 collider정보</param>
 	/// <param name="damage"> 계산된 최종 데미지</param>
 	/// <param name="currentDmgType"> 데미지 타입정보</param>
 	///
@@ -216,6 +216,46 @@ public abstract class Projectile : MonoBehaviour
 		target.TakeDamage(damageInfo);
 	}
 
+
+	/// <summary>
+	/// 스플뎀용 오버라이드
+	/// </summary>
+	/// <param name="target"> 피격자</param>
+	/// <param name="targetCollider"> 피격대상의 collider정보</param>
+	/// <param name="damage"> 계산된 최종 데미지</param>
+	/// <param name="currentDmgType"> 데미지 타입정보</param>
+	protected void ApplyDamage(IDamageable target, Collider targetCollider, int damage, DAMAGE_TYPE currentDmgType)
+	{
+		// 데미지를 받을 수 없는 대상(벽 등)이면 데미지 로직 생략
+		if (target == null)
+		{
+			Debug.Log("ApplyDamage 상대가 null");
+			return;
+		}
+
+		// 아군 타격 방지 (오인사격 Off 상태일 때 데미지 생략)
+		if (IsSameTeam(targetCollider) && !friendlyFire)
+		{
+			Debug.Log("ApplyDamage 상대가 같은팀");
+			return;
+		}
+		DamageInfo damageInfo = new DamageInfo
+		{
+			type = currentDmgType,
+			damageAmount = damage,
+			isCritical = critical,
+			hitPosition = targetCollider.transform.position,
+			hitDiriection = (targetCollider.transform.position - transform.position).normalized,
+			attacker = this.attacker != null ? this.attacker.gameObject : null
+		};
+		target.TakeDamage(damageInfo);
+	}
+
+
+
+	/// <summary>
+	/// 투사체를 풀로 반납. 소멸 시 반드시 이걸로 처리.
+	/// </summary>
 	protected void ReturnToPool()
 	{
 		//gameObject.SetActive(false);풀매니저에서 비활성화로 변경
