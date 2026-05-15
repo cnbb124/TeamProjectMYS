@@ -8,3 +8,16 @@ public enum UNIT_STATE
 	HIT,//필요한가?
 }
 
+public enum UNIT_PLAYER_STATE
+{
+	DODGE,
+	BOOSTING,
+	MOVING
+}
+public enum UNIT_ENEMY_STATE
+{
+	
+	//차후 FSM관련추가?
+
+}
+
