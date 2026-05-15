@@ -154,12 +154,12 @@ public abstract class Projectile : MonoBehaviour
 		//Debug.Log("OnTrigger발생");
 
 		//다른 시야감지용 트리거와 충돌방지.차후 수정필요할수도.
-		if (other.gameObject.layer == (int)LAYER_TYPE.Trigger_Vision | other.gameObject.layer == (int)LAYER_TYPE.Trigger_Detection)
+		if (other.gameObject.layer == (int)LAYER_TYPE.Trigger_Vision || other.gameObject.layer == (int)LAYER_TYPE.Trigger_Detection)
 		{
 			return;
 		}
 		//발사자 본인과의 즉각 충돌 방지
-		if (attacker != null && other.gameObject == attacker.gameObject)
+		if (attacker != null && other.transform.root == attacker.transform.root)
 		{
 			return;
 		}

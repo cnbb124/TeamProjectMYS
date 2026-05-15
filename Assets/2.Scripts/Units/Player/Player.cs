@@ -56,6 +56,10 @@ public class Player : Unit
 	[Tooltip("현재 레벨에서 다음 레벨까지 필요한 경험치")]
 	public int expToNextLevel = 100;
 
+	// ==================락온 시스템==================
+	[Header("락온 시스템 (인스펙터에서 할당)")]
+	public MissileLockOnSystem lockOnSystem;
+
 
 	protected override void Awake()
 	{
@@ -400,6 +404,11 @@ public class Player : Unit
 					_sound.PlaySFX3DAtPosition(_playSoundType, transform.position);
 					ShootMissile(FIREPOS_TYPE.MISSILE_RIGHT);
 				}
+				//좌우 미사일 발사 처리가 모두 끝난 후, 마지막에 한 번만 락온을 해제
+				if (lockOnSystem != null && lockOnSystem.IsLocked)
+				{
+					lockOnSystem.ClearLock();
+				}
 				break;
 
 
@@ -505,7 +514,16 @@ public class Player : Unit
 		// curFirePos에서 실제발사로직필요// poolmanager 구현 뒤 넣기
 		//ex.PoolManager.Instance.GetMissile(curFirePos.position, curFirePos.forward, this);
 		Missile newMissile = _pool.GetMissile();
-		newMissile.Init(curFirePos.position, curFirePos.forward, this);
+		// 락온 확정 시 타겟 넘기기, 아니면 직진 미사일로 발사
+		if (lockOnSystem != null && lockOnSystem.IsLocked)
+		{
+			newMissile.Init(curFirePos.position, curFirePos.forward, this, lockOnSystem.LockedTarget);
+			
+		}
+		else
+		{
+			newMissile.Init(curFirePos.position, curFirePos.forward, this);
+		}
 	}
 
 

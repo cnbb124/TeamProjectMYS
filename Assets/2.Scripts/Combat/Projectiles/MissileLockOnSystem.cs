@@ -20,7 +20,7 @@ public class MissileLockOnSystem : MonoBehaviour
 	[Header("락온 확정까지 필요한 시간 (초)")]
 	public float lockOnRequiredTime = 1.2f;
 
-	[Header("락온 대상 레이어 마스크 (적 레이어만 지정)")]
+	[Header("락온 대상이될 레이어 마스크 (적 레이어만 지정)")]
 	public LayerMask targetLayerMask;
 
 	[Header("락온 전방 각도 제한 (이 각도 안에 있어야 락온 가능)")]
@@ -47,10 +47,10 @@ public class MissileLockOnSystem : MonoBehaviour
 
 	private void Update()
 	{
-		// 1. 범위+각도 안의 가장 가까운 적 탐지
+		// 범위+각도 안의 가장 가까운 적 탐지
 		Transform candidate = FindBestTarget();
 
-		// 2. 후보가 바뀌면 타이머 리셋
+		// 후보가 바뀌면 타이머 리셋
 		if (candidate != LockOnCandidate)
 		{
 			LockOnCandidate = candidate;
@@ -59,13 +59,13 @@ public class MissileLockOnSystem : MonoBehaviour
 			LockedTarget = null;
 		}
 
-		// 3. 후보가 있으면 타이머 누적
+		// 후보가 있으면 타이머 누적
 		if (LockOnCandidate != null)
 		{
 			lockOnTimer += Time.deltaTime;
 			LockOnProgress = Mathf.Clamp01(lockOnTimer / lockOnRequiredTime);
 
-			// 4. 시간 채우면 락온 확정
+			// 시간 채우면 락온 확정
 			if (lockOnTimer >= lockOnRequiredTime)
 			{
 				IsLocked = true;
@@ -94,20 +94,29 @@ public class MissileLockOnSystem : MonoBehaviour
 		foreach (Collider hit in hits)
 		{
 			// 자기 자신 제외
-			if (ownerUnit != null && hit.gameObject == ownerUnit.gameObject) continue;
+			if (ownerUnit != null && hit.gameObject == ownerUnit.gameObject)
+			{
+				continue;
+			}
 
 			Vector3 dirToTarget = (hit.transform.position - transform.position).normalized;
 			float angle = Vector3.Angle(transform.forward, dirToTarget);
 
 			// 전방 각도 안에 있어야만 락온 가능
-			if (angle > lockOnAngle * 0.5f) continue;
+			if (angle > lockOnAngle * 0.5f)
+			{
+				continue;
+			}
 
 			// 시야 차단 체크 (장애물이 막고 있으면 스킵)
 			if (Physics.Raycast(transform.position, dirToTarget,
 				out RaycastHit rayHit, lockOnRange))
 			{
 				// 레이캐스트가 타겟 레이어 아닌 다른 걸 먼저 맞으면 차단된 것
-				if (rayHit.collider != hit) continue;
+				if (rayHit.collider != hit)
+				{
+					continue;
+				}
 			}
 
 			float dist = Vector3.Distance(transform.position, hit.transform.position);
