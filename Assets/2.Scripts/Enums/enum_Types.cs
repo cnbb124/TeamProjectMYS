@@ -11,6 +11,9 @@ public enum LAYER_TYPE
 	Projectile_Player = 8,
 	Projectile_Enemy = 9,
 	Environment = 10,
+	//임시
+	Trigger_Vision = 11,
+	Trigger_Detection = 12
 }
 
 
@@ -67,11 +70,11 @@ public enum SOUND_TYPE
 {
 	BGM_LOBBY,          // 정거장(상점) 배경음
 	BGM_BATTLE,         // 우주 전투 배경음
-	BGM_1F,				// 1층 배경음
-	BGM_B2,				// 지하2층배경음
+	BGM_1F,             // 1층 배경음
+	BGM_B2,             // 지하2층배경음
 
 
-						//UI관련
+	//UI관련
 	SFX_DICE_ROLL,      // 주사위 굴리는 소리
 	SFX_UI_CLICK,       // 버튼 클릭음
 						// 발사음
