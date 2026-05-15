@@ -1630,6 +1630,7 @@ MonoBehaviour:
   maxShieldRemaining: 150
   shieldRegainDelay: 5
   shieldRegainRate: 15
+  isShieldRegaining: 0
   shield: {fileID: 7089524994869286018}
   maxArmor: 100
   defense: 3
@@ -1643,8 +1644,6 @@ MonoBehaviour:
   boostRegainDelay: 0
   boostRegainRate: 20
   speedMultiPlier: 0
-  viewDistance: 0
-  lockOnDistance: 0
   firePositions:
   - type: 0
     pos: {fileID: 2198507826871783684}
@@ -1669,6 +1668,7 @@ MonoBehaviour:
   curHpRemaining: 0
   curShieldRemaining: 0
   curArmorRemaining: 0
+  curSpeed: 0
   curBoostRemaining: 0
   _playSoundType: 0
   xSensitivity: 200
@@ -1691,11 +1691,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   lockOnRange: 1800
-  lockOnRequiredTime: 1.2
+  lockOnRequiredTime: 0.8
   targetLayerMask:
     serializedVersion: 2
-    m_Bits: 128
-  lockOnAngle: 60.8
+    m_Bits: 16384
+  lockOnAngle: 110
   LockOnCandidate: {fileID: 0}
   LockedTarget: {fileID: 0}
   LockOnProgress: 0
@@ -2901,8 +2901,8 @@ GameObject:
   - component: {fileID: 3967831173901859461}
   - component: {fileID: 4333072450207505953}
   - component: {fileID: 2814246442707632204}
-  m_Layer: 6
-  m_Name: HItBox
+  m_Layer: 13
+  m_Name: HItBox_Player
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

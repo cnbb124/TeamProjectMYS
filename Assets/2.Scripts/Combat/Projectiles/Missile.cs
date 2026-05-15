@@ -157,36 +157,44 @@ public class Missile : Projectile, IExplodable
 	}
 
 
-	private void Steer()
-	{
-		//비례항법기반 미사일 유도 조종 메서드 AI참조
+    private void Steer()
+    {
+        //비례항법기반 미사일 유도 조종 메서드 AI참조
+        //방향벡터설정
+        Vector3 toTarget = targetTr.position - transform.position;
+        float dist = toTarget.magnitude;
+        //LineofSight, 미사일에서 타겟을 바라보는 방향
+        Vector3 los = toTarget.normalized;
 
-		//방향벡터설정
-		Vector3 toTarget = targetTr.position - transform.position;
-		float dist = toTarget.magnitude;
+        //타겟의 속도추정
+        Vector3 targetVelocity = (targetTr.position - prevTargetPos) / Time.deltaTime;
+        prevTargetPos = targetTr.position;
 
-		//타겟의 속도추정
-		Vector3 targetVelocity = (targetTr.position - prevTargetPos) / Time.deltaTime;
-		prevTargetPos = targetTr.position;
-		//상대속도 구하기타겟의 속도에서 미사일의 현재 속도를 빼서, 두 객체가 서로에게 접근하거나 멀어지는 상대적인 속도구하기
-		Vector3 closingVelocity = targetVelocity - transform.forward * curSpeed;
-		//LineofSight, 미사일에서 타겟을 바라보는 방향
-		Vector3 los = toTarget.normalized;
-		//시선변화율
-		Vector3 losRate = Vector3.Cross(los, closingVelocity) / Mathf.Max(dist, 0.1f);
-		//
-		Vector3 accelCmd = navGain * curSpeed * losRate;
+        Vector3 desiredDir;
 
-		Vector3 desiredDir = accelCmd.sqrMagnitude > 0.001f ? (transform.forward + accelCmd * Time.deltaTime).normalized : los;
+        // 타겟이 거의 정지 상태면 단순 추적
+        if (targetVelocity.magnitude < 0.5f)
+        {
+            desiredDir = los;
+        }
+		//이동중일경우
+        else
+        {
+            //상대속도 구하기
+            Vector3 closingVelocity = targetVelocity - transform.forward * curSpeed;
+            //시선변화율
+            Vector3 losRate = Vector3.Cross(los, closingVelocity) / Mathf.Max(dist, 0.1f);
+            Vector3 accelCmd = navGain * curSpeed * losRate;
+            desiredDir = accelCmd.sqrMagnitude > 0.001f ? (transform.forward + accelCmd * Time.deltaTime).normalized  : los;
+        }
 
-		// turnRate로 선회 각도 제한
-		Vector3 newDir = Vector3.RotateTowards(transform.forward, desiredDir, turnRate * Mathf.Deg2Rad * Time.deltaTime, 0f);
+        // turnRate로 선회 각도 제한
+        Vector3 newDir = Vector3.RotateTowards(transform.forward, desiredDir, turnRate * Mathf.Deg2Rad * Time.deltaTime, 0f);
+        transform.forward = newDir;
+        transform.position += transform.forward * curSpeed * Time.deltaTime;
+    }
 
-		transform.forward = newDir;
-		transform.position += transform.forward * curSpeed * Time.deltaTime;
-	}
-
-	protected override void OnTriggerEnter(Collider other)
+    protected override void OnTriggerEnter(Collider other)
 	{
 		//최소거리 도달안했으면 트리거무시
 		if (traveledDistance < armDistance)

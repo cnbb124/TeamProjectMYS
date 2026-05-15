@@ -45,7 +45,7 @@ public class Player : Unit
 	public float rollSensitivity = 120f;
 
 
-	// ==================플레이어용 레벨관련 스탯==================
+	// ==================플레이어용==================
 	[Header("경험치/레벨")]
 	[Tooltip("현재 레벨. 최소 1")]
 	public int level = 1;//차후 mathf.max치로 조정
@@ -55,6 +55,8 @@ public class Player : Unit
 
 	[Tooltip("현재 레벨에서 다음 레벨까지 필요한 경험치")]
 	public int expToNextLevel = 100;
+
+	
 
 	// ==================락온 시스템==================
 	[Header("락온 시스템 (인스펙터에서 할당)")]
@@ -81,7 +83,7 @@ public class Player : Unit
 		base.Update(); //FSM, 실드/부스트 회복 호출
 					   // 입력처리 - InputManager 구현 뒤 여기서 호출
 					   // ex. InputManager.Instance.HandleInput(this);
-
+		
 		if (_input == null)
 		{
 			return;
@@ -386,7 +388,7 @@ public class Player : Unit
 		switch (type)
 		{
 			case PROJECTILE_TYPE.BULLET:
-				_sound.PlaySFX3DAtPosition(_playSoundType, transform.position, 0.9f, 1.1f);//총알소리 살짝랜덤하게
+				_sound.PlaySFX3DAtPosition(_playSoundType, transform.position, 0.7f, 1.2f);//총알소리 살짝랜덤하게
 				ShootBullet();
 				break;
 			case PROJECTILE_TYPE.LASER:
