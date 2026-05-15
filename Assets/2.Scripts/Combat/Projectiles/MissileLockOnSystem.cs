@@ -20,7 +20,7 @@ public class MissileLockOnSystem : MonoBehaviour
 	[Header("락온 확정까지 필요한 시간초")]
 	public float lockOnRequiredTime = 1.2f;
 
-	[Header("락온 대상이될 레이어 마스크 (상대 Unit 레이어만 지정)")]
+	[Header("락온 대상이될 레이어 마스크 (상대 Unit HitBox 레이어만 지정)")]
 	public LayerMask targetLayerMask;
 
 	[Header("락온 전방 각도 제한 (이 각도 안에 있어야 락온 가능)")]
