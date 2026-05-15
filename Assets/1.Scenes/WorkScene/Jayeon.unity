@@ -130,10 +130,18 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1788722382}
     m_Modifications:
-    - target: {fileID: 1295354817333113809, guid: a7897ad853ae9d6458830c653646215c, type: 3}
-      propertyPath: lockOnSystem
-      value: 
-      objectReference: {fileID: 1568914425}
+    - target: {fileID: 1161755328960943635, guid: a7897ad853ae9d6458830c653646215c, type: 3}
+      propertyPath: lockOnAngle
+      value: 90
+      objectReference: {fileID: 0}
+    - target: {fileID: 1161755328960943635, guid: a7897ad853ae9d6458830c653646215c, type: 3}
+      propertyPath: lockOnRange
+      value: 1800
+      objectReference: {fileID: 0}
+    - target: {fileID: 1161755328960943635, guid: a7897ad853ae9d6458830c653646215c, type: 3}
+      propertyPath: lockOnRequiredTime
+      value: 0.8
+      objectReference: {fileID: 0}
     - target: {fileID: 3107650116710039119, guid: a7897ad853ae9d6458830c653646215c, type: 3}
       propertyPath: m_Name
       value: TestUnit_Player
@@ -181,10 +189,7 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 3107650116710039119, guid: a7897ad853ae9d6458830c653646215c, type: 3}
-      insertIndex: 3
-      addedObject: {fileID: 1568914425}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: a7897ad853ae9d6458830c653646215c, type: 3}
 --- !u!1 &401418424
 GameObject:
@@ -312,11 +317,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 50, y: -30, z: 0}
---- !u!1 &563824346 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 3107650116710039119, guid: a7897ad853ae9d6458830c653646215c, type: 3}
-  m_PrefabInstance: {fileID: 228176548}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &673790073
 GameObject:
   m_ObjectHideFlags: 0
@@ -1148,28 +1148,6 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 6433512454957104831, guid: a7897ad853ae9d6458830c653646215c, type: 3}
   m_PrefabInstance: {fileID: 228176548}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &1568914425
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 563824346}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a547208e588a6c04ebc7cf397cd9034d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  lockOnRange: 1800
-  lockOnRequiredTime: 1.2
-  targetLayerMask:
-    serializedVersion: 2
-    m_Bits: 128
-  lockOnAngle: 60.8
-  LockOnCandidate: {fileID: 0}
-  LockedTarget: {fileID: 0}
-  LockOnProgress: 0
-  IsLocked: 0
 --- !u!1 &1622319570
 GameObject:
   m_ObjectHideFlags: 0

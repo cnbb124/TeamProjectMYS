@@ -45,10 +45,7 @@ public abstract class Unit : MonoBehaviour, IDamageable
 	public float shieldRegainRate; //실드회복수치
 	private float shieldRegainTimer = 0f;//딜레이 시간까지잴 타이머
 	private bool isShieldRegaining = false; //회복중인지 여부
-
-
-
-
+	//실드연결용
 	public GameObject shield;
 
 	[Header("Armor - 자동회복x")]
@@ -355,15 +352,13 @@ public abstract class Unit : MonoBehaviour, IDamageable
 		
 	}
 
+	/// <summary>
+	/// Unit TakeDamage(IDamageable 상속시 필수구현하는 메서드) 
+	/// </summary>
+	/// <param name="info"> 데미지정보구조체 받음</param>
 	public virtual void TakeDamage(DamageInfo info)
 	{
-		//피격 애니메이션재생 필요
-		//피격 사운드재생 필요
-		_playSoundType = GetPlaySoundType(info);
-		_sound.PlaySFX3DAtPosition(_playSoundType, info.hitPosition);
-		//피격 카메라무빙필요
-
-		//크리면 데미지 배율, 아니면 그냥 데미지
+		
 
 
 		//info.isCritical = Random.Range(0f, 100f) < criChance; //크리판정은 투사체에서 직접담당.
@@ -372,11 +367,11 @@ public abstract class Unit : MonoBehaviour, IDamageable
 		shieldRegainTimer = 0f;
 		isShieldRegaining = false;
 
-		//피격 데미지수치필요(실드있을시, 없을시)
+		//피격 데미지수치필요(실드있을시, 없을시),실제로 데미지받음
 		calculTakeDamage(damageAmount);
 
 
-		//피격 방향에 따른 이동(반동)피요
+		//피격 방향에 따른 리액션(사운드,이펙트,카메라흔들림, 혹은 밀려남등)
 		OnHitReaction(info);
 
 		if (curHpRemaining <= 0)
@@ -386,12 +381,29 @@ public abstract class Unit : MonoBehaviour, IDamageable
 		}
 
 	}
-	//피격 반동(카메라 쉐이크, 넉백등 자식에서 override)
+	
+	/// <summary>
+	/// 피격 반동(카메라 쉐이크, 넉백등 자식에서 override)
+	/// </summary>
+	/// <param name="info"></param>
 	protected virtual void OnHitReaction(DamageInfo info)
 	{
+		//피격 애니메이션재생 필요
+		//피격 사운드재생 필요
+		_playSoundType = GetPlaySoundType(info);
+		_sound.PlaySFX3DAtPosition(_playSoundType, info.hitPosition);
+		//피격 카메라무빙필요
 
+		//크리면 데미지 배율, 아니면 그냥 데미지
+		//데미지인포에서 총알인지 폭발인지 레이저인지에 따라서
 	}
-	//사망처리(오브젝트 풀반납, 비활성화등. 플레이어와는 다르게 처리할거기때문에 자식에서 override)
+
+
+
+
+	/// <summary>
+	/// 사망처리(오브젝트 풀반납, 비활성화등. 플레이어와는 다르게 처리할거기때문에 자식에서 override)
+	/// </summary>
 	protected virtual void Die()
 	{
 

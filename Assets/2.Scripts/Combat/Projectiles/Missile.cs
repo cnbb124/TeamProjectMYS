@@ -49,7 +49,7 @@ public class Missile : Projectile, IExplodable
 	public float navGain = 3f;
 
 
-	[Header("락온 목표")]
+	[Header("락온되는 목표(확인용)")]
 	public Transform targetTr;
 
 
@@ -160,7 +160,7 @@ public class Missile : Projectile, IExplodable
 	private void Steer()
 	{
 		//비례항법기반 미사일 유도 조종 메서드 AI참조
-		Vector3 temp = transform.forward;
+
 		//방향벡터설정
 		Vector3 toTarget = targetTr.position - transform.position;
 		float dist = toTarget.magnitude;
@@ -176,11 +176,11 @@ public class Missile : Projectile, IExplodable
 		Vector3 losRate = Vector3.Cross(los, closingVelocity) / Mathf.Max(dist, 0.1f);
 		//
 		Vector3 accelCmd = navGain * curSpeed * losRate;
-		
-		Vector3 desiredDir = accelCmd.sqrMagnitude > 0.001f? (transform.forward + accelCmd * Time.deltaTime).normalized : los;
+
+		Vector3 desiredDir = accelCmd.sqrMagnitude > 0.001f ? (transform.forward + accelCmd * Time.deltaTime).normalized : los;
 
 		// turnRate로 선회 각도 제한
-		Vector3 newDir = Vector3.RotateTowards(transform.forward, desiredDir,turnRate * Mathf.Deg2Rad * Time.deltaTime, 0f);
+		Vector3 newDir = Vector3.RotateTowards(transform.forward, desiredDir, turnRate * Mathf.Deg2Rad * Time.deltaTime, 0f);
 
 		transform.forward = newDir;
 		transform.position += transform.forward * curSpeed * Time.deltaTime;
@@ -191,7 +191,7 @@ public class Missile : Projectile, IExplodable
 		//최소거리 도달안했으면 트리거무시
 		if (traveledDistance < armDistance)
 		{
-			return; 
+			return;
 		}
 		//그게아니면 판정주기
 		base.OnTriggerEnter(other);
@@ -212,7 +212,7 @@ public class Missile : Projectile, IExplodable
 
 	public void Explode(ExplosionInfo explosionInfo)
 	{
-		
+
 		//이펙트 출력 로직 추가(사운드,파티클)
 
 		//맞은것들의 충돌박스 갯수 카운트
@@ -220,26 +220,26 @@ public class Missile : Projectile, IExplodable
 		//Debug.Log($"hitCount: {hitCount}, radius: {explosionInfo.explosionRadius}");
 		// 중복 타격 방지를 위한 HashSet 초기화
 		damagedTargets.Clear();
-		
-		
+
+
 
 
 		//맞은것들 전부처리
-		for (int i =0; i< hitCount;i++)
+		for (int i = 0; i < hitCount; i++)
 		{
 			//맞은것들중 부모에 데미지받는애들 갖고오기
 			IDamageable target = explosionHits[i].GetComponentInParent<IDamageable>();
-			
+
 			// 타격 대상 기록 . 중복이없으면
 			if (target != null && !damagedTargets.Contains(target))
 			{
 
 				// 거리 비례 데미지 감쇠 (중심 100%, 외곽 50%)
-				float distRatio = 1f - (Vector3.Distance(transform.position, explosionHits[i].transform.position)/explosionInfo.explosionRadius);
+				float distRatio = 1f - (Vector3.Distance(transform.position, explosionHits[i].transform.position) / explosionInfo.explosionRadius);
 				int finalDamage = Mathf.RoundToInt(explosionInfo.explosionDamage * Mathf.Lerp(0.5f, 1f, distRatio));
 				//데미지 실제적용
-				ApplyDamage(target,explosionHits[i], finalDamage, this.dmgType);
-				//중복체크용 해쉬셋ADd
+				ApplyDamage(target, explosionHits[i], finalDamage, this.dmgType);
+				//중복체크용 해쉬셋Add
 				damagedTargets.Add(target);
 			}
 		}
