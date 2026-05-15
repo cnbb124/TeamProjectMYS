@@ -11,7 +11,7 @@ public abstract class Projectile : MonoBehaviour
 {
 
 	[Header("<size=18>[투사체 공통 스탯 기본 설정]</size>")]
-	
+
 	//최대사거리
 	[Header("최대 사거리 설정")]
 	public float maxRange;
@@ -74,7 +74,7 @@ public abstract class Projectile : MonoBehaviour
 		{
 			ReturnToPool();
 		}
-	
+
 		//직선투사체에만 현재 사용안함.
 		//if (Vector3.Distance(startPos, transform.position) >= maxRange)
 		//{
@@ -117,7 +117,7 @@ public abstract class Projectile : MonoBehaviour
 		{
 			gameObject.layer = (int)LAYER_TYPE.Projectile_Enemy;
 		}
-		
+
 
 
 	}
@@ -139,7 +139,7 @@ public abstract class Projectile : MonoBehaviour
 		{
 			return true;
 		}
-		
+
 		return false;
 	}
 
@@ -152,9 +152,9 @@ public abstract class Projectile : MonoBehaviour
 	protected virtual void OnTriggerEnter(Collider other)
 	{
 		//Debug.Log("OnTrigger발생");
-		
+
 		//다른 시야감지용 트리거와 충돌방지.차후 수정필요할수도.
-		if (other.isTrigger)
+		if (other.gameObject.layer == (int)LAYER_TYPE.Trigger_Vision | other.gameObject.layer == (int)LAYER_TYPE.Trigger_Detection)
 		{
 			return;
 		}
@@ -175,7 +175,7 @@ public abstract class Projectile : MonoBehaviour
 	}
 
 
-	
+
 	/// <summary>
 	/// 데미지 허용 메서드(온힛에서호출)
 	///  </summary>
@@ -185,7 +185,7 @@ public abstract class Projectile : MonoBehaviour
 	///
 	protected void ApplyDamage(Collider targetCollider, int damage, DAMAGE_TYPE currentDmgType)
 	{
-		
+
 		IDamageable target = targetCollider.GetComponentInParent<IDamageable>();
 
 		// 데미지를 받을 수 없는 대상(벽 등)이면 데미지 로직 생략
