@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 7187441521400461841}
   - component: {fileID: 5176086865588242047}
   - component: {fileID: 1226672387525313290}
+  - component: {fileID: 7451529030891748419}
   m_Layer: 5
   m_Name: PlaneNodButton
   m_TagString: Untagged
@@ -121,6 +122,26 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &7451529030891748419
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6980797127068918236}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f22273e69fc152c4f8473b476eb4c473, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  iconImage: {fileID: 0}
+  borderImage: {fileID: 0}
+  lockOverlay: {fileID: 0}
+  labelText: {fileID: 0}
+  button: {fileID: 0}
+  normalColor: {r: 0.2, g: 0.6, b: 1, a: 1}
+  selectedColor: {r: 1, g: 0.85, b: 0.2, a: 1}
+  lockedColor: {r: 0.35, g: 0.35, b: 0.35, a: 0.6}
 --- !u!1 &7259094921844792968
 GameObject:
   m_ObjectHideFlags: 0
