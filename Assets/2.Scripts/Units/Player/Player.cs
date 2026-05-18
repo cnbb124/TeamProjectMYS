@@ -406,11 +406,11 @@ public class Player : Unit
 					_sound.PlaySFX3DAtPosition(_playSoundType, transform.position);
 					ShootMissile(FIREPOS_TYPE.MISSILE_RIGHT);
 				}
-				//좌우 미사일 발사 처리가 모두 끝난 후, 마지막에 한 번만 락온을 해제
-				if (lockOnSystem != null && lockOnSystem.IsLocked)
-				{
-					lockOnSystem.ClearLock();
-				}
+				////좌우 미사일 발사 처리가 모두 끝난 후, 마지막에 한 번만 락온을 해제
+				//if (lockOnSystem != null && lockOnSystem.IsLocked)
+				//{
+				//	lockOnSystem.ClearLock();
+				//}
 				break;
 
 

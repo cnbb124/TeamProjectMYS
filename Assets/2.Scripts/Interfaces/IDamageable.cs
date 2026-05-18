@@ -16,6 +16,7 @@ public struct DamageInfo
 public interface IDamageable
 {
     void TakeDamage(DamageInfo info);
+	int CurHp { get; }
 }
 
 

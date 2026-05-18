@@ -48,7 +48,7 @@ public class PoolManager : MonoBehaviour
 
 	[Tooltip("적 미사일쉽 풀 초기 생성 개수. 부족 시 자동 확장")]
 	public int enmey_MissileShipPoolSize = 5;
-	
+
 	//======================오브젝트 풀===================
 	//차후 필요한만큼 추가
 	private List<Bullet> bulletPool = new List<Bullet>();
@@ -77,6 +77,7 @@ public class PoolManager : MonoBehaviour
 	[Header("Item Prefabs(아이템 프리펩 연결)")]
 	public GameObject Item_;
 
+	
 	//이펙트도 추가할것.
 
 	private void Awake()
@@ -115,6 +116,8 @@ public class PoolManager : MonoBehaviour
 		}
 		
 	}
+
+
 
 	//투사체 반환필요시?
 	public Projectile GetProjectile(PROJECTILE_TYPE shootType)

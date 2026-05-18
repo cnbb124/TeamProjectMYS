@@ -24,15 +24,20 @@ public class BoostPosEntry///부스터(추진기 쓰러스터)좌표 연결용
 public abstract class Unit : MonoBehaviour, IDamageable
 {
 
-
-    //==================레퍼런스==================//
-
-
+    
+	//==================레퍼런스==================//
 
 
-    //==================유닛데이터==================//
+	//=============기타 레퍼런스===============
+	//리지드바디 할당용 레퍼런스
+	protected Rigidbody _rb;
+	//매니저 할당용 레퍼런스
+	protected SoundManager _sound;
+	protected PoolManager _pool;
 
-    [Header("<size=18>기본 스탯 설정창</size>")]
+	//==================유닛데이터==================//
+
+	[Header("<size=18>기본 스탯 설정창</size>")]
 
     [Header("HP")]
     public int maxHpRemaining; //최대,현재HP수치
@@ -125,10 +130,11 @@ public abstract class Unit : MonoBehaviour, IDamageable
     //public Transform curFirePos;//밑에서 총구스위칭용 
     //필요없음.
 
-    [Header("현재 상태")]
+    [Header("현재 상태(입력x 참고용)")]
     public UNIT_STATE curState = UNIT_STATE.IDLE;
     public int curHpRemaining;
-    public int curShieldRemaining;
+   	public int CurHp => curHpRemaining;//인터페이스 프로퍼티용
+	public int curShieldRemaining;
     public int curArmorRemaining;
     public float curSpeed;
     public float curBoostRemaining;//부스트잔량
@@ -155,12 +161,7 @@ public abstract class Unit : MonoBehaviour, IDamageable
     public SOUND_TYPE _playSoundType;
 
 
-    //=============기타 레퍼런스===============
-    //리지드바디 할당용 레퍼런스
-    protected Rigidbody _rb;
-    //매니저 할당용 레퍼런스
-    protected SoundManager _sound;
-    protected PoolManager _pool;
+    
 
     protected virtual void Awake()
     {

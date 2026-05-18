@@ -64,8 +64,9 @@ public class Missile : Projectile, IExplodable
 	[Header("최대 도달 속도 설정")]
 	public float maxSpeed;
 
+	[Header("현재 미사일 속도(입력x 참고용)")]
 	//현재속도
-	private float curSpeed;
+	public float curSpeed;
 
 	[Tooltip("최고 속도 도달까지 걸리는 시간 (초).")]
 	public float accelerateTime = 0.8f;
@@ -76,7 +77,10 @@ public class Missile : Projectile, IExplodable
 	private float aliveTime = 0f;
 	//락온타겟 이전좌표(추적용)
 	private Vector3 prevTargetPos;
-
+	//미사일 이전좌표(실제속도계산용)
+	private Vector3 prevPosition;
+	//계산된 미사일의 추진 속도
+	private float thrustSpeed;
 
 
 
@@ -104,9 +108,11 @@ public class Missile : Projectile, IExplodable
 		explosionInfo.explosionRadius = this.explosionRadius;
 		//발사후경과시간
 		aliveTime = 0f;
-		//현재스피드를 발사스피드로 입력
-		curSpeed = launchSpeed;
+		//현재 추진 스피드를 발사스피드로 입력
+		thrustSpeed = launchSpeed;
 
+		curSpeed = 0f;
+		prevPosition = transform.position;
 		//타겟이 있을경우. 타겟의 전 좌표 초기화
 		if (targetTr != null)
 		{
@@ -138,22 +144,31 @@ public class Missile : Projectile, IExplodable
 		aliveTime += Time.deltaTime;
 
 		// 속도 가속, 발사시간>최대속도
-		curSpeed = Mathf.Lerp(launchSpeed, maxSpeed, Mathf.Clamp01(aliveTime / accelerateTime));
+		thrustSpeed = Mathf.Lerp(launchSpeed, maxSpeed, Mathf.Clamp01(aliveTime / accelerateTime));
 
-		//타겟이 비활성화시 소실처리
+		////타겟이 비활성화시 소실처리
 
-		if (targetTr != null && !targetTr.gameObject.activeInHierarchy)
-		{
-			targetTr = null;
-		}
+		//if (targetTr != null && !targetTr.gameObject.activeInHierarchy)
+		//{
+		//	targetTr = null;
+		//}
 		// 현재이동거리<직진거리보다 작거나 타겟이없으면 그냥 직진으로 판정
 		if (traveledDistance < armDistance || targetTr == null)
 		{
-			transform.position += transform.forward * curSpeed * Time.deltaTime;
+			transform.position += transform.forward * thrustSpeed * Time.deltaTime;
 			return;
 		}
+		else
+		{
+			Steer();
+		}
+		//실제 속도(curSpeed) 관측 및 계산
+		//(현재 위치 - 이전 프레임 위치)의 거리 /걸린 시간
+		float distanceMovedThisFrame = Vector3.Distance(transform.position, prevPosition);
+		curSpeed = distanceMovedThisFrame / Time.deltaTime;
 
-		Steer();
+		//다음 프레임 연산을 위해 현재 위치 저장
+		prevPosition = transform.position;
 	}
 
 
@@ -181,17 +196,17 @@ public class Missile : Projectile, IExplodable
         else
         {
             //상대속도 구하기
-            Vector3 closingVelocity = targetVelocity - transform.forward * curSpeed;
+            Vector3 closingVelocity = targetVelocity - transform.forward * thrustSpeed;
             //시선변화율
             Vector3 losRate = Vector3.Cross(los, closingVelocity) / Mathf.Max(dist, 0.1f);
-            Vector3 accelCmd = navGain * curSpeed * losRate;
+            Vector3 accelCmd = navGain * thrustSpeed * losRate;
             desiredDir = accelCmd.sqrMagnitude > 0.001f ? (transform.forward + accelCmd * Time.deltaTime).normalized  : los;
         }
 
         // turnRate로 선회 각도 제한
         Vector3 newDir = Vector3.RotateTowards(transform.forward, desiredDir, turnRate * Mathf.Deg2Rad * Time.deltaTime, 0f);
         transform.forward = newDir;
-        transform.position += transform.forward * curSpeed * Time.deltaTime;
+        transform.position += transform.forward * thrustSpeed * Time.deltaTime;
     }
 
     protected override void OnTriggerEnter(Collider other)

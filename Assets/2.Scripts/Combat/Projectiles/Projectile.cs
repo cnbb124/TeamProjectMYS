@@ -188,8 +188,11 @@ public abstract class Projectile : MonoBehaviour
     //온트리거 재정의할 함수들
     protected virtual void OnHit(Collider other)
     {
-        Debug.Log($"[Projectile OnHit 발생] 충돌 대상: {other.gameObject.name} | 레이어: {LayerMask.LayerToName(other.gameObject.layer)} HP: {other.gameObject.GetComponentInParent<Unit>().curHpRemaining}");
-    }
+		IDamageable target = other.GetComponentInParent<IDamageable>();
+		string targetName = (target as MonoBehaviour)?.gameObject.name ?? other.gameObject.name;
+		string hp = target != null ? target.CurHp.ToString() : "N/A";
+		Debug.Log($"[OnHit] 피격 대상: {targetName} | 레이어: {LayerMask.LayerToName(other.gameObject.layer)} | HP: {hp}");
+	}
 
 
 
@@ -218,7 +221,7 @@ public abstract class Projectile : MonoBehaviour
             Debug.Log("ApplyDamage 상대가 같은팀");
             return;
         }
-        Debug.Log("ApplyDamage 실제 데미지발생");
+        //Debug.Log("ApplyDamage 실제 데미지발생");
         // 데미지 정보 생성 및 전달
         DamageInfo damageInfo = new DamageInfo
         {
