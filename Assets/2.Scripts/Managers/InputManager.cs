@@ -97,7 +97,8 @@ public class InputManager : MonoBehaviour
 	[Tooltip("전체 무기 동시 발사. V 누른 순간 한 프레임만 true")]
 	public bool fireAll;
 
-
+	[Tooltip("락온 대상 전환. 마우스휠 위=다음, 아래=이전")]
+	public float switchLockOnTarget; // 양수=다음, 음수=이전, 0=입력없음
 
 
 	private void Awake()
@@ -162,6 +163,8 @@ public class InputManager : MonoBehaviour
 		fireLaser = Input.GetKeyDown(KeyCode.F);
 		fireAll = Input.GetKeyDown(KeyCode.V);
 
+		// 락온 대상 전환 (마우스휠)
+		switchLockOnTarget = Input.GetAxisRaw("Mouse ScrollWheel");
 		// 미사일 슬롯 장착/해제 토글 (Player에서 토글 로직 처리)
 		equipMissileL = Input.GetKeyDown(KeyCode.Alpha1);
 		equipMissileR = Input.GetKeyDown(KeyCode.Alpha3);

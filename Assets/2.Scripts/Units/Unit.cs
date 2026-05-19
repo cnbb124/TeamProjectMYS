@@ -293,7 +293,7 @@ public abstract class Unit : MonoBehaviour, IDamageable
     //실드회복
     protected IEnumerator ShieldRegenerationRoutine()
     {
-        // 1. 피격 후 설정된 딜레이(초)만큼 대기합니다. (Update의 타이머 연산을 완벽히 대체)
+        //피격 후 설정된 딜레이(초)만큼 대기합니다. (Update의 타이머 연산을 완벽히 대체)
         yield return new WaitForSeconds(shieldRegainDelay);
 
         isShieldRegaining = true;
@@ -301,7 +301,7 @@ public abstract class Unit : MonoBehaviour, IDamageable
         // 최적화를 위해 0.1초마다 대기할 캐싱 객체 생성
         WaitForSeconds tick = new WaitForSeconds(0.1f);
 
-        // 2. 실드가 꽉 차지 않았고, 유닛이 살아있는 동안 반복해서 회복
+        //  실드가 꽉 차지 않았고, 유닛이 살아있는 동안 반복해서 회복
         while (curShieldRemaining < maxShieldRemaining && curState != UNIT_STATE.DIE)
         {
             // 초당 회복량(shieldRegainRate)을 0.1초 기준 단위로 계산하여 더함

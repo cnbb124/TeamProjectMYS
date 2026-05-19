@@ -26,10 +26,11 @@ public class Bullet : Projectile
 	// Update is called once per frame
 	protected override void Update()
 	{
-		//기본 업데이트 실행(사거리 업뎃)
-		base.Update();
 		//이동 로직
 		transform.Translate(Vector3.forward * speed * Time.deltaTime);
+		//기본 업데이트 실행(사거리 업뎃)
+		base.Update();
+		
 	}
 
 

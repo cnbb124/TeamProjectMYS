@@ -79,16 +79,21 @@ public enum SOUND_TYPE
     //UI관련
     SFX_DICE_ROLL,      // 주사위 굴리는 소리
     SFX_UI_CLICK,       // 버튼 클릭음
-                        // 발사음
-    SFX_BULLETSHOOT,    //탄
+	SFX_UI_LOCKON_COMPLETE,
+
+	// 발사음
+	SFX_BULLETSHOOT,    //탄
     SFX_MISSILESHOOT,   //미사일
     SFX_LASERSHOOT,     //레이저
-                        // 피격음
+                        
+    // 피격음
     SFX_BULLETHIT,      //탄
     SFX_EXPLOSION,      // 미사일등 폭발음
     SFX_CONTACTSHIP,    //부딪혔을때.
     SFX_CONTACTGROUND,  //행성등 부딪혔을떄. 차후 필드명 수정할수있음
     SFX_LASERHIT,       //레이저
+
+    
 
 
     SFX_NONE,//빈거설정용

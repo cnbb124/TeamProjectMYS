@@ -15,7 +15,9 @@ public struct DamageInfo
 
 public interface IDamageable
 {
+	//피격시 작동
     void TakeDamage(DamageInfo info);
+	//체력 참고용
 	int CurHp { get; }
 }
 

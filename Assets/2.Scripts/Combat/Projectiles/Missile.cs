@@ -77,8 +77,7 @@ public class Missile : Projectile, IExplodable
 	private float aliveTime = 0f;
 	//락온타겟 이전좌표(추적용)
 	private Vector3 prevTargetPos;
-	//미사일 이전좌표(실제속도계산용)
-	private Vector3 prevPosition;
+
 	//계산된 미사일의 추진 속도
 	private float thrustSpeed;
 
@@ -112,7 +111,7 @@ public class Missile : Projectile, IExplodable
 		thrustSpeed = launchSpeed;
 
 		curSpeed = 0f;
-		prevPosition = transform.position;
+		
 		//타겟이 있을경우. 타겟의 전 좌표 초기화
 		if (targetTr != null)
 		{
@@ -138,7 +137,7 @@ public class Missile : Projectile, IExplodable
 	// Update is called once per frame
 	protected override void Update()
 	{
-		base.Update();//최대사거리로직
+		
 
 		// 발사후 경과시간 업데이트
 		aliveTime += Time.deltaTime;
@@ -152,11 +151,12 @@ public class Missile : Projectile, IExplodable
 		//{
 		//	targetTr = null;
 		//}
+
 		// 현재이동거리<직진거리보다 작거나 타겟이없으면 그냥 직진으로 판정
 		if (traveledDistance < armDistance || targetTr == null)
 		{
 			transform.position += transform.forward * thrustSpeed * Time.deltaTime;
-			return;
+			
 		}
 		else
 		{
@@ -164,11 +164,11 @@ public class Missile : Projectile, IExplodable
 		}
 		//실제 속도(curSpeed) 관측 및 계산
 		//(현재 위치 - 이전 프레임 위치)의 거리 /걸린 시간
-		float distanceMovedThisFrame = Vector3.Distance(transform.position, prevPosition);
-		curSpeed = distanceMovedThisFrame / Time.deltaTime;
-
+		
+		curSpeed = Vector3.Distance(transform.position, prevPos) / Time.deltaTime;
+		
 		//다음 프레임 연산을 위해 현재 위치 저장
-		prevPosition = transform.position;
+		base.Update();//최대사거리로직
 	}
 
 
