@@ -98,10 +98,12 @@ public class Player : Unit
 		{
 			isMissile_EquippedRight = !isMissile_EquippedRight;
 		}
-		if (_input.switchLockOnTarget != 0f && lockOnSystem != null)
-		{
-			lockOnSystem.SwitchTarget(_input.switchLockOnTarget > 0 ? 1 : -1);
-		}
+		
+		//차후 락온스위칭용
+		//if (_input.switchLockOnTarget != 0f && lockOnSystem != null)
+		//{
+		//	lockOnSystem.SwitchTarget(_input.switchLockOnTarget > 0 ? 1 : -1);
+		//}
 		ShootByInput();
 	}
 
