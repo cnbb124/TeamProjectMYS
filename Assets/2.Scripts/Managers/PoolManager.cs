@@ -17,77 +17,81 @@ public class PoolManager : MonoBehaviour
 				instance = FindObjectOfType<PoolManager>();
 				if (instance == null)
 				{
-					Debug.LogError("¾À¿¡ PoolMnager´©¶ô! ÇÏÀÌ¾î¶óÅ°¿¡ Ç®¸Å´ÏÀú ÇÊ¿ä");
+					Debug.LogError("ì”¬ì— PoolMnagerëˆ„ë½! í•˜ì´ì–´ë¼í‚¤ì— í’€ë§¤ë‹ˆì € í•„ìš”");
 				}
 			}
 			return instance;
-
 		}
-
 	}
 
 
+	// ==================í’€ ì‚¬ì´ì¦ˆ====================ê²Œì„ì´ˆë°˜ ë ‰ì™„í™”ìš©
 
-	// ==================Ç® »çÀÌÁî====================°ÔÀÓÃÊ¹İ ·º¿ÏÈ­¿ë
-
-	[Header("Ç® ÃÊ±â »çÀÌÁî")]
-	[Tooltip("ÃÑ¾Ë Ç® ÃÊ±â »ı¼º °³¼ö. ºÎÁ· ½Ã ÀÚµ¿ È®Àå")]
+	[Header("í’€ ì´ˆê¸° ì‚¬ì´ì¦ˆ")]
+	[Tooltip("ì´ì•Œ í’€ ì´ˆê¸° ìƒì„± ê°œìˆ˜. ë¶€ì¡± ì‹œ ìë™ í™•ì¥")]
 	public int bulletPoolSize = 30;
 
-	[Tooltip("¹Ì»çÀÏ Ç® ÃÊ±â »ı¼º °³¼ö. ºÎÁ· ½Ã ÀÚµ¿ È®Àå")]
+	[Tooltip("ë¯¸ì‚¬ì¼ í’€ ì´ˆê¸° ìƒì„± ê°œìˆ˜. ë¶€ì¡± ì‹œ ìë™ í™•ì¥")]
 	public int missilePoolSize = 10;
 
-	[Tooltip("·¹ÀÌÀú Ç® ÃÊ±â »ı¼º °³¼ö. ºÎÁ· ½Ã ÀÚµ¿ È®Àå")]
+	[Tooltip("ë ˆì´ì € í’€ ì´ˆê¸° ìƒì„± ê°œìˆ˜. ë¶€ì¡± ì‹œ ìë™ í™•ì¥")]
 	public int laserPoolSize = 5;
 
-	[Tooltip("Àû °Ç½± Ç® ÃÊ±â »ı¼º °³¼ö. ºÎÁ· ½Ã ÀÚµ¿ È®Àå")]
+	[Tooltip("ë¶„ì—´ ë¯¸ì‚¬ì¼ í’€ ì´ˆê¸° ìƒì„± ê°œìˆ˜. ë¶€ì¡± ì‹œ ìë™ í™•ì¥")]
+	public int clusterMissilePoolSize = 10;
+
+	[Tooltip("í•µ?ë¯¸ì‚¬ì¼ í’€ ì´ˆê¸° ìƒì„± ê°œìˆ˜. ë¶€ì¡± ì‹œ ìë™ í™•ì¥")]
+	public int dumbMissilePoolSize = 10;
+
+	[Tooltip("ì  ê±´ì‰½ í’€ ì´ˆê¸° ìƒì„± ê°œìˆ˜. ë¶€ì¡± ì‹œ ìë™ í™•ì¥")]
 	public int enemy_GunshipPoolSize = 10;
 
-	[Tooltip("Àû µå¶ø½± Ç® ÃÊ±â »ı¼º °³¼ö. ºÎÁ· ½Ã ÀÚµ¿ È®Àå")]
+	[Tooltip("ì  ë“œëì‰½ í’€ ì´ˆê¸° ìƒì„± ê°œìˆ˜. ë¶€ì¡± ì‹œ ìë™ í™•ì¥")]
 	public int enmey_DropshipPoolSize = 5;
 
-	[Tooltip("Àû ¹Ì»çÀÏ½± Ç® ÃÊ±â »ı¼º °³¼ö. ºÎÁ· ½Ã ÀÚµ¿ È®Àå")]
+	[Tooltip("ì  ë¯¸ì‚¬ì¼ì‰½ í’€ ì´ˆê¸° ìƒì„± ê°œìˆ˜. ë¶€ì¡± ì‹œ ìë™ í™•ì¥")]
 	public int enmey_MissileShipPoolSize = 5;
 
-	//======================¿ÀºêÁ§Æ® Ç®===================
-	//Â÷ÈÄ ÇÊ¿äÇÑ¸¸Å­ Ãß°¡
+	//======================ì˜¤ë¸Œì íŠ¸ í’€===================
 	private List<Bullet> bulletPool = new List<Bullet>();
 	private List<Missile> missilePool = new List<Missile>();
 	private List<Laser> laserPool = new List<Laser>();
-	//¿¡³Ê¹Ì Ç®¸µ¿ë
+	private List<ClusterMissile> clusterMissilePool = new List<ClusterMissile>();
+	private List<DumbMissile> dumbMissilePool = new List<DumbMissile>();
+	//ì—ë„ˆë¯¸ í’€ë§ìš©
 	//private List<>
 
-	//¾ÆÀÌÅÛ Ç®¸µ¿ë
+	//ì•„ì´í…œ í’€ë§ìš©
 
 
-	//
-	////////////////ÇÁ¸®Æé ¿¬°á¿ë ·¹ÆÛ·±½ºµé////////////////////////
+	////////////////í”„ë¦¬í© ì—°ê²°ìš© ë ˆí¼ëŸ°ìŠ¤ë“¤////////////////////////
 
-	[Header("Projectiles Prefabs(»ç°İ Åõ»çÃ¼ ÇÁ¸®Æé¿¬°á)")]
-	//Â÷ÈÄ Á¾·ùÃß°¡½Ã ´õ Ãß°¡ÇÒ°Í.
+	[Header("Projectiles Prefabs(ì‚¬ê²© íˆ¬ì‚¬ì²´ í”„ë¦¬í©ì—°ê²°)")]
 	public Bullet bulletPrefab;
 	public Missile missilePrefab;
 	public Laser laserPrefab;
+	public ClusterMissile clusterMissilePrefab;
+	public DumbMissile dumbMissilePrefab;
 
-	[Header("Enemy Prefabs(Àû ÇÁ¸®Æé ¿¬°á)")]
+	[Header("Enemy Prefabs(ì  í”„ë¦¬í© ì—°ê²°)")]
 	public GameObject enemy_DropshipPrefab;
 	public GameObject enemy_GunshipPrefab;
 	public GameObject enemy_MissileshipPrefab;
 
-	[Header("Item Prefabs(¾ÆÀÌÅÛ ÇÁ¸®Æé ¿¬°á)")]
+	[Header("Item Prefabs(ì•„ì´í…œ í”„ë¦¬í© ì—°ê²°)")]
 	public GameObject Item_;
 
-	
-	//ÀÌÆåÆ®µµ Ãß°¡ÇÒ°Í.
+	//ì´í™íŠ¸ë„ ì¶”ê°€í• ê²ƒ.
 
 	private void Awake()
 	{
-		// ½Ì±ÛÅæ ±âº» ¼¼ÆÃ (¾ÀÀÌ ³Ñ¾î°¡µµ ÆÄ±«µÇÁö ¾Ê°Ô À¯Áö)
+		// ì‹±ê¸€í†¤ ê¸°ë³¸ ì„¸íŒ… (ì”¬ì´ ë„˜ì–´ê°€ë„ íŒŒê´´ë˜ì§€ ì•Šê²Œ ìœ ì§€)
 		if (instance == null)
 		{
 			instance = this;
 			DontDestroyOnLoad(gameObject);
-			// Ç® ¹Ì¸® »ı¼º
+
+			// í’€ ë¯¸ë¦¬ ìƒì„±
 			for (int i = 0; i < bulletPoolSize; i++)
 			{
 				Bullet bullet = Instantiate(bulletPrefab);
@@ -106,86 +110,84 @@ public class PoolManager : MonoBehaviour
 				laser.gameObject.SetActive(false);
 				laserPool.Add(laser);
 			}
-			
+			for (int i = 0; i < clusterMissilePoolSize; i++)
+			{
+				ClusterMissile cm = Instantiate(clusterMissilePrefab);
+				cm.gameObject.SetActive(false);
+				clusterMissilePool.Add(cm);
+			}
+			for (int i = 0; i < dumbMissilePoolSize; i++)
+			{
+				DumbMissile dm = Instantiate(dumbMissilePrefab);
+				dm.gameObject.SetActive(false);
+				dumbMissilePool.Add(dm);
+			}
 		}
 		else if (instance != this)
 		{
-
-			Debug.LogWarning("Áßº¹µÈ SoundManager ¹ß°ß. ÆÄ±« ÈÄ ½ÇÇà");
+			Debug.LogWarning("ì¤‘ë³µëœ PoolManager ë°œê²¬. íŒŒê´´ í›„ ì‹¤í–‰");
 			Destroy(gameObject);
 		}
-		
 	}
 
 
-
-	//Åõ»çÃ¼ ¹İÈ¯ÇÊ¿ä½Ã?
+	//íˆ¬ì‚¬ì²´ ë°˜í™˜í•„ìš”ì‹œ?
 	public Projectile GetProjectile(PROJECTILE_TYPE shootType)
 	{
-		switch(shootType)
+		switch (shootType)
 		{
 			case PROJECTILE_TYPE.BULLET:
-				GetBullet();
-				break;
-
+				return GetBullet();
 			case PROJECTILE_TYPE.MISSILE:
-				GetMissile();
-				break;
-				
+				return GetMissile();
 			case PROJECTILE_TYPE.LASER:
-				GetLaser();
-				break;
+				return GetLaser();
 		}
 		return null;
 	}
 
-	//°ÔÀÓ¿À¹ö³ª ¾ÀÀüÈ¯ µî ÀüÃ¼ºñÈ°¼ºÈ­½Ã
+	//ê²Œì„ì˜¤ë²„ë‚˜ ì”¬ì „í™˜ ë“± ì „ì²´ë¹„í™œì„±í™”ì‹œ
 	public void DisableAllProjectiles()
 	{
-		foreach (Bullet b in bulletPool)
+		foreach (Bullet bullet in bulletPool)
 		{
-			b.gameObject.SetActive(false);
+			bullet.gameObject.SetActive(false);
 		}
-		foreach (Missile m in missilePool)
+		foreach (Missile missile in missilePool)
 		{
-			m.gameObject.SetActive(false);
+			missile.gameObject.SetActive(false);
 		}
-		foreach (Laser l in laserPool)
+		foreach (Laser laser in laserPool)
 		{
-			l.gameObject.SetActive(false);
+			laser.gameObject.SetActive(false);
 		}
-		
+		foreach (ClusterMissile cm in clusterMissilePool)
+		{
+			cm.gameObject.SetActive(false);
+		}
+		foreach (DumbMissile dm in dumbMissilePool)
+		{
+			dm.gameObject.SetActive(false);
+		}
 	}
 
-	///////////////À¯´ÖÀÌ³ª ±âÅ¸µî¿¡¼­ È£ÃâÇÒ GetÇÔ¼öµé/////////////////
+	///////////////ìœ ë‹›ì´ë‚˜ ê¸°íƒ€ë“±ì—ì„œ í˜¸ì¶œí•  Getí•¨ìˆ˜ë“¤/////////////////
 	public Bullet GetBullet()
 	{
-		//¸ÕÀú ºÒ¸´Ç®Ã¼Å©
-		foreach(Bullet bullet in bulletPool)
+		foreach (Bullet bullet in bulletPool)
 		{
-			//ÇÏÀÌ¾î¶óÅ°¿¡ ºñÈ°¼ºÈ­°¡ÀÖÀ¸¸é
-			if(!bullet.gameObject.activeInHierarchy)
+			if (!bullet.gameObject.activeInHierarchy)
 			{
-				//ÀçÈ°¿ë
 				bullet.gameObject.SetActive(true);
-				
 				return bullet;
 			}
 		}
-		//Ç®´Ùµ¹¾Ò´Âµ¥ ¾øÀ»°æ¿ì
-		//»õ·Î»ı¼º
-		//Á¾·ùÃß°¡½Ã enum»õ·Î ¸¸µé°í ¹è¿­·Î¹Ù²Ù°í ÇØ´ç¹øÈ£·Î Ãß°¡.
 		Bullet newBullet = Instantiate(bulletPrefab);
-		//Åõ»çÃ¼Á¾·ù,µ¥¹ÌÁöÅ¸ÀÔ¼³Á¤
 		newBullet.projectileType = PROJECTILE_TYPE.BULLET;
 		newBullet.dmgType = DAMAGE_TYPE.BULLET;
-		//Ç®¿¡Ãß°¡
 		bulletPool.Add(newBullet);
-		Debug.LogWarning($"[PoolManager] Bullet Ç® È®Àå. ÇöÀç Å©±â: {bulletPool.Count}");
-		//È°¼ºÈ­&Init
+		Debug.LogWarning($"[PoolManager] Bullet í’€ í™•ì¥. í˜„ì¬ í¬ê¸°: {bulletPool.Count}");
 		newBullet.gameObject.SetActive(true);
-		
-		//¹İÈ¯
 		return newBullet;
 	}
 
@@ -193,39 +195,28 @@ public class PoolManager : MonoBehaviour
 	{
 		foreach (Missile missile in missilePool)
 		{
-			if(!missile.gameObject.activeInHierarchy)
+			if (!missile.gameObject.activeInHierarchy)
 			{
 				missile.gameObject.SetActive(true);
-				
 				return missile;
 			}
-			
 		}
-		//´Ùµ¹¾Ò´Âµ¥¾øÀ»°æ¿ì
 		Missile newMissile = Instantiate(missilePrefab);
-		//Åõ»çÃ¼Á¾·ù,µ¥¹ÌÁöÅ¸ÀÔ¼³Á¤
 		newMissile.projectileType = PROJECTILE_TYPE.MISSILE;
 		newMissile.dmgType = DAMAGE_TYPE.EXPLOSION;
-		//Ç®¿¡Ãß°¡
 		missilePool.Add(newMissile);
-		Debug.LogWarning($"[PoolManager] Missile Ç® È®Àå. ÇöÀç Å©±â: {missilePool.Count}");
-		//È°¼ºÈ­&Init
+		Debug.LogWarning($"[PoolManager] Missile í’€ í™•ì¥. í˜„ì¬ í¬ê¸°: {missilePool.Count}");
 		newMissile.gameObject.SetActive(true);
-		
-		//¹İÈ¯
 		return newMissile;
-
 	}
 
 	public Laser GetLaser()
 	{
-		foreach(Laser laser in laserPool)
+		foreach (Laser laser in laserPool)
 		{
-			if(!laser.gameObject.activeInHierarchy)
+			if (!laser.gameObject.activeInHierarchy)
 			{
 				laser.gameObject.SetActive(true);
-			
-
 				return laser;
 			}
 		}
@@ -233,35 +224,63 @@ public class PoolManager : MonoBehaviour
 		newLaser.projectileType = PROJECTILE_TYPE.LASER;
 		newLaser.dmgType = DAMAGE_TYPE.LASER;
 		laserPool.Add(newLaser);
-		Debug.LogWarning($"[PoolManager] Laser Ç® È®Àå. ÇöÀç Å©±â: {laserPool.Count}");
+		Debug.LogWarning($"[PoolManager] Laser í’€ í™•ì¥. í˜„ì¬ í¬ê¸°: {laserPool.Count}");
 		newLaser.gameObject.SetActive(true);
-		
-
 		return newLaser;
 	}
 
-	
+	/// <summary>
+	/// ë¶„ì—´ ë¯¸ì‚¬ì¼ í’€ì—ì„œ êº¼ë‚´ê¸°. ì—†ìœ¼ë©´ ìë™ í™•ì¥.
+	/// êº¼ë‚¸ í›„ ë°˜ë“œì‹œ Init() í˜¸ì¶œí•  ê²ƒ.
+	/// </summary>
+	public ClusterMissile GetClusterMissile()
+	{
+		foreach (ClusterMissile cm in clusterMissilePool)
+		{
+			if (!cm.gameObject.activeInHierarchy)
+			{
+				cm.gameObject.SetActive(true);
+				return cm;
+			}
+		}
+		ClusterMissile newCm = Instantiate(clusterMissilePrefab);
+		newCm.projectileType = PROJECTILE_TYPE.MISSILE;
+		newCm.dmgType = DAMAGE_TYPE.EXPLOSION;
+		clusterMissilePool.Add(newCm);
+		Debug.LogWarning($"[PoolManager] ClusterMissile í’€ í™•ì¥. í˜„ì¬ í¬ê¸°: {clusterMissilePool.Count}");
+		newCm.gameObject.SetActive(true);
+		return newCm;
+	}
 
-
+	/// <summary>
+	/// ë¬´ìœ ë„ ë¯¸ì‚¬ì¼ í’€ì—ì„œ êº¼ë‚´ê¸°. ì—†ìœ¼ë©´ ìë™ í™•ì¥.
+	/// êº¼ë‚¸ í›„ ë°˜ë“œì‹œ Init() í˜¸ì¶œí•  ê²ƒ.
+	/// </summary>
+	public DumbMissile GetDumbMissile()
+	{
+		foreach (DumbMissile dm in dumbMissilePool)
+		{
+			if (!dm.gameObject.activeInHierarchy)
+			{
+				dm.gameObject.SetActive(true);
+				return dm;
+			}
+		}
+		DumbMissile newDm = Instantiate(dumbMissilePrefab);
+		newDm.projectileType = PROJECTILE_TYPE.MISSILE;
+		newDm.dmgType = DAMAGE_TYPE.EXPLOSION;
+		dumbMissilePool.Add(newDm);
+		Debug.LogWarning($"[PoolManager] DumbMissile í’€ í™•ì¥. í˜„ì¬ í¬ê¸°: {dumbMissilePool.Count}");
+		newDm.gameObject.SetActive(true);
+		return newDm;
+	}
 
 	public void ReturnProjectile(Projectile projectile)
 	{
-		projectile.gameObject.SetActive(false); // ¸Å´ÏÀú°¡ Ã³¸®
-	}
-	public void DisableBullet()
-	{
-
-	}
-	public void DisableMissile()
-	{
-
-	}
-	public void DisableLaser()
-	{
-
+		projectile.gameObject.SetActive(false);
 	}
 
-
-
-
+	public void DisableBullet() { }
+	public void DisableMissile() { }
+	public void DisableLaser() { }
 }

@@ -98,3 +98,17 @@ public enum SOUND_TYPE
 
     SFX_NONE,//빈거설정용
 }
+
+public enum LOCK_ON_MODE
+{
+	SINGLE, // 기존 1개 표적 선택 모드(호밍용)
+	MULTI,   // 다중 표적 동시 락온 모드(클러스터용)
+    NONE,//락온안됨(Dumb미사일용)
+}
+
+public enum MISSILE_TYPE
+{
+	HOMING,     // 기본 락온 추적 미사일
+	CLUSTER,    // 분열 미사일 (멀티락온 후 분열)
+	DUMB,       // 직선 무유도 미사일 (일정시간/충돌 후 광역폭발)
+}

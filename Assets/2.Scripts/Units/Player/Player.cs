@@ -5,6 +5,13 @@ using UnityEngine;
 
 
 
+
+// 미사일 발사 모드 선택용 열거형 추가
+public enum MISSILE_FIRE_MODE
+{
+	DOUBLE, // 동시 발사
+	SINGLE     // 교대 발사
+}
 //
 // 플레이어 전용 컴포넌트.
 // Unit을 상속받아 스탯/FSM/데미지 처리는 Unit에서,
@@ -20,6 +27,8 @@ public class Player : Unit
 	// bulletFirePos는 Unit에 있는 배열 그대로 사용
 	// missileFirePos, laserFirePos도 Unit 그대로 사용
 	private int _bulletFireIndex = 0;
+	// 미사일 교대발사용인덱스
+	private int _missileFireIndex = 0;
 	// =================================================
 
 	//매니저 할당용 레퍼런스
@@ -27,9 +36,7 @@ public class Player : Unit
 
 
 
-	//미사일 장착 여부 인풋은 getkeydown이라 누른 그순간만 true 타고 false로 다시바뀜.
-	private bool isMissile_EquippedLeft = false;
-	private bool isMissile_EquippedRight = false;
+	
 
 	// ==================회전 감도==================
 	[Space(5)]
@@ -61,7 +68,23 @@ public class Player : Unit
 	// ==================락온 시스템==================
 	[Header("락온 시스템 (인스펙터에서 할당)")]
 	public MissileLockOnSystem lockOnSystem;
+	[Header("미사일 발사 모드 설정")]
+	public MISSILE_FIRE_MODE missileFireMode = MISSILE_FIRE_MODE.DOUBLE;
+	[Header("현재 장착된 미사일 타입")]
+	public MISSILE_TYPE curMissileType = MISSILE_TYPE.HOMING;
 
+	// 미사일 장착 여부 (잔탄량에 따라 Update에서 자동 갱신됨)
+	public bool isMissile_EquippedLeft = false;
+	public bool isMissile_EquippedRight = false;
+
+	[Header("미사일 장비 슬롯 (1, 2, 3번 키에 대응)")]
+	[Tooltip("인벤토리나 장비창에서 장착한 미사일 타입들을 배열에 넣어줌")]
+	public MISSILE_TYPE[] equippedMissiles = new MISSILE_TYPE[3]
+	{
+		MISSILE_TYPE.HOMING,
+		MISSILE_TYPE.CLUSTER,
+		MISSILE_TYPE.DUMB
+	};
 
 	protected override void Awake()
 	{
@@ -75,6 +98,11 @@ public class Player : Unit
 	{
 		base.Start(); //유닛 초기화 호출
 		_input = InputManager.Instance;
+		// 게임 시작 시 1번 슬롯 무기로 초기화
+		if (equippedMissiles.Length > 0)
+		{
+			curMissileType = equippedMissiles[0];
+		}
 	}
 
 	// Update is called once per frame
@@ -90,20 +118,36 @@ public class Player : Unit
 		}
 		//==========혹여나 업뎃이 입력없을때도 필요한게ㅐ 있으면 이 위로 입력학ㄹ것=========
 		//미사일 장착 토글 처리(온오프) 상태변화 관련이므로 즉시 Update로
-		if (_input.equipMissileL)
+		// 장착 슬롯 배열의 길이를 확인하여 에러 방지 후 현재 미사일 타입 변경
+		if (_input.switchMissile1 && equippedMissiles.Length > 0)
 		{
-			isMissile_EquippedLeft = !isMissile_EquippedLeft;
+			curMissileType = equippedMissiles[0];
+			Debug.Log($"[Player] 1번 슬롯 무기 장착: {curMissileType}");
 		}
-		if (_input.equipMissileR)
+		else if (_input.switchMissile2 && equippedMissiles.Length > 1)
 		{
-			isMissile_EquippedRight = !isMissile_EquippedRight;
+			curMissileType = equippedMissiles[1];
+			Debug.Log($"[Player] 2번 슬롯 무기 장착: {curMissileType}");
 		}
-		
-		//차후 락온스위칭용
-		//if (_input.switchLockOnTarget != 0f && lockOnSystem != null)
-		//{
-		//	lockOnSystem.SwitchTarget(_input.switchLockOnTarget > 0 ? 1 : -1);
-		//}
+		else if (_input.switchMissile3 && equippedMissiles.Length > 2)
+		{
+			curMissileType = equippedMissiles[2];
+			Debug.Log($"[Player] 3번 슬롯 무기 장착: {curMissileType}");
+		}
+
+		if (_input.switchLockOnTarget != 0f && lockOnSystem != null)
+		{
+			lockOnSystem.SwitchTarget(_input.switchLockOnTarget > 0 ? 1 : -1);
+		}
+
+		if(_input.switchMissileShootMode)
+		{
+			missileFireMode = (missileFireMode == MISSILE_FIRE_MODE.DOUBLE) ? MISSILE_FIRE_MODE.SINGLE : MISSILE_FIRE_MODE.DOUBLE;
+
+			Debug.Log($"[Player] 미사일 발사 모드 변경: {missileFireMode}");
+		}
+		// 매 프레임 잔탄을 체크하여 좌우 장착 여부 갱신
+		UpdateMissileEquipStatus();
 		ShootByInput();
 	}
 
@@ -116,6 +160,48 @@ public class Player : Unit
 
 	}
 
+
+	// ==================================상태 업데이트 관련=======================
+	/// <summary>
+	/// 잔탄과 발사 모드에 따라 좌/우 총구의 활성화 상태(isMissile_Equipped)를 갱신
+	/// 기존 Shoot() 메서드의 if문을 제어하는 스위치 역할
+	/// </summary>
+	private void UpdateMissileEquipStatus()
+	{
+		MissileAmmoInfo info = missileAmmoList.Find(x => x.missileType == curMissileType);
+		int ammo = info != null ? info.curAmmo : 0;
+
+		// 잔탄이 0이면 무조건 둘 다 비활성화하여 Shoot() 내부의 if문을 통과하지 못하게 차단
+		if (ammo <= 0)
+		{
+			isMissile_EquippedLeft = false;
+			isMissile_EquippedRight = false;
+			return;
+		}
+
+		if (missileFireMode == MISSILE_FIRE_MODE.DOUBLE)
+		{
+			// [동시 발사] 1발 남았으면 왼쪽만, 2발 이상이면 양쪽 다 활성화
+			isMissile_EquippedLeft = ammo > 0;
+			isMissile_EquippedRight = ammo > 1;
+		}
+		else if (missileFireMode == MISSILE_FIRE_MODE.SINGLE)
+		{
+			// [교대 발사] 잔탄이 1발일 때는 강제로 왼쪽 총구로 고정하여 발사 보장
+			if (ammo == 1)
+			{
+				isMissile_EquippedLeft = true;
+				isMissile_EquippedRight = false;
+				_missileFireIndex = 0; // 다음번을 위해 동기화
+			}
+			else
+			{
+				// 인덱스에 맞춰 한 쪽만 활성화하여 기존 Shoot()의 if문 중 하나만 통과하게 유도
+				isMissile_EquippedLeft = (_missileFireIndex == 0);
+				isMissile_EquippedRight = (_missileFireIndex == 1);
+			}
+		}
+	}
 
 
 	//===============override 메서드 FSM==================
@@ -148,6 +234,7 @@ public class Player : Unit
 		// ex. GameManager.Instance.OnPlayerDie();
 	}
 
+	
 
 
 	// ===========================================
@@ -159,7 +246,7 @@ public class Player : Unit
 	// =================================================
 
 
-	//================InputManager에서 입력받을시 작동할 조작관련 메서드=============
+	//================InputManager에서 입력받을시 작동할 입력처리 조작관련 메서드=============
 
 	// 늘 회전후 이동하게 rotate부터 호출할것
 
@@ -198,43 +285,7 @@ public class Player : Unit
 		}
 	}
 
-	//전에사용
-	//if (InputManager.Instance.fireBullet)
-	//{
-	//	Shoot(SHOOT_TYPE.BULLET);
-	//}
-	//if(InputManager.Instance.fireMissile)
-	//{
-	//	if(isMissile_EquippedLeft)
-	//	{
-	//		Shoot(SHOOT_TYPE.MISSILE_LEFT);
-	//	}
-	//	if(isMissile_EquippedRight)
-	//	{
-	//		Shoot(SHOOT_TYPE.MISSILE_RIGHT);
-	//	}
-	//}
-	//if(InputManager.Instance.fireLaser)
-	//{
-	//	Shoot(SHOOT_TYPE.LASER);
-	//}
-	//if(InputManager.Instance.fireAll)
-	//{
-	//	if(isMissile_EquippedLeft)
-	//	{
-	//		Shoot(SHOOT_TYPE.MISSILE_LEFT);
-	//	}
-	//	if(isMissile_EquippedRight)
-	//	{
-	//		Shoot(SHOOT_TYPE.MISSILE_RIGHT);
-	//	}
-	//	
-	//	Shoot(SHOOT_TYPE.LASER);
-	//}
-
-
-
-
+	
 	//부스트 로직
 //W(전진)     → BACK 부스터(뒤에서 밀어줌)
 //S(후진)     → FRONT 부스터(앞에서 밀어줌)
@@ -247,14 +298,7 @@ public class Player : Unit
 //마우스 상하  → FRONT or BACK 부스터
 //손 뗌        → 역분사(모두 켜거나 반대 부스터)
 
-	//==============부스트이펙트====================
-
-
-
-	private void UpdateBoostEffect()
-	{
-
-	}
+	
 	// ==================회전 (FixedUpdate에서 호출)==================
 
 
@@ -287,8 +331,6 @@ public class Player : Unit
 
 
 	// ==================이동 (FixedUpdate에서 호출)==================
-
-
 	// 오브젝트가 바라보는 방향(로컬축) 기준으로 6방향 물리 이동.
 	// RotateByInput() 이후 호출되므로 이미 회전된 방향 기준으로 이동.
 
@@ -299,7 +341,6 @@ public class Player : Unit
 	// 부스트: LeftShift + 잔량 있을 때 boostSpeed 적용.
 	//         Unit.UseBoost()로 잔량 소모 및 회복 타이머 초기화.
 	// maxSpeed: 속도 초과 시 방향 유지하고 크기만 클램프.
-
 	private void MovingByInput()
 	{
 		// 로컬 축 기준 6방향 합산
@@ -380,11 +421,23 @@ public class Player : Unit
 
 	}
 
+	//==============부스트이펙트====================(이동에서같이)
+
+
+
+	private void UpdateBoostEffect()
+	{
+
+	}
+
+	//===========================인풋끝=================
 	/// <summary>
 	/// 사격및 소리재생
 	/// </summary>
 	/// <param name="type"></param>
-	//실제 InputManager에서 받아오면 작동할 명령
+	/// 
+
+	//=====================실제 InputManager에서 받아오면 작동할 동작명령구현부================
 	public override void Shoot(PROJECTILE_TYPE type)
 	{
 
@@ -412,77 +465,20 @@ public class Player : Unit
 					_sound.PlaySFX3DAtPosition(_playSoundType, transform.position);
 					ShootMissile(FIREPOS_TYPE.MISSILE_RIGHT);
 				}
-				////좌우 미사일 발사 처리가 모두 끝난 후, 마지막에 한 번만 락온을 해제
-				//if (lockOnSystem != null && lockOnSystem.IsLocked)
-				//{
-				//	lockOnSystem.ClearLock();
-				//}
+					
 				break;
 
-
-				//미사용. 차후 다시 사용할수도?
-				//case SHOOT_TYPE.MISSILE_BOTH://소리클경우 양쪽말고 한쪽이나 중간점 으로 따로만들어서진행
-				//	_sound.PlaySFX3DAtPosition(_playSoundType, GetFirePos(FIREPOS_TYPE.MISSILE_LEFT).position);
-				//	_sound.PlaySFX3DAtPosition(_playSoundType, GetFirePos(FIREPOS_TYPE.MISSILE_RIGHT).position);
-				//	ShootMissile(FIREPOS_TYPE.MISSILE_LEFT);
-				//	ShootMissile(FIREPOS_TYPE.MISSILE_RIGHT);
-				//	break;
-				//case SHOOT_TYPE.ALL:
-				//	_sound.PlaySFX3DAtPosition(GetPlaySoundType(SHOOT_TYPE.BULLET), transform.position, 0.9f, 1.1f);
-				//	_sound.PlaySFX3DAtPosition(GetPlaySoundType(SHOOT_TYPE.MISSILE_LEFT), transform.position);
-				//	_sound.PlaySFX3DAtPosition(GetPlaySoundType(SHOOT_TYPE.LASER), transform.position);
-				//	ShootBullet();
-				//	ShootMissile(FIREPOS_TYPE.MISSILE_LEFT);
-				//	ShootMissile(FIREPOS_TYPE.MISSILE_RIGHT);
-				//	ShootLaser();
-				//	break;
 		}
-		// 인스턴스 직접접근
-		//switch (type)
-		//{
-		//	case SHOOT_TYPE.BULLET:
-		//		SoundManager.Instance.PlaySFX3DAtPosition(_playSoundType, transform.position, 0.9f, 1.1f);
-		//		ShootBullet();
-		//		break;
-		//	case SHOOT_TYPE.LASER:
-		//		SoundManager.Instance.PlaySFX3DAtPosition(_playSoundType, transform.position);
-		//		ShootLaser();
-		//		break;
-		//	case SHOOT_TYPE.MISSILE_LEFT:
-		//		SoundManager.Instance.PlaySFX3DAtPosition(_playSoundType, transform.position);
-		//		ShootMissile(FIREPOS_TYPE.MISSILE_LEFT);
-		//		break;
-		//	case SHOOT_TYPE.MISSILE_RIGHT:
-		//		SoundManager.Instance.PlaySFX3DAtPosition(_playSoundType, transform.position);
-		//		ShootMissile(FIREPOS_TYPE.MISSILE_RIGHT);
-		//		break;
-
-		//	//미사용. 차후 다시 사용할수도?
-		//	//case SHOOT_TYPE.MISSILE_BOTH://소리클경우 양쪽말고 한쪽이나 중간점 으로 따로만들어서진행
-		//	//	SoundManager.Instance.PlaySFX3DAtPosition(_playSoundType, GetFirePos(FIREPOS_TYPE.MISSILE_LEFT).position);
-		//	//	SoundManager.Instance.PlaySFX3DAtPosition(_playSoundType, GetFirePos(FIREPOS_TYPE.MISSILE_RIGHT).position);
-		//	//	ShootMissile(FIREPOS_TYPE.MISSILE_LEFT);
-		//	//	ShootMissile(FIREPOS_TYPE.MISSILE_RIGHT);
-		//	//	break;
-		//	//case SHOOT_TYPE.ALL:
-		//	//	SoundManager.Instance.PlaySFX3DAtPosition(GetPlaySoundType(SHOOT_TYPE.BULLET), transform.position, 0.9f, 1.1f);
-		//	//	SoundManager.Instance.PlaySFX3DAtPosition(GetPlaySoundType(SHOOT_TYPE.MISSILE_LEFT), transform.position);
-		//	//	SoundManager.Instance.PlaySFX3DAtPosition(GetPlaySoundType(SHOOT_TYPE.LASER), transform.position);
-		//	//	ShootBullet();
-		//	//	ShootMissile(FIREPOS_TYPE.MISSILE_LEFT);
-		//	//	ShootMissile(FIREPOS_TYPE.MISSILE_RIGHT);
-		//	//	ShootLaser();
-		//	//	break;
-		//}
-
-
 	}
 
-	// =====================[추가]======================
+
+
+
+
+	// 
 	// 총알 - 좌우 교대 발사
 	// bulletFirePos[0]=왼쪽, bulletFirePos[1]=오른쪽
 	// =================================================
-
 
 
 
@@ -511,26 +507,52 @@ public class Player : Unit
 	}
 
 	// 미사일 - 타입으로 좌우선택. 총구타입선택(좌우)
+	/// <summary>
+	/// Shoot()에서 조건문을 통과했을 때 호출되며 실제 생성과 잔탄 소모만 담당
+	/// </summary>
 	private void ShootMissile(FIREPOS_TYPE firePosType)
 	{
 		Transform curFirePos = GetFirePos(firePosType);
-		if (curFirePos == null)
+		if (curFirePos == null) return;
+
+		// Shoot()에서 이미 장착 여부(if)를 통과하고 들어왔으므로 여기서 즉시 1발 소모
+		RemoveMissileAmmo(curMissileType);
+
+		// 교대 모드 시, 잔탄이 부족하여 오른쪽 발사가 불가능하다면 인덱스를 다시 0으로 강제 보정
+		if (missileFireMode == MISSILE_FIRE_MODE.SINGLE && !isMissile_EquippedRight)
 		{
-			return;
+			_missileFireIndex = 0;
+		}
+		// 교대 모드일 경우 다음 발사를 위해 인덱스 전환 (0 -> 1 -> 0)
+		if (missileFireMode == MISSILE_FIRE_MODE.SINGLE)
+		{
+			_missileFireIndex = (_missileFireIndex + 1) % 2;
 		}
 
-		// curFirePos에서 실제발사로직필요// poolmanager 구현 뒤 넣기
-		//ex.PoolManager.Instance.GetMissile(curFirePos.position, curFirePos.forward, this);
-		Missile newMissile = _pool.GetMissile();
-		// 락온 확정 시 타겟 넘기기, 아니면 직진 미사일로 발사
-		if (lockOnSystem != null && lockOnSystem.IsLocked)
+		// 투사체 생성 및 초기화 로직
+		switch (curMissileType)
 		{
-			newMissile.Init(curFirePos.position, curFirePos.forward, this, lockOnSystem.LockedTarget);
-			
-		}
-		else
-		{
-			newMissile.Init(curFirePos.position, curFirePos.forward, this);
+			case MISSILE_TYPE.HOMING:
+				Missile newMissile = _pool.GetMissile();
+				if (lockOnSystem != null && lockOnSystem.IsLocked)
+				{
+					newMissile.Init(curFirePos.position, curFirePos.forward, this, lockOnSystem.LockedTarget);
+				}
+				else
+				{
+					newMissile.Init(curFirePos.position, curFirePos.forward, this);
+				}
+				break;
+
+			case MISSILE_TYPE.CLUSTER:
+				// ClusterMissile cm = _pool.GetClusterMissile();
+				// cm.Init(curFirePos.position, curFirePos.forward, this);
+				break;
+
+			case MISSILE_TYPE.DUMB:
+				// DumbMissile dm = _pool.GetDumbMissile();
+				// dm.Init(curFirePos.position, curFirePos.forward, this);
+				break;
 		}
 	}
 

@@ -49,7 +49,8 @@ public class InputManager : MonoBehaviour
 	"마우스 우클릭 : 미사일 발사 (fireMissile, 누른 순간)\n" +
 	"F : 레이저 발사 (fireLaser, 누른 순간)\n" +
 	"V : 전체 무기 동시 발사 (fireAll, 누른 순간)\n" +
-	"숫자 1 / 3 : 좌우 미사일 장착 토글 (equipMissileL/R, 누른 순간)")]
+	"숫자 1 2 3 : 미사일 장착 토글 1:일반 2:클러스터(분열유도) 3:DUMB(핵)\n"+
+	"C: 미사일 발사모드(좌우교차,동시)")]
 	
 
 	//==========================이동관련 조작=====================
@@ -86,10 +87,7 @@ public class InputManager : MonoBehaviour
 	[Tooltip("미사일 발사. 마우스 우클릭 누른 순간 한 프레임만")]
 	public bool fireMissile;
 
-	[Tooltip("미사일 장착/해제. 1(좌),3(우)버튼 누른순간 한프레임")]
-	public bool equipMissileL;
-	public bool equipMissileR;
-
+	
 
 	[Tooltip("레이저 발사. F 누르면  true")]
 	public bool fireLaser;
@@ -100,7 +98,14 @@ public class InputManager : MonoBehaviour
 	[Tooltip("락온 대상 전환. 마우스휠 위=다음, 아래=이전")]
 	public float switchLockOnTarget; // 양수=다음, 음수=이전, 0=입력없음
 
+	[Header("미사일 타입 전환 입력")]
+	[Tooltip("숫자 1, 2, 3키 입력. 누른 순간 한 프레임만 true")]
+	public bool switchMissile1;
+	public bool switchMissile2;
+	public bool switchMissile3;
 
+	[Header("미사일 발사 모드 전환 입력")]
+	public bool switchMissileShootMode;
 	private void Awake()
 	{
 		// 싱글톤 기본 세팅 (씬이 넘어가도 파괴되지 않게 유지)
@@ -117,11 +122,7 @@ public class InputManager : MonoBehaviour
 			Destroy(gameObject);
 		}
 	}
-	// Start is called before the first frame update
-	void Start()
-	{
 
-	}
 
 	// Update is called once per frame
 
@@ -158,18 +159,28 @@ public class InputManager : MonoBehaviour
 		// GetKey  = 누르는 동안 (총알 연사 가능성 고려. 추후 연사속도는 Player에서 제어)
 		// GetKeyDown = 누른 순간만 (미사일/레이저/전체는 토글/즉발 개념)
 		fireBullet = Input.GetKey(KeyCode.Mouse0);
-
 		fireMissile = Input.GetKeyDown(KeyCode.Mouse1);
 		fireLaser = Input.GetKeyDown(KeyCode.F);
 		fireAll = Input.GetKeyDown(KeyCode.V);
 
 		// 락온 대상 전환 (마우스휠)
 		switchLockOnTarget = Input.GetAxisRaw("Mouse ScrollWheel");
-		// 미사일 슬롯 장착/해제 토글 (Player에서 토글 로직 처리)
-		equipMissileL = Input.GetKeyDown(KeyCode.Alpha1);
-		equipMissileR = Input.GetKeyDown(KeyCode.Alpha3);
-
 		
+
+		// 미사일 타입 스위칭
+		switchMissile1 = Input.GetKeyDown(KeyCode.Alpha1);
+		switchMissile2 = Input.GetKeyDown(KeyCode.Alpha2);
+		switchMissile3 = Input.GetKeyDown(KeyCode.Alpha3);
+
+		//미사일 발사모드 스위칭
+
+		switchMissileShootMode = Input.GetKeyDown(KeyCode.C);
+
+		//// 미사일 슬롯 장착/해제 토글 (Player에서 토글 로직 처리) 0520 이후 미사용
+		//equipMissileL = Input.GetKeyDown(KeyCode.Alpha1);
+		//equipMissileR = Input.GetKeyDown(KeyCode.Alpha3);
+
+
 
 
 	}

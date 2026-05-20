@@ -4,41 +4,54 @@ using UnityEngine;
 
 // =====================================================================
 // MissileLockOnSystem
-// ¹ß»ç ÁÖÃ¼(Player, Enemy À¯´Ö)¿¡ ºÙÀÌ´Â ÄÄÆ÷³ÍÆ®.
-// ¹üÀ§ ³» Àû ÀÚµ¿ °¨Áö ¡æ ¶ô¿Â À¯Áö ½Ã°£ Ã¤¿ì¸é ¶ô¿Â È®Á¤.
-// ¹ß»ç ½Ã Missile.Init()¿¡ targetTrÀ» ³Ñ°ÜÁÖ¸é µÊ.
+// ë°œì‚¬ ì£¼ì²´(Player, Enemy ìœ ë‹›)ì— ë¶™ì´ëŠ” ì»´í¬ë„ŒíŠ¸.
+// ë²”ìœ„ ë‚´ ì  ìë™ ê°ì§€ â†’ ë½ì˜¨ ëª¨ë“œ(Single/Multi)ì— ë”°ë¼ ë½ì˜¨ ìˆ˜í–‰.
 // =====================================================================
+
 
 public class MissileLockOnSystem : MonoBehaviour
 {
 	[Space(5)]
-	[Header("<size=18>[¶ô¿Â ½Ã½ºÅÛ ¼³Á¤]</size>")]
+	[Header("<size=18>[ë½ì˜¨ ì‹œìŠ¤í…œ ì„¤ì •]</size>")]
 
-	[Header("¶ô¿Â Å½Áö ¹üÀ§")]
+	[Header("í˜„ì¬ ë½ì˜¨ ëª¨ë“œ (ë¯¸ì‚¬ì¼ ì¢…ë¥˜ì— ë”°ë¼ ë³€ê²½)")]
+	//í”Œë ˆì´ì–´ì—ì„œ ì¥ë¹„ë˜ëŠ” ë¯¸ì‚¬ì¼ë”°ë¼ ìŠ¤ìœ„ì¹­í•´ì„œ ì…ë ¥í• ê²ƒ.
+	public LOCK_ON_MODE currentLockMode = LOCK_ON_MODE.SINGLE;
+
+	[Header("ë©€í‹° ë½ì˜¨ ì‹œ ìµœëŒ€ ë™ì‹œ ë½ì˜¨ ê°œìˆ˜")]
+	public int maxMultiLockCount = 4;
+
+	[Header("ë½ì˜¨ íƒì§€ ë²”ìœ„")]
 	public float lockOnRange = 80f;
 
-	[Header("¶ô¿Â È®Á¤±îÁö ÇÊ¿äÇÑ ½Ã°£ÃÊ")]
+	[Header("ë½ì˜¨ í™•ì •ê¹Œì§€ í•„ìš”í•œ ì‹œê°„ì´ˆ")]
 	public float lockOnRequiredTime = 1.2f;
 
-	[Header("¶ô¿Â ´ë»óÀÌµÉ ·¹ÀÌ¾î ¸¶½ºÅ© (»ó´ë Unit HitBox ·¹ÀÌ¾î¸¸ ÁöÁ¤)")]
+	[Header("ë½ì˜¨ ëŒ€ìƒì´ë  ë ˆì´ì–´ ë§ˆìŠ¤í¬")]
 	public LayerMask targetLayerMask;
 
-	[Header("¶ô¿Â Àü¹æ °¢µµ Á¦ÇÑ (ÀÌ °¢µµ ¾È¿¡ ÀÖ¾î¾ß ¶ô¿Â °¡´É)")]
+	[Header("ë½ì˜¨ ì „ë°© ê°ë„ ì œí•œ")]
 	[Range(10f, 180f)]
 	public float lockOnAngle = 60f;
 
-	// ¦¡¦¡ ÇöÀç »óÅÂ (ÀĞ±â Àü¿ëÀ¸·Î ¿ÜºÎ ÂüÁ¶ °¡´É) ¦¡¦¡
-	// ÇöÀç ¶ô¿Â ÁøÇà ÁßÀÎ ÈÄº¸ Å¸°Ù
-	public Transform LockOnCandidate;// { get; private set; }
-	// ¶ô¿Â ¿ÏÀüÈ÷ È®Á¤µÈ Å¸°Ù
-	public Transform LockedTarget;// { get; private set; }
-	// ¶ô¿Â ÁøÇà·ü 0~1 (UI °ÔÀÌÁö ¿¬µ¿¿ë)
-	public float LockOnProgress; //{ get; private set; }
-	// ¶ô¿Â ¿ÏÀü È®Á¤ ¿©ºÎ
-	public bool IsLocked; //{ get; private set; }
+	// â”€â”€ í˜„ì¬ ìƒíƒœ (UIíŒ€ ì™¸ë¶€ ì°¸ì¡°ìš©) â”€â”€
+	public List<Transform> TargetsInRange = new List<Transform>();
+
+	// [Single ëª¨ë“œ ì „ìš© ë³€ìˆ˜]
+	public Transform LockOnCandidate;
+	public Transform LockedTarget;
+
+	// [Multi ëª¨ë“œ ì „ìš© ë³€ìˆ˜]
+	public List<Transform> MultiLockCandidates = new List<Transform>();
+	public List<Transform> MultiLockedTargets = new List<Transform>();
+
+	// [ê³µí†µ ë³€ìˆ˜]
+	public float LockOnProgress;
+	public bool IsLocked;
 
 	private float lockOnTimer = 0f;
-	private Unit ownerUnit; // ÀÌ ½Ã½ºÅÛÀÇ ¼ÒÀ¯ À¯´Ö (ÀÚ±â ÀÚ½Å°ú Ãæµ¹ ¹æÁö¿ë)
+	private int _currentTargetIndex = 0;
+	private Unit ownerUnit;
 
 	private void Awake()
 	{
@@ -47,107 +60,187 @@ public class MissileLockOnSystem : MonoBehaviour
 
 	private void Update()
 	{
-		// ¹üÀ§+°¢µµ ¾ÈÀÇ °¡Àå °¡±î¿î Àû Å½Áö
-		Transform candidate = FindBestTarget();
+		FindAllTargets();
 
-		// ÈÄº¸°¡ ¹Ù²î¸é Å¸ÀÌ¸Ó ¸®¼Â
-		if (candidate != LockOnCandidate)
+		// íƒ€ê²Ÿ ì—†ìœ¼ë©´ ì „ë¶€ ì´ˆê¸°í™”
+		if (TargetsInRange.Count == 0)
 		{
-			LockOnCandidate = candidate;
-			lockOnTimer = 0f;
-			IsLocked = false;
-			LockedTarget = null;
+			ClearLock();
+			return;
 		}
 
-		// ÈÄº¸°¡ ÀÖÀ¸¸é Å¸ÀÌ¸Ó ´©Àû
-		if (LockOnCandidate != null)
+		// ì„ íƒëœ ëª¨ë“œì— ë”°ë¼ ì²˜ë¦¬ ë¡œì§ ë¶„ë¦¬
+		switch (currentLockMode)
 		{
-			lockOnTimer += Time.deltaTime;
-			LockOnProgress = Mathf.Clamp01(lockOnTimer / lockOnRequiredTime);
+			case LOCK_ON_MODE.SINGLE:
+				UpdateSingleLockMode();
+				break;
 
-			// ½Ã°£ Ã¤¿ì¸é ¶ô¿Â È®Á¤
-			if (lockOnTimer >= lockOnRequiredTime)
-			{
-				IsLocked = true;
-				LockedTarget = LockOnCandidate;
-			}
-		}
-		else
-		{
-			// ÈÄº¸ ¾øÀ¸¸é ÀüºÎ ÃÊ±âÈ­
-			lockOnTimer = 0f;
-			LockOnProgress = 0f;
-			IsLocked = false;
-			LockedTarget = null;
+			case LOCK_ON_MODE.MULTI:
+				UpdateMultiLockMode();
+				break;
 		}
 	}
 
-	// ¹üÀ§ + °¢µµ Á¶°ÇÀ» ¸¸Á·ÇÏ´Â °¡Àå °¡±î¿î Å¸°Ù ¹İÈ¯
-	private Transform FindBestTarget()
+	/// <summary>
+	/// ë‹¨ì¼ ë½ì˜¨ ëª¨ë“œ ì—…ë°ì´íŠ¸ ë¡œì§
+	/// </summary>
+	private void UpdateSingleLockMode()
 	{
-		// OverlapSphere·Î ¹üÀ§ ³» Äİ¶óÀÌ´õ ÀüºÎ ¼öÁı
-		Collider[] hits = Physics.OverlapSphere(transform.position, lockOnRange, targetLayerMask);
+		if (_currentTargetIndex >= TargetsInRange.Count)
+		{
+			_currentTargetIndex = TargetsInRange.Count - 1;
+		}
 
-		Transform best = null;
-		float closestDist = float.MaxValue;
+		LockOnCandidate = TargetsInRange[_currentTargetIndex];
+
+		lockOnTimer += Time.deltaTime;
+		LockOnProgress = Mathf.Clamp01(lockOnTimer / lockOnRequiredTime);
+
+		if (!IsLocked && lockOnTimer >= lockOnRequiredTime)
+		{
+			IsLocked = true;
+			LockedTarget = LockOnCandidate;
+			// SoundManager.Instance.PlaySFXUI(SOUND_TYPE.SFX_UI_LOCKON_COMPLETE);
+		}
+
+		if (IsLocked)
+		{
+			LockedTarget = LockOnCandidate;
+		}
+	}
+
+	/// <summary>
+	/// ë‹¤ì¤‘ ë½ì˜¨ ëª¨ë“œ ì—…ë°ì´íŠ¸ ë¡œì§
+	/// </summary>
+	private void UpdateMultiLockMode()
+	{
+		MultiLockCandidates.Clear();
+
+		// íƒì§€ëœ íƒ€ê²Ÿ ì¤‘ ìµœëŒ€ ê°œìˆ˜(maxMultiLockCount)ë§Œí¼ë§Œ í›„ë³´ë¡œ ë“±ë¡
+		int count = Mathf.Min(TargetsInRange.Count, maxMultiLockCount);
+		for (int i = 0; i < count; i++)
+		{
+			MultiLockCandidates.Add(TargetsInRange[i]);
+		}
+
+		lockOnTimer += Time.deltaTime;
+		LockOnProgress = Mathf.Clamp01(lockOnTimer / lockOnRequiredTime);
+
+		if (!IsLocked && lockOnTimer >= lockOnRequiredTime)
+		{
+			IsLocked = true;
+			MultiLockedTargets.Clear();
+			MultiLockedTargets.AddRange(MultiLockCandidates);
+			// SoundManager.Instance.PlaySFXUI(SOUND_TYPE.SFX_UI_LOCKON_COMPLETE);
+		}
+
+		if (IsLocked)
+		{
+			MultiLockedTargets.Clear();
+			MultiLockedTargets.AddRange(MultiLockCandidates);
+		}
+	}
+
+	private void FindAllTargets()
+	{
+		Collider[] hits = Physics.OverlapSphere(transform.position, lockOnRange, targetLayerMask);
 
 		foreach (Collider hit in hits)
 		{
-			// ÀÚ±â ÀÚ½Å Á¦¿Ü
-			if (ownerUnit != null && hit.gameObject == ownerUnit.gameObject)
+			if (ownerUnit != null && hit.GetComponentInParent<Unit>() == ownerUnit)
 			{
 				continue;
 			}
 
 			Vector3 dirToTarget = (hit.transform.position - transform.position).normalized;
 			float angle = Vector3.Angle(transform.forward, dirToTarget);
-
-			// Àü¹æ °¢µµ ¾È¿¡ ÀÖ¾î¾ß¸¸ ¶ô¿Â °¡´É
 			if (angle > lockOnAngle * 0.5f)
 			{
 				continue;
 			}
 
-			// ½Ã¾ß Â÷´Ü Ã¼Å© (Àå¾Ö¹°ÀÌ ¸·°í ÀÖÀ¸¸é ½ºÅµ)
-			if (Physics.Raycast(transform.position, dirToTarget,
-				out RaycastHit rayHit, lockOnRange))
+			Transform unitTr = hit.GetComponentInParent<Unit>()?.transform;
+			if (unitTr == null)
 			{
-				// ·¹ÀÌÄ³½ºÆ®°¡ Å¸°Ù ·¹ÀÌ¾î ¾Æ´Ñ ´Ù¸¥ °É ¸ÕÀú ¸ÂÀ¸¸é Â÷´ÜµÈ °Í
-				if (rayHit.collider != hit)
+				continue;
+			}
+
+			if (!TargetsInRange.Contains(unitTr))
+			{
+				TargetsInRange.Add(unitTr);
+			}
+		}
+
+		// ë²”ìœ„ ë²—ì–´ë‚˜ê±°ë‚˜ ë¹„í™œì„±í™”ëœ íƒ€ê²Ÿ ì œê±°
+		for (int i = TargetsInRange.Count - 1; i >= 0; i--)
+		{
+			Transform t = TargetsInRange[i];
+			if (t == null || !t.gameObject.activeInHierarchy)
+			{
+				TargetsInRange.RemoveAt(i);
+				if (i <= _currentTargetIndex && _currentTargetIndex > 0) _currentTargetIndex--;
 				{
 					continue;
 				}
 			}
 
-			float dist = Vector3.Distance(transform.position, hit.transform.position);
-			if (dist < closestDist)
+			float dist = Vector3.Distance(transform.position, t.position);
+			float angle = Vector3.Angle(transform.forward, (t.position - transform.position).normalized);
+			if (dist > lockOnRange || angle > lockOnAngle * 0.5f)
 			{
-				closestDist = dist;
-				best = hit.transform;
+				TargetsInRange.RemoveAt(i);
+				if (i <= _currentTargetIndex && _currentTargetIndex > 0)
+				{
+					_currentTargetIndex--;
+				}
 			}
 		}
-
-		return best;
 	}
 
-	// ¶ô¿Â °­Á¦ ÇØÁ¦ (¹ß»ç ÈÄ ½½·Ô ÇØÁ¦ µî ÇÊ¿ä ½Ã ¿ÜºÎ¿¡¼­ È£Ãâ)
+	/// <summary>
+	/// ë½ì˜¨ ëŒ€ìƒ ì „í™˜ (Single ëª¨ë“œì—ì„œë§Œ ì‘ë™)
+	/// </summary>
+	public void SwitchTarget(int direction)
+	{
+		if (currentLockMode == LOCK_ON_MODE.MULTI)
+		{
+			// ë©€í‹° ë½ì˜¨ ëª¨ë“œì—ì„œëŠ” ì „ì²´ë¥¼ ë™ì‹œ ì¡°ì¤€í•˜ë¯€ë¡œ ê°œë³„ ìŠ¤ìœ„ì¹˜ ê¸°ëŠ¥ì„ ì œí•œí•©ë‹ˆë‹¤.
+			return;
+		}
+
+		if (TargetsInRange.Count <= 1)
+		{
+			return;
+		}
+		_currentTargetIndex = (_currentTargetIndex + direction + TargetsInRange.Count) % TargetsInRange.Count;
+	}
+
+	/// <summary>
+	/// ë½ì˜¨ ìƒíƒœ ì´ˆê¸°í™”
+	/// </summary>
 	public void ClearLock()
 	{
-		LockOnCandidate = null;
-		LockedTarget = null;
+		// ê³µí†µ ì´ˆê¸°í™”
 		lockOnTimer = 0f;
 		LockOnProgress = 0f;
 		IsLocked = false;
+		_currentTargetIndex = 0;
+
+		// Single ì´ˆê¸°í™”
+		LockOnCandidate = null;
+		LockedTarget = null;
+
+		// Multi ì´ˆê¸°í™”
+		MultiLockCandidates.Clear();
+		MultiLockedTargets.Clear();
 	}
 
-	// ¿¡µğÅÍ¿¡¼­ ¹üÀ§/°¢µµ ±âÁî¸ğ Ç¥½Ã
 	private void OnDrawGizmosSelected()
 	{
-		// Å½Áö ¹üÀ§ ±¸Ã¼
 		Gizmos.color = new Color(1f, 1f, 0f, 0.15f);
 		Gizmos.DrawSphere(transform.position, lockOnRange);
 
-		// ¶ô¿Â °¢µµ ºÎÃ¤²Ã (Àü¹æ ÁÂ¿ì)
 		Gizmos.color = Color.yellow;
 		Vector3 leftDir = Quaternion.Euler(0, -lockOnAngle * 0.5f, 0) * transform.forward;
 		Vector3 rightDir = Quaternion.Euler(0, lockOnAngle * 0.5f, 0) * transform.forward;
@@ -155,12 +248,38 @@ public class MissileLockOnSystem : MonoBehaviour
 		Gizmos.DrawRay(transform.position, rightDir * lockOnRange);
 		Gizmos.DrawRay(transform.position, transform.forward * lockOnRange);
 
-		// ÇöÀç ¶ô¿Â ÈÄº¸ Ç¥½Ã
-		if (LockOnCandidate != null)
+		// ê¸°ì¦ˆëª¨: Single ëª¨ë“œ ì‹œê°í™”
+		if (currentLockMode == LOCK_ON_MODE.SINGLE && LockOnCandidate != null)
 		{
 			Gizmos.color = IsLocked ? Color.red : Color.cyan;
 			Gizmos.DrawWireSphere(LockOnCandidate.position, 2f);
 			Gizmos.DrawLine(transform.position, LockOnCandidate.position);
+		}
+		// ê¸°ì¦ˆëª¨: Multi ëª¨ë“œ ì‹œê°í™”
+		else if (currentLockMode == LOCK_ON_MODE.MULTI && MultiLockCandidates.Count > 0)
+		{
+			Gizmos.color = IsLocked ? Color.red : Color.green;
+			foreach (Transform t in MultiLockCandidates)
+			{
+				Gizmos.DrawWireSphere(t.position, 2f);
+				Gizmos.DrawLine(transform.position, t.position);
+			}
+		}
+
+		// ì „ì²´ ê°ì§€ íƒ€ê²Ÿ ì‹œê°í™”
+		Gizmos.color = Color.white;
+		foreach (Transform t in TargetsInRange)
+		{
+			if (currentLockMode == LOCK_ON_MODE.SINGLE && t == LockOnCandidate)
+			{
+				continue;
+			}
+			if (currentLockMode == LOCK_ON_MODE.MULTI && MultiLockCandidates.Contains(t))
+			{
+				continue;
+			}
+
+			Gizmos.DrawWireSphere(t.position, 1.5f);
 		}
 	}
 }
