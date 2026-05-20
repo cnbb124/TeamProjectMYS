@@ -180,6 +180,7 @@ MonoBehaviour:
   criChance: 0
   criDamageMultiplier: 0
   fireDelay: 0.1
+  missileAmmoList: []
   baseMoveSpeed: 0
   boostSpeed: 0
   maxSpeed: 0
@@ -367,13 +368,21 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1788722382}
     m_Modifications:
-    - target: {fileID: 1161755328960943635, guid: a7897ad853ae9d6458830c653646215c, type: 3}
-      propertyPath: maxMultiLockCount
-      value: 8
+    - target: {fileID: 1295354817333113809, guid: a7897ad853ae9d6458830c653646215c, type: 3}
+      propertyPath: missileFireMode
+      value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 1161755328960943635, guid: a7897ad853ae9d6458830c653646215c, type: 3}
-      propertyPath: targetLayerMask.m_Bits
-      value: 16384
+    - target: {fileID: 1295354817333113809, guid: a7897ad853ae9d6458830c653646215c, type: 3}
+      propertyPath: missileAmmoList.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1295354817333113809, guid: a7897ad853ae9d6458830c653646215c, type: 3}
+      propertyPath: missileAmmoList.Array.data[0].curAmmo
+      value: 120
+      objectReference: {fileID: 0}
+    - target: {fileID: 1295354817333113809, guid: a7897ad853ae9d6458830c653646215c, type: 3}
+      propertyPath: missileAmmoList.Array.data[0].maxAmmo
+      value: 120
       objectReference: {fileID: 0}
     - target: {fileID: 3107650116710039119, guid: a7897ad853ae9d6458830c653646215c, type: 3}
       propertyPath: m_Name
@@ -954,11 +963,13 @@ MonoBehaviour:
   isDodging: 0
   fireBullet: 0
   fireMissile: 0
-  equipMissileL: 0
-  equipMissileR: 0
   fireLaser: 0
   fireAll: 0
   switchLockOnTarget: 0
+  switchMissile1: 0
+  switchMissile2: 0
+  switchMissile3: 0
+  switchMissileShootMode: 0
 --- !u!4 &832859079
 Transform:
   m_ObjectHideFlags: 0
@@ -1032,6 +1043,7 @@ MonoBehaviour:
   criChance: 0
   criDamageMultiplier: 0
   fireDelay: 0.1
+  missileAmmoList: []
   baseMoveSpeed: 0
   boostSpeed: 0
   maxSpeed: 0
@@ -1987,6 +1999,7 @@ MonoBehaviour:
   criChance: 0
   criDamageMultiplier: 0
   fireDelay: 0.1
+  missileAmmoList: []
   baseMoveSpeed: 0
   boostSpeed: 0
   maxSpeed: 0
@@ -2447,12 +2460,16 @@ MonoBehaviour:
   bulletPoolSize: 80
   missilePoolSize: 50
   laserPoolSize: 5
+  clusterMissilePoolSize: 10
+  dumbMissilePoolSize: 10
   enemy_GunshipPoolSize: 10
   enmey_DropshipPoolSize: 5
   enmey_MissileShipPoolSize: 5
   bulletPrefab: {fileID: 4456100443192961303, guid: 3e9a0f2679fdb134486731886e4b5b02, type: 3}
   missilePrefab: {fileID: 5952914819822619202, guid: 2129724456e13de4982a09d110aabb09, type: 3}
   laserPrefab: {fileID: 8159655599400890973, guid: 5f3b658f08f4b1641ba6f4557a97fb46, type: 3}
+  clusterMissilePrefab: {fileID: 0}
+  dumbMissilePrefab: {fileID: 0}
   enemy_DropshipPrefab: {fileID: 0}
   enemy_GunshipPrefab: {fileID: 0}
   enemy_MissileshipPrefab: {fileID: 0}

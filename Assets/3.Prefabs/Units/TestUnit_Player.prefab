@@ -1637,6 +1637,7 @@ MonoBehaviour:
   criChance: 20
   criDamageMultiplier: 1.5
   fireDelay: 0.1
+  missileAmmoList: []
   baseMoveSpeed: 350
   boostSpeed: 550
   maxSpeed: 1000
@@ -1678,6 +1679,11 @@ MonoBehaviour:
   exp: 0
   expToNextLevel: 100
   lockOnSystem: {fileID: 1161755328960943635}
+  missileFireMode: 0
+  curMissileType: 0
+  isMissile_EquippedLeft: 0
+  isMissile_EquippedRight: 0
+  equippedMissiles: 000000000100000002000000
 --- !u!114 &1161755328960943635
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1690,14 +1696,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a547208e588a6c04ebc7cf397cd9034d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  currentLockMode: 0
+  maxMultiLockCount: 8
   lockOnRange: 1800
   lockOnRequiredTime: 0.8
   targetLayerMask:
     serializedVersion: 2
     m_Bits: 16384
   lockOnAngle: 110
+  TargetsInRange: []
   LockOnCandidate: {fileID: 0}
   LockedTarget: {fileID: 0}
+  MultiLockCandidates: []
+  MultiLockedTargets: []
   LockOnProgress: 0
   IsLocked: 0
 --- !u!54 &1329124423494150431
