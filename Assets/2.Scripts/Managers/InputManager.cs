@@ -49,7 +49,7 @@ public class InputManager : MonoBehaviour
 	"마우스 우클릭 : 미사일 발사 (fireMissile, 누른 순간)\n" +
 	"F : 레이저 발사 (fireLaser, 누른 순간)\n" +
 	"V : 전체 무기 동시 발사 (fireAll, 누른 순간)\n" +
-	"숫자 1 2 3 : 미사일 장착 토글 1:일반 2:클러스터(분열유도) 3:DUMB(핵)\n"+
+	"숫자 1 2 3 : 미사일 장착 슬롯 현재는 1:일반 2:클러스터(분열유도) 3:DUMB(핵)\n"+
 	"C: 미사일 발사모드(좌우교차,동시)")]
 	
 

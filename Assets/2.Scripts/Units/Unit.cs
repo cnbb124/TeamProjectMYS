@@ -377,7 +377,7 @@ public abstract class Unit : MonoBehaviour, IDamageable
     protected virtual void OnDying()
     {
         //애니메이션명령, 사운드재생?
-        //죽는처리
+        //죽는처리 - 풀매니저
     }
 
     //실드회복

@@ -21,3 +21,13 @@ public enum UNIT_ENEMY_STATE
 
 }
 
+public enum GAME_STATE
+{
+	MAIN_MENU,
+	UI_MENU,
+	PLAYING,
+	PAUSED,
+	GAME_OVER,
+	CLEAR,
+}
+

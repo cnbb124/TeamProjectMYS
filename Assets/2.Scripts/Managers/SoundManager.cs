@@ -78,7 +78,8 @@ public class SoundManager : MonoBehaviour
 	[SerializeField]
 	[Tooltip("배경음악(BGM) 재생을 전담하는 소스. Loop(반복 재생)가 자동으로 활성화")]
 	private AudioSource bgmSource; // BGM 전용 스피커 (반복 재생 켜두기)
-
+	[Tooltip("현재 BGM소스에 입력된 사운드")]
+	public SOUND_TYPE curBGM;
 	[SerializeField]
 	[Tooltip("UI(2D)용")]
 	private AudioSource sfxUISource; // UI/일반 효과음 전용 스피커 (2D)
@@ -231,6 +232,7 @@ public class SoundManager : MonoBehaviour
 
 
 
+	#region 외부 호출용
 	// ================== [실제 사용되는 재생 함수들] ==================
 
 
@@ -242,14 +244,16 @@ public class SoundManager : MonoBehaviour
 
 
 
-	// BGM재생
-
+	/// <summary>
+	/// BGM재생
+	/// </summary>
+	/// <param name="type">사운드타입 입력</param>
 	public void PlayBGM(SOUND_TYPE type)
 	{
 		SoundTypeClip data = GetSoundData(type);
 		if (data != null)
 		{
-
+			curBGM = type;
 			bgmSource.volume = bgmVolume;
 			bgmSource.clip = data.clip;
 			bgmSource.loop = true; // BGM은 무한반복
@@ -263,8 +267,11 @@ public class SoundManager : MonoBehaviour
 	//	SoundManager.Instance.PlayBGM(SOUND_TYPE.BGM_LOBBY);
 	//}
 
-	// UI 클릭, 주사위 굴리기 등 화면 전체에서 들려야 하는 2D 효과음
 
+	/// <summary>
+	/// UI 클릭, 주사위 굴리기 등 화면 전체에서 들려야 하는 2D 효과음
+	/// </summary>
+	/// <param name="type"></param>
 	public void PlaySFXUI(SOUND_TYPE type)
 	{
 		SoundTypeClip data = GetSoundData(type);
@@ -280,7 +287,12 @@ public class SoundManager : MonoBehaviour
 
 
 
-	// 단조로움을 방지하기 위해 랜덤한 피치(음높이)로 2D 효과음 재생
+	/// <summary>
+	/// 단조로움을 방지하기 위해 랜덤한 피치(음높이)로 2D 효과음 재생
+	/// </summary>
+	/// <param name="type"></param>
+	/// <param name="pitchMin"></param>
+	/// <param name="pitchMax"></param>
 	// 사용 예: PlaySFX(SOUND_TYPE.SFX_SHOOT, 0.9f, 1.1f);
 	public void PlaySFXUI(SOUND_TYPE type, float pitchMin, float pitchMax)
 	{
@@ -295,8 +307,13 @@ public class SoundManager : MonoBehaviour
 	}
 
 
-	// 총소리, 폭발음,이동 등 특정 위치에서 나야 하는 단발성 3D 효과음을 재생(랜덤x)
-	// 타입과 좌표받기
+	/// <summary>
+	/// 총소리, 폭발음,이동 등 특정 위치에서 나야 하는 단발성 3D 효과음을 재생(랜덤x)
+	///  타입과 좌표받기
+	/// </summary>
+	/// <param name="type"></param>
+	/// <param name="position"></param>
+
 	public void PlaySFX3DAtPosition(SOUND_TYPE type, Vector3 position)
 	{
 		SoundTypeClip data = GetSoundData(type);
@@ -320,7 +337,14 @@ public class SoundManager : MonoBehaviour
 	//사용예
 	//Soundmanager.Instance.PlaySFXAtPosition(SOUND_TYPE.SFX_SHOOT, transform.position);
 
-	//피치 랜덤 재생(오버로딩)
+	/// <summary>
+	/// 피치 랜덤 재생(오버로딩)
+	/// </summary>
+	/// <param name="type"></param>
+	/// <param name="position"></param>
+	/// <param name="pitchMin"></param>
+	/// <param name="pitchMax"></param>
+
 	public void PlaySFX3DAtPosition(SOUND_TYPE type, Vector3 position, float pitchMin, float pitchMax)
 	{
 		SoundTypeClip data = GetSoundData(type);
@@ -412,7 +436,7 @@ public class SoundManager : MonoBehaviour
 	}
 	// 모든 사운드(BGM 및 2D SFX) 정지
 
-	public void StopAll()
+	public void StopSFXAll()
 	{
 		bgmSource.Stop();
 		sfxUISource.Stop();
@@ -463,7 +487,7 @@ public class SoundManager : MonoBehaviour
 	}
 
 
-
+	#endregion
 
 #if UNITY_EDITOR
 	private void OnValidate()

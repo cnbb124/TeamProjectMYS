@@ -112,3 +112,13 @@ public enum MISSILE_TYPE
 	CLUSTER,    // 분열 미사일 (멀티락온 후 분열)
 	DUMB,       // 직선 무유도 미사일 (일정시간/충돌 후 광역폭발)
 }
+
+
+
+public enum SCENE_TYPE
+{
+    MAIN,
+    STAGE1,
+    STATION,
+    GAME_OVER,
+}
