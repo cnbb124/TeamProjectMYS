@@ -34,20 +34,28 @@ public class MissileLockOnSystem : MonoBehaviour
 	[Range(10f, 180f)]
 	public float lockOnAngle = 60f;
 
-	// ── 현재 상태 (UI팀 외부 참조용) ──
+	// =============현재 상태 (UI팀 외부 참조용)==================
+	//락온범위내의 락온가능상대
 	public List<Transform> TargetsInRange = new List<Transform>();
 
-	// [Single 모드 전용 변수]
+	// Single (단일타겟락온)모드 전용 변수
+	// 현재 목표로 삼은락온되고있는 후보
 	public Transform LockOnCandidate;
+	// 락온된 타겟
 	public Transform LockedTarget;
 
-	// [Multi 모드 전용 변수]
+	// Multi (다중타겟락온)모드 전용 변수
+	//현재 목표로 삼은 락온되고있는 후보들
 	public List<Transform> MultiLockCandidates = new List<Transform>();
+	//락온된 타겟들
 	public List<Transform> MultiLockedTargets = new List<Transform>();
 
-	// [공통 변수]
+	
+	//락온 진행률(UI표현에 참조)
 	public float LockOnProgress;
+	//락온 여부
 	public bool IsLocked;
+
 
 	private float lockOnTimer = 0f;
 	private int _currentTargetIndex = 0;

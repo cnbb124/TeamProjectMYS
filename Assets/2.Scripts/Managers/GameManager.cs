@@ -168,7 +168,7 @@ public class GameManager : MonoBehaviour
 		{
 			return;
 		}
-		Time.timeScale = 0f;
+		Time.timeScale = 0f;//이거는 임시..... 0되면 아예 다멈춰버리니까 ui같은거는 정상작동하도록
 		ChangeState(GAME_STATE.PAUSED);
 	}
 
