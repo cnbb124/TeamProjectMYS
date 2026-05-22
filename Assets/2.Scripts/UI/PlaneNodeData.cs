@@ -13,15 +13,15 @@ public class PlaneNodeData : ScriptableObject
 
     [Header("Tree Structure")]
     public List<PlaneNodeData> children = new();
-
     [Header("Specifications")]
+    [Range(0, 100)] public int hp;
     [Range(0, 100)] public int speed;
+    [Range(0, 100)] public int defense;
     [Range(0, 100)] public int mobility;
     [Range(0, 100)] public int stability;
     [Range(0, 100)] public int airToAir;
     [Range(0, 100)] public int airToGround;
-    [Range(0, 100)] public int defense;
-
+    
     [Header("Parts Slots")]
     public int bodySlots = 6;
     public int armSlots = 6;

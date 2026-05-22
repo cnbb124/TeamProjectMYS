@@ -10,12 +10,14 @@ public class StatPanelUI : MonoBehaviour
     public Text descriptionText;
 
     [Header("Stat Bars (Image.Type = Filled, Horizontal)")]
+    
+    public Image hpBar;
     public Image speedBar;
+    public Image defenseBar;
     public Image mobilityBar;
     public Image stabilityBar;
     public Image airToAirBar;
     public Image airToGroundBar;
-    public Image defenseBar;
 
     [Header("Parts Slots")]
     public Text bodySlotText;
@@ -37,7 +39,7 @@ public class StatPanelUI : MonoBehaviour
     {
         if (!data) return;
 
-        if (unitNameText)   unitNameText.text   = $"[ {data.unitName.ToUpper()} ]";
+        if (unitNameText)   unitNameText.text   = data.unitName;
         if (descriptionText) descriptionText.text = data.description;
 
         if (_anim != null) StopCoroutine(_anim);
@@ -55,9 +57,9 @@ public class StatPanelUI : MonoBehaviour
 
     IEnumerator AnimateBars(PlaneNodeData data)
     {
-        Image[] bars    = { speedBar, mobilityBar, stabilityBar, airToAirBar, airToGroundBar, defenseBar };
-        float[] targets = { data.speed / 100f, data.mobility / 100f, data.stability / 100f,
-                            data.airToAir / 100f, data.airToGround / 100f, data.defense / 100f };
+        Image[] bars    = { hpBar, speedBar, defenseBar,mobilityBar, stabilityBar, airToAirBar, airToGroundBar};
+        float[] targets = { data.hp / 100f, data.speed / 100f, data.defense / 100f,
+                            data.mobility / 100f, data.stability / 100f, data.airToAir / 100f, data.airToGround / 100f };
         float[] starts  = new float[bars.Length];
 
         for (int i = 0; i < bars.Length; i++)
