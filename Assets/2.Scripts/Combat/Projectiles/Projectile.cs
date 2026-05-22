@@ -75,11 +75,7 @@ public abstract class Projectile : MonoBehaviour
             ReturnToPool();
         }
 
-        //직선투사체에만 현재 사용안함.
-        //if (Vector3.Distance(startPos, transform.position) >= maxRange)
-        //{
-        //	ReturnToPool();//풀로 돌리기.
-        //}
+      
     }
 
     //활성화시 넣을 정보. 플레이어에서 호출

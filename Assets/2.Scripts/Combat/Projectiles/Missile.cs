@@ -109,7 +109,6 @@ public class Missile : Projectile, IExplodable
 		aliveTime = 0f;
 		//현재 추진 스피드를 발사스피드로 입력
 		thrustSpeed = launchSpeed;
-
 		curSpeed = 0f;
 		
 		//타겟이 있을경우. 타겟의 전 좌표 초기화
@@ -137,7 +136,8 @@ public class Missile : Projectile, IExplodable
 	// Update is called once per frame
 	protected override void Update()
 	{
-		
+		//프레임따른 튐현상방지
+		if (Time.deltaTime <= 0f) return;
 
 		// 발사후 경과시간 업데이트
 		aliveTime += Time.deltaTime;
@@ -145,71 +145,71 @@ public class Missile : Projectile, IExplodable
 		// 속도 가속, 발사시간>최대속도
 		thrustSpeed = Mathf.Lerp(launchSpeed, maxSpeed, Mathf.Clamp01(aliveTime / accelerateTime));
 
-		////타겟이 비활성화시 소실처리
 
-		//if (targetTr != null && !targetTr.gameObject.activeInHierarchy)
-		//{
-		//	targetTr = null;
-		//}
+		// [핵심 수정] Steer() 진입 여부와 무관하게 매 프레임 타겟의 속도를 계산하고 이전 좌표를 갱신합니다.
+		Vector3 targetVelocity = Vector3.zero;
+		if (targetTr != null)
+		{
+			float dt = Mathf.Max(Time.deltaTime, 0.001f);
+			targetVelocity = (targetTr.position - prevTargetPos) / dt;
+			prevTargetPos = targetTr.position; // 직진(armDistance) 기간에도 정상 갱신됨
+		}
 
-		// 현재이동거리<직진거리보다 작거나 타겟이없으면 그냥 직진으로 판정
 		if (traveledDistance < armDistance || targetTr == null)
 		{
 			transform.position += transform.forward * thrustSpeed * Time.deltaTime;
-			
 		}
 		else
 		{
-			Steer();
+			// 계산된 정상 속도를 유도 로직에 전달합니다.
+			Steer(targetVelocity);
 		}
-		//실제 속도(curSpeed) 관측 및 계산
-		//(현재 위치 - 이전 프레임 위치)의 거리 /걸린 시간
-		
+
 		curSpeed = Vector3.Distance(transform.position, prevPos) / Time.deltaTime;
-		
-		//다음 프레임 연산을 위해 현재 위치 저장
-		base.Update();//최대사거리로직
+		base.Update();
 	}
 
 
-    private void Steer()
-    {
-        //비례항법기반 미사일 유도 조종 메서드 AI참조
-        //방향벡터설정
-        Vector3 toTarget = targetTr.position - transform.position;
-        float dist = toTarget.magnitude;
-        //LineofSight, 미사일에서 타겟을 바라보는 방향
-        Vector3 los = toTarget.normalized;
+	private void Steer(Vector3 targetVelocity)
+	{
+		Vector3 toTarget = targetTr.position - transform.position;
+		float dist = toTarget.magnitude;
 
-        //타겟의 속도추정
-        Vector3 targetVelocity = (targetTr.position - prevTargetPos) / Time.deltaTime;
-        prevTargetPos = targetTr.position;
+		// 1. [핵심] 타겟과 일정 거리 이내로 좁혀지면 미사일이 맴도는 현상(Orbiting) 방지
+		// 거리가 가까울 때는 복잡한 예측을 버리고 타겟을 향해 즉시 내리꽂도록 강제합니다.
+		if (dist < 4.0f)
+		{
+			Vector3 finalDir = Vector3.RotateTowards(transform.forward, toTarget.normalized, turnRate * 2f * Mathf.Deg2Rad * Time.deltaTime, 0f);
+			transform.forward = finalDir;
+			transform.position += transform.forward * thrustSpeed * Time.deltaTime;
+			return;
+		}
 
-        Vector3 desiredDir;
+		Vector3 desiredDir = toTarget.normalized;
 
-        // 타겟이 거의 정지 상태면 단순 추적
-        if (targetVelocity.magnitude < 0.5f)
-        {
-            desiredDir = los;
-        }
-		//이동중일경우
-        else
-        {
-            //상대속도 구하기
-            Vector3 closingVelocity = targetVelocity - transform.forward * thrustSpeed;
-            //시선변화율
-            Vector3 losRate = Vector3.Cross(los, closingVelocity) / Mathf.Max(dist, 0.1f);
-            Vector3 accelCmd = navGain * thrustSpeed * losRate;
-            desiredDir = accelCmd.sqrMagnitude > 0.001f ? (transform.forward + accelCmd * Time.deltaTime).normalized  : los;
-        }
+		// 2. 타겟의 미래 위치를 계산하는 예측 추적(Predictive Pursuit) 알고리즘
+		if (targetVelocity.sqrMagnitude > 0.1f)
+		{
+			// 현재 속도로 타겟까지 도달하는 데 걸리는 예상 시간(ETA)
+			float timeToHit = dist / Mathf.Max(thrustSpeed, 1f);
 
-        // turnRate로 선회 각도 제한
-        Vector3 newDir = Vector3.RotateTowards(transform.forward, desiredDir, turnRate * Mathf.Deg2Rad * Time.deltaTime, 0f);
-        transform.forward = newDir;
-        transform.position += transform.forward * thrustSpeed * Time.deltaTime;
-    }
+			// 거리가 너무 멀 때 예측 좌표가 우주로 튀는 것을 막기 위해 최대 1.5초 후의 위치까지만 예측
+			timeToHit = Mathf.Min(timeToHit, 1.5f);
 
-    protected override void OnTriggerEnter(Collider other)
+			// 타겟의 미래 예측 위치 도출
+			Vector3 predictedPos = targetTr.position + (targetVelocity * timeToHit);
+
+			desiredDir = (predictedPos - transform.position).normalized;
+		}
+
+		// 3. 예측된 방향으로 부드럽게 회전 및 전진
+		Vector3 newDir = Vector3.RotateTowards(transform.forward, desiredDir, turnRate * Mathf.Deg2Rad * Time.deltaTime, 0f);
+		transform.forward = newDir;
+		transform.position += transform.forward * thrustSpeed * Time.deltaTime;
+	}
+
+
+	protected override void OnTriggerEnter(Collider other)
 	{
 		//최소거리 도달안했으면 트리거무시
 		if (traveledDistance < armDistance)
