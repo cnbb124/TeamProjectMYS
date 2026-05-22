@@ -168,16 +168,35 @@ public class MissileLockOnSystem : MonoBehaviour
 				continue;
 			}
 
-			Transform unitTr = hit.GetComponentInParent<Unit>()?.transform;
-			if (unitTr == null)
+			// 해당 객체가 HitBox 컴포넌트를 가지고 있는지 우선 확인
+			HitBox hitbox = hit.GetComponent<HitBox>();
+			if (hitbox == null)
 			{
 				continue;
 			}
 
-			if (!TargetsInRange.Contains(unitTr))
+			//Unit에 소속된 것인지
+			Unit parentUnit = hit.GetComponentInParent<Unit>();
+			if (parentUnit == null || (ownerUnit != null && parentUnit == ownerUnit))
 			{
-				TargetsInRange.Add(unitTr);
+				continue;
 			}
+
+			// 검증이 완료되면 HitBox의 좌표를 락온 대상으로 등록
+			if (!TargetsInRange.Contains(hitbox.transform))
+			{
+				TargetsInRange.Add(hitbox.transform);
+			}
+			//Transform unitTr = hit.GetComponentInParent<Unit>()?.transform;
+			//if (unitTr == null)
+			//{
+			//	continue;
+			//}
+
+			//if (!TargetsInRange.Contains(unitTr))
+			//{
+			//	TargetsInRange.Add(unitTr);
+			//}
 		}
 
 		// 범위 벗어나거나 비활성화된 타겟 제거
