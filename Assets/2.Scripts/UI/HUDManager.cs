@@ -4,12 +4,18 @@ using TMPro;
 
 public class HUDManager : MonoBehaviour
 {
+    public static HUDManager Instance { get; private set; }
+
     [Header("Target")]
     [SerializeField] private Player player;
 
     [Header("HP")]
     [SerializeField] private Image hpFill;
     [SerializeField] private TMP_Text hpText;
+
+    [Header("Shield")]
+    [SerializeField] private Image shieldFill;
+    [SerializeField] private TMP_Text shieldText;
 
     [Header("Armor")]
     [SerializeField] private Image armorFill;
@@ -23,12 +29,24 @@ public class HUDManager : MonoBehaviour
     [SerializeField] private TMP_Text xpText;
     [SerializeField] private TMP_Text levelDisplay;
 
+    private void Awake()
+    {
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+        Instance = this;
+        DontDestroyOnLoad(gameObject);
+    }
+
     void Update()
     {
         if (player == null) return;
 
-        UpdateBar(hpFill,    hpText,    player.curHpRemaining,    player.maxHpRemaining);
-        UpdateBar(armorFill, armorText, player.curArmorRemaining, player.maxArmor);
+        UpdateBar(hpFill,     hpText,     player.curHpRemaining,     player.maxHpRemaining);
+        UpdateBar(shieldFill, shieldText, player.curShieldRemaining, player.maxShieldRemaining);
+        UpdateBar(armorFill,  armorText,  player.curArmorRemaining,  player.maxArmor);
 
         if (nitroFill != null)
             nitroFill.fillAmount = player.maxBoostRemaining > 0f
