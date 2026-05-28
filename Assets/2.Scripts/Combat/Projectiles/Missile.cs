@@ -137,7 +137,10 @@ public class Missile : Projectile, IExplodable
 	protected override void Update()
 	{
 		//프레임따른 튐현상방지
-		if (Time.deltaTime <= 0f) return;
+		if (Time.deltaTime <= 0f)
+		{
+			return;
+		}
 
 		// 발사후 경과시간 업데이트
 		aliveTime += Time.deltaTime;
@@ -146,7 +149,7 @@ public class Missile : Projectile, IExplodable
 		thrustSpeed = Mathf.Lerp(launchSpeed, maxSpeed, Mathf.Clamp01(aliveTime / accelerateTime));
 
 
-		// [핵심 수정] Steer() 진입 여부와 무관하게 매 프레임 타겟의 속도를 계산하고 이전 좌표를 갱신합니다.
+		// [추가수정]Steer() 진입 여부와 무관하게 매 프레임 타겟의 속도를 계산하고 이전 좌표를 갱신
 		Vector3 targetVelocity = Vector3.zero;
 		if (targetTr != null)
 		{
@@ -175,7 +178,7 @@ public class Missile : Projectile, IExplodable
 		Vector3 toTarget = targetTr.position - transform.position;
 		float dist = toTarget.magnitude;
 
-		// 1. [핵심] 타겟과 일정 거리 이내로 좁혀지면 미사일이 맴도는 현상(Orbiting) 방지
+		// 타겟과 일정 거리 이내로 좁혀지면 미사일이 맴도는 현상(Orbiting) 방지
 		// 거리가 가까울 때는 복잡한 예측을 버리고 타겟을 향해 즉시 내리꽂도록 강제합니다.
 		if (dist < 4.0f)
 		{
@@ -187,7 +190,7 @@ public class Missile : Projectile, IExplodable
 
 		Vector3 desiredDir = toTarget.normalized;
 
-		// 2. 타겟의 미래 위치를 계산하는 예측 추적(Predictive Pursuit) 알고리즘
+		//[추가수정] 타겟의 미래 위치를 계산하는 예측 추적(Predictive Pursuit) 알고리즘
 		if (targetVelocity.sqrMagnitude > 0.1f)
 		{
 			// 현재 속도로 타겟까지 도달하는 데 걸리는 예상 시간(ETA)
@@ -202,7 +205,7 @@ public class Missile : Projectile, IExplodable
 			desiredDir = (predictedPos - transform.position).normalized;
 		}
 
-		// 3. 예측된 방향으로 부드럽게 회전 및 전진
+		//[추가수정] 예측된 방향으로 부드럽게 회전 및 전진
 		Vector3 newDir = Vector3.RotateTowards(transform.forward, desiredDir, turnRate * Mathf.Deg2Rad * Time.deltaTime, 0f);
 		transform.forward = newDir;
 		transform.position += transform.forward * thrustSpeed * Time.deltaTime;

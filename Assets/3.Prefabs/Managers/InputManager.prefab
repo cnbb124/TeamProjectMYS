@@ -1,0 +1,100 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &417953749035928536
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4937408709306154190}
+  - component: {fileID: 2794135899293206080}
+  m_Layer: 0
+  m_Name: InputManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4937408709306154190
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 417953749035928536}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2794135899293206080
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 417953749035928536}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 21ed71377ca65bb40ab9afc8346ac96b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  controlType: 0
+  keyboardMouseConfig:
+    moveUp: 327
+    moveDown: 326
+    rollLeft: 113
+    rollRight: 101
+    boost: 304
+    dodge: 32
+    fireBullet: 323
+    fireMissile: 324
+    fireLaser: 102
+    fireAll: 118
+    missilePrev: 122
+    missileNext: 120
+    switchConsumable: 114
+    useConsumable: 116
+    switchFireMode: 99
+    axisHorizontal: Horizontal
+    axisVertical: Vertical
+    axisMouseX: Mouse X
+    axisMouseY: Mouse Y
+    axisScrollWheel: Mouse ScrollWheel
+  gamepadConfig:
+    axisLeftStickX: LeftStickX
+    axisLeftStickY: LeftStickY
+    axisRightStickX: RightStickX
+    axisRightStickY: RightStickY
+    axisVerticalMove: VerticalMove
+    axisDPadX: DPadX
+    axisDPadY: DPadY
+    fireBullet: 335
+    fireMissile: 334
+    fireLaser: 333
+    fireAll: 332
+    boost: 338
+    dodge: 339
+    rollLeft: 336
+    rollRight: 337
+    switchFireMode: 340
+  moveInput: {x: 0, y: 0, z: 0}
+  lookInput: {x: 0, y: 0}
+  rollInput: 0
+  isBoosting: 0
+  isDodging: 0
+  fireBullet: 0
+  fireMissile: 0
+  fireLaser: 0
+  fireAll: 0
+  switchLockOnTarget: 0
+  switchMissilePrev: 0
+  switchMissileNext: 0
+  switchMissileShootMode: 0
+  switchConsumable: 0
+  useConsumable: 0

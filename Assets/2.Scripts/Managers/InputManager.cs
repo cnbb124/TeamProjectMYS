@@ -1,187 +1,356 @@
-using JetBrains.Annotations;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+// =====================================================================
+// ì¡°ì‘ ë°©ì‹ ì„ íƒ ì—´ê±°í˜•
+// ì¸ìŠ¤í™í„° [ì¡°ì‘ ë°©ì‹ ì„ íƒ] ë“œë¡­ë‹¤ìš´ì—ì„œ ì„ íƒ
+// =====================================================================
 
-//ÇÃ·¹ÀÌ¾îÀÇ Å°º¸µå/¸¶¿ì½º ÀÔ·ÂÀ» ¸Å ÇÁ·¹ÀÓ ¼öÁıÇÏ¿© ÀúÀåÇÏ´Â ½Ì±ÛÅæ ¸Å´ÏÀú.
-// ´Ù¸¥ Å¬·¡½º¿¡¼­ InputManager.Instance.ÇÊµå¸í À¸·Î Á¢±ÙÇØ¼­ »ç¿ë.
-//¸ğµç Å°ÀÔ·Â, ¸¶¿ì½ºÀÔ·Â ´ã´ç
 
-//Â÷ÈÄ¿¡ Ãß°¡
+// =====================================================================
+// í‚¤ë³´ë“œ/ë§ˆìš°ìŠ¤ í‚¤ ì„¤ì •
+// ì¸ìŠ¤í™í„°ì—ì„œ ê° í‚¤ë¥¼ ë“œë¡­ë‹¤ìš´ìœ¼ë¡œ ë³€ê²½ ê°€ëŠ¥
+// =====================================================================
+[System.Serializable]
+public class KeyboardMouseConfig
+{
+    [Header("ì´ë™")]
+    public KeyCode moveUp    = KeyCode.Mouse4;    // ìˆ˜ì§ ìƒìŠ¹
+    public KeyCode moveDown  = KeyCode.Mouse3;    // ìˆ˜ì§ í•˜ê°•
+    public KeyCode rollLeft  = KeyCode.Q;         // ê¸°ì²´ ì¢Œ ë¡¤
+    public KeyCode rollRight = KeyCode.E;         // ê¸°ì²´ ìš° ë¡¤
+    public KeyCode boost     = KeyCode.LeftShift; // ë¶€ìŠ¤íŠ¸
+    public KeyCode dodge     = KeyCode.Space;     // íšŒí”¼
+
+    [Header("ì‚¬ê²©")]
+    public KeyCode fireBullet  = KeyCode.Mouse0;  // ì´ì•Œ (ê¾¹)
+    public KeyCode fireMissile = KeyCode.Mouse1;  // ë¯¸ì‚¬ì¼ (ìˆœê°„)
+    public KeyCode fireLaser   = KeyCode.F;       // ë ˆì´ì € (ìˆœê°„)
+    public KeyCode fireAll     = KeyCode.V;       // ì „ì²´ ë°œì‚¬ (ìˆœê°„)
+
+    [Header("ë¯¸ì‚¬ì¼ ìŠ¬ë¡¯ ì „í™˜")]
+    public KeyCode missilePrev = KeyCode.Z;         // ì´ì „ ìŠ¬ë¡¯
+    public KeyCode missileNext = KeyCode.X;         // ë‹¤ìŒ ìŠ¬ë¡¯
+
+    [Header("ì†Œëª¨í’ˆ")]
+    public KeyCode switchConsumable = KeyCode.R;    // ì†Œëª¨í’ˆ ìŠ¬ë¡¯ ì „í™˜
+    public KeyCode useConsumable    = KeyCode.T;    // ì†Œëª¨í’ˆ ì‚¬ìš©
+
+    [Header("ëª¨ë“œ ì „í™˜")]
+    public KeyCode switchFireMode = KeyCode.C;      // ë°œì‚¬ ëª¨ë“œ ì „í™˜ (êµì°¨/ë™ì‹œ)
+
+    [Header("Unity Input Settings ì¶• ì´ë¦„")]
+    [Tooltip("Edit > Project Settings > Input Manager ì— ë“±ë¡ëœ ì´ë¦„ê³¼ ì¼ì¹˜í•´ì•¼ í•¨")]
+    public string axisHorizontal  = "Horizontal";      // A/D
+    public string axisVertical    = "Vertical";        // W/S
+    public string axisMouseX      = "Mouse X";
+    public string axisMouseY      = "Mouse Y";
+    public string axisScrollWheel = "Mouse ScrollWheel";
+}
+
+// =====================================================================
+// ê²Œì„íŒ¨ë“œ í‚¤ ì„¤ì •
+// ì¶• ì´ë¦„ì€ Unity Input Settingsì—ì„œ ì§ì ‘ ë“±ë¡í•œ ì´ë¦„ê³¼ ë§ì¶°ì•¼ í•¨
+// =====================================================================
+[System.Serializable]
+public class GamepadConfig
+{
+    [Header("ì¶• ì´ë¦„ (Unity Input Settings ê¸°ì¤€)")]
+    [Tooltip("ì™¼ìª½ ìŠ¤í‹± ê°€ë¡œ - ì¢Œìš° ì´ë™(Xì¶•)")]
+    public string axisLeftStickX   = "LeftStickX";
+    [Tooltip("ì™¼ìª½ ìŠ¤í‹± ì„¸ë¡œ - ì „í›„ ì´ë™(Zì¶•)")]
+    public string axisLeftStickY   = "LeftStickY";
+    [Tooltip("ì˜¤ë¥¸ìª½ ìŠ¤í‹± ê°€ë¡œ - Yaw(ì¢Œìš° ì‹œì•¼)")]
+    public string axisRightStickX  = "RightStickX";
+    [Tooltip("ì˜¤ë¥¸ìª½ ìŠ¤í‹± ì„¸ë¡œ - Pitch(ìƒí•˜ ì‹œì•¼)")]
+    public string axisRightStickY  = "RightStickY";
+    [Tooltip("ìˆ˜ì§ ì´ë™ ì¶• (íŠ¸ë¦¬ê±° ì°¨ì´ or ë³„ë„ ì¶•)")]
+    public string axisVerticalMove = "VerticalMove";
+    [Tooltip("D-íŒ¨ë“œ ê°€ë¡œì¶• (ì¢Œ=-1, ìš°=+1) - ë¯¸ì‚¬ì¼ ìŠ¬ë¡¯ ì „í™˜")]
+    public string axisDPadX        = "DPadX";
+    [Tooltip("D-íŒ¨ë“œ ì„¸ë¡œì¶• (í•˜=-1, ìƒ=+1) - ì†Œëª¨í’ˆ ì „í™˜/ì‚¬ìš©")]
+    public string axisDPadY        = "DPadY";
+
+    [Header("ë²„íŠ¼")]
+    public KeyCode fireBullet     = KeyCode.JoystickButton5;  // RB - ì´ì•Œ (ê¾¹)
+    public KeyCode fireMissile    = KeyCode.JoystickButton4;  // LB - ë¯¸ì‚¬ì¼
+    public KeyCode fireLaser      = KeyCode.JoystickButton3;  // Y  - ë ˆì´ì €
+    public KeyCode fireAll        = KeyCode.JoystickButton2;  // X  - ì „ì²´ ë°œì‚¬
+    public KeyCode boost          = KeyCode.JoystickButton8;  // L3 - ë¶€ìŠ¤íŠ¸
+    public KeyCode dodge          = KeyCode.JoystickButton9;  // R3 - íšŒí”¼
+    public KeyCode rollLeft       = KeyCode.JoystickButton6;  // LT - ì¢Œ ë¡¤
+    public KeyCode rollRight      = KeyCode.JoystickButton7;  // RT - ìš° ë¡¤
+
+    [Header("ëª¨ë“œ ì „í™˜")]
+    public KeyCode switchFireMode = KeyCode.JoystickButton10; // íŒ¨ë“œ ìœ„ìª½
+}
+
+// =====================================================================
+// InputManager
+//
+// í”Œë ˆì´ì–´ì˜ ì…ë ¥ì„ ë§¤ í”„ë ˆì„ ìˆ˜ì§‘í•´ ê³µìš© í•„ë“œì— ì €ì¥í•˜ëŠ” ì‹±ê¸€í†¤.
+// ë‹¤ë¥¸ ìŠ¤í¬ë¦½íŠ¸ëŠ” InputManager.Instance.í•„ë“œëª… ìœ¼ë¡œ ì½ê¸°ë§Œ í•˜ë©´ ë¨.
+// ì¡°ì‘ ë°©ì‹ì„ ë°”ê¿”ë„ ì¶œë ¥ í•„ë“œëŠ” ë™ì¼í•˜ê²Œ
+//
+// ====== ì¶œë ¥ í•„ë“œ ìš”ì•½ ======
+// moveInput          : Vector3  X=ì¢Œìš°  Y=ìƒí•˜  Z=ì „í›„  (-1~1)
+// lookInput          : Vector2  X=Yaw   Y=Pitch
+// rollInput          : float    -1=ì¢Œë¡¤  +1=ìš°ë¡¤
+// isBoosting         : bool     ëˆ„ë¥´ëŠ” ë™ì•ˆ true
+// isDodging          : bool     ëˆ„ë¥¸ ìˆœê°„ í•œ í”„ë ˆì„
+// fireBullet         : bool     ëˆ„ë¥´ëŠ” ë™ì•ˆ true
+// fireMissile        : bool     ëˆ„ë¥¸ ìˆœê°„ í•œ í”„ë ˆì„
+// fireLaser          : bool     ëˆ„ë¥¸ ìˆœê°„ í•œ í”„ë ˆì„
+// fireAll            : bool     ëˆ„ë¥¸ ìˆœê°„ í•œ í”„ë ˆì„
+// switchLockOnTarget : float    ì–‘ìˆ˜=ë‹¤ìŒ  ìŒìˆ˜=ì´ì „  0=ì—†ìŒ
+// switchMissile1~3   : bool     ëˆ„ë¥¸ ìˆœê°„ í•œ í”„ë ˆì„
+// switchMissileShootMode : bool ëˆ„ë¥¸ ìˆœê°„ í•œ í”„ë ˆì„
+// =====================================================================
 public class InputManager : MonoBehaviour
 {
-	//½Ì±ÛÅæ ¸Å´ÏÀú ¼³Á¤
-	private static InputManager instance = null;
-	public static InputManager Instance
-	{
-		get
-		{
-			if (instance == null)
-			{
-				instance = FindObjectOfType<InputManager>();
-				if (instance == null)
-				{
-					Debug.LogError("¾À¿¡ InputManager ´©¶ô! ÇÏÀÌ¾î¶óÅ°¿¡ ÀÎÇ²¸Å´ÏÀúÇÊ¿ä ÇÊ¿ä");
-				}
-			}
-			return instance;
-		}
-	}
+    // =====================================================================
+    // ì‹±ê¸€í†¤
+    // =====================================================================
+    private static InputManager instance = null;
+    public static InputManager Instance
+    {
+        get
+        {
+            if (instance == null)
+            {
+                instance = FindObjectOfType<InputManager>();
+                if (instance == null)
+                    Debug.LogError("[InputManager] ì”¬ì— InputManager ì—†ìŒ! í•˜ì´ì–´ë¼í‚¤ì— ì¶”ê°€ í•„ìš”");
+            }
+            return instance;
+        }
+    }
 
+    // =====================================================================
+    // ì¸ìŠ¤í™í„° ì„¤ì •
+    // =====================================================================
+    [Header("â”â”â”â”â”â” ì¡°ì‘ ë°©ì‹ ì„ íƒ â”â”â”â”â”â”")]
+    [Tooltip("KEYBOARD_MOUSE / GAMEPAD / MOBILE ì¤‘ ì„ íƒ")]
+    public INPUT_CONTROL_TYPE controlType = INPUT_CONTROL_TYPE.KEYBOARD_MOUSE;
 
+    [Space(5)]
+    [Header("â”â”â”â”â”â” í‚¤ë³´ë“œ/ë§ˆìš°ìŠ¤ í‚¤ ì„¤ì • â”â”â”â”â”â”")]
+    public KeyboardMouseConfig keyboardMouseConfig = new KeyboardMouseConfig();
 
+    [Space(5)]
+    [Header("â”â”â”â”â”â” ê²Œì„íŒ¨ë“œ í‚¤ ì„¤ì • â”â”â”â”â”â”")]
+    public GamepadConfig gamepadConfig = new GamepadConfig();
 
-	[Header("<size=18>»ç¿ë½Ã InputManager.Instance.ÇÊµå ¸í</size>\n\n" +
-	"ÇÃ·¹ÀÌ¾î ½ºÅ©¸³Æ® µî¿¡¼­ »ç¿ë\n" +
-	"\n" +
-	"====== ÀÌµ¿ ¹× ½Ã¾ß Á¶ÀÛ ======\n" +
-	"W / S : ÀüÁø ¹× ÈÄÁø (moveInput.z)\n" +
-	"A / D : ÁÂ¿ì ÀÌµ¿ (moveInput.x)\n" +
-	"Mouse4 / 3 : ¼öÁ÷ »ó½Â ¹× ÇÏ°­ (moveInput.y)\n" +
-	"Q / E : ±âÃ¼ ÁÂ¿ì ·Ñ È¸Àü (rollInput)\n" +
-	"¸¶¿ì½º ÀÌµ¿ : ½Ã¾ß Á¶ÀÛ (lookInput)\n" +
-	"LeftShift : ºÎ½ºÆ® (isBoosting, ´©¸£´Â µ¿¾È)\n" +
-	"Space : È¸ÇÇ (isDodging, ´©¸¥ ¼ø°£)\n" +
-	"\n" +
-	"====== ¹«±â ¹× °ø°İ Á¶ÀÛ ======\n" +
-	"¸¶¿ì½º ÁÂÅ¬¸¯ : ÃÑ¾Ë ¹ß»ç (fireBullet, ´©¸£´Â µ¿¾È)\n" +
-	"¸¶¿ì½º ¿ìÅ¬¸¯ : ¹Ì»çÀÏ ¹ß»ç (fireMissile, ´©¸¥ ¼ø°£)\n" +
-	"F : ·¹ÀÌÀú ¹ß»ç (fireLaser, ´©¸¥ ¼ø°£)\n" +
-	"V : ÀüÃ¼ ¹«±â µ¿½Ã ¹ß»ç (fireAll, ´©¸¥ ¼ø°£)\n" +
-	"¼ıÀÚ 1 2 3 : ¹Ì»çÀÏ ÀåÂø ½½·Ô ÇöÀç´Â 1:ÀÏ¹İ 2:Å¬·¯½ºÅÍ(ºĞ¿­À¯µµ) 3:DUMB(ÇÙ)\n"+
-	"C: ¹Ì»çÀÏ ¹ß»ç¸ğµå(ÁÂ¿ì±³Â÷,µ¿½Ã)")]
-	
+    // =====================================================================
+    // ì¶œë ¥ í•„ë“œ (ì™¸ë¶€ ìŠ¤í¬ë¦½íŠ¸ëŠ” ì½ê¸°ë§Œ)
+    // =====================================================================
+    [Space(10)]
+    [Header("â”â”â”â”â”â” ì¶œë ¥ê°’ (ì½ê¸° ì „ìš©) â”â”â”â”â”â”")]
 
-	//==========================ÀÌµ¿°ü·Ã Á¶ÀÛ=====================
-	[Header("ÀÌµ¿ ÀÔ·Â")]
-	[Tooltip("WASD + Â÷ÈÄ °áÁ¤»óÇÏÅ° ÀÔ·Â°ª. X=ÁÂ¿ì, Y=»óÇÏ, Z=ÀüÈÄ.")]
-	//GetAxis?º¸°£ÀÖ  GetAxisRaw?º¸°£¾ø ¹»·Î¹Ş¾Æ¿ÃÁö
-	public Vector3 moveInput;
-	// W/S          ¡æ ZÃà ÀüÈÄ
-	// A/D          ¡æ XÃà ÁÂ¿ì
-	// Mouse4(¾ÕÀ¸·Î) ¡æ YÃà »ó½Â
-	// Mouse3(µÚ·Î)   ¡æ YÃà ÇÏ°­
-	// EQ ¸»°í ¸¶¿ì½º ¹öÆ° »óÇÏ·Î? eq´Â ¼±È¸ÇÏµµ·Ï
+    [Header("ì´ë™/íšŒì „")]
+    [Tooltip("X=ì¢Œìš°  Y=ìƒí•˜  Z=ì „í›„  |  -1~1")]
+    public Vector3 moveInput;
 
+    [Tooltip("X=Yaw(ì¢Œìš°ì‹œì•¼)  Y=Pitch(ìƒí•˜ì‹œì•¼)")]
+    public Vector2 lookInput;
 
-	[Header("È¸Àü ÀÔ·Â")]
-	[Tooltip("¸¶¿ì½º ÀÌµ¿·®. X=ÁÂ¿ì, Y=»óÇÏ Pitch")]
-	public Vector2 lookInput;
-	[Tooltip("ZÃà±âÁØ È¸Àü(ÀüÁø¹æÇâ±âÁØ ÁÂ¿ìÈ¸Àü) Q=ÁÂ E=¿ì")]
-	public float rollInput;
-	// Q ¡æ -1f (ÁÂ ·Ñ)
-	// E ¡æ +1f (¿ì ·Ñ)
+    [Tooltip("-1=ì¢Œ ë¡¤  +1=ìš° ë¡¤")]
+    public float rollInput;
 
-	[Tooltip("ºÎ½ºÆ® Å°(LeftShift) ´©¸£´Â µ¿¾È true")]
-	public bool isBoosting;//ºÎ½ºÆ®»ç¿ëÀ¯¹Â¤Ì
-	[Tooltip("´åÁö Å°(Space) ´©¸¥ ¼ø°£ ÇÑ ÇÁ·¹ÀÓ¸¸ true")]
-	public bool isDodging;//È¸ÇÇ»ç¿ëÀ¯¹«
+    [Tooltip("ë¶€ìŠ¤íŠ¸ - ëˆ„ë¥´ëŠ” ë™ì•ˆ true")]
+    public bool isBoosting;
 
-	//========================»ç°İ°ü·Ã Á¶ÀÛ========================
+    [Tooltip("íšŒí”¼ - ëˆ„ë¥¸ ìˆœê°„ í•œ í”„ë ˆì„ë§Œ true")]
+    public bool isDodging;
 
-	[Header("»ç°İ ÀÔ·Â")]
-	[Tooltip("ÃÑ¾Ë ¹ß»ç. ¸¶¿ì½º ÁÂÅ¬¸¯ ´©¸£´Â µ¿¾È true")]
-	public bool fireBullet;
+    [Header("ì‚¬ê²©")]
+    [Tooltip("ì´ì•Œ - ëˆ„ë¥´ëŠ” ë™ì•ˆ true")]
+    public bool fireBullet;
 
-	[Tooltip("¹Ì»çÀÏ ¹ß»ç. ¸¶¿ì½º ¿ìÅ¬¸¯ ´©¸¥ ¼ø°£ ÇÑ ÇÁ·¹ÀÓ¸¸")]
-	public bool fireMissile;
+    [Tooltip("ë¯¸ì‚¬ì¼ - ëˆ„ë¥¸ ìˆœê°„ í•œ í”„ë ˆì„ë§Œ true")]
+    public bool fireMissile;
 
-	
+    [Tooltip("ë ˆì´ì € - ëˆ„ë¥¸ ìˆœê°„ í•œ í”„ë ˆì„ë§Œ true")]
+    public bool fireLaser;
 
-	[Tooltip("·¹ÀÌÀú ¹ß»ç. F ´©¸£¸é  true")]
-	public bool fireLaser;
+    [Tooltip("ì „ì²´ ë°œì‚¬ - ëˆ„ë¥¸ ìˆœê°„ í•œ í”„ë ˆì„ë§Œ true")]
+    public bool fireAll;
 
-	[Tooltip("ÀüÃ¼ ¹«±â µ¿½Ã ¹ß»ç. V ´©¸¥ ¼ø°£ ÇÑ ÇÁ·¹ÀÓ¸¸ true")]
-	public bool fireAll;
+    [Tooltip("ë½ì˜¨ ëŒ€ìƒ ì „í™˜. ì–‘ìˆ˜=ë‹¤ìŒ  ìŒìˆ˜=ì´ì „  0=ì—†ìŒ")]
+    public float switchLockOnTarget;
 
-	[Tooltip("¶ô¿Â ´ë»ó ÀüÈ¯. ¸¶¿ì½ºÈÙ À§=´ÙÀ½, ¾Æ·¡=ÀÌÀü")]
-	public float switchLockOnTarget; // ¾ç¼ö=´ÙÀ½, À½¼ö=ÀÌÀü, 0=ÀÔ·Â¾øÀ½
+    [Header("ë¯¸ì‚¬ì¼ ìŠ¬ë¡¯/ëª¨ë“œ")]
+    [Tooltip("ì´ì „ ìŠ¬ë¡¯ - ëˆ„ë¥¸ ìˆœê°„ í•œ í”„ë ˆì„ë§Œ true")]
+    public bool switchMissilePrev;
 
-	[Header("¹Ì»çÀÏ Å¸ÀÔ ÀüÈ¯ ÀÔ·Â")]
-	[Tooltip("¼ıÀÚ 1, 2, 3Å° ÀÔ·Â. ´©¸¥ ¼ø°£ ÇÑ ÇÁ·¹ÀÓ¸¸ true")]
-	public bool switchMissile1;
-	public bool switchMissile2;
-	public bool switchMissile3;
+    [Tooltip("ë‹¤ìŒ ìŠ¬ë¡¯ - ëˆ„ë¥¸ ìˆœê°„ í•œ í”„ë ˆì„ë§Œ true")]
+    public bool switchMissileNext;
 
-	[Header("¹Ì»çÀÏ ¹ß»ç ¸ğµå ÀüÈ¯ ÀÔ·Â")]
-	public bool switchMissileShootMode;
-	private void Awake()
-	{
-		// ½Ì±ÛÅæ ±âº» ¼¼ÆÃ (¾ÀÀÌ ³Ñ¾î°¡µµ ÆÄ±«µÇÁö ¾Ê°Ô À¯Áö)
-		if (instance == null)
-		{
-			instance = this;
-			DontDestroyOnLoad(gameObject);
+    [Tooltip("ë°œì‚¬ ëª¨ë“œ ì „í™˜(êµì°¨/ë™ì‹œ) - ëˆ„ë¥¸ ìˆœê°„ í•œ í”„ë ˆì„ë§Œ true")]
+    public bool switchMissileShootMode;
 
-		}
-		else if (instance != this)
-		{
+    [Header("ì†Œëª¨í’ˆ")]
+    [Tooltip("ì†Œëª¨í’ˆ ìŠ¬ë¡¯ ì „í™˜ - ëˆ„ë¥¸ ìˆœê°„ í•œ í”„ë ˆì„ë§Œ true")]
+    public bool switchConsumable;
 
-			Debug.LogWarning("Áßº¹µÈ InputManager ¹ß°ß. ÆÄ±« ÈÄ ½ÇÇà");
-			Destroy(gameObject);
-		}
-	}
+    [Tooltip("ì†Œëª¨í’ˆ ì‚¬ìš© - ëˆ„ë¥¸ ìˆœê°„ í•œ í”„ë ˆì„ë§Œ true")]
+    public bool useConsumable;
 
+    // D-íŒ¨ë“œ ì´ì „ í”„ë ˆì„ê°’ (ê²Œì„íŒ¨ë“œ "ëˆ„ë¥¸ ìˆœê°„" ê°ì§€ìš©)
+    private float _prevDPadX = 0f;
+    private float _prevDPadY = 0f;
 
-	// Update is called once per frame
+    // =====================================================================
+    // ì‹±ê¸€í†¤ ì´ˆê¸°í™”
+    // =====================================================================
+    private void Awake()
+    {
+        if (instance == null)
+        {
+            instance = this;
+            DontDestroyOnLoad(gameObject);
+        }
+        else if (instance != this)
+        {
+            Debug.LogWarning("[InputManager] ì¤‘ë³µ ê°ì§€. ê¸°ì¡´ ì¸ìŠ¤í„´ìŠ¤ ìœ ì§€, ì´ ì˜¤ë¸Œì íŠ¸ íŒŒê´´");
+            Destroy(gameObject);
+        }
+    }
 
-	//	ÀÔ·Â ÄÚµå   ´ëÀÀÇÏ´Â ¸¶¿ì½º ¹öÆ°
-	//KeyCode.Mouse0  ¿ŞÂÊ ¸¶¿ì½º ¹öÆ° (LMB)
-	//KeyCode.Mouse1 ¿À¸¥ÂÊ ¸¶¿ì½º ¹öÆ° (RMB)
-	//KeyCode.Mouse2 ÈÙ Å¬¸¯ ¹öÆ° (MMB)
-	//KeyCode.Mouse3 º¸Á¶ ¹öÆ° 1 (Ãø¸é ÇÏ´Ü/µÚ·Î)
-	//KeyCode.Mouse4 º¸Á¶ ¹öÆ° 2 (Ãø¸é »ó´Ü/¾ÕÀ¸·Î)
-	//KeyCode.Mouse5 ~6	Ãß°¡ÀûÀÎ Æ¯¼ö ¹öÆ°(¸¶¿ì½º »ç¾ç¿¡ µû¶ó ´Ù¸§)
+    // =====================================================================
+    // ë§¤ í”„ë ˆì„ ì…ë ¥ ìˆ˜ì§‘ - controlTypeì— ë”°ë¼ ì½ê¸° ë°©ì‹ ë¶„ê¸°
+    // =====================================================================
+    private void Update()
+    {
+        switch (controlType)
+        {
+            case INPUT_CONTROL_TYPE.KEYBOARD_MOUSE: ReadKeyboardMouse(); break;
+            case INPUT_CONTROL_TYPE.GAMEPAD:        ReadGamepad();  break;
+            case INPUT_CONTROL_TYPE.MOBILE:         ReadMobile();   break;
+        }
+    }
 
-	void Update()
-	{
-		//ÀÌµ¿Á¶ÀÛ
-		moveInput = new Vector3(Input.GetAxisRaw("Horizontal"),//Å°º¸µå  A=-1, D=1
-			(Input.GetKey(KeyCode.Mouse4) ? 1f : 0f) + (Input.GetKey(KeyCode.Mouse3) ? -1f : 0f),//¼öÁ÷ÀÌµ¿ ¸¶¿ì½º 34,
-			Input.GetAxisRaw("Vertical")); //Å°º¸µå // S=-1, W=1
+    // =====================================================================
+    // í‚¤ë³´ë“œ + ë§ˆìš°ìŠ¤ ì…ë ¥
+    // =====================================================================
+    private void ReadKeyboardMouse()
+    {
+        var km = keyboardMouseConfig;
 
-		//¼±Ã¼ È¸Àü (·Ñ): Q=ÁÂ(-1), E=¿ì(+1), µ¿½ÃÀÔ·Â ½Ã »ó¼âµÇ¾î 0
-		rollInput = (Input.GetKey(KeyCode.E) ? 1f : 0f) + (Input.GetKey(KeyCode.Q) ? -1f : 0f);
+        // ì´ë™
+        // WASD: Unity ê¸°ë³¸ ì¶•(Horizontal/Vertical) ì‚¬ìš©
+        // ìƒí•˜: Mouse4(ìƒìŠ¹) / Mouse3(í•˜ê°•)
+        moveInput = new Vector3(
+            Input.GetAxisRaw(km.axisHorizontal),
+            (Input.GetKey(km.moveUp)   ? 1f : 0f)
+          + (Input.GetKey(km.moveDown) ? -1f : 0f),
+            Input.GetAxisRaw(km.axisVertical)
+        );
 
+        // ë¡¤ íšŒì „ - ë™ì‹œ ì…ë ¥ ì‹œ ìƒì‡„
+        rollInput = (Input.GetKey(km.rollRight) ? 1f  : 0f)
+                  + (Input.GetKey(km.rollLeft)  ? -1f : 0f);
 
-		//ºÎ½ºÆ®(²Ú)
-		isBoosting = Input.GetKey(KeyCode.LeftShift);
-		//È¸ÇÇ
-		isDodging = Input.GetKeyDown(KeyCode.Space);
+        // ì‹œì•¼ (ë§ˆìš°ìŠ¤ ì´ë™ëŸ‰)
+        lookInput = new Vector2(
+            Input.GetAxisRaw(km.axisMouseX),
+            Input.GetAxisRaw(km.axisMouseY)
+        );
 
-		//½Ã¾ßÁ¶ÀÛ
-		lookInput = new Vector2(Input.GetAxisRaw("Mouse X"), Input.GetAxisRaw("Mouse Y"));
+        // ë¶€ìŠ¤íŠ¸ / íšŒí”¼
+        isBoosting = Input.GetKey(km.boost);
+        isDodging  = Input.GetKeyDown(km.dodge);
 
+        // ì‚¬ê²©
+        // fireBulletì€ GetKey (ì—°ì‚¬ - ì†ë„ëŠ” Player.fireDelayë¡œ ì œì–´)
+        // ë‚˜ë¨¸ì§€ëŠ” GetKeyDown (ì¦‰ë°œ/í† ê¸€)
+        fireBullet  = Input.GetKey(km.fireBullet);
+        fireMissile = Input.GetKeyDown(km.fireMissile);
+        fireLaser   = Input.GetKeyDown(km.fireLaser);
+        fireAll     = Input.GetKeyDown(km.fireAll);
 
+        // ë½ì˜¨ ëŒ€ìƒ ì „í™˜ (ë§ˆìš°ìŠ¤íœ )
+        switchLockOnTarget = Input.GetAxisRaw(km.axisScrollWheel);
 
-		// »ç°İ
-		// GetKey  = ´©¸£´Â µ¿¾È (ÃÑ¾Ë ¿¬»ç °¡´É¼º °í·Á. ÃßÈÄ ¿¬»ç¼Óµµ´Â Player¿¡¼­ Á¦¾î)
-		// GetKeyDown = ´©¸¥ ¼ø°£¸¸ (¹Ì»çÀÏ/·¹ÀÌÀú/ÀüÃ¼´Â Åä±Û/Áï¹ß °³³ä)
-		fireBullet = Input.GetKey(KeyCode.Mouse0);
-		fireMissile = Input.GetKeyDown(KeyCode.Mouse1);
-		fireLaser = Input.GetKeyDown(KeyCode.F);
-		fireAll = Input.GetKeyDown(KeyCode.V);
+        // ë¯¸ì‚¬ì¼ ìŠ¬ë¡¯/ëª¨ë“œ ì „í™˜
+        switchMissilePrev      = Input.GetKeyDown(km.missilePrev);
+        switchMissileNext      = Input.GetKeyDown(km.missileNext);
+        switchMissileShootMode = Input.GetKeyDown(km.switchFireMode);
 
-		// ¶ô¿Â ´ë»ó ÀüÈ¯ (¸¶¿ì½ºÈÙ)
-		switchLockOnTarget = Input.GetAxisRaw("Mouse ScrollWheel");
-		
+        // ì†Œëª¨í’ˆ
+        switchConsumable = Input.GetKeyDown(km.switchConsumable);
+        useConsumable    = Input.GetKeyDown(km.useConsumable);
+    }
 
-		// ¹Ì»çÀÏ Å¸ÀÔ ½ºÀ§Äª
-		switchMissile1 = Input.GetKeyDown(KeyCode.Alpha1);
-		switchMissile2 = Input.GetKeyDown(KeyCode.Alpha2);
-		switchMissile3 = Input.GetKeyDown(KeyCode.Alpha3);
+    // =====================================================================
+    // ê²Œì„íŒ¨ë“œ ì…ë ¥
+    // ì•„ë˜ ì¶•ë“¤ì€ Edit > Project Settings > Input Manager ì—ì„œ ì§ì ‘ ë“±ë¡ í•„ìš”:
+    //   LeftStickX, LeftStickY, RightStickX, RightStickY, VerticalMove, DPadY
+    // =====================================================================
+    private void ReadGamepad()
+    {
+        var gp = gamepadConfig;
 
-		//¹Ì»çÀÏ ¹ß»ç¸ğµå ½ºÀ§Äª
+        // ì´ë™ (ì™¼ìª½ ìŠ¤í‹±)
+        moveInput = new Vector3(
+            Input.GetAxisRaw(gp.axisLeftStickX),
+            Input.GetAxisRaw(gp.axisVerticalMove),
+            Input.GetAxisRaw(gp.axisLeftStickY)
+        );
 
-		switchMissileShootMode = Input.GetKeyDown(KeyCode.C);
+        // ë¡¤ íšŒì „ (LT/RT ë²„íŠ¼)
+        rollInput = (Input.GetKey(gp.rollRight) ? 1f  : 0f)
+                  + (Input.GetKey(gp.rollLeft)  ? -1f : 0f);
 
-		//// ¹Ì»çÀÏ ½½·Ô ÀåÂø/ÇØÁ¦ Åä±Û (Player¿¡¼­ Åä±Û ·ÎÁ÷ Ã³¸®) 0520 ÀÌÈÄ ¹Ì»ç¿ë
-		//equipMissileL = Input.GetKeyDown(KeyCode.Alpha1);
-		//equipMissileR = Input.GetKeyDown(KeyCode.Alpha3);
+        // ì‹œì•¼ (ì˜¤ë¥¸ìª½ ìŠ¤í‹±)
+        lookInput = new Vector2(
+            Input.GetAxisRaw(gp.axisRightStickX),
+            Input.GetAxisRaw(gp.axisRightStickY)
+        );
 
+        // ë¶€ìŠ¤íŠ¸ / íšŒí”¼
+        isBoosting = Input.GetKey(gp.boost);
+        isDodging  = Input.GetKeyDown(gp.dodge);
 
+        // ì‚¬ê²©
+        fireBullet  = Input.GetKey(gp.fireBullet);
+        fireMissile = Input.GetKeyDown(gp.fireMissile);
+        fireLaser   = Input.GetKeyDown(gp.fireLaser);
+        fireAll     = Input.GetKeyDown(gp.fireAll);
 
+        // ë½ì˜¨ ëŒ€ìƒ ì „í™˜ - D-íŒ¨ë“œ ì‚¬ìš©ìœ¼ë¡œ ì¶©ëŒ, íŒ¨ë“œ ë¯¸ì§€ì›
+        // TODO: ì¶”í›„ ë³„ë„ ë²„íŠ¼ ì§€ì • í•„ìš”
+        switchLockOnTarget = 0f;
 
-	}
+        // ëª¨ë“œ ì „í™˜
+        switchMissileShootMode = Input.GetKeyDown(gp.switchFireMode);
+
+        // D-íŒ¨ë“œ: ì´ì „ í”„ë ˆì„ ë¹„êµë¡œ "ëˆ„ë¥¸ ìˆœê°„" ê°ì§€
+        //   ì¢Œ â†’ ë¯¸ì‚¬ì¼ ì´ì „ ìŠ¬ë¡¯
+        //   ìš° â†’ ë¯¸ì‚¬ì¼ ë‹¤ìŒ ìŠ¬ë¡¯
+        //   ìƒ â†’ ì†Œëª¨í’ˆ ìŠ¬ë¡¯ ì „í™˜
+        //   í•˜ â†’ ì†Œëª¨í’ˆ ì‚¬ìš©
+        float dpadX = Input.GetAxisRaw(gp.axisDPadX);
+        float dpadY = Input.GetAxisRaw(gp.axisDPadY);
+
+        switchMissilePrev = (dpadX < -0.5f) && (_prevDPadX >= -0.5f);
+        switchMissileNext = (dpadX >  0.5f) && (_prevDPadX <=  0.5f);
+        switchConsumable  = (dpadY >  0.5f) && (_prevDPadY <=  0.5f);
+        useConsumable     = (dpadY < -0.5f) && (_prevDPadY >= -0.5f);
+
+        _prevDPadX = dpadX;
+        _prevDPadY = dpadY;
+    }
+
+    // =====================================================================
+    // ëª¨ë°”ì¼ ì…ë ¥ (ë¯¸êµ¬í˜„ - ì¶”í›„ ê°€ìƒ ì¡°ì´ìŠ¤í‹±/ë²„íŠ¼ ì—°ë™ ì‹œ ì‘ì„±)
+    // =====================================================================
+    private void ReadMobile()
+    {
+        // êµ¬í˜„ ì˜ˆì‹œ (ê°€ìƒ ì¡°ì´ìŠ¤í‹± ì—ì…‹ ì—°ë™ ì‹œ):
+        //   moveInput  = VirtualJoystick.Instance.Direction;
+        //   fireBullet = VirtualButton.Instance.IsHeld("FireBullet");
+        Debug.LogWarning("[InputManager] MOBILE ì¡°ì‘ì€ ì•„ì§ ë¯¸êµ¬í˜„ì…ë‹ˆë‹¤.");
+    }
 }

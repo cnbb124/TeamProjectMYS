@@ -173,6 +173,15 @@ public abstract class Unit : MonoBehaviour, IDamageable
 
     
 
+    // =====================================================================
+    // 일시정지 / 게임오버 체크
+    // Player, Enemy 등 자식 클래스의 Update/FixedUpdate 첫 줄에서 사용.
+    // Unit.Update() 에도 적용 - 자식이 base.Update() 호출 시 이중 안전망.
+    // =====================================================================
+    protected bool ShouldPause =>
+        GameManager.Instance != null &&
+        (GameManager.Instance.IsPaused || GameManager.Instance.IsGameOver);
+
     protected virtual void Awake()
     {
         _rb = GetComponent<Rigidbody>();
@@ -210,6 +219,7 @@ public abstract class Unit : MonoBehaviour, IDamageable
     // Update is called once per frame
     protected virtual void Update()
     {
+        if (ShouldPause) return;
         UpdateFSM();
         //UpdateShieldRegen(); >>0516 코루틴으로변경
         UpdateBoostRegen();
@@ -511,7 +521,7 @@ public abstract class Unit : MonoBehaviour, IDamageable
             CurState = UNIT_STATE.DIE;
             Die();
         }
-        else
+        else//실드 배터리?엔진?이 파츠가 말짱할경우 조건추가
         {
             // 죽지 않았다면 딜레이 후 다시 실드가 차오르도록 코루틴을 새로 시작함
             _shieldRegenCoroutine = StartCoroutine(ShieldRegenerationRoutine());
@@ -526,9 +536,16 @@ public abstract class Unit : MonoBehaviour, IDamageable
     protected virtual void OnHitReaction(DamageInfo info)
     {
         //피격 애니메이션재생 필요
-        //피격 사운드재생 필요
-        _playSoundType = GetPlaySoundType(info);
-        _sound.PlaySFX3DAtPosition(_playSoundType, info.hitPosition);
+        //피격 사운드재생 필요 실드있을떄는 실드사운드, 아니면 타입맞춰서
+        if (curShieldRemaining <= 0)
+        {
+            _playSoundType = GetPlaySoundType(info);
+        }
+        else
+        {
+            _playSoundType = GetPlaySoundTypeShield(info);
+        }
+            _sound.PlaySFX3DAtPosition(_playSoundType, info.hitPosition);
         //피격 카메라무빙필요
 
         //크리면 데미지 배율, 아니면 그냥 데미지
@@ -588,9 +605,13 @@ public abstract class Unit : MonoBehaviour, IDamageable
 
 
 
-    //재생할 사운드 찾는 함수 (오버로딩)
-    //피격
-    protected SOUND_TYPE GetPlaySoundType(DamageInfo info)
+	/// <summary>
+	/// 재생할 사운드 찾는 함수 (오버로딩)
+	/// 피격
+	/// </summary>
+	/// <param name="info">맞은 투사체 정보</param>
+	/// <returns></returns>
+	protected SOUND_TYPE GetPlaySoundType(DamageInfo info)
     {
 
 
@@ -618,7 +639,11 @@ public abstract class Unit : MonoBehaviour, IDamageable
         }
         return SOUND_TYPE.SFX_NONE;
     }
-    //사격
+    /// <summary>
+    /// 사격시
+    /// </summary>
+    /// <param name="type">발사할 투사체 타입</param>
+    /// <returns></returns>
     protected SOUND_TYPE GetPlaySoundType(PROJECTILE_TYPE type)
     {
         switch (type)
@@ -638,4 +663,32 @@ public abstract class Unit : MonoBehaviour, IDamageable
         return SOUND_TYPE.SFX_NONE;
 
     }
+
+
+    protected SOUND_TYPE GetPlaySoundTypeShield(DamageInfo info)
+    {
+		switch (info.type)
+		{
+			case DAMAGE_TYPE.BULLET:
+				return SOUND_TYPE.SFX_BULLETHIT_SHIELD;
+
+			case DAMAGE_TYPE.LASER:
+				return SOUND_TYPE.SFX_LASERHIT_SHIELD;
+
+			case DAMAGE_TYPE.EXPLOSION:
+				return SOUND_TYPE.SFX_EXPLOSION_SHIELD;
+
+			case DAMAGE_TYPE.CONTACT:
+				if (info.attacker.CompareTag("Enemy"))
+				{
+					return SOUND_TYPE.SFX_CONTACTSHIP_SHIELD;
+				}
+				if (info.attacker.CompareTag("Ground"))
+				{
+					return SOUND_TYPE.SFX_CONTACTGROUND_SHIELD;
+				}
+				break;
+		}
+		return SOUND_TYPE.SFX_NONE;
+	}
 }

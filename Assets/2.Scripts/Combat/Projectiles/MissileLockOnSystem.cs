@@ -232,7 +232,7 @@ public class MissileLockOnSystem : MonoBehaviour
 	{
 		if (currentLockMode == LOCK_ON_MODE.MULTI)
 		{
-			// 멀티 락온 모드에서는 전체를 동시 조준하므로 개별 스위치 기능을 제한합니다.
+			// 멀티 락온 모드에서는 전체를 동시 조준하므로 개별 스위치 기능을 제한.
 			return;
 		}
 

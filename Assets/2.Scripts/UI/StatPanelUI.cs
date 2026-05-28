@@ -12,8 +12,10 @@ public class StatPanelUI : MonoBehaviour
     [Header("Stat Bars (Image.Type = Filled, Horizontal)")]
     
     public Image hpBar;
+    public Image shieldBar;
+    public Image armorBar;
     public Image speedBar;
-    public Image defenseBar;
+    public Image boostBar;
     public Image mobilityBar;
     public Image stabilityBar;
     public Image airToAirBar;
@@ -57,8 +59,8 @@ public class StatPanelUI : MonoBehaviour
 
     IEnumerator AnimateBars(PlaneNodeData data)
     {
-        Image[] bars    = { hpBar, speedBar, defenseBar,mobilityBar, stabilityBar, airToAirBar, airToGroundBar};
-        float[] targets = { data.hp / 100f, data.speed / 100f, data.defense / 100f,
+        Image[] bars    = { hpBar, shieldBar, armorBar, speedBar, boostBar, mobilityBar, stabilityBar, airToAirBar, airToGroundBar};
+        float[] targets = { data.hp / 150f, data.shield / 150f, data.armor / 100f, data.speed / 350f, data.boost / 550f,
                             data.mobility / 100f, data.stability / 100f, data.airToAir / 100f, data.airToGround / 100f };
         float[] starts  = new float[bars.Length];
 

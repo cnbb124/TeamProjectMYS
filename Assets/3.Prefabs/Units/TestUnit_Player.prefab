@@ -1638,7 +1638,10 @@ MonoBehaviour:
   criChance: 20
   criDamageMultiplier: 1.5
   fireDelay: 0.1
-  missileAmmoList: []
+  missileAmmoList:
+  - missileType: 0
+    curAmmo: 9999
+    maxAmmo: 9999
   baseMoveSpeed: 350
   boostSpeed: 550
   maxSpeed: 1000
@@ -1699,7 +1702,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   currentLockMode: 0
   maxMultiLockCount: 8
-  lockOnRange: 1800
+  lockOnRange: 1820
   lockOnRequiredTime: 0.8
   targetLayerMask:
     serializedVersion: 2
