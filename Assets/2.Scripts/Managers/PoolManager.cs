@@ -113,7 +113,7 @@ public class PoolManager : MonoBehaviour
             var pool = new List<GameObject>(config.initialSize);
             for (int i = 0; i < config.initialSize; i++)
             {
-                GameObject obj = Instantiate(config.prefab);
+                GameObject obj = Instantiate(config.prefab, this.transform); // DontDestroyOnLoad 유지를 위해 PoolManager 자식으로
                 obj.SetActive(false);
                 pool.Add(obj);
             }
