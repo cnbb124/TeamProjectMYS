@@ -24440,6 +24440,7 @@ MonoBehaviour:
     maxDistance: 0
     volumeScale: 1
   bgmSource: {fileID: 502022204}
+  curBGM: 0
   sfxUISource: {fileID: 0}
   bgmVolume: 1
   sfxUIVolume: 1
@@ -27175,6 +27176,7 @@ MonoBehaviour:
   openDistance: 2
   speed: 2
   closeDelay: 2
+  trigger: 0
 --- !u!82 &574141337
 AudioSource:
   m_ObjectHideFlags: 0
@@ -44730,6 +44732,7 @@ MonoBehaviour:
   openDistance: 2
   speed: 2
   closeDelay: 2
+  trigger: 0
 --- !u!82 &890987054
 AudioSource:
   m_ObjectHideFlags: 0
@@ -67810,63 +67813,6 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 400002, guid: 738b55f9d75654dd2a1bbbed9d6fea19, type: 3}
   m_PrefabInstance: {fileID: 495509473}
   m_PrefabAsset: {fileID: 0}
---- !u!1001 &1329433160
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    serializedVersion: 3
-    m_TransformParent: {fileID: 0}
-    m_Modifications:
-    - target: {fileID: -8679921383154817045, guid: a6b703fbf02fe154e99c8c5d253787e3, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 68.78737
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: a6b703fbf02fe154e99c8c5d253787e3, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: -4.049342
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: a6b703fbf02fe154e99c8c5d253787e3, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 3.2706738
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: a6b703fbf02fe154e99c8c5d253787e3, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 0.7071068
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: a6b703fbf02fe154e99c8c5d253787e3, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: -0.7071068
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: a6b703fbf02fe154e99c8c5d253787e3, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: a6b703fbf02fe154e99c8c5d253787e3, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: -0
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: a6b703fbf02fe154e99c8c5d253787e3, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: a6b703fbf02fe154e99c8c5d253787e3, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: a6b703fbf02fe154e99c8c5d253787e3, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 919132149155446097, guid: a6b703fbf02fe154e99c8c5d253787e3, type: 3}
-      propertyPath: m_Name
-      value: Meshy_AI_Pastel_Explorer_0521020842_texture
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-    m_RemovedGameObjects: []
-    m_AddedGameObjects: []
-    m_AddedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: a6b703fbf02fe154e99c8c5d253787e3, type: 3}
 --- !u!4 &1329562476 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 400002, guid: b436ae5c615194675b30036b30e568c3, type: 3}
@@ -100948,7 +100894,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: -8679921383154817045, guid: 97c749c36e125704f926552fe2478ccb, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 65.842705
+      value: 68.72
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 97c749c36e125704f926552fe2478ccb, type: 3}
       propertyPath: m_LocalPosition.y
@@ -100956,7 +100902,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 97c749c36e125704f926552fe2478ccb, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 3.4605036
+      value: 2.86
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 97c749c36e125704f926552fe2478ccb, type: 3}
       propertyPath: m_LocalRotation.w
@@ -110496,4 +110442,3 @@ SceneRoots:
   - {fileID: 1437031325}
   - {fileID: 1680497130}
   - {fileID: 1923941176}
-  - {fileID: 1329433160}
