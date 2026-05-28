@@ -233,7 +233,7 @@ public class Player : Unit
 	protected override void Die()
 	{
 		GameManager.Instance.GameOver();
-		// ex. GameManager.Instance.OnPlayerDie();
+		//기타 필요한거 반납??여기서해야하나
 	}
 
 	

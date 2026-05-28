@@ -558,10 +558,7 @@ public abstract class Unit : MonoBehaviour, IDamageable
     /// <summary>
     /// 사망처리(오브젝트 풀반납, 비활성화등. 플레이어와는 다르게 처리할거기때문에 자식에서 override)
     /// </summary>
-    protected virtual void Die()
-    {
-
-    }
+    protected virtual void Die(){ }
 
     //bool isCritical()
     //{

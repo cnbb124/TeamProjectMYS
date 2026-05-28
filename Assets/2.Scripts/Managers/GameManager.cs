@@ -272,8 +272,9 @@ public class GameManager : MonoBehaviour
         if (curState == GAME_STATE.GAME_OVER) return;
         IsGameOver = true;
         ChangeState(GAME_STATE.GAME_OVER);
-        PoolManager.Instance.DisableAllProjectiles();
-        SoundManager.Instance.StopSFXAll();
+        PoolManager.Instance.DisableAllProjectiles();//현재 투사체 모두 비활성화
+        SoundManager.Instance.StopSFXAll();//모든 나고있던 효과음중지
+        //기타 필요한 ui연출이나 사운드, 이펙트연출은 추가로 작성필요
     }
 
     /// <summary>스테이지 클리어 조건 달성 시 호출.</summary>
