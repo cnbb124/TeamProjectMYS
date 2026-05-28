@@ -3,10 +3,11 @@ using UnityEngine;
 
 public class cs_Map_BGM_Zone : MonoBehaviour
 {
+    [Header("BGM 연결")]
     public SOUND_TYPE bgmType; // 사운드 연결 추가되면 살릴것
     public float fadeTime = 2f;
-    public AudioClip temp_Audio;
-    public AudioSource tempAudioSource;
+    //public AudioClip temp_Audio;
+    //public AudioSource tempAudioSource;
 
     void OnTriggerEnter(Collider other)
     {
