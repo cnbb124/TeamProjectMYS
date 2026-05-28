@@ -13,4 +13,9 @@ public class LobbyUIManager : MonoBehaviour
         //변경완료
         GameManager.Instance.LoadScene("ServerListUI");
     }
+
+	public void OnClickNewGame()
+	{
+		GameManager.Instance.LoadScene("Test"); // 또는 SCENE_TYPE.STAGE1
+	}
 }

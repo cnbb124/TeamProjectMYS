@@ -29,6 +29,8 @@ public class Player : Unit
 	private int _bulletFireIndex = 0;
 	// 미사일 교대발사용인덱스
 	private int _missileFireIndex = 0;
+	// 미사일 슬롯 순환 인덱스
+	private int _missileSlotIndex = 0;
 	// =================================================
 
 	//매니저 할당용 레퍼런스
@@ -108,6 +110,7 @@ public class Player : Unit
 	// Update is called once per frame
 	protected override void Update()
 	{
+		if (ShouldPause) return;
 		base.Update(); //FSM, 실드/부스트 회복 호출
 					   // 입력처리 - InputManager 구현 뒤 여기서 호출
 					   // ex. InputManager.Instance.HandleInput(this);
@@ -119,20 +122,17 @@ public class Player : Unit
 		//==========혹여나 업뎃이 입력없을때도 필요한게ㅐ 있으면 이 위로 입력학ㄹ것=========
 		//미사일 장착 토글 처리(온오프) 상태변화 관련이므로 즉시 Update로
 		// 장착 슬롯 배열의 길이를 확인하여 에러 방지 후 현재 미사일 타입 변경
-		if (_input.switchMissile1 && equippedMissiles.Length > 0)
+		if (_input.switchMissileNext && equippedMissiles.Length > 0)
 		{
-			curMissileType = equippedMissiles[0];
-			Debug.Log($"[Player] 1번 슬롯 무기 장착: {curMissileType}");
+			_missileSlotIndex = (_missileSlotIndex + 1) % equippedMissiles.Length;
+			curMissileType = equippedMissiles[_missileSlotIndex];
+			Debug.Log($"[Player] 미사일 슬롯 → {_missileSlotIndex} : {curMissileType}");
 		}
-		else if (_input.switchMissile2 && equippedMissiles.Length > 1)
+		else if (_input.switchMissilePrev && equippedMissiles.Length > 0)
 		{
-			curMissileType = equippedMissiles[1];
-			Debug.Log($"[Player] 2번 슬롯 무기 장착: {curMissileType}");
-		}
-		else if (_input.switchMissile3 && equippedMissiles.Length > 2)
-		{
-			curMissileType = equippedMissiles[2];
-			Debug.Log($"[Player] 3번 슬롯 무기 장착: {curMissileType}");
+			_missileSlotIndex = (_missileSlotIndex - 1 + equippedMissiles.Length) % equippedMissiles.Length;
+			curMissileType = equippedMissiles[_missileSlotIndex];
+			Debug.Log($"[Player] 미사일 슬롯 ← {_missileSlotIndex} : {curMissileType}");
 		}
 
 		if (_input.switchLockOnTarget != 0f && lockOnSystem != null)
@@ -153,6 +153,7 @@ public class Player : Unit
 
 	protected override void FixedUpdate()
 	{
+		if (ShouldPause) return;
 
 		//항상 회전이먼저!!!
 		RotateByInput();
@@ -211,7 +212,7 @@ public class Player : Unit
 		{
 			case UNIT_STATE.DIE:
 				Debug.Log("[Player] 사망");
-				// GameManager.Instance.OnPlayerDie();
+				
 				break;
 		}
 	}
@@ -231,6 +232,7 @@ public class Player : Unit
 	// 사망처리
 	protected override void Die()
 	{
+		GameManager.Instance.GameOver();
 		// ex. GameManager.Instance.OnPlayerDie();
 	}
 
@@ -617,3 +619,5 @@ public class Player : Unit
 		// OnLevelUp();
 	}
 }
+
+

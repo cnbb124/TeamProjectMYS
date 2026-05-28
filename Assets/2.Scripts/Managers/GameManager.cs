@@ -1,255 +1,432 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
+// =====================================================================
+// GameManager
+//
+// ì—­í• :
+//   1. ê²Œì„ ìƒíƒœ(FSM) ê´€ë¦¬
+//   2. ì”¬ ì „í™˜ (ì •ë¦¬ í›„ ë¡œë“œ)
+//   3. ê³¨ë“œ / í‚¬ì¹´ìš´íŠ¸ / ë³´ìŠ¤ ìŠ¤í° ì¡°ê±´ ê´€ë¦¬
+//   4. ì €ì¥ / ë¶ˆëŸ¬ì˜¤ê¸° (STATION ì”¬ì—ì„œë§Œ ì €ì¥ ê°€ëŠ¥)
+//   5. Player ë ˆí¼ëŸ°ìŠ¤ ìºì‹± (ì”¬ ë¡œë“œ í›„ ìë™ íƒìƒ‰)
+//
+// ì”¬ íë¦„:
+//   STATION â†’ LOADING_SEQUENCE â†’ MAP_SELECT â†’ STAGE1
+//   ì „íˆ¬ ì¢…ë£Œ â†’ STATION ë³µê·€
+//
+// ì €ì¥ ë°ì´í„°: SaveData.cs ì°¸ê³ 
+// =====================================================================
 public class GameManager : MonoBehaviour
 {
-	private static GameManager instance = null;
-	public static GameManager Instance
-	{
-		get
-		{
-			if (instance == null)
-			{
-				instance = FindObjectOfType<GameManager>();
-				if (instance == null)
-				{
-					Debug.LogError("¾À¿¡ GameManager ´©¶ô! ÇÏÀÌ¾î¶óÅ°¿¡ °ÔÀÓ¸Å´ÏÀú ÇÊ¿ä");
-				}
-			}
-			return instance;
-		}
-	}
+    // =====================================================================
+    // ì‹±ê¸€í†¤
+    // =====================================================================
+    private static GameManager instance = null;
+    public static GameManager Instance
+    {
+        get
+        {
+            if (instance == null)
+            {
+                instance = FindObjectOfType<GameManager>();
+                if (instance == null)
+                    Debug.LogError("[GameManager] ì”¬ì— GameManager ì—†ìŒ! í•˜ì´ì–´ë¼í‚¤ì— ì¶”ê°€ í•„ìš”");
+            }
+            return instance;
+        }
+    }
 
-	private void Awake()
-	{
-		if (instance == null)
-		{
-			instance = this;
-			DontDestroyOnLoad(gameObject);
-		}
-		else if (instance != this)
-		{
-			Debug.LogWarning("Áßº¹µÈ GameManager ¹ß°ß. ÆÄ±« ÈÄ ½ÇÇà");
-			Destroy(gameObject);
-		}
+    // =====================================================================
+    // ì”¬-BGM ë§¤í•‘ (ì”¬ ì¶”ê°€ ì‹œ ì—¬ê¸°ì— í•œ ì¤„ë§Œ ì¶”ê°€)
+    // =====================================================================
+    private static readonly Dictionary<string, SOUND_TYPE> _sceneBGMMap = new Dictionary<string, SOUND_TYPE>
+    {
+        { "MAIN",             SOUND_TYPE.BGM_MAIN      },
+        { "STATION",          SOUND_TYPE.BGM_STATION   },
+        { "STAGE1",           SOUND_TYPE.BGM_STAGE1    },
+        { "GAME_OVER",        SOUND_TYPE.BGM_GAMEOVER  },
+        { "1F",               SOUND_TYPE.BGM_1F        },
+        { "B2",               SOUND_TYPE.BGM_B2        },
+        // LOADING_SEQUENCE, MAP_SELECT ë“±ë„ ì¶”ê°€í•´ì•¼í•¨.
+    };
 
-		//SceneManager.sceneLoaded += OnSceneLoaded;
-	}
+    // =====================================================================
+    // ê²Œì„ ìƒíƒœ
+    // =====================================================================
+    public GAME_STATE curState;
+
+    // ìƒíƒœ ë³€í™” ì‹œ UIì—ì„œ êµ¬ë… (íŒ¨ë„ ì „í™˜ ë“±)
+    public System.Action<GAME_STATE> OnGameStateChanged;
+
+    // Time.timeScale ëŒ€ì‹  í”Œë˜ê·¸ë¡œ ì œì–´
+    // Player, Enemy ë“± ê²Œì„ ë¡œì§ì—ì„œ ì´ ê°’ì„ ì²´í¬í•´ ìŠ¤ìŠ¤ë¡œ ë©ˆì¶¤
+    // UI / ìŒì•… / ì—°ì¶œì€ ì˜í–¥ ì—†ìŒ
+    public bool IsPaused   { get; private set; }
+    public bool IsGameOver { get; private set; }
+
+    // =====================================================================
+    // Player ë ˆí¼ëŸ°ìŠ¤ (ì”¬ ë¡œë“œ í›„ ìë™ ìºì‹±)
+    // =====================================================================
+    public Player playerRef;
+
+    // =====================================================================
+    // ì¬í™”
+    // =====================================================================
+    public int gold;
+
+    // =====================================================================
+    // ë³´ìŠ¤ ìŠ¤í° ì¡°ê±´
+    // =====================================================================
+    [Header("â”â”â”â”â”â” ë³´ìŠ¤ ìŠ¤í° ì¡°ê±´ â”â”â”â”â”â”")]
+    [Tooltip("ì´ ìˆ˜ë§Œí¼ ì ì„ ì²˜ì¹˜í•˜ë©´ ë³´ìŠ¤ ìŠ¤í° (0ì´ë©´ í‚¬ì¹´ìš´íŠ¸ ì¡°ê±´ ë¯¸ì‚¬ìš©)")]
+    public int killCountToSpawnBoss = 20;
+
+    [Tooltip("ì´ ìˆ˜ë§Œí¼ ì˜¤ë¸Œì íŠ¸ë¥¼ íŒŒê´´í•˜ë©´ ë³´ìŠ¤ ìŠ¤í° (0ì´ë©´ íŒŒê´´ ì¡°ê±´ ë¯¸ì‚¬ìš©)")]
+    public int destroyCountToSpawnBoss = 0;
+
+    [HideInInspector] public int  killCount;
+    [HideInInspector] public int  destroyedObjectCount;
+    [HideInInspector] public bool bossSpawned;
+
+    // ë³´ìŠ¤ ìŠ¤í° ì¡°ê±´ ë‹¬ì„± ì‹œ ë°œí–‰ (SpawnManager ë“±ì´ êµ¬ë…)
+    public System.Action OnBossSpawn;
+
+    // =====================================================================
+    // ì €ì¥ ê²½ë¡œ
+    // =====================================================================
+    private string SavePath(int slot) =>
+        Path.Combine(Application.persistentDataPath, $"save{slot}.json");
+
+    // =====================================================================
+    // ì €ì¥ ê°€ëŠ¥ ì—¬ë¶€ (STATION ì”¬ì—ì„œë§Œ true)
+    // =====================================================================
+    public bool CanSave =>
+        SceneManager.GetActiveScene().name == SCENE_TYPE.STATION.ToString();
+
+    // =====================================================================
+    // ì´ˆê¸°í™”
+    // =====================================================================
+    private void Awake()
+    {
+        if (instance == null)
+        {
+            instance = this;
+            DontDestroyOnLoad(gameObject);
+            SceneManager.sceneLoaded += OnSceneLoaded;
+        }
+        else if (instance != this)
+        {
+            Debug.LogWarning("[GameManager] ì¤‘ë³µ ê°ì§€. íŒŒê´´ í›„ ê¸°ì¡´ ìœ ì§€");
+            Destroy(gameObject);
+        }
+    }
+
+    private void OnDestroy()
+    {
+        SceneManager.sceneLoaded -= OnSceneLoaded;
+    }
+
+    // ì”¬ ë¡œë“œ ì™„ë£Œ ì‹œ ìë™ í˜¸ì¶œ
+    private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        // Player ë ˆí¼ëŸ°ìŠ¤ ê°±ì‹ 
+        playerRef = FindObjectOfType<Player>();
+
+        // BGM ì¬ìƒ
+        PlaySceneBGM(scene.name);
+
+        // ì „íˆ¬ ì”¬ ì§„ì… ì‹œ í‚¬ì¹´ìš´íŠ¸ ì´ˆê¸°í™”
+        if (scene.name == SCENE_TYPE.STAGE1.ToString())
+            ResetBattleData();
+    }
+
+    // =====================================================================
+    // ì”¬ ì „í™˜
+    // ë°˜ë“œì‹œ ì´ ë©”ì„œë“œë¥¼ í†µí•´ ì”¬ì„ ì „í™˜í•  ê²ƒ (ì§ì ‘ SceneManager í˜¸ì¶œ ê¸ˆì§€)
+    // =====================================================================
+    public void LoadScene(string sceneName)
+    {
+        StartCoroutine(LoadSceneRoutine(sceneName));
+    }
+
+    public void LoadScene(SCENE_TYPE sceneType)
+    {
+        StartCoroutine(LoadSceneRoutine(sceneType.ToString()));
+    }
+
+    private IEnumerator LoadSceneRoutine(string sceneName)
+    {
+        // ì „í™˜ ì „ ì •ë¦¬
+        Time.timeScale = 1f;
+        PoolManager.Instance.DisableAllProjectiles();
+        SoundManager.Instance.StopSFXAll();
+
+        // í•„ìš” ì‹œ í˜ì´ë“œì•„ì›ƒ ì—°ì¶œ ì¶”ê°€
+        // yield return StartCoroutine(FadeOut());
+
+        yield return null;
+        SceneManager.LoadScene(sceneName);
+    }
+
+    private void PlaySceneBGM(string sceneName)
+    {
+        if (_sceneBGMMap.TryGetValue(sceneName, out SOUND_TYPE bgm))
+            SoundManager.Instance.PlayBGM(bgm);
+        // ë§¤í•‘ ì—†ëŠ” ì”¬(ë¡œë”©, ë§µì„ íƒ ë“±)ì€ BGM ìœ ì§€ or ì¤‘ì§€ ì„ íƒ
+        // SoundManager.Instance.StopBGM(); // ì¤‘ì§€ ì›í•  ì‹œ ì£¼ì„ í•´ì œ
+
+        // switch ë°©ì‹ ë©”ëª¨ (Dictionary ë°©ì‹ìœ¼ë¡œ êµì²´ë¨, í•„ìš” ì‹œ ì•„ë˜ ë³µì›)
+        //switch (sceneName)
+        //{
+        //    case "MAIN":      SoundManager.Instance.PlayBGM(SOUND_TYPE.BGM_MAIN);     break;
+        //    case "STAGE1":    SoundManager.Instance.PlayBGM(SOUND_TYPE.BGM_STAGE1);   break;
+        //    case "STATION":   SoundManager.Instance.PlayBGM(SOUND_TYPE.BGM_STATION);  break;
+        //    case "GAME_OVER": SoundManager.Instance.PlayBGM(SOUND_TYPE.BGM_GAMEOVER); break;
+        //    default:          /* BGM ìœ ì§€ ë˜ëŠ” StopBGM() */                           break;
+        //}
+    }
+
+    // =====================================================================
+    // UIì—ì„œ í˜¸ì¶œí•˜ëŠ” ê³µê°œ ë©”ì„œë“œ
+    // =====================================================================
+
+    /// <summary>ìƒˆ ê²Œì„ ì‹œì‘. ë°ì´í„° ì´ˆê¸°í™” í›„ ë¡œë”© ì‹œí€€ìŠ¤ë¡œ ì´ë™.</summary>
+    public void NewGame()
+    {
+        ClearData();
+        ChangeState(GAME_STATE.PLAYING);
+        LoadScene(SCENE_TYPE.LOADING_SEQUENCE);
+    }
+
+    /// <summary>ì €ì¥ëœ ê²Œì„ ë¶ˆëŸ¬ì˜¤ê¸°. ì„¸ì´ë¸Œ ìŠ¬ë¡¯ ë²ˆí˜¸ë¡œ í˜¸ì¶œ.</summary>
+    public void LoadGame(int saveSlotNum)
+    {
+        LoadData(saveSlotNum);
+        ChangeState(GAME_STATE.PLAYING);
+        LoadScene(SCENE_TYPE.LOADING_SEQUENCE);
+    }
+
+    //=================================
+    // ì €ì¥/ë¡œë“œ ì²˜ë¦¬ íë¦„ ë©”ëª¨
+    // [ì €ì¥ íë¦„]
+    //   GameManager.SaveGame()
+    //     â† Playerì—ì„œ í˜„ì¬ HP/ì‹¤ë“œ ì½ì–´ì˜´
+    //     â† PlayerLoadoutì—ì„œ ì¥ë¹„/íƒ„ì•½ ì½ì–´ì˜´
+    //     â† Inventoryì—ì„œ ì•„ì´í…œ ëª©ë¡ ì½ì–´ì™€ì„œ
+    //     â† í•˜ë‚˜ì˜ SaveDataë¡œ íŒ¨í‚¹ í›„ JSON íŒŒì¼ ì €ì¥
+    //
+    // [ë¡œë“œ íë¦„]
+    // GameManager.LoadGame()
+    //     â† JSON íŒŒì¼ ì½ì–´ SaveDataë¡œ íŒŒì‹±
+    //     â† Playerì— HP/ì‹¤ë“œ ë“± ë³µì›
+    //     â† PlayerLoadoutì— ì¥ë¹„/íƒ„ì•½ ë³µì›
+    //     â† Inventoryì— ì•„ì´í…œ ëª©ë¡ ë³µì›
+    //=================================
+
+    /// <summary>í˜„ì¬ ê²Œì„ ì €ì¥. STATION ì”¬ì—ì„œë§Œ ê°€ëŠ¥.</summary>
+    public void SaveGame(int saveSlotNum)
+    {
+        if (!CanSave)
+        {
+            Debug.LogWarning("[GameManager] ì €ì¥ì€ ë§ˆì„(STATION)ì—ì„œë§Œ ê°€ëŠ¥í•©ë‹ˆë‹¤.");
+            return;
+        }
+        SaveData(saveSlotNum);
+    }
+
+    /// <summary>
+    /// ì¼ì‹œì •ì§€. PLAYING ìƒíƒœì—ì„œë§Œ ë™ì‘.
+    /// Time.timeScaleì„ ê±´ë“œë¦¬ì§€ ì•Šìœ¼ë¯€ë¡œ UI / ìŒì•… / ì—°ì¶œì€ ê·¸ëŒ€ë¡œ ë™ì‘.
+    /// Player, Enemy ë“± ê²Œì„ ë¡œì§ì€ IsPausedë¥¼ ì²´í¬í•´ì„œ ìŠ¤ìŠ¤ë¡œ ë©ˆì¶°ì•¼ í•¨.
+    /// </summary>
+    public void PauseGame()
+    {
+        if (curState != GAME_STATE.PLAYING) return;
+        IsPaused = true;
+        ChangeState(GAME_STATE.PAUSED);
+    }
+
+    /// <summary>ì¼ì‹œì •ì§€ í•´ì œ.</summary>
+    public void ResumeGame()
+    {
+        if (curState != GAME_STATE.PAUSED) return;
+        IsPaused = false;
+        ChangeState(GAME_STATE.PLAYING);
+    }
+
+    // =====================================================================
+    // ê²Œì„ ë‚´ë¶€ì—ì„œ í˜¸ì¶œí•˜ëŠ” ë©”ì„œë“œ
+    // =====================================================================
+
+    /// <summary>
+    /// í”Œë ˆì´ì–´ ì‚¬ë§ ì‹œ Player.Die()ì—ì„œ í˜¸ì¶œ.
+    /// Time.timeScale ê±´ë“œë¦¬ì§€ ì•ŠìŒ - ì£½ìŒ ì—°ì¶œ(í­ë°œ ë“±)ì´ ì¬ìƒë˜ì–´ì•¼ í•˜ë¯€ë¡œ.
+    /// UI / ìŒì•…ì€ OnGameStateChanged ì´ë²¤íŠ¸ë¡œ ì²˜ë¦¬.
+    /// </summary>
+    public void GameOver()
+    {
+        if (curState == GAME_STATE.GAME_OVER) return;
+        IsGameOver = true;
+        ChangeState(GAME_STATE.GAME_OVER);
+        PoolManager.Instance.DisableAllProjectiles();
+        SoundManager.Instance.StopSFXAll();
+    }
+
+    /// <summary>ìŠ¤í…Œì´ì§€ í´ë¦¬ì–´ ì¡°ê±´ ë‹¬ì„± ì‹œ í˜¸ì¶œ.</summary>
+    public void GameClear()
+    {
+        if (curState == GAME_STATE.CLEAR) return;
+        ChangeState(GAME_STATE.CLEAR);
+        PoolManager.Instance.DisableAllProjectiles();
+    }
+
+    /// <summary>
+    /// ê³¨ë“œ íšë“. ì  ì²˜ì¹˜ ë“± ë³´ìƒ ì§€ê¸‰ ì‹œ í˜¸ì¶œ.
+    /// </summary>
+    public void AddGold(int amount)
+    {
+        gold += Mathf.Max(0, amount);
+        Debug.Log($"[GameManager] ê³¨ë“œ íšë“: +{amount} / ë³´ìœ : {gold}");
+    }
+
 
 	
-
-	//===== ÇöÀç °ÔÀÓ »óÅÂ=====
-	public GAME_STATE curState;
-
-	// =====UIÆÀ ¿¬µ¿¿ë =======
-	// »óÅÂ º¯È­ ½Ã UI¿¡¼­ ÆĞ³Î ÀüÈ¯ µî¿¡ »ç¿ë
-	public System.Action<GAME_STATE> OnGameStateChanged;
-	
-
-	
-
-	// ===== ¾À ÀüÈ¯======
-	/// <summary>¾À ÀÌ¸§À¸·Î ÀüÈ¯. ÀüÈ¯ Àü Á¤¸® Ã³¸® Æ÷ÇÔ.</summary>
-	/// bgmÀº ÄÚ·çÆ¾³»·Î ÀÌµ¿½ÃÅ³¼öµµÀÖÀ½ ¼öÁ¤¿¹Á¤
-	public void LoadScene(string sceneName)
-	{
-		StartCoroutine(LoadSceneRoutine(sceneName));
-		PlaySceneBGM(sceneName);
-	}
-
-	/// <summary>¾À Å¸ÀÔ enumÀ¸·Î ÀüÈ¯.</summary>
-	public void LoadScene(SCENE_TYPE sceneType)
-	{
-		StartCoroutine(LoadSceneRoutine(sceneType));
-		PlaySceneBGM(sceneType.ToString());
-	}
-
 	/// <summary>
-	/// ·ÎµåµÈÈÄ ÇØ´ç ¾ÀÀÇ bgmÀ» Æ²À» ÇÔ¼ö(»ç¿îµå¸Å´ÏÀú È£Ãâ)
-	/// ÇÊ¿ä½Ã ¾È¿¡ Ãß°¡, enumÃß°¡
+	/// ì  ì²˜ì¹˜ ì‹œ Enemy.Die()ì—ì„œ í˜¸ì¶œ.
+	/// í‚¬ì¹´ìš´íŠ¸ ëˆ„ì  í›„ ë³´ìŠ¤ ìŠ¤í° ì¡°ê±´ ì²´í¬.
 	/// </summary>
-	/// <param name="sceneName"></param>
-	private void PlaySceneBGM(string sceneName)
-	{
-		switch (sceneName)
-		{
-			case "MAIN":
-				//SoundManager.Instance.PlayBGM(SOUND_TYPE.)
-				break;
-			case "STAGE1":
-				//SoundManager.Instance.PlayBGM(SOUND_TYPE.)
-				break;
-			case "STATION":
-				//SoundManager.Instance.PlayBGM(SOUND_TYPE.)
-				break;
-			case "GAME_OVER":
-				//SoundManager.Instance.PlayBGM(SOUND_TYPE.)
-				break;
-			default:
-				// ÁöÁ¤µÇÁö ¾ÊÀº ¾ÀÀÇ °æ¿ì BGMÀ» ²ô°Å³ª ±âº» BGMÀ» À¯ÁöÇÏ´Â µîÀÇ Ã³¸®
-				break;
-		}
-	}
+	public void OnEnemyKilled()
+    {
+        killCount++;
+        CheckBossSpawnCondition();
+    }
 
-	//¾À ÀüÈ¯ Àü Á¤¸® ÈÄ ·Îµå
-	//LoadScene³»¿¡¼­ ¾²ÀÌ´Â ÄÚ·çÆ¾
-	private IEnumerator LoadSceneRoutine(string sceneName)
-	{
-		// ÀüÈ¯ Àü Á¤¸®
-		Time.timeScale = 1f;
-		PoolManager.Instance.DisableAllProjectiles();
-		SoundManager.Instance.StopSFXAll();
+    /// <summary>
+    /// íŒŒê´´ ê°€ëŠ¥ ì˜¤ë¸Œì íŠ¸ íŒŒê´´ ì‹œ í•´ë‹¹ ì˜¤ë¸Œì íŠ¸ì—ì„œ í˜¸ì¶œ.
+    /// íŒŒê´´ ì¹´ìš´íŠ¸ ëˆ„ì  í›„ ë³´ìŠ¤ ìŠ¤í° ì¡°ê±´ ì²´í¬.
+    /// </summary>
+    public void OnObjectDestroyed()
+    {
+        destroyedObjectCount++;
+        CheckBossSpawnCondition();
+    }
 
-		// ÇÊ¿ä ½Ã ÆäÀÌµå¾Æ¿ô ¿¬Ãâ ¿©±â¼­ Ãß°¡
-		// yield return StartCoroutine(FadeOut());
+    // =====================================================================
+    // ë‚´ë¶€ ë©”ì„œë“œ
+    // =====================================================================
 
-		yield return null;
-		SceneManager.LoadScene(sceneName);
-	}
+    private void ChangeState(GAME_STATE state)
+    {
+        curState = state;
+        OnGameStateChanged?.Invoke(curState);
+    }
 
-	// ¾À ÀüÈ¯ Àü Á¤¸® ÈÄ ·Îµå
-	private IEnumerator LoadSceneRoutine(SCENE_TYPE sceneType)
-	{
-		// ÀüÈ¯ Àü Á¤¸®
-		Time.timeScale = 1f;
-		PoolManager.Instance.DisableAllProjectiles();
-		SoundManager.Instance.StopSFXAll();
+    /// <summary>ë³´ìŠ¤ ìŠ¤í° ì¡°ê±´ ì²´í¬. ì¡°ê±´ ë‹¬ì„± ì‹œ OnBossSpawn ì´ë²¤íŠ¸ ë°œí–‰.</summary>
+    private void CheckBossSpawnCondition()
+    {
+        if (bossSpawned) return;
 
-		// ÇÊ¿ä ½Ã ÆäÀÌµå¾Æ¿ô ¿¬Ãâ ¿©±â¼­ Ãß°¡
-		// yield return StartCoroutine(FadeOut());
+        bool killCondition    = killCountToSpawnBoss    > 0 && killCount             >= killCountToSpawnBoss;
+        bool destroyCondition = destroyCountToSpawnBoss > 0 && destroyedObjectCount  >= destroyCountToSpawnBoss;
 
-		yield return null;
-		SceneManager.LoadScene((int)sceneType);
-	}
+        if (killCondition || destroyCondition)
+        {
+            bossSpawned = true;
+            Debug.Log($"[GameManager] ë³´ìŠ¤ ìŠ¤í° ì¡°ê±´ ë‹¬ì„± (í‚¬: {killCount}, íŒŒê´´: {destroyedObjectCount})");
+            OnBossSpawn?.Invoke();
+        }
+    }
 
+    /// <summary>ì „íˆ¬ ì”¬ ì§„ì… ì‹œ ì „íˆ¬ ê´€ë ¨ ì¹´ìš´í„° ì´ˆê¸°í™”.</summary>
+    private void ResetBattleData()
+    {
+        killCount            = 0;
+        destroyedObjectCount = 0;
+        bossSpawned          = false;
+    }
 
-	#region UI¸Å´ÏÀú¿¡¼­ È£Ãâ
+    // =====================================================================
+    // ì„¸ì´ë¸Œ / ë¡œë“œ
+    // =====================================================================
 
-	/// <summary>
-	/// UI¸Å´ÏÀú¿¡¼­ È£Ãâ.
-	/// »õ°ÔÀÓ ½ÃÀÛ.
-	/// </summary>
-	public void NewGame()
-	{
-		ClearData();
-		ChangeState(GAME_STATE.PLAYING);
-		LoadScene(SCENE_TYPE.STAGE1);
-	}
+    /// <summary>Player ë“±ì—ì„œ í˜„ì¬ ìƒíƒœë¥¼ ìˆ˜ì§‘í•´ JSON íŒŒì¼ë¡œ ì €ì¥.</summary>
+    private void SaveData(int saveSlot)
+    {
+        SaveData data = CollectSaveData();
+        string json  = JsonUtility.ToJson(data, prettyPrint: true);
+        File.WriteAllText(SavePath(saveSlot), json);
+        Debug.Log($"[GameManager] ì €ì¥ ì™„ë£Œ: {SavePath(saveSlot)}");
+    }
 
-	/// <summary>
-	/// UI¸Å´ÏÀú¿¡¼­ È£Ãâ.
-	/// ÀúÀåµÈ °ÔÀÓ ·Îµå. ¼¼ÀÌºê½½·Ô ¹øÈ£·Î È£Ãâ.
-	/// </summary>
-	public void LoadGame(int saveSlotNum)
-	{
-		ChangeState(GAME_STATE.PLAYING);
-		LoadData(saveSlotNum);
-		// LoadScene(ÇØ´ç¾À)
-	}
+    /// <summary>JSON íŒŒì¼ì—ì„œ ë°ì´í„°ë¥¼ ì½ì–´ Player ë“±ì— ë¶„ë°°.</summary>
+    private void LoadData(int saveSlot)
+    {
+        string path = SavePath(saveSlot);
+        if (!File.Exists(path))
+        {
+            Debug.LogWarning($"[GameManager] ì„¸ì´ë¸Œ íŒŒì¼ ì—†ìŒ: {path}");
+            return;
+        }
+        string json = File.ReadAllText(path);
+        SaveData data = JsonUtility.FromJson<SaveData>(json);
+        ApplySaveData(data);
+        Debug.Log($"[GameManager] ë¡œë“œ ì™„ë£Œ: {path}");
+    }
 
-	/// <summary>
-	/// UI¸Å´ÏÀú¿¡¼­ È£Ãâ.
-	/// ÇöÀç °ÔÀÓ ¼¼ÀÌºê.
-	/// </summary>
-	public void SaveGame(int saveSlotNum)
-	{
-		SaveData(saveSlotNum);
-	}
+    /// <summary>Player / Loadout ë“±ì—ì„œ ì €ì¥í•  ë°ì´í„° ìˆ˜ì§‘.</summary>
+    private SaveData CollectSaveData()
+    {
+        SaveData data = new SaveData();
+        data.gold = gold;
 
-	/// <summary>
-	/// UI¸Å´ÏÀú¿¡¼­ È£Ãâ.
-	/// ÀÏ½ÃÁ¤Áö.
-	/// </summary>
-	public void PauseGame()
-	{
-		if (curState != GAME_STATE.PLAYING)
-		{
-			return;
-		}
-		Time.timeScale = 0f;//ÀÌ°Å´Â ÀÓ½Ã..... 0µÇ¸é ¾Æ¿¹ ´Ù¸ØÃç¹ö¸®´Ï±î ui°°Àº°Å´Â Á¤»óÀÛµ¿ÇÏµµ·Ï
-		ChangeState(GAME_STATE.PAUSED);
-	}
+        if (playerRef != null)
+        {
+            data.level          = playerRef.level;
+            data.exp            = playerRef.exp;
+            data.expToNextLevel = playerRef.expToNextLevel;
+            data.curHp          = playerRef.curHpRemaining;
+            data.curShield      = playerRef.curShieldRemaining;
+            data.curArmor       = playerRef.curArmorRemaining;
+            data.curBoost       = playerRef.curBoostRemaining;
 
-	/// <summary>
-	/// UI¸Å´ÏÀú¿¡¼­ È£Ãâ.
-	/// ÀÏ½ÃÁ¤Áö ÇØÁ¦.
-	/// </summary>
-	public void ResumeGame()
-	{
-		if (curState != GAME_STATE.PAUSED)
-		{
-			return;
-		}
-		Time.timeScale = 1f;
-		ChangeState(GAME_STATE.PLAYING);
-	}
+            // ë¯¸ì‚¬ì¼ íƒ„ì•½ (MissileAmmoInfoê°€ [Serializable]ì´ë¯€ë¡œ ì§ì ‘ ë³µì‚¬)
+            data.missileAmmoList = new List<MissileAmmoInfo>(playerRef.missileAmmoList);
 
-	#endregion
+            // TODO: PlayerLoadout êµ¬í˜„ í›„ ì°©ìš© ì¥ë¹„ / ì†Œëª¨í’ˆ / ì¸ë²¤í† ë¦¬ ì¶”ê°€
+        }
+        return data;
+    }
 
+    /// <summary>ë¶ˆëŸ¬ì˜¨ SaveDataë¥¼ Player / Loadout ë“±ì— ì ìš©.</summary>
+    private void ApplySaveData(SaveData data)
+    {
+        gold = data.gold;
 
-	#region °ÔÀÓ ³»ºÎ¿¡¼­ È£Ãâ
+        if (playerRef != null)
+        {
+            playerRef.level             = data.level;
+            playerRef.exp               = data.exp;
+            playerRef.expToNextLevel    = data.expToNextLevel;
+            playerRef.curHpRemaining    = data.curHp;
+            playerRef.curShieldRemaining = data.curShield;
+            playerRef.curArmorRemaining  = data.curArmor;
+            playerRef.curBoostRemaining  = data.curBoost;
 
-	/// <summary>
-	/// ÇÃ·¹ÀÌ¾î »ç¸Á ½Ã Player.Die()¿¡¼­ È£Ãâ.
-	/// </summary>
-	public void GameOver()
-	{
-		if (curState == GAME_STATE.GAME_OVER)
-		{
-			return;
-		}
-		ChangeState(GAME_STATE.GAME_OVER);
-		Time.timeScale = 0f;
-		PoolManager.Instance.DisableAllProjectiles();
-		SoundManager.Instance.StopSFXAll();
-	}
+            // ë¯¸ì‚¬ì¼ íƒ„ì•½
+            playerRef.missileAmmoList = new List<MissileAmmoInfo>(data.missileAmmoList);
 
-	/// <summary>
-	/// ½ºÅ×ÀÌÁö Å¬¸®¾î Á¶°Ç ´Ş¼º ½Ã È£Ãâ.
-	/// </summary>
-	public void GameClear()
-	{
-		if (curState == GAME_STATE.CLEAR)
-		{
-			return;
-		}
-		ChangeState(GAME_STATE.CLEAR);
-		
-		PoolManager.Instance.DisableAllProjectiles();
-	}
+            // TODO: PlayerLoadout êµ¬í˜„ í›„ ì°©ìš© ì¥ë¹„ / ì†Œëª¨í’ˆ / ì¸ë²¤í† ë¦¬ ì ìš©
+        }
+    }
 
-	
-	
-
-	#endregion
-
-
-	// »óÅÂ º¯°æ + ÀÌº¥Æ® ¹ßÇà
-	private void ChangeState(GAME_STATE state)
-	{
-		curState = state;
-		OnGameStateChanged?.Invoke(curState);
-	}
-
-	/// <summary>
-	/// ¸Å°³º¯¼ö ¼¼ÀÌºê½½·ÔÀ» ¹Ş¾Æ ¸ğµç µ¥ÀÌÅÍ¸¦ ·ÎµåÇÒ ¸Ş¼­µå.
-	/// ¸ğµç ÀûÀ¯´ÖÀÇ ¹èÄ¡, »óÈ£ÀÛ¿ë ¿ÀºêÁ§Æ®, ÀÜÅº, ÀÜ¿©HP, °ÔÀÌÁö, ½Çµå·®, Àåºñ, ÀÎº¥, °ñµå, È£°¨µµ, °æÇèÄ¡ µî ÇÃ·¹ÀÌ¾î Á¤º¸.
-	/// </summary>
-	private void LoadData(int saveSlot)
-	{
-		// Array[saveSlot]¿¡¼­ µ¥ÀÌÅÍ ²¨³»±â È¤Àº ¸®½ºÆ®, ¸Ê, µñ¼Å³Ê¸® µî
-		//
-	}
-
-	private void SaveData(int saveSlot)
-	{
-		// ·Îµå¿Í ¹İ´ë·Î ÇØ´ç ¹è¿­¿¡ ÀúÀå
-	}
-
-	private void ClearData()
-	{
-
-	}
+    /// <summary>ìƒˆ ê²Œì„ ì‹œì‘ ì‹œ ë°ì´í„° ì „ì²´ ì´ˆê¸°í™”.</summary>
+    private void ClearData()
+    {
+        gold = 0;
+        ResetBattleData();
+    }
 }

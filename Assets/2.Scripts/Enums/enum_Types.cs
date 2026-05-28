@@ -74,10 +74,14 @@ public enum SOUND_TYPE
     BGM_BATTLE,         // 우주 전투 배경음
     BGM_1F,             // 1층 배경음
     BGM_B2,             // 지하2층배경음
+	BGM_MAIN,
+	BGM_STAGE1,
+	BGM_STATION,
+	BGM_GAMEOVER,
 
 
-    //UI관련
-    SFX_DICE_ROLL,      // 주사위 굴리는 소리
+	//UI관련
+	SFX_DICE_ROLL,      // 주사위 굴리는 소리
     SFX_UI_CLICK,       // 버튼 클릭음
 	SFX_UI_LOCKON_COMPLETE,
 
@@ -92,11 +96,17 @@ public enum SOUND_TYPE
     SFX_CONTACTSHIP,    //부딪혔을때.
     SFX_CONTACTGROUND,  //행성등 부딪혔을떄. 차후 필드명 수정할수있음
     SFX_LASERHIT,       //레이저
+    SFX_BULLETHIT_SHIELD,//실드 도탄
+    SFX_EXPLOSION_SHIELD,//실드 폭발
+	SFX_CONTACTSHIP_SHIELD,    //부딪혔을때. 실드
+	SFX_CONTACTGROUND_SHIELD,  //행성등 부딪혔을 때, 실드
+	SFX_LASERHIT_SHIELD,    //레이저맞았을때, 실드
 
-    
 
 
-    SFX_NONE,//빈거설정용
+
+
+	SFX_NONE,//빈거설정용
 }
 
 public enum LOCK_ON_MODE
@@ -114,11 +124,38 @@ public enum MISSILE_TYPE
 }
 
 
-
+//Build Settings의 씬 순서와 일치해야 함. LoadScene(SCENE_TYPE)오버로드가(int)sceneType으로 로드함.
+// 현재 Build Settings 순서 확인 후 맞출것
 public enum SCENE_TYPE
 {
-    MAIN,
-    STAGE1,
-    STATION,
-    GAME_OVER,
+	MAIN = 0,
+	STATION = 1,
+	LOADING_SEQUENCE = 2,   // ← 추가 (로딩 시퀀스 씬)
+	MAP_SELECT = 3,   // ← 추가 (맵 선택 화면)
+	STAGE1 = 4,   // ← 기존 인덱스 밀릴 수 있음
+	GAME_OVER = 5,   // ← 기존 인덱스 밀릴 수 있음
+}
+public enum INPUT_CONTROL_TYPE
+{
+    KEYBOARD_MOUSE,
+    GAMEPAD,
+    MOBILE,
+}
+public enum POOL_TYPE
+{
+    // 투사체 (DisableAllProjectiles 대상)
+    BULLET,
+    MISSILE,
+    LASER,
+    CLUSTER_MISSILE,
+    DUMB_MISSILE,
+
+    // 적
+    ENEMY_GUNSHIP,
+    ENEMY_DROPSHIP,
+    ENEMY_MISSILESHIP,
+
+    // 아이템 / 이펙트 (추후 세분화)
+    ITEM,
+    VFX,
 }
