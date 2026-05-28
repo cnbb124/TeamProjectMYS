@@ -3,7 +3,9 @@ using UnityEngine;
 
 public class cs_Map_SlideDoor_Manager : MonoBehaviour
 {
+    [Header("¹® ¿©´ÝÈû ¼Ò¸®")]
     private AudioSource audioSource;
+    [Header("¹® ¼³Á¤")]
     public Transform[] door;
     public float openDistance = 2f;
     public float speed = 2f;
@@ -29,6 +31,7 @@ public class cs_Map_SlideDoor_Manager : MonoBehaviour
 
     void OnTriggerEnter(Collider other)
     {
+        
         if (other.CompareTag("Player"))
         {
             if (!isOpen)
