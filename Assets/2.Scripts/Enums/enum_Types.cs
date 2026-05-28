@@ -84,6 +84,7 @@ public enum SOUND_TYPE
 	SFX_DICE_ROLL,      // 주사위 굴리는 소리
     SFX_UI_CLICK,       // 버튼 클릭음
 	SFX_UI_LOCKON_COMPLETE,
+    
 
 	// 발사음
 	SFX_BULLETSHOOT,    //탄

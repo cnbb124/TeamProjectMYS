@@ -36,8 +36,9 @@ public class MissileLockOnSystem : MonoBehaviour
 
 	// =============현재 상태 (UI팀 외부 참조용)==================
 	//락온범위내의 락온가능상대
-	public List<Transform> TargetsInRange = new List<Transform>();
-
+	public List<Transform> TargetsInLockonRange = new List<Transform>();
+	//레이더범위내의 상대
+	public Collider[] TargetsInRadarRange;
 	// Single (단일타겟락온)모드 전용 변수
 	// 현재 목표로 삼은락온되고있는 후보
 	public Transform LockOnCandidate;
@@ -71,7 +72,7 @@ public class MissileLockOnSystem : MonoBehaviour
 		FindAllTargets();
 
 		// 타겟 없으면 전부 초기화
-		if (TargetsInRange.Count == 0)
+		if (TargetsInLockonRange.Count == 0)
 		{
 			ClearLock();
 			return;
@@ -95,12 +96,12 @@ public class MissileLockOnSystem : MonoBehaviour
 	/// </summary>
 	private void UpdateSingleLockMode()
 	{
-		if (_currentTargetIndex >= TargetsInRange.Count)
+		if (_currentTargetIndex >= TargetsInLockonRange.Count)
 		{
-			_currentTargetIndex = TargetsInRange.Count - 1;
+			_currentTargetIndex = TargetsInLockonRange.Count - 1;
 		}
 
-		LockOnCandidate = TargetsInRange[_currentTargetIndex];
+		LockOnCandidate = TargetsInLockonRange[_currentTargetIndex];
 
 		lockOnTimer += Time.deltaTime;
 		LockOnProgress = Mathf.Clamp01(lockOnTimer / lockOnRequiredTime);
@@ -126,10 +127,10 @@ public class MissileLockOnSystem : MonoBehaviour
 		MultiLockCandidates.Clear();
 
 		// 탐지된 타겟 중 최대 개수(maxMultiLockCount)만큼만 후보로 등록
-		int count = Mathf.Min(TargetsInRange.Count, maxMultiLockCount);
+		int count = Mathf.Min(TargetsInLockonRange.Count, maxMultiLockCount);
 		for (int i = 0; i < count; i++)
 		{
-			MultiLockCandidates.Add(TargetsInRange[i]);
+			MultiLockCandidates.Add(TargetsInLockonRange[i]);
 		}
 
 		lockOnTimer += Time.deltaTime;
@@ -152,7 +153,9 @@ public class MissileLockOnSystem : MonoBehaviour
 
 	private void FindAllTargets()
 	{
+		//현재 유닛에서 락온사거리까지, 락온목표레이어를 저장
 		Collider[] hits = Physics.OverlapSphere(transform.position, lockOnRange, targetLayerMask);
+		TargetsInRadarRange = hits;
 
 		foreach (Collider hit in hits)
 		{
@@ -183,9 +186,9 @@ public class MissileLockOnSystem : MonoBehaviour
 			}
 
 			// 검증이 완료되면 HitBox의 좌표를 락온 대상으로 등록
-			if (!TargetsInRange.Contains(hitbox.transform))
+			if (!TargetsInLockonRange.Contains(hitbox.transform))
 			{
-				TargetsInRange.Add(hitbox.transform);
+				TargetsInLockonRange.Add(hitbox.transform);
 			}
 			//Transform unitTr = hit.GetComponentInParent<Unit>()?.transform;
 			//if (unitTr == null)
@@ -200,12 +203,12 @@ public class MissileLockOnSystem : MonoBehaviour
 		}
 
 		// 범위 벗어나거나 비활성화된 타겟 제거
-		for (int i = TargetsInRange.Count - 1; i >= 0; i--)
+		for (int i = TargetsInLockonRange.Count - 1; i >= 0; i--)
 		{
-			Transform t = TargetsInRange[i];
+			Transform t = TargetsInLockonRange[i];
 			if (t == null || !t.gameObject.activeInHierarchy)
 			{
-				TargetsInRange.RemoveAt(i);
+				TargetsInLockonRange.RemoveAt(i);
 				if (i <= _currentTargetIndex && _currentTargetIndex > 0) _currentTargetIndex--;
 				{
 					continue;
@@ -216,7 +219,7 @@ public class MissileLockOnSystem : MonoBehaviour
 			float angle = Vector3.Angle(transform.forward, (t.position - transform.position).normalized);
 			if (dist > lockOnRange || angle > lockOnAngle * 0.5f)
 			{
-				TargetsInRange.RemoveAt(i);
+				TargetsInLockonRange.RemoveAt(i);
 				if (i <= _currentTargetIndex && _currentTargetIndex > 0)
 				{
 					_currentTargetIndex--;
@@ -236,11 +239,11 @@ public class MissileLockOnSystem : MonoBehaviour
 			return;
 		}
 
-		if (TargetsInRange.Count <= 1)
+		if (TargetsInLockonRange.Count <= 1)
 		{
 			return;
 		}
-		_currentTargetIndex = (_currentTargetIndex + direction + TargetsInRange.Count) % TargetsInRange.Count;
+		_currentTargetIndex = (_currentTargetIndex + direction + TargetsInLockonRange.Count) % TargetsInLockonRange.Count;
 	}
 
 	/// <summary>
@@ -295,7 +298,7 @@ public class MissileLockOnSystem : MonoBehaviour
 
 		// 전체 감지 타겟 시각화
 		Gizmos.color = Color.white;
-		foreach (Transform t in TargetsInRange)
+		foreach (Transform t in TargetsInLockonRange)
 		{
 			if (currentLockMode == LOCK_ON_MODE.SINGLE && t == LockOnCandidate)
 			{

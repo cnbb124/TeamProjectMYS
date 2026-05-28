@@ -653,6 +653,22 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 75285212269006569, guid: 6c496b1493a584e4db5940e2753f9917, type: 3}
+      propertyPath: poolConfigs.Array.size
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 75285212269006569, guid: 6c496b1493a584e4db5940e2753f9917, type: 3}
+      propertyPath: poolConfigs.Array.data[3].prefab
+      value: 
+      objectReference: {fileID: 1555731708780421259, guid: 5f3b658f08f4b1641ba6f4557a97fb46, type: 3}
+    - target: {fileID: 75285212269006569, guid: 6c496b1493a584e4db5940e2753f9917, type: 3}
+      propertyPath: poolConfigs.Array.data[3].poolType
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 75285212269006569, guid: 6c496b1493a584e4db5940e2753f9917, type: 3}
+      propertyPath: poolConfigs.Array.data[3].initialSize
+      value: 20
+      objectReference: {fileID: 0}
     - target: {fileID: 4353218582667052855, guid: 6c496b1493a584e4db5940e2753f9917, type: 3}
       propertyPath: m_Name
       value: PoolManager
@@ -713,6 +729,10 @@ PrefabInstance:
     - target: {fileID: 417953749035928536, guid: c071772b28b1fe04fa3d1ef4793cb675, type: 3}
       propertyPath: m_Name
       value: InputManager
+      objectReference: {fileID: 0}
+    - target: {fileID: 2794135899293206080, guid: c071772b28b1fe04fa3d1ef4793cb675, type: 3}
+      propertyPath: controlType
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4937408709306154190, guid: c071772b28b1fe04fa3d1ef4793cb675, type: 3}
       propertyPath: m_LocalPosition.x
@@ -867,6 +887,10 @@ PrefabInstance:
     - target: {fileID: 7958776009055819432, guid: b6e739d74b36d7e4b991318bcb2d7f2d, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8014826492725034353, guid: b6e739d74b36d7e4b991318bcb2d7f2d, type: 3}
+      propertyPath: soundList.Array.data[0].volumeScale
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

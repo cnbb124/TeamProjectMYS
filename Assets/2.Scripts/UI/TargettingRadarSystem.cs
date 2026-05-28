@@ -39,7 +39,7 @@ public class RadarSystem : MonoBehaviour
 
         _activeDotCount = 0;
 
-        foreach (Transform target in lockOnSystem.TargetsInRange)
+        foreach (Transform target in lockOnSystem.TargetsInLockonRange)
         {
             if (target == null) continue;
 
