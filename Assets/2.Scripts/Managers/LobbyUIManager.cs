@@ -17,7 +17,7 @@ public class LobbyUIManager : MonoBehaviour
 
     public void OnClickNewGame()
     {
-        GameManager.Instance.LoadScene("GameScene");
+        GameManager.Instance.LoadScene("Test");//차후에 GameScene
     }
 
     public void OnClickCharacter()
@@ -40,8 +40,4 @@ public class LobbyUIManager : MonoBehaviour
         GameManager.Instance.LoadScene("ServerListUI");
     }
 
-	public void OnClickNewGame()
-	{
-		GameManager.Instance.LoadScene("Test"); // 또는 SCENE_TYPE.STAGE1
-	}
 }
