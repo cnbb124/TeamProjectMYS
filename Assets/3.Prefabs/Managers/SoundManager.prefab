@@ -25,7 +25,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 954793311371548586}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -74,6 +74,11 @@ MonoBehaviour:
     volumeScale: 1
   - type: 10
     clip: {fileID: 8300000, guid: 86b964999062391498f3b49a3215cdf7, type: 3}
+    minDistance: 1
+    maxDistance: 200
+    volumeScale: 1
+  - type: 9
+    clip: {fileID: 8300000, guid: 55f51ee6743d6a14fb9850cd88f7bf5f, type: 3}
     minDistance: 1
     maxDistance: 200
     volumeScale: 1
