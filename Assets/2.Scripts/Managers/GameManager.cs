@@ -327,7 +327,7 @@ public class GameManager : MonoBehaviour
     // =====================================================================
     // 내부 메서드
     // =====================================================================
-
+    
     private void ChangeState(GAME_STATE state)
     {
         curState = state;

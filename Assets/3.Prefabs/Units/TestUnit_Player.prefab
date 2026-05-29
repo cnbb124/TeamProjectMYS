@@ -1017,15 +1017,15 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1116676972818631700}
-  - {fileID: 4428863465641317965}
   - {fileID: 5801406059799231408}
   - {fileID: 4217649332175358306}
-  - {fileID: 7383682365185584265}
   - {fileID: 8442401269057753777}
+  - {fileID: 7383682365185584265}
   - {fileID: 5882797527510097585}
   - {fileID: 921445468744780411}
-  - {fileID: 5844131151833751771}
   - {fileID: 1799758826355454561}
+  - {fileID: 5844131151833751771}
+  - {fileID: 4428863465641317965}
   m_Father: {fileID: 6433512454957104831}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2102156831015370043
@@ -1629,7 +1629,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   maxHpRemaining: 150
-  maxShieldRemaining: 150
+  maxShieldCapacity: 150
   shieldRegainDelay: 5
   shieldRegainRate: 15
   isShieldRegaining: 0
@@ -1646,8 +1646,9 @@ MonoBehaviour:
   baseMoveSpeed: 350
   boostSpeed: 550
   maxSpeed: 1000
-  maxBoostRemaining: 100
-  boostRegainDelay: 0
+  maxBoostCapacity: 150
+  minBoostRequired: 30
+  boostRegainDelay: 0.2
   boostRegainRate: 20
   speedMultiPlier: 0
   firePositions:
@@ -2168,7 +2169,7 @@ GameObject:
   m_Component:
   - component: {fileID: 5844131151833751771}
   m_Layer: 6
-  m_Name: boosterPos_RIghtWing_Bottom
+  m_Name: boosterPos_Wing_R_Bottom
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2387,7 +2388,7 @@ GameObject:
   m_Component:
   - component: {fileID: 921445468744780411}
   m_Layer: 6
-  m_Name: boosterPos_LeftWing_Bottom
+  m_Name: boosterPos_Wing_L_Bottom
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -3771,7 +3772,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1799758826355454561}
   m_Layer: 6
-  m_Name: boosterPos_RIghtWing_Top
+  m_Name: boosterPos_Wing_R_Top
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -4255,7 +4256,7 @@ GameObject:
   m_Component:
   - component: {fileID: 5882797527510097585}
   m_Layer: 6
-  m_Name: boosterPos_LeftWing_Top
+  m_Name: boosterPos_Wing_L_Top
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

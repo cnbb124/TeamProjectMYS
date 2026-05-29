@@ -209,6 +209,7 @@ public class Player : Unit
 	//===============override 메서드 FSM==================
 	protected override void OnStateEnter(UNIT_STATE state)
 	{
+		base.OnStateEnter(state);
 		switch (state)
 		{
 			case UNIT_STATE.DIE:
@@ -451,14 +452,22 @@ public class Player : Unit
 		switch (type)
 		{
 			case PROJECTILE_TYPE.BULLET:
+				_animCtrl.Play(ANIM_TYPE.SHOOT_BULLET);
 				_sound.PlaySFX3DAtPosition(_playSoundType, transform.position, 0.7f, 1.2f);//총알소리 살짝랜덤하게
 				ShootBullet();
 				break;
 			case PROJECTILE_TYPE.LASER:
+				_animCtrl.Play(ANIM_TYPE.SHOOT_LASER);
 				_sound.PlaySFX3DAtPosition(_playSoundType, transform.position);
 				ShootLaser();
 				break;
-			case PROJECTILE_TYPE.MISSILE://소리 너무 크면 가운데서 실행되게 아래로 빼기.
+			case PROJECTILE_TYPE.MISSILE:
+			if (isMissile_EquippedLeft && isMissile_EquippedRight)
+				_animCtrl.Play(ANIM_TYPE.SHOOT_MISSILE_BOTH);
+			else if (isMissile_EquippedLeft)
+				_animCtrl.Play(ANIM_TYPE.SHOOT_MISSILE_L);
+			else if (isMissile_EquippedRight)
+				_animCtrl.Play(ANIM_TYPE.SHOOT_MISSILE_R);//소리 너무 크면 가운데서 실행되게 아래로 빼기.
 				if (isMissile_EquippedLeft)
 				{
 					_sound.PlaySFX3DAtPosition(_playSoundType, transform.position);

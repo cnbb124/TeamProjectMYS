@@ -8,8 +8,11 @@ public enum ANIM_TYPE
     BOOST,
     DODGE,//무적시간및 롤
     SHOOT_BULLET,//좌우 총구가 앞뒤로 쏠대마다 밀리게
-    SHOOT_MISSILE,//미사일베이열리게
+    SHOOT_MISSILE_L,//미사일베이열리게
+    SHOOT_MISSILE_R,
+    SHOOT_MISSILE_BOTH,
     SHOOT_LASER,//기모으는 파츠?
+    MOVING,
     HIT,
     DIE
 }
@@ -77,12 +80,19 @@ public enum FIREPOS_TYPE
     MISSILE_RIGHT,
     LASER,
 }
+
 public enum BOOSTPOS_TYPE
 {
-    LEFT,
-    RIGHT,
-    FRONT,
-    BACK,
+    THRUSTER_MAIN,
+	THRUSTER_L_INNER,
+	THRUSTER_L_OUTER,
+	THRUSTER_R_INNER,
+	THRUSTER_R_OUTER,
+    REVERSAL,
+    WING_L_TOP,
+    WING_L_BOTTTOM,
+    WING_R_TOP,
+    WING_R_BOTTOM,
 }
 
 public enum SOUND_TYPE

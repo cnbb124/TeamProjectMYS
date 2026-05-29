@@ -9,8 +9,12 @@ public class LobbyUIManager : MonoBehaviour
         if (Instance != null && Instance != this) { Destroy(gameObject); return; }
         Instance = this;
     }
+	private void Start()
+	{
+        SoundManager.Instance.PlayBGM(SOUND_TYPE.BGM_LOBBY);
+	}
 
-    public void OnClickPlay()
+	public void OnClickPlay()
     {
         GameManager.Instance.LoadScene("ServerListUI");
     }

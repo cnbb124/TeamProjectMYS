@@ -21,9 +21,17 @@ public class UnitAnimCtrl : MonoBehaviour
 		}
 	}
 
-	// Update is called once per frame
-	void Update()
+
+	public void Play(ANIM_TYPE type)
 	{
+		AnimationClip clip = animDic.Get(type);
+		if (clip == null)
+		{
+			return;
+		}
+		animator.CrossFade(clip.name, 0.1f);
+
 
 	}
 }
+
