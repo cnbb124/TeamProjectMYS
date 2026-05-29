@@ -362,7 +362,8 @@ public class Player : Unit
 		bool isMoving = dir.sqrMagnitude > 0.001f;
 
 		// 부스트 조건: Shift 누름 + 잔량 남아있음
-		bool canBoost = _input.isBoosting && curBoostRemaining > 0f;
+		bool canBoost = _input.isBoosting && curBoostRemaining > minBoostRequired;
+		_isBoosting = canBoost;
 
 		if (canBoost)
 		{

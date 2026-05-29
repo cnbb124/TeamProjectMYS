@@ -141,7 +141,9 @@ public class GameManager : MonoBehaviour
 
         // 전투 씬 진입 시 킬카운트 초기화
         if (scene.name == SCENE_TYPE.STAGE1.ToString())
+        {
             ResetBattleData();
+        }
     }
 
     // =====================================================================

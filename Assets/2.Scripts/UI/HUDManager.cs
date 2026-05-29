@@ -45,12 +45,12 @@ public class HUDManager : MonoBehaviour
         if (player == null) return;
 
         UpdateBar(hpFill,     hpText,     player.curHpRemaining,     player.maxHpRemaining);
-        UpdateBar(shieldFill, shieldText, player.curShieldRemaining, player.maxShieldRemaining);
+        UpdateBar(shieldFill, shieldText, player.curShieldRemaining, player.maxShieldCapacity);
         UpdateBar(armorFill,  armorText,  player.curArmorRemaining,  player.maxArmor);
 
         if (nitroFill != null)
-            nitroFill.fillAmount = player.maxBoostRemaining > 0f
-                ? player.curBoostRemaining / player.maxBoostRemaining : 0f;
+            nitroFill.fillAmount = player.maxBoostCapacity > 0f
+                ? player.curBoostRemaining / player.maxBoostCapacity : 0f;
 
         if (xpFill != null)
             xpFill.fillAmount = player.expToNextLevel > 0

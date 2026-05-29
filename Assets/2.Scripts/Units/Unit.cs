@@ -50,7 +50,7 @@ public abstract class Unit : MonoBehaviour, IDamageable
 
 
     [Header("Shield - 피격후 일정딜레이 후 자동회복")]
-    public int maxShieldRemaining;//최대,현재실드수치
+    public int maxShieldCapacity;//최대,현재실드수치
 
     public float shieldRegainDelay;//피격후 회복까지딜레이시간
     public float shieldRegainRate; //실드회복수치
@@ -96,12 +96,17 @@ public abstract class Unit : MonoBehaviour, IDamageable
     public float baseMoveSpeed;//기본이동속ㄷ
     public float boostSpeed;//부스트시 이동속도
     public float maxSpeed;//최대속도velocity가 넘어갈시 고정시킬속도  
-    public float maxBoostRemaining;//최대,현재 부스트수치
+    [Tooltip("부스트 최대치")]
+    public float maxBoostCapacity;//최대,현재 부스트수치
+    [Tooltip("부스트 사용최소 요구치")]
+    public float minBoostRequired;//최소 부스트사용요구치
 
-    public float boostRegainDelay;//부스트 회복딜레이
+
+	public float boostRegainDelay;//부스트 회복딜레이
     public float boostRegainRate;//초당 부스트 잔량회복수치
     private float boostRegainTimer = 0f;//부스트 회복딜레이까지 잴 타이머
     private bool isBoostRegaining = false;//회복유무
+    protected bool _isBoosting = false;//부스트 사용 중 여부 (자식에서 설정)
 
 
     [Tooltip("피격부위 혹은 HP잔량에 따른이동속도 변경용")]
@@ -198,9 +203,9 @@ public abstract class Unit : MonoBehaviour, IDamageable
         //인스펙터에서 입력된 값 현재 스탯으로 설정
         //저장 기능 생길시 변경필요.
         curHpRemaining = maxHpRemaining;
-        curShieldRemaining = maxShieldRemaining;
+        curShieldRemaining = maxShieldCapacity;
         curArmorRemaining = maxArmor;
-        curBoostRemaining = maxBoostRemaining;
+        curBoostRemaining = maxBoostCapacity;
 
         //playerLayer = LayerMask.NameToLayer("UNIT_Player");
         //enemyLayer = LayerMask.NameToLayer("UNIT_Enemy");
@@ -402,11 +407,11 @@ public abstract class Unit : MonoBehaviour, IDamageable
         WaitForSeconds tick = new WaitForSeconds(0.1f);
 
         //  실드가 꽉 차지 않았고, 유닛이 살아있는 동안 반복해서 회복
-        while (curShieldRemaining < maxShieldRemaining && curState != UNIT_STATE.DIE)
+        while (curShieldRemaining < maxShieldCapacity && curState != UNIT_STATE.DIE)
         {
             // 초당 회복량(shieldRegainRate)을 0.1초 기준 단위로 계산하여 더함
             curShieldRemaining += Mathf.RoundToInt(shieldRegainRate * 0.1f);
-            curShieldRemaining = Mathf.Min(curShieldRemaining, maxShieldRemaining);
+            curShieldRemaining = Mathf.Min(curShieldRemaining, maxShieldCapacity);
 
             // 다음 0.1초까지 대기
             yield return tick;
@@ -448,8 +453,14 @@ public abstract class Unit : MonoBehaviour, IDamageable
     //부스트회복
     private void UpdateBoostRegen()
     {
-        if (curState == UNIT_STATE.DIE || curBoostRemaining >= maxBoostRemaining)
+        if (curState == UNIT_STATE.DIE || curBoostRemaining >= maxBoostCapacity)
         {
+            return;
+        }
+        if (_isBoosting)
+        {
+            boostRegainTimer = 0f;
+            isBoostRegaining = false;
             return;
         }
         //if(curBoostRemaining>=maxBoostRemaining)//디버그 로깅같은거 필요하면 주석풀고 위에서 지울것
@@ -467,7 +478,7 @@ public abstract class Unit : MonoBehaviour, IDamageable
         if (isBoostRegaining)
         {
             curBoostRemaining += boostRegainRate * Time.deltaTime;
-            curBoostRemaining = Mathf.Min(curBoostRemaining, maxBoostRemaining);//실드와동일
+            curBoostRemaining = Mathf.Min(curBoostRemaining, maxBoostCapacity);//실드와동일
         }
     }
 
