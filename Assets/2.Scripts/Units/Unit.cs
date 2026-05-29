@@ -35,6 +35,8 @@ public abstract class Unit : MonoBehaviour, IDamageable
 
 
 	//=============기타 레퍼런스===============
+	//애니메이션 컨트롤러 할당용
+	protected UnitAnimCtrl _animCtrl;
 	//리지드바디 할당용 레퍼런스
 	protected Rigidbody _rb;
 	//매니저 할당용 레퍼런스
@@ -112,8 +114,16 @@ public abstract class Unit : MonoBehaviour, IDamageable
     protected bool _isBoosting = false;//부스트 사용 중 여부 (자식에서 설정)
 
 
-    [Tooltip("피격부위 혹은 HP잔량에 따른이동속도 변경용")]
-    public float speedMultiPlier;//HP 혹은 피격부위에따른 속도조절용.
+   
+    [Header("회피 & 무적")]
+    [Tooltip("회피 지속시간")]
+    public float dodgeDuration = 0.5f;
+    [Tooltip("무적 지속시간")]
+    public float dodgeInvincibleTime = 0.4f;
+    private float _dodgeTimer = 0f;
+    public bool IsInvincible { get; private set; }
+	[Tooltip("피격부위 혹은 HP잔량에 따른이동속도 변경용")]
+	public float speedMultiPlier;//HP 혹은 피격부위에따른 속도조절용.
 
 
 
@@ -193,6 +203,7 @@ public abstract class Unit : MonoBehaviour, IDamageable
     protected virtual void Awake()
     {
         _rb = GetComponent<Rigidbody>();
+        _animCtrl = GetComponent<UnitAnimCtrl>();
     }
 
 
@@ -374,7 +385,13 @@ public abstract class Unit : MonoBehaviour, IDamageable
     //===============자식에서 직접 override==================
     protected virtual void OnStateEnter(UNIT_STATE state)
     {
-
+        switch (state)
+        {
+            case UNIT_STATE.IDLE:   _animCtrl.Play(ANIM_TYPE.IDLE);   break;
+            case UNIT_STATE.MOVING: _animCtrl.Play(ANIM_TYPE.MOVING); break;
+            case UNIT_STATE.DODGE:  _animCtrl.Play(ANIM_TYPE.DODGE);  break;
+            case UNIT_STATE.DIE:    _animCtrl.Play(ANIM_TYPE.DIE);    break;
+        }
     }
     protected virtual void OnStateExit(UNIT_STATE state)
     {
