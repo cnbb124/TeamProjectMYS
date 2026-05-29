@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 
 public class cs_Map_Auto_Move : MonoBehaviour
@@ -19,6 +20,10 @@ public class cs_Map_Auto_Move : MonoBehaviour
     private Vector3 closedPos_R;
     private Vector3 startUnitPos;
     private bool isClosing = false;
+
+    [Header("이동할 씬 관련")]
+    public string nextSceneName;  // Inspector에서 씬 이름 입력
+    private bool isNextScene = false;
 
     void Start()
     {
@@ -43,10 +48,22 @@ public class cs_Map_Auto_Move : MonoBehaviour
         }
 
         unit.localPosition = Vector3.MoveTowards(unit.localPosition, startUnitPos, moveSpeed * Time.deltaTime);
+
+        if (Vector3.Distance(unit.localPosition, startUnitPos) < 1f && !isNextScene)
+        {
+            isNextScene = true;
+            StartCoroutine(nextScene());
+        }
     }
 
     void OnTriggerExit(Collider other)
     {
         isClosing = true;
+    }
+
+    IEnumerator nextScene()
+    {
+        yield return new WaitForSeconds(1.0f);
+        UnityEngine.SceneManagement.SceneManager.LoadScene(nextSceneName);
     }
 }
