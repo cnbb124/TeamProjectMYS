@@ -43,7 +43,7 @@ public abstract class Unit : MonoBehaviour, IDamageable
 
 	//==================유닛데이터==================//
 
-	[Header("<size=18>기본 스탯 설정창</size>")]
+	[Header("<size=18>유닛 공통 기본 스탯 설정창</size>")]
 
     [Header("HP")]
     public int maxHpRemaining; //최대,현재HP수치
@@ -93,12 +93,15 @@ public abstract class Unit : MonoBehaviour, IDamageable
 	//curHp-=damageAmount;
 
 	[Header("이동 관련")]
+    [Tooltip("기본 이동속도")]
     public float baseMoveSpeed;//기본이동속ㄷ
-    public float boostSpeed;//부스트시 이동속도
-    public float maxSpeed;//최대속도velocity가 넘어갈시 고정시킬속도  
+    [Tooltip("부스트 사용시 이동속도")]
+    public float boostSpeed;//부스트사용시 이동속도
+    [Tooltip("최대속도velocity가 넘어갈시 고정시킬속도")]
+	public float maxSpeed;
     [Tooltip("부스트 최대치")]
-    public float maxBoostCapacity;//최대,현재 부스트수치
-    [Tooltip("부스트 사용최소 요구치")]
+	public float maxBoostCapacity;
+    [Tooltip("부스트 사용 최소 요구치")]
     public float minBoostRequired;//최소 부스트사용요구치
 
 
@@ -145,7 +148,7 @@ public abstract class Unit : MonoBehaviour, IDamageable
     //public Transform curFirePos;//밑에서 총구스위칭용 
     //필요없음.
 
-    [Header("현재 상태(입력x 참고용)")]
+    [Header("===============<size=14>현재 상태(입력x 참고용)</size>================")]
     public UNIT_STATE curState = UNIT_STATE.IDLE;
     public int curHpRemaining;
    	public int CurHp => curHpRemaining;//인터페이스 프로퍼티용
@@ -154,7 +157,7 @@ public abstract class Unit : MonoBehaviour, IDamageable
     public float curSpeed;
     public float curBoostRemaining;//부스트잔량
                                    //잔탄도추가예정
-
+    
     private float updateTimer = 0f;
 
     //// ==================레이어==================
@@ -232,7 +235,7 @@ public abstract class Unit : MonoBehaviour, IDamageable
         updateTimer += Time.deltaTime;
         if (updateTimer > 0.5f)
         {
-            curSpeed = _rb.velocity.magnitude;
+            curSpeed = _rb.velocity.magnitude < 0.01f ? 0f : _rb.velocity.magnitude;
             updateTimer = 0f;
         }
     }

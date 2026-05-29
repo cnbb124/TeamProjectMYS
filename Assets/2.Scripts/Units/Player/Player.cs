@@ -38,10 +38,11 @@ public class Player : Unit
 
 
 
-	
+
 
 	// ==================회전 감도==================
-	[Space(5)]
+	[Header("")]
+	[Space(10)]
 	[Header("<size=18>플레이어 설정<size>")]
 	[Header("마우스 감도")]
 	[Tooltip("마우스 좌우 회전(Yaw) 감도")]
@@ -312,7 +313,7 @@ public class Player : Unit
 	// Roll (Z축): Q/E      → 좌우 스핀. Space.Self 기준
 	// 
 	// Space.Self 사용 이유: 어느 방향 바라봐도 직관적으로 상하/롤 회전됨.
-	// Yaw만 World 기준인 이유: 완전 뒤집혔을 때도 마우스 좌우가 자연스럽게 동작.
+	
 
 
 
@@ -325,7 +326,7 @@ public class Player : Unit
 		float roll = -_input.rollInput * rollSensitivity * Time.fixedDeltaTime;
 		// rollInput 반전: E키 눌렀을 때 오른쪽으로 기우는 방향
 
-		transform.Rotate(Vector3.up, yaw, Space.World);
+		transform.Rotate(transform.up, yaw, Space.World);
 		transform.Rotate(Vector3.right, pitch, Space.Self);
 		transform.Rotate(Vector3.forward, roll, Space.Self);
 	}
