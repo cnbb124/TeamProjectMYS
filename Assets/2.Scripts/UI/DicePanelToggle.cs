@@ -6,14 +6,15 @@ public class DicePanelToggle : MonoBehaviour
     [SerializeField] private RectTransform panelRect;
     [SerializeField] private float expandedHeight = 300f;
     [SerializeField] private float animDuration = 0.3f;
-    [SerializeField] private KeyCode toggleKey = KeyCode.Tab;
+    //[SerializeField] private KeyCode toggleKey = KeyCode.Tab; ÀÎÇ²¸Å´ÏÀú·Î¿Å±è
 
     private bool _isOpen = false;
     private Coroutine _coroutine;
 
+
     void Update()
     {
-        if (Input.GetKeyDown(toggleKey))
+        if (InputManager.Instance.dicePanelToggle)
             Toggle();
     }
 
@@ -34,7 +35,7 @@ public class DicePanelToggle : MonoBehaviour
 
         while (elapsed < animDuration)
         {
-            elapsed += Time.unscaledDeltaTime; // timeScale 0ì´ì–´ë„ ìž‘ë™
+            elapsed += Time.unscaledDeltaTime; // timeScale 0ÀÌ¾îµµ ÀÛµ¿µÊ  Â÷ÈÄ¼öÁ¤¿¹Á¤
             float t = Mathf.SmoothStep(0f, 1f, elapsed / animDuration);
             panelRect.sizeDelta = new Vector2(
                 panelRect.sizeDelta.x,

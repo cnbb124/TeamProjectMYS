@@ -36,8 +36,11 @@ public class KeyboardMouseConfig
     [Header("소모품")]
     public KeyCode switchConsumable = KeyCode.R;    // 소모품 슬롯 전환
     public KeyCode useConsumable    = KeyCode.T;    // 소모품 사용
+    
+	[Header("다이스 패널 (토글)")]
+	public KeyCode dicePanelToggle = KeyCode.Tab;
 
-    [Header("모드 전환")]
+	[Header("모드 전환")]
     public KeyCode switchFireMode = KeyCode.C;      // 발사 모드 전환 (교차/동시)
 
     [Header("Unity Input Settings 축 이름")]
@@ -47,6 +50,8 @@ public class KeyboardMouseConfig
     public string axisMouseX      = "Mouse X";
     public string axisMouseY      = "Mouse Y";
     public string axisScrollWheel = "Mouse ScrollWheel";
+
+    
 }
 
 // =====================================================================
@@ -56,34 +61,36 @@ public class KeyboardMouseConfig
 [System.Serializable]
 public class GamepadConfig
 {
-    [Header("축 이름 (Unity Input Settings 기준)")]
-    [Tooltip("왼쪽 스틱 가로 - 좌우 이동(X축)")]
+    [Header("이동")]
     public string axisLeftStickX   = "LeftStickX";
-    [Tooltip("왼쪽 스틱 세로 - 전후 이동(Z축)")]
     public string axisLeftStickY   = "LeftStickY";
-    [Tooltip("오른쪽 스틱 가로 - Yaw(좌우 시야)")]
-    public string axisRightStickX  = "RightStickX";
-    [Tooltip("오른쪽 스틱 세로 - Pitch(상하 시야)")]
-    public string axisRightStickY  = "RightStickY";
-    [Tooltip("수직 이동 축 (트리거 차이 or 별도 축)")]
     public string axisVerticalMove = "VerticalMove";
-    [Tooltip("D-패드 가로축 (좌=-1, 우=+1) - 미사일 슬롯 전환")]
+    public KeyCode rollLeft        = KeyCode.JoystickButton6;
+    public KeyCode rollRight       = KeyCode.JoystickButton7;
+    public KeyCode boost           = KeyCode.JoystickButton8;
+    public KeyCode dodge           = KeyCode.JoystickButton9;
+
+    [Header("사격")]
+    public KeyCode fireBullet      = KeyCode.JoystickButton5;
+    public KeyCode fireMissile     = KeyCode.JoystickButton4;
+    public KeyCode fireLaser       = KeyCode.JoystickButton3;
+    public KeyCode fireAll         = KeyCode.JoystickButton2;
+
+    [Header("미사일 슬롯 전환")]
     public string axisDPadX        = "DPadX";
-    [Tooltip("D-패드 세로축 (하=-1, 상=+1) - 소모품 전환/사용")]
+
+    [Header("소모품")]
     public string axisDPadY        = "DPadY";
 
-    [Header("버튼")]
-    public KeyCode fireBullet     = KeyCode.JoystickButton5;  // RB - 총알 (꾹)
-    public KeyCode fireMissile    = KeyCode.JoystickButton4;  // LB - 미사일
-    public KeyCode fireLaser      = KeyCode.JoystickButton3;  // Y  - 레이저
-    public KeyCode fireAll        = KeyCode.JoystickButton2;  // X  - 전체 발사
-    public KeyCode boost          = KeyCode.JoystickButton8;  // L3 - 부스트
-    public KeyCode dodge          = KeyCode.JoystickButton9;  // R3 - 회피
-    public KeyCode rollLeft       = KeyCode.JoystickButton6;  // LT - 좌 롤
-    public KeyCode rollRight      = KeyCode.JoystickButton7;  // RT - 우 롤
+    [Header("다이스 패널(토글)")]
+    public KeyCode dicePanelToggle = KeyCode.JoystickButton1;
 
     [Header("모드 전환")]
-    public KeyCode switchFireMode = KeyCode.JoystickButton10; // 패드 위쪽
+    public KeyCode switchFireMode  = KeyCode.JoystickButton10;
+
+    [Header("Unity Input Settings 축 이름")]
+    public string axisRightStickX  = "RightStickX";
+    public string axisRightStickY  = "RightStickY";
 }
 
 // =====================================================================
@@ -196,6 +203,7 @@ public class InputManager : MonoBehaviour
 
     [Tooltip("소모품 사용 - 누른 순간 한 프레임만 true")]
     public bool useConsumable;
+    public bool dicePanelToggle;
 
     // D-패드 이전 프레임값 (게임패드 "누른 순간" 감지용)
     private float _prevDPadX = 0f;
@@ -281,6 +289,7 @@ public class InputManager : MonoBehaviour
         // 소모품
         switchConsumable = Input.GetKeyDown(km.switchConsumable);
         useConsumable    = Input.GetKeyDown(km.useConsumable);
+        dicePanelToggle = Input.GetKeyDown(km.dicePanelToggle);
     }
 
     // =====================================================================
@@ -339,6 +348,7 @@ public class InputManager : MonoBehaviour
         switchConsumable  = (dpadY >  0.5f) && (_prevDPadY <=  0.5f);
         useConsumable     = (dpadY < -0.5f) && (_prevDPadY >= -0.5f);
 
+        dicePanelToggle = Input.GetKeyDown(gp.dicePanelToggle);
         _prevDPadX = dpadX;
         _prevDPadY = dpadY;
     }

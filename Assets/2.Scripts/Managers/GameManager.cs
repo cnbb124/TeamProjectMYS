@@ -271,7 +271,10 @@ public class GameManager : MonoBehaviour
     /// </summary>
     public void GameOver()
     {
-        if (curState == GAME_STATE.GAME_OVER) return;
+        if (curState == GAME_STATE.GAME_OVER)
+        {
+            return;
+        }
         IsGameOver = true;
         ChangeState(GAME_STATE.GAME_OVER);
         PoolManager.Instance.DisableAllProjectiles();//현재 투사체 모두 비활성화
@@ -282,7 +285,10 @@ public class GameManager : MonoBehaviour
     /// <summary>스테이지 클리어 조건 달성 시 호출.</summary>
     public void GameClear()
     {
-        if (curState == GAME_STATE.CLEAR) return;
+        if (curState == GAME_STATE.CLEAR)
+        {
+            return;
+        }
         ChangeState(GAME_STATE.CLEAR);
         PoolManager.Instance.DisableAllProjectiles();
     }
