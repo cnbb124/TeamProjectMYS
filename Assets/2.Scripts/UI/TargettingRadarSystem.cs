@@ -12,6 +12,9 @@ public class RadarSystem : MonoBehaviour
     [SerializeField] private RectTransform radarRect;
     [SerializeField] private GameObject dotPrefab;
 
+    [Header("Player Arrow")]
+    [SerializeField] private RectTransform playerArrow;
+
     [Header("Settings")]
     [SerializeField] private float radarDisplayRadius = 75f;
 
@@ -36,6 +39,10 @@ public class RadarSystem : MonoBehaviour
     void Update()
     {
         if (lockOnSystem == null || player == null) return;
+
+        // 플레이어 화살표: 항상 레이더 중앙 고정 (Heading-Up)
+        if (playerArrow != null)
+            playerArrow.anchoredPosition = Vector2.zero;
 
         _activeDotCount = 0;
 
