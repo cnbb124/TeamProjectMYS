@@ -1,20 +1,29 @@
 using System.Collections;
 using UnityEngine;
-using UnityEngine.UI;
 
 public class DicePanelToggle : MonoBehaviour
 {
-    [SerializeField] private RectTransform panelRect;  // PanelDice
+    [SerializeField] private RectTransform panelRect;
     [SerializeField] private float expandedHeight = 300f;
     [SerializeField] private float animDuration = 0.3f;
+    [SerializeField] private KeyCode toggleKey = KeyCode.Tab;
 
     private bool _isOpen = false;
     private Coroutine _coroutine;
+
+    void Update()
+    {
+        if (Input.GetKeyDown(toggleKey))
+            Toggle();
+    }
 
     public void Toggle()
     {
         if (_coroutine != null) StopCoroutine(_coroutine);
         _isOpen = !_isOpen;
+
+        Time.timeScale = _isOpen ? 0f : 1f;
+
         _coroutine = StartCoroutine(Animate(_isOpen ? expandedHeight : 0f));
     }
 
@@ -25,7 +34,7 @@ public class DicePanelToggle : MonoBehaviour
 
         while (elapsed < animDuration)
         {
-            elapsed += Time.deltaTime;
+            elapsed += Time.unscaledDeltaTime; // timeScale 0이어도 작동
             float t = Mathf.SmoothStep(0f, 1f, elapsed / animDuration);
             panelRect.sizeDelta = new Vector2(
                 panelRect.sizeDelta.x,

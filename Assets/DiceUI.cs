@@ -53,14 +53,14 @@ public class DiceUI : MonoBehaviour
             ShowDiceFace(Random.Range(1, 7));
 
             elapsed += interval;
-            yield return new WaitForSeconds(interval);
+            yield return new WaitForSecondsRealtime(interval);
         }
 
         // 최종 결과
         ShowDiceFace(result);
 
         // 잠깐 대기 후 아이템 표시
-        yield return new WaitForSeconds(0.4f);
+        yield return new WaitForSecondsRealtime(0.4f);
         itemNameText.text = itemName;
         if (itemDescText != null) itemDescText.text = itemDesc;
     }
