@@ -170,7 +170,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   maxHpRemaining: 9999999
-  maxShieldRemaining: 0
+  maxShieldCapacity: 0
   shieldRegainDelay: 0
   shieldRegainRate: 0
   isShieldRegaining: 0
@@ -184,7 +184,7 @@ MonoBehaviour:
   baseMoveSpeed: 0
   boostSpeed: 0
   maxSpeed: 0
-  maxBoostRemaining: 0
+  maxBoostCapacity: 0
   minBoostRequired: 0
   boostRegainDelay: 0
   boostRegainRate: 0
@@ -383,8 +383,16 @@ PrefabInstance:
     m_TransformParent: {fileID: 1788722382}
     m_Modifications:
     - target: {fileID: 1295354817333113809, guid: a7897ad853ae9d6458830c653646215c, type: 3}
+      propertyPath: boostRegainDelay
+      value: 0.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 1295354817333113809, guid: a7897ad853ae9d6458830c653646215c, type: 3}
+      propertyPath: maxBoostCapacity
+      value: 150
+      objectReference: {fileID: 0}
+    - target: {fileID: 1295354817333113809, guid: a7897ad853ae9d6458830c653646215c, type: 3}
       propertyPath: minBoostRequired
-      value: 20
+      value: 30
       objectReference: {fileID: 0}
     - target: {fileID: 3107650116710039119, guid: a7897ad853ae9d6458830c653646215c, type: 3}
       propertyPath: m_Name
@@ -1161,7 +1169,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   maxHpRemaining: 9999999
-  maxShieldRemaining: 0
+  maxShieldCapacity: 0
   shieldRegainDelay: 0
   shieldRegainRate: 0
   isShieldRegaining: 0
@@ -1175,7 +1183,7 @@ MonoBehaviour:
   baseMoveSpeed: 0
   boostSpeed: 0
   maxSpeed: 0
-  maxBoostRemaining: 0
+  maxBoostCapacity: 0
   minBoostRequired: 0
   boostRegainDelay: 0
   boostRegainRate: 0
@@ -1862,7 +1870,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   maxHpRemaining: 9999999
-  maxShieldRemaining: 0
+  maxShieldCapacity: 0
   shieldRegainDelay: 0
   shieldRegainRate: 0
   isShieldRegaining: 0
@@ -1876,7 +1884,7 @@ MonoBehaviour:
   baseMoveSpeed: 0
   boostSpeed: 0
   maxSpeed: 0
-  maxBoostRemaining: 0
+  maxBoostCapacity: 0
   minBoostRequired: 0
   boostRegainDelay: 0
   boostRegainRate: 0
