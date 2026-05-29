@@ -1,3 +1,20 @@
+
+//재생할 애니메이션 타입. 차후 유닛의 STATE에 따른 재생가능.
+//필요한만큼 추가가능
+//NONE을 0에넣을까?
+public enum ANIM_TYPE
+{
+	IDLE,
+    BOOST,
+    DODGE,//무적시간및 롤
+    SHOOT_BULLET,//좌우 총구가 앞뒤로 쏠대마다 밀리게
+    SHOOT_MISSILE,//미사일베이열리게
+    SHOOT_LASER,//기모으는 파츠?
+    HIT,
+    DIE
+}
+
+
 public enum LAYER_TYPE
 {
     Default = 0,

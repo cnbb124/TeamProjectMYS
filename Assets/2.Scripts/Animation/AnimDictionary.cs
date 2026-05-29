@@ -20,14 +20,8 @@ public class AnimTypeClip
 	*/
 }
 
-//재생할 애니메이션 타입. 차후 유닛의 STATE에 따른 재생가능.
-//필요한만큼 추가가능
-//NONE을 0에넣을까?
 
-public enum ANIM_TYPE
-{
-    IDLE,BOOST,DODGE,SHOT,HIT,DIE
-}
+
 
 public class AnimDictionary
 {

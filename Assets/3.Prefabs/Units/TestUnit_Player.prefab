@@ -1571,7 +1571,8 @@ GameObject:
   - component: {fileID: 1295354817333113809}
   - component: {fileID: 1161755328960943635}
   - component: {fileID: 1329124423494150431}
-  - component: {fileID: 9026279215469021488}
+  - component: {fileID: 7402764472675028080}
+  - component: {fileID: 3934864504421733446}
   m_Layer: 6
   m_Name: TestUnit_Player
   m_TagString: Untagged
@@ -1708,7 +1709,8 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 16384
   lockOnAngle: 110
-  TargetsInRange: []
+  TargetsInLockonRange: []
+  TargetsInRadarRange: []
   LockOnCandidate: {fileID: 0}
   LockedTarget: {fileID: 0}
   MultiLockCandidates: []
@@ -1742,7 +1744,28 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
---- !u!114 &9026279215469021488
+--- !u!95 &7402764472675028080
+Animator:
+  serializedVersion: 5
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3107650116710039119}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 0}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &3934864504421733446
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -1751,10 +1774,23 @@ MonoBehaviour:
   m_GameObject: {fileID: 3107650116710039119}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 379a8ec7179d6e84fa8bd03e51149bd7, type: 3}
+  m_Script: {fileID: 11500000, guid: ae1b975512cde9f49a8b76ca33645c06, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  shipData: {fileID: 0}
+  animTypeClips:
+  - animType: 0
+    animClip: {fileID: 0}
+  - animType: 3
+    animClip: {fileID: 0}
+  - animType: 4
+    animClip: {fileID: 0}
+  - animType: 5
+    animClip: {fileID: 0}
+  - animType: 2
+    animClip: {fileID: 0}
+  - animType: 7
+    animClip: {fileID: 0}
+  animator: {fileID: 7402764472675028080}
 --- !u!1 &3559093038818824757
 GameObject:
   m_ObjectHideFlags: 0
@@ -2541,7 +2577,7 @@ Transform:
   m_GameObject: {fileID: 5128569965372199403}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -1.65, y: -0.47871947, z: 4.255}
+  m_LocalPosition: {x: -1.65, y: -0.47871947, z: 4.176}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -2738,7 +2774,7 @@ Transform:
   m_GameObject: {fileID: 5596759128311500433}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 1.65, y: -0.47871947, z: 4.255}
+  m_LocalPosition: {x: 1.65, y: -0.47871947, z: 4.176}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []

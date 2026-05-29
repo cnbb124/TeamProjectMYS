@@ -1,0 +1,29 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class UnitAnimCtrl : MonoBehaviour
+{
+	[Header("애니메이션 타입,해당클립")]
+	public AnimTypeClip[] animTypeClips;
+	[Header("애니메이터")]
+	public Animator animator;
+
+	private AnimDictionary animDic = new AnimDictionary();
+	// Start is called before the first frame update
+	void Start()
+	{
+		//인스펙터에있는 타입,클립을 딕셔너리에 실제등록.
+		//차후 애님클립=딕.Get으로 갖고와서 할것
+		foreach (var entry in animTypeClips)
+		{
+			animDic.Add(entry.animType, entry.animClip);
+		}
+	}
+
+	// Update is called once per frame
+	void Update()
+	{
+
+	}
+}
