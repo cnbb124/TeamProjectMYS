@@ -7,9 +7,9 @@ public class LockOnUIManager : MonoBehaviour
 
     [Header("References")]
     [SerializeField] private MissileLockOnSystem lockOnSystem;
-    [SerializeField] private Camera mainCamera;
     [SerializeField] private GameObject lockOnUIPrefab;
 
+    private Camera _mainCamera;
     private List<LockOnTargetUI> _pool = new List<LockOnTargetUI>();
     private int _activeCount;
 
@@ -22,12 +22,12 @@ public class LockOnUIManager : MonoBehaviour
 
     private void Start()
     {
-        if (mainCamera == null) mainCamera = Camera.main;
+        _mainCamera = Camera.main; // 한 번만 캐싱
     }
 
     private void Update()
     {
-        if (lockOnSystem == null || mainCamera == null) return;
+        if (lockOnSystem == null || _mainCamera == null) return;
 
         _activeCount = 0;
 
@@ -63,7 +63,7 @@ public class LockOnUIManager : MonoBehaviour
 
     private void ShowIndicator(Vector3 worldPos, float progress, bool isLocked)
     {
-        Vector3 screenPos = mainCamera.WorldToScreenPoint(worldPos);
+        Vector3 screenPos = _mainCamera.WorldToScreenPoint(worldPos);
         if (screenPos.z < 0f) return; // 카메라 뒤면 표시 안 함
 
         LockOnTargetUI ui = GetUI(_activeCount);
