@@ -42,6 +42,7 @@ public abstract class Unit : MonoBehaviour, IDamageable
 	//매니저 할당용 레퍼런스
 	protected SoundManager _sound;
 	protected PoolManager _pool;
+	public WeaponSystem weaponSystem;
 
 	//==================유닛데이터==================//
 
@@ -76,13 +77,7 @@ public abstract class Unit : MonoBehaviour, IDamageable
     public float criDamageMultiplier;
 
 
-    [Header("사격 관련 설정")]
-    public float fireDelay = 0.1f; // 총알 발사 간격 (초)
-    protected float lastFireTime = 0f;
 
-	[Header("잔탄 시스템")]
-	[Tooltip("인스펙터에서 각 미사일 종류별 잔탄/최대치를 설정.")]
-	public List<MissileAmmoInfo> missileAmmoList = new List<MissileAmmoInfo>();
 
 	// 크리여부 판정은 투사체가 담당 크확은 유닛이. → DamageInfo.isCritical로 전달받음
 	// criChance는 투사체 생성 시 attacker에서 복사해서 사용
@@ -134,7 +129,7 @@ public abstract class Unit : MonoBehaviour, IDamageable
     private Dictionary<BOOSTPOS_TYPE, Transform> _boostPosDict = new Dictionary<BOOSTPOS_TYPE, Transform>();
 
 
-    protected Transform GetFirePos(FIREPOS_TYPE type)
+    public Transform GetFirePos(FIREPOS_TYPE type)
     {
         if (_firePosDict.TryGetValue(type, out Transform pos))
         {
@@ -204,6 +199,7 @@ public abstract class Unit : MonoBehaviour, IDamageable
     {
         _rb = GetComponent<Rigidbody>();
         _animCtrl = GetComponent<UnitAnimCtrl>();
+        weaponSystem = GetComponent<WeaponSystem>();
     }
 
 
@@ -257,88 +253,6 @@ public abstract class Unit : MonoBehaviour, IDamageable
     }
 
 
-	// ================= 잔탄 관리 메서드 =================
-
-	/// <summary>
-	/// 특정 미사일의 잔탄이 남아있는지 확인용
-	/// 플레이어나 적 유닛이 발사 버튼을 누르거나 공격 패턴을 시작할 때,
-    /// 가장 먼저 호출하여 총알이 나갈 수 있는 상태인지 판별 
-	/// </summary>
-	public bool HasMissileAmmo(MISSILE_TYPE type)
-	{
-		// 리스트에서 해당 타입의 미사일 정보 탐색
-		MissileAmmoInfo info = missileAmmoList.Find(x => x.missileType == type);
-		// 정보가 존재하고, 잔탄이 0보다 크면 true 반환
-		return info != null && info.curAmmo > 0;
-	}
-
-	/// <summary>
-	/// 미사일 발사 시 잔탄 1 감소
-	/// 발사 로직이 최종적으로 통과되어 투사체가 생성되는 시점에 호출,
-    /// 실제 잔탄을 소비하게 만들기.
-	/// </summary>
-	public void RemoveMissileAmmo(MISSILE_TYPE type)
-	{
-		// 리스트에서 해당 타입의 미사일 정보 탐색
-		MissileAmmoInfo info = missileAmmoList.Find(x => x.missileType == type);
-		// 잔탄이 1발이라도 남아있을 경우에만 차감 진행 (음수 방지)
-		if (info != null && info.curAmmo > 0)
-		{
-			info.curAmmo--;
-		}
-	}
-
-	/// <summary>
-	/// 미사일 잔탄 획득 (아이템 습득 등)
-	/// 게임 플레이 도중 보급품이나 탄약 팩을 획득했을 때 호출
-    /// 획득량(amount)을 기존 수치에 더하되, 결괏값이 최대 적재량을 초과하면 무조건 최대치에 맞춰지도록 처리
-	/// </summary>
-	public void AddMissileAmmo(MISSILE_TYPE type, int amount)
-	{
-		// 리스트에서 해당 타입의 미사일 정보 탐색
-		MissileAmmoInfo info = missileAmmoList.Find(x => x.missileType == type);
-		if (info != null)
-		{
-			// Mathf.Min을 사용해 획득 후 잔탄이 최대치(maxAmmo)를 넘지 않도록 제한
-			info.curAmmo = Mathf.Min(info.curAmmo + amount, info.maxAmmo);
-		}
-	}
-
-
-	/// <summary>
-	/// 미사일 최대 적재량 증가 (레벨업, 장비 장착 등)
-    /// 소지한도 상한선증가.
-	/// </summary>
-	public void IncreaseMaxMissileAmmo(MISSILE_TYPE type, int amount)
-	{
-		// 리스트에서 해당 타입의 미사일 정보 탐색
-		MissileAmmoInfo info = missileAmmoList.Find(x => x.missileType == type);
-		if (info != null)
-		{
-			// 최대치 한도 증가
-			info.maxAmmo += amount;
-			// 차후 최대치 증가 시 현재 잔탄도 같이 채워줄 수 있을지도?(필요시 주석 해제)
-			//info.curAmmo += amount; 
-		}
-	}
-
-
-	/// <summary>
-	/// 미사일 최대 적재량 감소 (파손, 장비 해제 등)
-	/// 소지한도 상한선감소.
-	/// </summary>
-	public void DecreaseMaxMissileAmmo(MISSILE_TYPE type, int amount)
-	{
-		// 리스트에서 해당 타입의 미사일 정보 탐색
-		MissileAmmoInfo info = missileAmmoList.Find(x => x.missileType == type);
-		if (info != null)
-		{
-			// 최대치 한도 증가
-			info.maxAmmo -= amount;
-			// 차후 최대치 감소 시 현재 잔탄도 같이 감소할 수 있을지도?(필요시 주석 해제)
-			//info.curAmmo -= amount; 
-		}
-	}
 	//===================FSM======================d
 
 
@@ -520,7 +434,21 @@ public abstract class Unit : MonoBehaviour, IDamageable
     //자식에서 오버라이드
     public virtual void Shoot(PROJECTILE_TYPE type)
     {
+        if (weaponSystem != null)
+        {
+            weaponSystem.Shoot(type);
+        }
+    }
 
+    /// <summary>
+    /// WeaponSystem에서 애니메이션 재생 호출용
+    /// </summary>
+    public void PlayAnim(ANIM_TYPE type)
+    {
+        if (_animCtrl != null)
+        {
+            _animCtrl.Play(type);
+        }
     }
 
     /// <summary>
@@ -672,7 +600,7 @@ public abstract class Unit : MonoBehaviour, IDamageable
     /// </summary>
     /// <param name="type">발사할 투사체 타입</param>
     /// <returns></returns>
-    protected SOUND_TYPE GetPlaySoundType(PROJECTILE_TYPE type)
+    public SOUND_TYPE GetPlaySoundType(PROJECTILE_TYPE type)
     {
         switch (type)
         {
