@@ -69,23 +69,23 @@ public class SoundManager : MonoBehaviour
 
 
 	[Space(10)]
-	[Header("1. 사운드 데이터 등록")]
+	[Header("<size=14>1. 사운드 데이터 등록</size>")]
 	[Tooltip("사운드 타입과 오디오 클립을 짝지어 등록하는 리스트")]
 	[SerializeField] private SoundTypeClip[] soundList;
 
 	[Space(10)]
-	[Header("2. 오디오 소스 설정 BGM&UI(2D)")]
+	[Header("<size=14>2. 오디오 소스 연결 BGM&UI(2D)</size>")]
 	[SerializeField]
-	[Tooltip("배경음악(BGM) 재생을 전담하는 소스. Loop(반복 재생)가 자동으로 활성화")]
+	[Tooltip("배경음악(BGM) SFX재생을 전담할 소스 연결. Loop(반복 재생)가 자동으로 활성화")]
 	private AudioSource bgmSource; // BGM 전용 스피커 (반복 재생 켜두기)
-	[Tooltip("현재 BGM소스에 입력된 사운드")]
-	public SOUND_TYPE curBGM;
 	[SerializeField]
-	[Tooltip("UI(2D)용")]
+	[Tooltip("UI(2D) SFX재생을 전담할 소스연결.")]
 	private AudioSource sfxUISource; // UI/일반 효과음 전용 스피커 (2D)
+	[Header("현재 BGM소스에 입력된 사운드(출력 확인용)")]
+	public SOUND_TYPE curBGM;
 
 	[Space(10)]
-	[Header("3. 기본 볼륨 설정")]
+	[Header("<size=14>3. 기본 볼륨 설정</size>")]
 	[Range(0f, 1f)]
 	public float bgmVolume = 1.0f;
 	[Range(0f, 1f)]
@@ -94,7 +94,7 @@ public class SoundManager : MonoBehaviour
 	public float sfx3DVolume = 1.0f;
 
 	[Space(10)]
-	[Header("4. 3D 사운드 풀링 사이즈 설정")]
+	[Header("<size=14>4. 3D 사운드 풀링 사이즈 설정</size>")]
 	[Tooltip("게임 시작 시 미리 만들어둘 3D 스피커의 개수.")]
 	[SerializeField]
 	private uint initialPoolSize = 20;
