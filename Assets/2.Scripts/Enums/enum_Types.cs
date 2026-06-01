@@ -151,6 +151,13 @@ public enum MISSILE_TYPE
 	DUMB,       // 직선 무유도 미사일 (일정시간/충돌 후 광역폭발)
 }
 
+// 미사일 발사 모드 
+public enum MISSILE_FIRE_MODE
+{
+	DOUBLE, // 동시 발사
+	SINGLE, // 교대 발사
+}
+
 
 //Build Settings의 씬 순서와 일치해야 함. LoadScene(SCENE_TYPE)오버로드가(int)sceneType으로 로드함.
 // 현재 Build Settings 순서 확인 후 맞출것

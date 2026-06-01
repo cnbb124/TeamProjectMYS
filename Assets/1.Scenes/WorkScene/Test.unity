@@ -276,6 +276,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 48672769f4d2501448f438691a36dbcb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  weaponSystem: {fileID: 0}
   maxHpRemaining: 9999999
   maxShieldCapacity: 0
   shieldRegainDelay: 0
@@ -286,8 +287,6 @@ MonoBehaviour:
   defense: 0
   criChance: 0
   criDamageMultiplier: 0
-  fireDelay: 0.1
-  missileAmmoList: []
   baseMoveSpeed: 0
   boostSpeed: 0
   maxSpeed: 0
@@ -883,7 +882,10 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 3107650116710039119, guid: a7897ad853ae9d6458830c653646215c, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 639050006}
   m_SourcePrefab: {fileID: 100100000, guid: a7897ad853ae9d6458830c653646215c, type: 3}
 --- !u!4 &639050002 stripped
 Transform:
@@ -895,7 +897,7 @@ MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 1161755328960943635, guid: a7897ad853ae9d6458830c653646215c, type: 3}
   m_PrefabInstance: {fileID: 639050001}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
+  m_GameObject: {fileID: 639050005}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: a547208e588a6c04ebc7cf397cd9034d, type: 3}
@@ -906,12 +908,43 @@ MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 1295354817333113809, guid: a7897ad853ae9d6458830c653646215c, type: 3}
   m_PrefabInstance: {fileID: 639050001}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
+  m_GameObject: {fileID: 639050005}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 120491e114eaf54449edb1ede4eca701, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!1 &639050005 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 3107650116710039119, guid: a7897ad853ae9d6458830c653646215c, type: 3}
+  m_PrefabInstance: {fileID: 639050001}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &639050006
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 639050005}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aa66153ac3873e44589a1d73fc8a0257, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  lockOnSystem: {fileID: 639050003}
+  fireDelay: 0.1
+  equippedMissiles: 000000000100000002000000
+  curMissileType: 0
+  missileFireMode: 0
+  isMissile_EquippedLeft: 0
+  isMissile_EquippedRight: 0
+  missileAmmoList:
+  - missileType: 0
+    curAmmo: 9999
+    maxAmmo: 9999
+  - missileType: 0
+    curAmmo: 100
+    maxAmmo: 100
 --- !u!1 &776283881
 GameObject:
   m_ObjectHideFlags: 0
@@ -1169,6 +1202,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 48672769f4d2501448f438691a36dbcb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  weaponSystem: {fileID: 0}
   maxHpRemaining: 9999999
   maxShieldCapacity: 0
   shieldRegainDelay: 0
@@ -1179,8 +1213,6 @@ MonoBehaviour:
   defense: 0
   criChance: 0
   criDamageMultiplier: 0
-  fireDelay: 0.1
-  missileAmmoList: []
   baseMoveSpeed: 0
   boostSpeed: 0
   maxSpeed: 0
@@ -1638,6 +1670,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 48672769f4d2501448f438691a36dbcb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  weaponSystem: {fileID: 0}
   maxHpRemaining: 9999999
   maxShieldCapacity: 0
   shieldRegainDelay: 0
@@ -1648,8 +1681,6 @@ MonoBehaviour:
   defense: 0
   criChance: 0
   criDamageMultiplier: 0
-  fireDelay: 0.1
-  missileAmmoList: []
   baseMoveSpeed: 0
   boostSpeed: 0
   maxSpeed: 0

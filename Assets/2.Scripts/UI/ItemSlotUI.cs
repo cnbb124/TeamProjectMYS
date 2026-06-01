@@ -7,11 +7,11 @@ public class ItemSlotUI : MonoBehaviour
     [System.Serializable]
     public class Slot
     {
-        public Image        background;   // 슬롯 배경
+        public Image        background;   // ?�롯 배경
         public Image        weaponIcon;   // Weapon_0X Image
-        public GameObject   indicator;    // ItemIndicator (활성화/비활성화)
-        public TMP_Text     numberText;   // 슬롯 번호
-        public Sprite       weaponSprite; // 할당할 무기 아이콘
+        public GameObject   indicator;    // ItemIndicator (?�성??비활?�화)
+        public TMP_Text     numberText;   // ?�롯 번호
+        public Sprite       weaponSprite; // ?�당??무기 ?�이�?
     }
 
     [SerializeField] private Slot[] slots = new Slot[4];
@@ -74,11 +74,11 @@ public class ItemSlotUI : MonoBehaviour
                 slots[i].background.color = isActive ? activeColor : inactiveColor;
         }
 
-        // 플레이어 미사일 타입 연동 (슬롯 0~2 = equippedMissiles 인덱스)
-        if (player != null && player.equippedMissiles != null
-            && index < player.equippedMissiles.Length)
+        // ?�레?�어 미사???�???�동 (?�롯 0~2 = equippedMissiles ?�덱??
+        if (player != null && player.weaponSystem.equippedMissiles != null
+            && index < player.weaponSystem.equippedMissiles.Length)
         {
-            player.curMissileType = player.equippedMissiles[index];
+            player.weaponSystem.curMissileType = player.weaponSystem.equippedMissiles[index];
         }
     }
 }
