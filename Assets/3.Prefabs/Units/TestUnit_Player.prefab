@@ -1573,6 +1573,7 @@ GameObject:
   - component: {fileID: 1329124423494150431}
   - component: {fileID: 7402764472675028080}
   - component: {fileID: 3934864504421733446}
+  - component: {fileID: 7897952812583820154}
   m_Layer: 6
   m_Name: TestUnit_Player
   m_TagString: Untagged
@@ -1628,6 +1629,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 120491e114eaf54449edb1ede4eca701, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  weaponSystem: {fileID: 0}
   maxHpRemaining: 150
   maxShieldCapacity: 150
   shieldRegainDelay: 5
@@ -1638,11 +1640,6 @@ MonoBehaviour:
   defense: 3
   criChance: 20
   criDamageMultiplier: 1.5
-  fireDelay: 0.1
-  missileAmmoList:
-  - missileType: 0
-    curAmmo: 9999
-    maxAmmo: 9999
   baseMoveSpeed: 350
   boostSpeed: 550
   maxSpeed: 1000
@@ -1650,6 +1647,8 @@ MonoBehaviour:
   minBoostRequired: 30
   boostRegainDelay: 0.2
   boostRegainRate: 20
+  dodgeDuration: 0.5
+  dodgeInvincibleTime: 0.4
   speedMultiPlier: 0
   firePositions:
   - type: 0
@@ -1684,12 +1683,6 @@ MonoBehaviour:
   level: 1
   exp: 0
   expToNextLevel: 100
-  lockOnSystem: {fileID: 1161755328960943635}
-  missileFireMode: 0
-  curMissileType: 0
-  isMissile_EquippedLeft: 0
-  isMissile_EquippedRight: 0
-  equippedMissiles: 000000000100000002000000
 --- !u!114 &1161755328960943635
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1792,6 +1785,32 @@ MonoBehaviour:
   - animType: 7
     animClip: {fileID: 0}
   animator: {fileID: 7402764472675028080}
+--- !u!114 &7897952812583820154
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3107650116710039119}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aa66153ac3873e44589a1d73fc8a0257, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  lockOnSystem: {fileID: 1161755328960943635}
+  fireDelay: 0.1
+  equippedMissiles: 000000000100000002000000
+  curMissileType: 0
+  missileFireMode: 0
+  isMissile_EquippedLeft: 0
+  isMissile_EquippedRight: 0
+  missileAmmoList:
+  - missileType: 0
+    curAmmo: 9999
+    maxAmmo: 9999
+  - missileType: 0
+    curAmmo: 100
+    maxAmmo: 100
 --- !u!1 &3559093038818824757
 GameObject:
   m_ObjectHideFlags: 0

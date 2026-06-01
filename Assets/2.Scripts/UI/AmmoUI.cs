@@ -7,6 +7,7 @@ public class AmmoUI : MonoBehaviour
 {
     [Header("References")]
     [SerializeField] private Player player;
+    private WeaponSystem weaponSystem;
 
     [Header("Text")]
     [SerializeField] private TMP_Text curAmmoText;
@@ -25,12 +26,16 @@ public class AmmoUI : MonoBehaviour
     private MISSILE_TYPE _lastType;
     private int _lastMaxAmmo = -1;
 
-    private void Update()
+	private void Awake()
+	{
+        weaponSystem = player.GetComponent<WeaponSystem>();
+	}
+	private void Update()
     {
         if (player == null) return;
 
-        MissileAmmoInfo info = player.missileAmmoList
-            .Find(x => x.missileType == player.curMissileType);
+        MissileAmmoInfo info = weaponSystem.missileAmmoList
+            .Find(x => x.missileType == weaponSystem.curMissileType);
 
         if (info == null) return;
 
@@ -60,7 +65,7 @@ public class AmmoUI : MonoBehaviour
         }
 
         _lastMaxAmmo = maxAmmo;
-        _lastType    = player.curMissileType;
+        _lastType    = weaponSystem.curMissileType;
     }
 
     private void UpdateIcons(int curAmmo)

@@ -194,3 +194,32 @@ public enum POOL_TYPE
     ITEM,
     VFX,
 }
+
+public enum PART_TYPE
+{
+    ENGINE,
+    FRAME,
+    ARMOR,
+    LAUNCHER,
+}
+
+public enum STAT_TYPE
+{
+    MAX_HP,
+    MAX_SHIELD,
+    MAX_ARMOR,
+    DEFENSE,
+    BASE_MOVE_SPEED,
+    BOOST_SPEED,
+    MAX_SPEED,
+    MAX_BOOST,
+    CRI_CHANCE,
+    CRI_DAMAGE_MULT,
+}
+
+public enum CONSUMABLE_TYPE
+{
+    HP_RESTORE,
+    SHIELD_RESTORE,
+    BOOST_RESTORE,
+}
