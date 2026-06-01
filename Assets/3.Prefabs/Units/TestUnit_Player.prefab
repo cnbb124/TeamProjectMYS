@@ -1574,6 +1574,8 @@ GameObject:
   - component: {fileID: 7402764472675028080}
   - component: {fileID: 3934864504421733446}
   - component: {fileID: 7897952812583820154}
+  - component: {fileID: 2532570374250757226}
+  - component: {fileID: 9117759095743404846}
   m_Layer: 6
   m_Name: TestUnit_Player
   m_TagString: Untagged
@@ -1811,6 +1813,35 @@ MonoBehaviour:
   - missileType: 0
     curAmmo: 100
     maxAmmo: 100
+--- !u!114 &2532570374250757226
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3107650116710039119}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4a126d7caf6cc7041b0412e828924d63, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  slots:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+--- !u!114 &9117759095743404846
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3107650116710039119}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e0baeb8ab62b6244c870e914cd47c666, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  partSlots: []
 --- !u!1 &3559093038818824757
 GameObject:
   m_ObjectHideFlags: 0

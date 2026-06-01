@@ -71,12 +71,12 @@ public class QuickSlot : MonoBehaviour
         {
             return;
         }
-        if (Inventory.Instance == null)
+        if (InventoryManager.Instance == null)
         {
             return;
         }
 
-        if (!Inventory.Instance.ConsumeOne(slots[slotIndex]))
+        if (!InventoryManager.Instance.ConsumeOne(slots[slotIndex]))
         {
             return;
         }
@@ -85,7 +85,7 @@ public class QuickSlot : MonoBehaviour
         _cooldownTimers[slotIndex] = slots[slotIndex].cooldown;
 
         // 인벤토리 수량 소진 시 슬롯 비우기
-        if (Inventory.Instance.GetCount(slots[slotIndex]) <= 0)
+        if (InventoryManager.Instance.GetCount(slots[slotIndex]) <= 0)
         {
             slots[slotIndex] = null;
         }

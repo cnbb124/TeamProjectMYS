@@ -8,14 +8,14 @@ public class ConsumableStack
     public int count;
 }
 
-public class Inventory : MonoBehaviour
+public class InventoryManager : MonoBehaviour
 {
-    public static Inventory Instance { get; private set; }
+    public static InventoryManager Instance { get; private set; }
 
-    [Header("Parts")]
+    [Header("보유 파츠 목록")]
     public List<PartData> parts = new List<PartData>();
 
-    [Header("Consumables")]
+    [Header("보유 소모품 목록")]
     public List<ConsumableStack> consumables = new List<ConsumableStack>();
 
     private void Awake()
