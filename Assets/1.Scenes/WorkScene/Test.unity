@@ -277,7 +277,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   maxHpRemaining: 9999999
-  maxShieldRemaining: 0
+  maxShieldCapacity: 0
   shieldRegainDelay: 0
   shieldRegainRate: 0
   isShieldRegaining: 0
@@ -291,9 +291,12 @@ MonoBehaviour:
   baseMoveSpeed: 0
   boostSpeed: 0
   maxSpeed: 0
-  maxBoostRemaining: 0
+  maxBoostCapacity: 0
+  minBoostRequired: 0
   boostRegainDelay: 0
   boostRegainRate: 0
+  dodgeDuration: 0.5
+  dodgeInvincibleTime: 0.4
   speedMultiPlier: 0
   firePositions: []
   boosterEffectPositions: []
@@ -1167,7 +1170,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   maxHpRemaining: 9999999
-  maxShieldRemaining: 0
+  maxShieldCapacity: 0
   shieldRegainDelay: 0
   shieldRegainRate: 0
   isShieldRegaining: 0
@@ -1181,9 +1184,12 @@ MonoBehaviour:
   baseMoveSpeed: 0
   boostSpeed: 0
   maxSpeed: 0
-  maxBoostRemaining: 0
+  maxBoostCapacity: 0
+  minBoostRequired: 0
   boostRegainDelay: 0
   boostRegainRate: 0
+  dodgeDuration: 0.5
+  dodgeInvincibleTime: 0.4
   speedMultiPlier: 0
   firePositions: []
   boosterEffectPositions: []
@@ -1293,6 +1299,38 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 258667864242943024, guid: f45f3c5144b7ed64d9c1338fc3bdf571, type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 258667864242943024, guid: f45f3c5144b7ed64d9c1338fc3bdf571, type: 3}
+      propertyPath: m_AnchorMin.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 258667864242943024, guid: f45f3c5144b7ed64d9c1338fc3bdf571, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 258667864242943024, guid: f45f3c5144b7ed64d9c1338fc3bdf571, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1159132935167852063, guid: f45f3c5144b7ed64d9c1338fc3bdf571, type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1159132935167852063, guid: f45f3c5144b7ed64d9c1338fc3bdf571, type: 3}
+      propertyPath: m_AnchorMin.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1159132935167852063, guid: f45f3c5144b7ed64d9c1338fc3bdf571, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1159132935167852063, guid: f45f3c5144b7ed64d9c1338fc3bdf571, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 2591405283403970116, guid: f45f3c5144b7ed64d9c1338fc3bdf571, type: 3}
       propertyPath: player
       value: 
@@ -1301,6 +1339,38 @@ PrefabInstance:
       propertyPath: lockOnSystem
       value: 
       objectReference: {fileID: 639050003}
+    - target: {fileID: 3210303906182727247, guid: f45f3c5144b7ed64d9c1338fc3bdf571, type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3210303906182727247, guid: f45f3c5144b7ed64d9c1338fc3bdf571, type: 3}
+      propertyPath: m_AnchorMin.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3210303906182727247, guid: f45f3c5144b7ed64d9c1338fc3bdf571, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3210303906182727247, guid: f45f3c5144b7ed64d9c1338fc3bdf571, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3348509957930815606, guid: f45f3c5144b7ed64d9c1338fc3bdf571, type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3348509957930815606, guid: f45f3c5144b7ed64d9c1338fc3bdf571, type: 3}
+      propertyPath: m_AnchorMin.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3348509957930815606, guid: f45f3c5144b7ed64d9c1338fc3bdf571, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3348509957930815606, guid: f45f3c5144b7ed64d9c1338fc3bdf571, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 5319932541056712807, guid: f45f3c5144b7ed64d9c1338fc3bdf571, type: 3}
       propertyPath: player
       value: 
@@ -1569,7 +1639,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   maxHpRemaining: 9999999
-  maxShieldRemaining: 0
+  maxShieldCapacity: 0
   shieldRegainDelay: 0
   shieldRegainRate: 0
   isShieldRegaining: 0
@@ -1583,9 +1653,12 @@ MonoBehaviour:
   baseMoveSpeed: 0
   boostSpeed: 0
   maxSpeed: 0
-  maxBoostRemaining: 0
+  maxBoostCapacity: 0
+  minBoostRequired: 0
   boostRegainDelay: 0
   boostRegainRate: 0
+  dodgeDuration: 0.5
+  dodgeInvincibleTime: 0.4
   speedMultiPlier: 0
   firePositions: []
   boosterEffectPositions: []

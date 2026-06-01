@@ -1,47 +1,46 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 // =====================================================================
 // PoolEntry
-// ì¸ìŠ¤í™í„°ì—ì„œ í’€ ì¢…ë¥˜ / í”„ë¦¬íŒ¹ / ì´ˆê¸° ì‚¬ì´ì¦ˆë¥¼ ì„¤ì •í•˜ëŠ” ì§ë ¬í™” í´ë˜ìŠ¤.
-// PoolManager.poolConfigs ë°°ì—´ì— í•­ëª©ì„ ì¶”ê°€í•´ ìƒˆ í’€ì„ ë“±ë¡.
+// ÀÎ½ºÆåÅÍ¿¡¼­ Ç® Á¾·ù / ÇÁ¸®ÆÕ / ÃÊ±â »çÀÌÁî¸¦ ¼³Á¤ÇÏ´Â Á÷·ÄÈ­ Å¬·¡½º.
+// PoolManager.poolConfigs ¹è¿­¿¡ Ç×¸ñÀ» Ãß°¡ÇØ¼­ µî·Ï.
 // =====================================================================
 [System.Serializable]
 public class PoolEntry
 {
-    [Tooltip("í’€ ì¢…ë¥˜. enum_Types.csì˜ POOL_TYPE ê°’ ì„ íƒ.")]
+    [Tooltip("Ç® Á¾·ù. enum_Types.csÀÇ POOL_TYPE °ª ¼±ÅÃ.")]
     public POOL_TYPE poolType;
 
-    [Tooltip("ìƒì„±í•  í”„ë¦¬íŒ¹. ì¸ìŠ¤í™í„°ì—ì„œ ë“œë˜ê·¸ì•¤ë“œë¡­.")]
+    [Tooltip("»ı¼ºÇÒ ÇÁ¸®ÆÕ. ÀÎ½ºÆåÅÍ¿¡¼­ ¿¬°á.")]
     public GameObject prefab;
 
-    [Tooltip("ì”¬ ì‹œì‘ ì‹œ ë¯¸ë¦¬ ìƒì„±í•  ì˜¤ë¸Œì íŠ¸ ìˆ˜. ë¶€ì¡±í•˜ë©´ ìë™ í™•ì¥ + ê²½ê³  ë¡œê·¸.")]
+    [Tooltip("°ÔÀÓ ½ÃÀÛ ½Ã ¹Ì¸® »ı¼ºÇÒ °³¼ö. ºÎÁ·ÇÏ¸é ÀÚµ¿ È®Àå + °æ°í ·Î±×.")]
     public int initialSize = 20;
 }
 
 // =====================================================================
 // PoolManager
 //
-// ì—­í• :
-//   1. ì”¬ ì‹œì‘ ì‹œ poolConfigs ë°°ì—´ì„ ìˆœíšŒí•´ í’€ ì´ˆê¸°í™”
-//   2. Get(POOL_TYPE) ìœ¼ë¡œ ë¹„í™œì„± ì˜¤ë¸Œì íŠ¸ êº¼ë‚´ê¸°
-//   3. Return(GameObject) ìœ¼ë¡œ ë°˜ë‚© (ë¹„í™œì„±í™”)
-//   4. í’€ ì†Œì§„ ì‹œ ìë™ í™•ì¥ + ê²½ê³  ë¡œê·¸
-//   5. DisableAllProjectiles(): ì”¬ ì „í™˜/ê²Œì„ì˜¤ë²„ ì‹œ íˆ¬ì‚¬ì²´ ì¼ê´„ ë¹„í™œì„±í™”
+// ¿ªÇÒ:
+//   1. °ÔÀÓ ½ÃÀÛ ½Ã poolConfigs ¹è¿­À» ¼øÈ¸ÇÏ¿© Ç® ÃÊ±âÈ­
+//   2. Get(POOL_TYPE) À¸·Î ºñÈ°¼º ¿ÀºêÁ§Æ® ²¨³»±â
+//   3. Return(GameObject) À¸·Î ¹İ³³ (ºñÈ°¼ºÈ­)
+//   4. Ç® ºÎÁ· ½Ã ÀÚµ¿ È®Àå + °æ°í ·Î±×
+//   5. DisableAllProjectiles(): ¾ÀÀüÈ¯/°ÔÀÓ¿À¹ö ½Ã Åõ»çÃ¼ ÀüÃ¼ ºñÈ°¼ºÈ­
 //
-// â€» ìƒˆ í’€ ì¶”ê°€ ë°©ë²• (ì½”ë“œ ìˆ˜ì • ë¶ˆí•„ìš”):
-//   1. enum_Types.cs â†’ POOL_TYPEì— ê°’ ì¶”ê°€
-//   2. ì¸ìŠ¤í™í„° poolConfigs ë°°ì—´ì— í•­ëª© ì¶”ê°€, í”„ë¦¬íŒ¹ ì—°ê²°, ì‚¬ì´ì¦ˆ ì„¤ì •
+// Åõ»çÃ¼ Àü¿ë Ä³½Ã(_projectilePools):
+//   ÃÊ±âÈ­ ½ÃÁ¡¿¡ GetComponent<Projectile>()À» ¹Ì¸® ¼öÇàÇØ ÀúÀå.
+//   GetBullet/GetMissile µî È£Ãâ ½Ã ¸Å¹ø GetComponent ÇÏÁö ¾Ê¾Æµµ µÊ.
 //
-// íˆ¬ì‚¬ì²´ ì „ìš© ë˜í¼: GetBullet / GetMissile / GetLaser / GetClusterMissile / GetDumbMissile
-//   â†’ ê¸°ì¡´ ì½”ë“œì™€ í˜¸í™˜ ìœ ì§€ (ë‚´ë¶€ì ìœ¼ë¡œ Get(POOL_TYPE) í˜¸ì¶œ)
-// ì  / ì•„ì´í…œ / ì´í™íŠ¸: Get(POOL_TYPE.ENEMY_GUNSHIP) ë“± ë²”ìš© ë©”ì„œë“œ ì§ì ‘ ì‚¬ìš©
+// Ãß°¡ ¹æ¹ı (½Å±Ô Å¸ÀÔ µî·Ï ½Ã):
+//   1. enum_Types.cs ÀÇ POOL_TYPE¿¡ °ª Ãß°¡
+//   2. ÀÎ½ºÆåÅÍ poolConfigs ¹è¿­¿¡ Ç×¸ñ Ãß°¡, ÇÁ¸®ÆÕ ¿¬°á, »çÀÌÁî ¼³Á¤
 // =====================================================================
 public class PoolManager : MonoBehaviour
 {
     // =====================================================================
-    // ì‹±ê¸€í†¤
+    // ½Ì±ÛÅæ
     // =====================================================================
     private static PoolManager instance = null;
     public static PoolManager Instance
@@ -52,26 +51,29 @@ public class PoolManager : MonoBehaviour
             {
                 instance = FindObjectOfType<PoolManager>();
                 if (instance == null)
-                    Debug.LogError("[PoolManager] ì”¬ì— PoolManager ì—†ìŒ! í•˜ì´ì–´ë¼í‚¤ì— ì¶”ê°€ í•„ìš”");
+                    Debug.LogError("[PoolManager] ¾À¿¡ PoolManager ¾øÀ½! ÇÏÀÌ¾î¶óÅ°¿¡ Ãß°¡ ÇÊ¿ä");
             }
             return instance;
         }
     }
 
     // =====================================================================
-    // ì¸ìŠ¤í™í„° ì„¤ì •
+    // ÀÎ½ºÆåÅÍ ¼³Á¤
     // =====================================================================
-    [Header("â”â”â”â”â”â” í’€ ì„¤ì • â”â”â”â”â”â”")]
-    [Tooltip("ë°°ì—´ í•­ëª© ì¶”ê°€ â†’ POOL_TYPE / í”„ë¦¬íŒ¹ / ì´ˆê¸° ì‚¬ì´ì¦ˆ ì„¤ì •ìœ¼ë¡œ ìƒˆ í’€ ë“±ë¡")]
+    [Header("======= Ç® ¼³Á¤=======")]
+    [Tooltip("¹è¿­ Ç×¸ñ Ãß°¡ ÈÄ POOL_TYPE / ÇÁ¸®ÆÕ / ÃÊ±â »çÀÌÁî ¼³Á¤À¸·Î Ç® µî·Ï")]
     public PoolEntry[] poolConfigs;
 
     // =====================================================================
-    // ëŸ°íƒ€ì„ í’€ (Awakeì—ì„œ poolConfigs ê¸°ë°˜ìœ¼ë¡œ êµ¬ì„±)
+    // ³»ºÎ Ç® µñ¼Å³Ê¸®
     // =====================================================================
-    private Dictionary<POOL_TYPE, List<GameObject>> _pools
-        = new Dictionary<POOL_TYPE, List<GameObject>>();
+    // ÀüÃ¼ Å¸ÀÔ °øÅë (GameObject ±âÁØ)
+    private Dictionary<POOL_TYPE, List<GameObject>> _pools = new Dictionary<POOL_TYPE, List<GameObject>>();
 
-    // DisableAllProjectiles() ëŒ€ìƒ íƒ€ì… ëª©ë¡ (íˆ¬ì‚¬ì²´ ì „ìš©)
+    // Åõ»çÃ¼ Àü¿ë Ä³½Ì(±âÁ¸ InitPool¿¡¼­ °è¼Ó GetBullet
+    private Dictionary<POOL_TYPE, List<Projectile>> _projectilePools = new Dictionary<POOL_TYPE, List<Projectile>>();
+
+    // DisableAllProjectiles() ´ë»ó ¸ñ·Ï (Åõ»çÃ¼¸¸)
     private static readonly POOL_TYPE[] _projectileTypes =
     {
         POOL_TYPE.BULLET,
@@ -82,7 +84,7 @@ public class PoolManager : MonoBehaviour
     };
 
     // =====================================================================
-    // ì´ˆê¸°í™”
+    // ÃÊ±âÈ­
     // =====================================================================
     private void Awake()
     {
@@ -94,51 +96,69 @@ public class PoolManager : MonoBehaviour
         }
         else if (instance != this)
         {
-            Debug.LogWarning("[PoolManager] ì¤‘ë³µ ê°ì§€. ê¸°ì¡´ ì¸ìŠ¤í„´ìŠ¤ ìœ ì§€, ì´ ì˜¤ë¸Œì íŠ¸ íŒŒê´´");
+            Debug.LogWarning("[PoolManager] Áßº¹ °¨Áö. ±âÁ¸ ÀÎ½ºÅÏ½º À¯Áö, »õ ¿ÀºêÁ§Æ® ÆÄ±«");
             Destroy(gameObject);
         }
     }
 
-    /// <summary>poolConfigs ìˆœíšŒ â†’ ê° í’€ ì´ˆê¸°í™”.</summary>
+    /// <summary>poolConfigs ¼øÈ¸ ÈÄ °¢ Ç® ÃÊ±âÈ­</summary>
     private void InitPools()
     {
         foreach (var config in poolConfigs)
         {
             if (config.prefab == null)
             {
-                Debug.LogError($"[PoolManager] {config.poolType} prefabì´ ë¹„ì–´ìˆìŒ! ì¸ìŠ¤í™í„°ì—ì„œ ì—°ê²° í•„ìš”");
+                Debug.LogError($"[PoolManager] {config.poolType} prefab ¹Ì¿¬°á! ÀÎ½ºÆåÅÍ È®ÀÎ ÇÊ¿ä");
                 continue;
             }
 
+            bool isProjectile = System.Array.IndexOf(_projectileTypes, config.poolType) >= 0;
+
             var pool = new List<GameObject>(config.initialSize);
+
+            if (isProjectile)
+                _projectilePools[config.poolType] = new List<Projectile>(config.initialSize);
+
             for (int i = 0; i < config.initialSize; i++)
             {
-                GameObject obj = Instantiate(config.prefab, this.transform); // DontDestroyOnLoad ìœ ì§€ë¥¼ ìœ„í•´ PoolManager ìì‹ìœ¼ë¡œ
+                // this.transform ÁöÁ¤ , ¾ÀÀüÈ¯ ½Ã ¼Ò¸ê ¹æÁö
+                GameObject obj = Instantiate(config.prefab, this.transform);
                 obj.SetActive(false);
                 pool.Add(obj);
+
+                // Åõ»çÃ¼ Å¸ÀÔÀÌ¸é Projectile ÄÄÆ÷³ÍÆ®¸¦ ÃÊ±âÈ­ ½ÃÁ¡¿¡ Ä³½Ì
+                // ´Ù¸¥ ¾ÆÀÌÅÛµî ¸¹ÀÌ »ç¿ëµÉ°Íµéµµ Â÷ÈÄ Ãß°¡ Ä³½Ì
+                if (isProjectile)
+                {
+                    Projectile proj = obj.GetComponent<Projectile>();
+                    if (proj != null)
+                        _projectilePools[config.poolType].Add(proj);
+                }
+
+                //if(isItem)¾îÂ¼±¸
             }
             _pools[config.poolType] = pool;
         }
     }
 
     // =====================================================================
-    // ë²”ìš© Get / Return
-    // ì , ì•„ì´í…œ, ì´í™íŠ¸ ë“± íˆ¬ì‚¬ì²´ ì™¸ íƒ€ì…ì€ ì´ ë©”ì„œë“œë¡œ ì‚¬ìš©
+    // ¹ü¿ë Get / Return
+    // Àû, ¾ÆÀÌÅÛ, ÀÌÆåÆ® µî GameObject ¹İÈ¯ÀÌ ÇÊ¿äÇÑ °æ¿ì Á÷Á¢ »ç¿ë
     // =====================================================================
 
     /// <summary>
-    /// í•´ë‹¹ POOL_TYPEì˜ ë¹„í™œì„± ì˜¤ë¸Œì íŠ¸ ë°˜í™˜.
-    /// í’€ ì†Œì§„ ì‹œ ìë™ í™•ì¥ í›„ ë°˜í™˜.
+    /// ÇØ´ç POOL_TYPEÀÇ ºñÈ°¼º ¿ÀºêÁ§Æ® ¹İÈ¯.
+    /// Ç® ºÎÁ· ½Ã ÀÚµ¿ È®Àå ÈÄ ¹İÈ¯.
     /// </summary>
     public GameObject Get(POOL_TYPE poolType)
     {
         if (!_pools.TryGetValue(poolType, out var pool))
         {
-            Debug.LogError($"[PoolManager] í’€ ì—†ìŒ: {poolType}. poolConfigsì— ë“±ë¡ í•„ìš”.");
+            Debug.LogError($"[PoolManager] Ç® ¾øÀ½: {poolType}. poolConfigs¿¡ µî·Ï ÇÊ¿ä.");
             return null;
         }
 
-        // ë¹„í™œì„± ì˜¤ë¸Œì íŠ¸ íƒìƒ‰
+        // ºñÈ°¼º ¿ÀºêÁ§Æ® Å½»ö
         foreach (var obj in pool)
         {
             if (!obj.activeInHierarchy)
@@ -148,31 +168,101 @@ public class PoolManager : MonoBehaviour
             }
         }
 
-        // í’€ ì†Œì§„ â†’ ìë™ í™•ì¥
+        // Ç® ºÎÁ· ¡æ ÀÚµ¿ È®Àå
         PoolEntry config = System.Array.Find(poolConfigs, c => c.poolType == poolType);
-        GameObject newObj = Instantiate(config.prefab);
+        if (config == null)
+        {
+            Debug.LogError($"[PoolManager] {poolType} config null - poolConfigs È®ÀÎ");
+            return null;
+        }
+
+        // this.transform ÁöÁ¤ ¡æ DontDestroyOnLoad ¾À¿¡ ±Í¼Ó
+        GameObject newObj = Instantiate(config.prefab, this.transform);
         pool.Add(newObj);
-        Debug.LogWarning($"[PoolManager] {poolType} í’€ ì†Œì§„. ìë™ í™•ì¥. í˜„ì¬ í¬ê¸°: {pool.Count}");
+
+        // Åõ»çÃ¼ Å¸ÀÔÀÌ¸é Projectile Ä³½Ã¿¡µµ Ãß°¡
+        bool isProjectile = System.Array.IndexOf(_projectileTypes, poolType) >= 0;
+        if (isProjectile && _projectilePools.ContainsKey(poolType))
+        {
+            Projectile proj = newObj.GetComponent<Projectile>();
+            if (proj != null)
+                _projectilePools[poolType].Add(proj);
+        }
+
+        Debug.LogWarning($"[PoolManager] {poolType} ÀÚµ¿ È®Àå. ÇöÀç ¼ö: {pool.Count}");
         newObj.SetActive(true);
         return newObj;
     }
 
-    /// <summary>ì˜¤ë¸Œì íŠ¸ë¥¼ í’€ë¡œ ë°˜ë‚© (ë¹„í™œì„±í™”). ëª¨ë“  íƒ€ì… ê³µìš©.</summary>
+    /// <summary>¿ÀºêÁ§Æ®¸¦ Ç®·Î ¹İ³³ (ºñÈ°¼ºÈ­). ¸ğµç Å¸ÀÔ °ø¿ë.</summary>
     public void Return(GameObject obj)
     {
         obj.SetActive(false);
     }
 
     // =====================================================================
-    // íˆ¬ì‚¬ì²´ ì „ìš© ë˜í¼ (ê¸°ì¡´ ì½”ë“œ í˜¸í™˜ ìœ ì§€)
-    // ë‚´ë¶€ì ìœ¼ë¡œ Get(POOL_TYPE) í˜¸ì¶œ í›„ ì»´í¬ë„ŒíŠ¸ ìºìŠ¤íŒ…
+    // Åõ»çÃ¼ Àü¿ë Get (GetComponent Ä³½Ì Àû¿ë)
+    // ¹ß»ç ºóµµ°¡ ³ôÀ¸¹Ç·Î ¸Å È£Ãâ ½Ã GetComponent ÇÏÁö ¾ÊÀ½.
+    // ±âÁ¸ GetBullet/GetMissile µî°ú È£Ãâ ¹æ¹ı µ¿ÀÏ.
     // =====================================================================
 
     /// <summary>
-    /// PROJECTILE_TYPE â†’ í•´ë‹¹ Projectile í•˜ìœ„ ì»´í¬ë„ŒíŠ¸ ë°˜í™˜.
-    /// Player/Enemy ë°œì‚¬ ë¡œì§ì—ì„œ ì‚¬ìš©.
+    /// Åõ»çÃ¼ Ä³½Ã¿¡¼­ ºñÈ°¼º Projectile ¹İÈ¯.
+    /// Ä³½Ã ¼ÒÁø ½Ã Get()À¸·Î ÀÚµ¿ È®Àå.
     /// </summary>
-    public Projectile GetProjectile(PROJECTILE_TYPE shootType)
+    private Projectile GetCachedProjectile(POOL_TYPE poolType)
+    {
+        if (_projectilePools.TryGetValue(poolType, out var projPool))
+        {
+            foreach (var proj in projPool)
+            {
+                if (proj != null && !proj.gameObject.activeInHierarchy)
+                {
+                    proj.gameObject.SetActive(true);
+                    return proj;
+                }
+            }
+        }
+
+        // Ä³½Ã ¼ÒÁø ¡æ Get()À¸·Î È®Àå (³»ºÎ¿¡¼­ Ä³½Ãµµ °°ÀÌ Ãß°¡µÊ)
+        GameObject newObj = Get(poolType);
+        if (newObj == null) return null;
+        return newObj.GetComponent<Projectile>();
+    }
+
+	// ±âÁ¸ È£ÃâºÎ º¯°æ ¾øÀÌ »ç¿ë °¡´É
+	public Bullet GetBullet()
+	{
+		return GetCachedProjectile(POOL_TYPE.BULLET) as Bullet;
+	}
+
+	public Missile GetMissile()
+	{
+		return GetCachedProjectile(POOL_TYPE.MISSILE) as Missile;
+	}
+
+	public Laser GetLaser()
+	{
+		return GetCachedProjectile(POOL_TYPE.LASER) as Laser;
+	}
+	/// <summary>
+	/// Å¬·¯½ºÅÍ ¹Ì»çÀÏ. ²¨³½ ÈÄ ¹İµå½Ã Init() È£Ãâ.
+	/// </summary>
+	public ClusterMissile GetClusterMissile()
+	{
+		return GetCachedProjectile(POOL_TYPE.CLUSTER_MISSILE) as ClusterMissile;
+	}
+	/// <summary>
+	/// À¯µµ¾ø´Â ¹Ì»çÀÏ. ²¨³½ ÈÄ ¹İµå½Ã Init() È£Ãâ.
+	/// </summary>
+	public DumbMissile GetDumbMissile()
+	{
+		return GetCachedProjectile(POOL_TYPE.DUMB_MISSILE) as DumbMissile;
+	}
+
+
+	/// <summary>PROJECTILE_TYPEÀ¸·Î Åõ»çÃ¼ ²¨³»±â. Player/Enemy °ø¿ë.</summary>
+	public Projectile GetProjectile(PROJECTILE_TYPE shootType)
     {
         switch (shootType)
         {
@@ -180,42 +270,24 @@ public class PoolManager : MonoBehaviour
             case PROJECTILE_TYPE.MISSILE: return GetMissile();
             case PROJECTILE_TYPE.LASER:   return GetLaser();
             default:
-                Debug.LogWarning($"[PoolManager] GetProjectile: ë¯¸ì²˜ë¦¬ íƒ€ì… {shootType}");
+                Debug.LogWarning($"[PoolManager] GetProjectile: ¹ÌÁö¿ø Å¸ÀÔ {shootType}");
                 return null;
         }
     }
 
-    // í´ëŸ¬ìŠ¤í„°/ë¤ ë¯¸ì‚¬ì¼ì€ ë³„ë„ Get ë©”ì„œë“œ ìœ ì§€
-    // (PROJECTILE_TYPEì— ì—†ê³  ë°œì‚¬ ë¡œì§ì´ ë”°ë¡œ ìˆì–´ì„œ)
-    public Bullet         GetBullet()          => Get(POOL_TYPE.BULLET)?.GetComponent<Bullet>();
-    public Missile        GetMissile()         => Get(POOL_TYPE.MISSILE)?.GetComponent<Missile>();
-    public Laser          GetLaser()           => Get(POOL_TYPE.LASER)?.GetComponent<Laser>();
-
-    /// <summary>
-    /// í´ëŸ¬ìŠ¤í„° ë¯¸ì‚¬ì¼. í­ë°œ ì‹œ MultiLockedTargets ìˆ˜ë§Œí¼ HOMING ë¶„ì—´ ë°œì‚¬ ì˜ˆì •.
-    /// êº¼ë‚¸ í›„ ë°˜ë“œì‹œ Init() í˜¸ì¶œ.
-    /// </summary>
-    public ClusterMissile GetClusterMissile()  => Get(POOL_TYPE.CLUSTER_MISSILE)?.GetComponent<ClusterMissile>();
-
-    /// <summary>
-    /// ë¤ ë¯¸ì‚¬ì¼. ì§ì§„ í›„ ëŒ€ë²”ìœ„ í­ë°œ ì˜ˆì •.
-    /// êº¼ë‚¸ í›„ ë°˜ë“œì‹œ Init() í˜¸ì¶œ.
-    /// </summary>
-    public DumbMissile    GetDumbMissile()     => Get(POOL_TYPE.DUMB_MISSILE)?.GetComponent<DumbMissile>();
-
-    /// <summary>Projectile.ReturnToPool()ì—ì„œ í˜¸ì¶œ. ê¸°ì¡´ ì¸í„°í˜ì´ìŠ¤ ìœ ì§€.</summary>
+    /// <summary>Projectile.ReturnToPool()¿¡¼­ È£Ãâ. ºñÈ°¼ºÈ­·Î ¹İ³³.</summary>
     public void ReturnProjectile(Projectile projectile)
     {
         projectile.gameObject.SetActive(false);
     }
 
     // =====================================================================
-    // ì”¬ ì „í™˜ / ê²Œì„ì˜¤ë²„ ì‹œ ì¼ê´„ ë¹„í™œì„±í™”
+    // ¾À ÀüÈ¯ / °ÔÀÓ¿À¹ö ½Ã Åõ»çÃ¼ ÀüÃ¼ ºñÈ°¼ºÈ­
     // =====================================================================
 
     /// <summary>
-    /// ì”¬ ì „í™˜/ê²Œì„ì˜¤ë²„ ì‹œ GameManagerì—ì„œ í˜¸ì¶œ.
-    /// íˆ¬ì‚¬ì²´ íƒ€ì…(_projectileTypes)ë§Œ ì¼ê´„ ë¹„í™œì„±í™”.
+    /// ¾À ÀüÈ¯/°ÔÀÓ¿À¹ö ½Ã GameManager¿¡¼­ È£Ãâ.
+    /// Åõ»çÃ¼(_projectileTypes) ÀüÃ¼ ºñÈ°¼ºÈ­.
     /// </summary>
     public void DisableAllProjectiles()
     {
@@ -223,16 +295,31 @@ public class PoolManager : MonoBehaviour
             DisableAll(type);
     }
 
-    /// <summary>íŠ¹ì • POOL_TYPE ì „ì²´ ë¹„í™œì„±í™”.</summary>
+    /// <summary>Æ¯Á¤ POOL_TYPE ÀüÃ¼ ºñÈ°¼ºÈ­.</summary>
     public void DisableAll(POOL_TYPE poolType)
     {
         if (_pools.TryGetValue(poolType, out var pool))
+        {
             foreach (var obj in pool)
+            {
                 obj.SetActive(false);
+            }
+        }
     }
 
-    // ê°œë³„ ë¹„í™œì„±í™” (í•„ìš” ì‹œ ì™¸ë¶€ì—ì„œ ì§ì ‘ í˜¸ì¶œ)
-    public void DisableBullet()  => DisableAll(POOL_TYPE.BULLET);
-    public void DisableMissile() => DisableAll(POOL_TYPE.MISSILE);
-    public void DisableLaser()   => DisableAll(POOL_TYPE.LASER);
+	// °³º° ºñÈ°¼ºÈ­ (ÇÊ¿ä ½Ã ¿ÜºÎ¿¡¼­ Á÷Á¢ È£Ãâ)
+	public void DisableBullet()
+	{
+		DisableAll(POOL_TYPE.BULLET);
+	}
+
+	public void DisableMissile()
+	{
+		DisableAll(POOL_TYPE.MISSILE);
+	}
+
+	public void DisableLaser()
+	{
+		DisableAll(POOL_TYPE.LASER);
+	}
 }
