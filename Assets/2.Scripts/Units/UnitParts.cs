@@ -15,24 +15,29 @@ public class UnitParts : MonoBehaviour
     private Unit _unit;
     private WeaponSystem _weaponSystem;
 
-    [Header("<size=14>파츠 슬롯 (출력용, 스크립트에서 자동입력)</size>")]
+    // ENGINE, FRAME은 프레임과 무관하게 항상 존재하는 기본 슬롯
+    private static readonly PART_TYPE[] BASE_SLOT_TYPES = { PART_TYPE.ENGINE, PART_TYPE.FRAME };
+
+    [Header("<size=14>파츠 슬롯 (출력용)</size>")]
     public List<PartSlotEntry> partSlots = new List<PartSlotEntry>();
 
     private void Awake()
     {
         _unit = GetComponent<Unit>();
         _weaponSystem = GetComponent<WeaponSystem>();
+        EnsureBaseSlots();
+    }
 
-        if (partSlots.Count == 0)
+    // ENGINE, FRAME 슬롯이 없으면 자동 생성. 나머지는 프레임이 결정.
+    private void EnsureBaseSlots()
+    {
+        if (GetSlot(PART_TYPE.ENGINE) == null)
         {
-            partSlots.Add(new PartSlotEntry { slotType = PART_TYPE.ENGINE });
-            partSlots.Add(new PartSlotEntry { slotType = PART_TYPE.FRAME });
-            partSlots.Add(new PartSlotEntry { slotType = PART_TYPE.ARMOR });
-            partSlots.Add(new PartSlotEntry { slotType = PART_TYPE.LAUNCHER_MISSILE });
-            partSlots.Add(new PartSlotEntry { slotType = PART_TYPE.LAUNCHER_BULLET });
-            partSlots.Add(new PartSlotEntry { slotType = PART_TYPE.THRUSTER });
-            //필요시 계속 추가
-            //partSlots.Add(new PartSlotEntry { slotType = PART_TYPE. })
+            partSlots.Insert(0, new PartSlotEntry { slotType = PART_TYPE.ENGINE });
+        }
+        if (GetSlot(PART_TYPE.FRAME) == null)
+        {
+            partSlots.Insert(1, new PartSlotEntry { slotType = PART_TYPE.FRAME });
         }
     }
 
@@ -52,6 +57,7 @@ public class UnitParts : MonoBehaviour
 
     /// <summary>
     /// 지정 슬롯에 파츠 장착. 기존 파츠는 자동 해제.
+    /// FRAME 장착 시 providedSlots 기반으로 슬롯 재구성.
     /// </summary>
     public void Equip(PART_TYPE slotType, PartData newPart)
     {
@@ -74,6 +80,12 @@ public class UnitParts : MonoBehaviour
         {
             SpawnPartPrefab(slot);
             ApplyStatBonuses(newPart, 1);
+        }
+
+        // 프레임 교체 시 슬롯 재구성
+        if (slotType == PART_TYPE.FRAME)
+        {
+            RebuildSlotsFromFrame(newPart);
         }
     }
 
@@ -140,6 +152,57 @@ public class UnitParts : MonoBehaviour
     }
 
 
+    // ================== [프레임 슬롯 재구성] ==================
+
+    /// <summary>
+    /// 프레임의 providedSlots 기준으로 비기본 슬롯 재구성.
+    /// 기존 장착 파츠는 해제되며 인벤토리 반환은 호출부(격납고 UI)에서 처리.
+    /// </summary>
+    private void RebuildSlotsFromFrame(PartData frameData)
+    {
+        // 비기본 슬롯 전부 해제 후 제거 (뒤에서부터 순회)
+        for (int i = partSlots.Count - 1; i >= 0; i--)
+        {
+            PartSlotEntry slot = partSlots[i];
+
+            bool isBase = false;
+            foreach (PART_TYPE baseType in BASE_SLOT_TYPES)
+            {
+                if (slot.slotType == baseType)
+                {
+                    isBase = true;
+                    break;
+                }
+            }
+
+            if (isBase)
+            {
+                continue;
+            }
+
+            if (slot.equippedPart != null)
+            {
+                DestroyPartPrefab(slot);
+                ApplyStatBonuses(slot.equippedPart, -1);
+                slot.equippedPart = null;
+            }
+
+            partSlots.RemoveAt(i);
+        }
+
+        if (frameData == null)
+        {
+            return;
+        }
+
+        // 프레임이 정의한 슬롯 추가
+        foreach (PART_TYPE slotType in frameData.providedSlots)
+        {
+            partSlots.Add(new PartSlotEntry { slotType = slotType });
+        }
+    }
+
+
     // ================== [파츠 프리팹 처리] ==================
 
     /// <summary>
@@ -158,6 +221,7 @@ public class UnitParts : MonoBehaviour
         }
 
         slot.spawnedInstance = Instantiate(slot.equippedPart.partPrefab, transform);
+        slot.spawnedInstance.transform.localPosition = slot.equippedPart.mountOffset;
 
         // WeaponFirePos 마커가 붙은 자식을 전부 찾아 WeaponSystem에 등록
         WeaponFirePos[] firePoses = slot.spawnedInstance.GetComponentsInChildren<WeaponFirePos>();
