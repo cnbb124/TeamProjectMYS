@@ -78,7 +78,7 @@ public enum WEAPON_POS_TYPE
     BULLET,   // 총알 총구 — LAUNCHER_BULLET 파츠
     MISSILE,  // 미사일 총구 — LAUNCHER_MISSILE 파츠
     LASER,    // 레이저 총구 — LAUNCHER_LASER 파츠
-    THRUSTER, // 부스터 이펙트 위치 — THRUSTER 파츠 (이펙트 시스템 구현 시 연동)
+    
 }
 
 public enum SOUND_TYPE
