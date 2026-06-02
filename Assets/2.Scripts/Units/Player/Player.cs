@@ -7,9 +7,9 @@ using UnityEngine;
 
 
 //
-// ÇÃ·¹ÀÌ¾î Àü¿ë ÄÄÆ÷³ÍÆ®.
-// UnitÀ» »ó¼Ó¹Ş¾Æ ½ºÅÈ/FSM/µ¥¹ÌÁö Ã³¸®´Â Unit¿¡¼­,
-// ÇÃ·¹ÀÌ¾î ÀÔ·ÂÀ» ¹Ş´Â ÀÌµ¿/È¸Àü/»ç°İ ÀÔ·Â Ã³¸®´Â ¿©±â¼­ ´ã´ç.
+// í”Œë ˆì´ì–´ ì „ìš© ì»´í¬ë„ŒíŠ¸.
+// Unitì„ ìƒì†ë°›ì•„ ìŠ¤íƒ¯/FSM/ë°ë¯¸ì§€ ì²˜ë¦¬ëŠ” Unitì—ì„œ,
+// í”Œë ˆì´ì–´ ì…ë ¥ì„ ë°›ëŠ” ì´ë™/íšŒì „/ì‚¬ê²© ì…ë ¥ ì²˜ë¦¬ëŠ” ì—¬ê¸°ì„œ ë‹´ë‹¹.
 
 
 
@@ -17,62 +17,67 @@ public class Player : Unit
 {
 
 
-	// ÃÑ¾Ë ±³´ë ¹ß»ç¿ë ÀÎµ¦½º (0=¿ŞÂÊ, 1=¿À¸¥ÂÊ ¡æ 0¡æ1¡æ0 ¼øÈ¯)
-	// bulletFirePos´Â Unit¿¡ ÀÖ´Â ¹è¿­ ±×´ë·Î »ç¿ë
-	// missileFirePos, laserFirePosµµ Unit ±×´ë·Î »ç¿ë
+	// ì´ì•Œ êµëŒ€ ë°œì‚¬ìš© ì¸ë±ìŠ¤ (0=ì™¼ìª½, 1=ì˜¤ë¥¸ìª½ â†’ 0â†’1â†’0 ìˆœí™˜)
+	// bulletFirePosëŠ” Unitì— ìˆëŠ” ë°°ì—´ ê·¸ëŒ€ë¡œ ì‚¬ìš©
+	// missileFirePos, laserFirePosë„ Unit ê·¸ëŒ€ë¡œ ì‚¬ìš©
 	// =================================================
 
-	//¸Å´ÏÀú ÇÒ´ç¿ë ·¹ÆÛ·±½º
+	//ë§¤ë‹ˆì € í• ë‹¹ìš© ë ˆí¼ëŸ°ìŠ¤
 	private InputManager _input;
 
 
 
 
 
-	// ==================È¸Àü °¨µµ==================
+	// ==================íšŒì „ ê°ë„==================
 	[Header("")]
 	[Space(10)]
-	[Header("<size=18>ÇÃ·¹ÀÌ¾î ¼³Á¤<size>")]
-	[Header("¸¶¿ì½º °¨µµ")]
-	[Tooltip("¸¶¿ì½º ÁÂ¿ì È¸Àü(Yaw) °¨µµ")]
+	[Header("<size=18>í”Œë ˆì´ì–´ ì„¤ì •<size>")]
+	[Header("ë§ˆìš°ìŠ¤ ê°ë„")]
+	[Tooltip("ë§ˆìš°ìŠ¤ ì¢Œìš° íšŒì „(Yaw) ê°ë„")]
 	public float xSensitivity = 120f;
 
-	[Tooltip("¸¶¿ì½º »óÇÏ È¸Àü(Pitch) °¨µµ")]
+	[Tooltip("ë§ˆìš°ìŠ¤ ìƒí•˜ íšŒì „(Pitch) ê°ë„")]
 	public float ySensitivity = 120f;
 
-	[Tooltip("Q/E ·Ñ(ZÃà È¸Àü) °¨µµ")]
+	[Tooltip("Q/E ë¡¤(Zì¶• íšŒì „) ê°ë„")]
 	public float rollSensitivity = 120f;
 
 
-	// ==================ÇÃ·¹ÀÌ¾î¿ë==================
-	[Header("°æÇèÄ¡/·¹º§")]
-	[Tooltip("ÇöÀç ·¹º§. ÃÖ¼Ò 1")]
-	public int level = 1;//Â÷ÈÄ mathf.maxÄ¡·Î Á¶Á¤
+	// ==================í”Œë ˆì´ì–´ìš©==================
+	[Header("ê²½í—˜ì¹˜/ë ˆë²¨")]
+	[Tooltip("í˜„ì¬ ë ˆë²¨. ìµœì†Œ 1")]
+	public int level = 1;//ì°¨í›„ mathf.maxì¹˜ë¡œ ì¡°ì •
 
-	[Tooltip("ÇöÀç º¸À¯ °æÇèÄ¡. À½¼ö ºÒ°¡")]
-	public int exp = 0;//Â÷ÈÄ mathf.maxÄ¡·Î Á¶Á¤
+	[Tooltip("í˜„ì¬ ë³´ìœ  ê²½í—˜ì¹˜. ìŒìˆ˜ ë¶ˆê°€")]
+	public int exp = 0;//ì°¨í›„ mathf.maxì¹˜ë¡œ ì¡°ì •
 
-	[Tooltip("ÇöÀç ·¹º§¿¡¼­ ´ÙÀ½ ·¹º§±îÁö ÇÊ¿äÇÑ °æÇèÄ¡")]
+	[Tooltip("í˜„ì¬ ë ˆë²¨ì—ì„œ ë‹¤ìŒ ë ˆë²¨ê¹Œì§€ í•„ìš”í•œ ê²½í—˜ì¹˜")]
 	public int expToNextLevel = 100;
 
 	
 
-	// ==================¶ô¿Â ½Ã½ºÅÛ==================
+	// ==================ë½ì˜¨ ì‹œìŠ¤í…œ==================
+
+    [Header("íšŒí”¼")]
+    [Tooltip("íšŒí”¼ ì‹œ ê°€í•´ì§€ëŠ” ìˆœê°„ í˜")]
+    public float dodgeForce = 800f;
+    private Vector3 _dodgeDir;
 
 
 	protected override void Awake()
 	{
 		base.Awake();
-		// ¿ìÁÖ °ø°£ = Áß·Â ¾øÀ½. È¸ÀüÀº Á÷Á¢ Á¦¾îÇÏ¹Ç·Î ¹°¸® È¸Àü °íÁ¤
+		// ìš°ì£¼ ê³µê°„ = ì¤‘ë ¥ ì—†ìŒ. íšŒì „ì€ ì§ì ‘ ì œì–´í•˜ë¯€ë¡œ ë¬¼ë¦¬ íšŒì „ ê³ ì •
 		_rb.useGravity = false;
 		_rb.freezeRotation = true;
 	}
 	// Start is called before the first frame update
 	protected override void Start()
 	{
-		base.Start(); //À¯´Ö ÃÊ±âÈ­ È£Ãâ
+		base.Start(); //ìœ ë‹› ì´ˆê¸°í™” í˜¸ì¶œ
 		_input = InputManager.Instance;
-		// °ÔÀÓ ½ÃÀÛ ½Ã 1¹ø ½½·Ô ¹«±â·Î ÃÊ±âÈ­
+		// ê²Œì„ ì‹œì‘ ì‹œ 1ë²ˆ ìŠ¬ë¡¯ ë¬´ê¸°ë¡œ ì´ˆê¸°í™”
 		weaponSystem.Init();
 	}
 
@@ -80,17 +85,17 @@ public class Player : Unit
 	protected override void Update()
 	{
 		if (ShouldPause) return;
-		base.Update(); //FSM, ½Çµå/ºÎ½ºÆ® È¸º¹ È£Ãâ
-					   // ÀÔ·ÂÃ³¸® - InputManager ±¸Çö µÚ ¿©±â¼­ È£Ãâ
+		base.Update(); //FSM, ì‹¤ë“œ/ë¶€ìŠ¤íŠ¸ íšŒë³µ í˜¸ì¶œ
+					   // ì…ë ¥ì²˜ë¦¬ - InputManager êµ¬í˜„ ë’¤ ì—¬ê¸°ì„œ í˜¸ì¶œ
 					   // ex. InputManager.Instance.HandleInput(this);
 		
 		if (_input == null)
 		{
 			return;
 		}
-		//==========È¤¿©³ª ¾÷µ«ÀÌ ÀÔ·Â¾øÀ»¶§µµ ÇÊ¿äÇÑ°Ô¤À ÀÖÀ¸¸é ÀÌ À§·Î ÀÔ·ÂÇĞ¤©°Í=========
-		//¹Ì»çÀÏ ÀåÂø Åä±Û Ã³¸®(¿Â¿ÀÇÁ) »óÅÂº¯È­ °ü·ÃÀÌ¹Ç·Î Áï½Ã Update·Î
-		// ¹Ì»çÀÏ ½½·Ô ÀüÈ¯ - WeaponSystem À§ÀÓ
+		//==========í˜¹ì—¬ë‚˜ ì—…ëƒì´ ì…ë ¥ì—†ì„ë•Œë„ í•„ìš”í•œê²Œã… ìˆìœ¼ë©´ ì´ ìœ„ë¡œ ì…ë ¥í•™ã„¹ê²ƒ=========
+		//ë¯¸ì‚¬ì¼ ì¥ì°© í† ê¸€ ì²˜ë¦¬(ì˜¨ì˜¤í”„) ìƒíƒœë³€í™” ê´€ë ¨ì´ë¯€ë¡œ ì¦‰ì‹œ Updateë¡œ
+		// ë¯¸ì‚¬ì¼ ìŠ¬ë¡¯ ì „í™˜ - WeaponSystem ìœ„ì„
 		if (_input.switchMissileNext)
 		{
 			weaponSystem.SwitchMissileNext();
@@ -109,7 +114,7 @@ public class Player : Unit
 		{
 			weaponSystem.ToggleFireMode();
 		}
-		// ¸Å ÇÁ·¹ÀÓ ÀÜÅºÀ» Ã¼Å©ÇÏ¿© ÁÂ¿ì ÀåÂø ¿©ºÎ °»½Å
+		// ë§¤ í”„ë ˆì„ ì”íƒ„ì„ ì²´í¬í•˜ì—¬ ì¢Œìš° ì¥ì°© ì—¬ë¶€ ê°±ì‹ 
 		weaponSystem.UpdateEquipStatus();
 		ShootByInput();
 	}
@@ -118,28 +123,42 @@ public class Player : Unit
 	{
 		if (ShouldPause) return;
 
-		//Ç×»ó È¸ÀüÀÌ¸ÕÀú!!!
+		//í•­ìƒ íšŒì „ì´ë¨¼ì €!!!
 		RotateByInput();
 		MovingByInput();
 
 	}
 
 
-	// ==================================»óÅÂ ¾÷µ¥ÀÌÆ® °ü·Ã=======================
+	// ==================================ìƒíƒœ ì—…ë°ì´íŠ¸ ê´€ë ¨=======================
 	/// <summary>
-	/// ÀÜÅº°ú ¹ß»ç ¸ğµå¿¡ µû¶ó ÁÂ/¿ì ÃÑ±¸ÀÇ È°¼ºÈ­ »óÅÂ(isMissile_Equipped)¸¦ °»½Å
-	/// ±âÁ¸ Shoot() ¸Ş¼­µåÀÇ if¹®À» Á¦¾îÇÏ´Â ½ºÀ§Ä¡ ¿ªÇÒ
+	/// ì”íƒ„ê³¼ ë°œì‚¬ ëª¨ë“œì— ë”°ë¼ ì¢Œ/ìš° ì´êµ¬ì˜ í™œì„±í™” ìƒíƒœ(isMissile_Equipped)ë¥¼ ê°±ì‹ 
+	/// ê¸°ì¡´ Shoot() ë©”ì„œë“œì˜ ifë¬¸ì„ ì œì–´í•˜ëŠ” ìŠ¤ìœ„ì¹˜ ì—­í• 
 	/// </summary>
 
 
-	//===============override ¸Ş¼­µå FSM==================
+	//===============override ë©”ì„œë“œ FSM==================
 	protected override void OnStateEnter(UNIT_STATE state)
 	{
 		base.OnStateEnter(state);
 		switch (state)
 		{
+            case UNIT_STATE.DODGE:
+                if (_input != null && _input.moveInput.magnitude > 0.1f)
+                {
+                    _dodgeDir = transform.forward * _input.moveInput.z
+                              + transform.right   * _input.moveInput.x
+                              + transform.up      * _input.moveInput.y;
+                    _dodgeDir.Normalize();
+                }
+                else
+                {
+                    _dodgeDir = transform.forward;
+                }
+                _rb.AddForce(_dodgeDir * dodgeForce, ForceMode.Impulse);
+                break;
 			case UNIT_STATE.DIE:
-				Debug.Log("[Player] »ç¸Á");
+				Debug.Log("[Player] ì‚¬ë§");
 				
 				break;
 		}
@@ -150,63 +169,63 @@ public class Player : Unit
 	protected override void OnDodge() { }
 	protected override void OnDying() { }
 
-	// ÇÇ°İ ¹İµ¿ - Ä«¸Ş¶ó ½¦ÀÌÅ©, ³Ë¹é µî
+	// í”¼ê²© ë°˜ë™ - ì¹´ë©”ë¼ ì‰ì´í¬, ë„‰ë°± ë“±
 	protected override void OnHitReaction(DamageInfo info)
 	{
-		// Å©¸®Æ¼ÄÃÀÌ¸é °­ÇÑ ½¦ÀÌÅ©
+		// í¬ë¦¬í‹°ì»¬ì´ë©´ ê°•í•œ ì‰ì´í¬
 		// ex. if (info.isCritical) CameraShake.Strong(); else CameraShake.Light();
 	}
 
-	// »ç¸ÁÃ³¸®
+	// ì‚¬ë§ì²˜ë¦¬
 	protected override void Die()
 	{
 		GameManager.Instance.GameOver();
-		//±âÅ¸ ÇÊ¿äÇÑ°Å ¹İ³³??¿©±â¼­ÇØ¾ßÇÏ³ª
+		//ê¸°íƒ€ í•„ìš”í•œê±° ë°˜ë‚©??ì—¬ê¸°ì„œí•´ì•¼í•˜ë‚˜
 	}
 
 	
 
 
 	// ===========================================
-	// Shoot - UnitÀÇ ¹è¿­ ÃÑ±¸ »ç¿ë
-	// ÃÑ¾Ë: ÁÂ¿ì ±³´ë °íÁ¤
-	// ¹Ì»çÀÏ: ÁÂ/¿ì
-	// ·¹ÀÌÀú: ¸Ó¸® Áß¾Ó °íÁ¤
-	// ALL: ÀüÃ¼ µ¿½Ã(ÃÑ¾ËÁ¦¿Ü)
+	// Shoot - Unitì˜ ë°°ì—´ ì´êµ¬ ì‚¬ìš©
+	// ì´ì•Œ: ì¢Œìš° êµëŒ€ ê³ ì •
+	// ë¯¸ì‚¬ì¼: ì¢Œ/ìš°
+	// ë ˆì´ì €: ë¨¸ë¦¬ ì¤‘ì•™ ê³ ì •
+	// ALL: ì „ì²´ ë™ì‹œ(ì´ì•Œì œì™¸)
 	// =================================================
 
 
-	//================InputManager¿¡¼­ ÀÔ·Â¹ŞÀ»½Ã ÀÛµ¿ÇÒ ÀÔ·ÂÃ³¸® Á¶ÀÛ°ü·Ã ¸Ş¼­µå=============
+	//================InputManagerì—ì„œ ì…ë ¥ë°›ì„ì‹œ ì‘ë™í•  ì…ë ¥ì²˜ë¦¬ ì¡°ì‘ê´€ë ¨ ë©”ì„œë“œ=============
 
-	// ´Ã È¸ÀüÈÄ ÀÌµ¿ÇÏ°Ô rotateºÎÅÍ È£ÃâÇÒ°Í
+	// ëŠ˜ íšŒì „í›„ ì´ë™í•˜ê²Œ rotateë¶€í„° í˜¸ì¶œí• ê²ƒ
 
 	/// <summary>
-	/// 	¹ß»ç (Update¿¡¼­ È£Ãâ)
-	/// 	ÀÔ·Â ±â¹İ ¹ß»ç ¸í·É Ã³¸®.
+	/// 	ë°œì‚¬ (Updateì—ì„œ í˜¸ì¶œ)
+	/// 	ì…ë ¥ ê¸°ë°˜ ë°œì‚¬ ëª…ë ¹ ì²˜ë¦¬.
 	/// </summary>
 
-	/// ½ÇÁ¦ Åõ»çÃ¼ »ı¼ºÀº Shoot() ³»ºÎ¿¡¼­ PoolManager È£Ãâ ¿¹Á¤.
-	/// GetKeyDown ¾ÃÈû ¹æÁö¸¦ À§ÇØ Update¿¡¼­ È£Ãâ.
+	/// ì‹¤ì œ íˆ¬ì‚¬ì²´ ìƒì„±ì€ Shoot() ë‚´ë¶€ì—ì„œ PoolManager í˜¸ì¶œ ì˜ˆì •.
+	/// GetKeyDown ì”¹í˜ ë°©ì§€ë¥¼ ìœ„í•´ Updateì—ì„œ í˜¸ì¶œ.
 
 	void ShootByInput()
 	{
-		//È¤¿©³ª ¹ö±×°É¸±½Ã ´Ù½Ã ¸Å´ÏÀú Á÷Á¢ÀÎ½ºÅÏ½ºÇÒ°Í. ½ºÅ¸Æ®¼ÓµµµîÀ¸·Î ¹ö±×³¯¼öÀÖµûÇÔ.
-		// ÃÑ¾Ë¹ß»ç ÀÔ·Â
+		//í˜¹ì—¬ë‚˜ ë²„ê·¸ê±¸ë¦´ì‹œ ë‹¤ì‹œ ë§¤ë‹ˆì € ì§ì ‘ì¸ìŠ¤í„´ìŠ¤í• ê²ƒ. ìŠ¤íƒ€íŠ¸ì†ë„ë“±ìœ¼ë¡œ ë²„ê·¸ë‚ ìˆ˜ìˆë”°í•¨.
+		// ì´ì•Œë°œì‚¬ ì…ë ¥
 		if (_input.fireBullet)
 		{
 			Shoot(PROJECTILE_TYPE.BULLET);
 		}
-		//¹Ì»çÀÏ ¹ß»ç ÀÔ·Â
+		//ë¯¸ì‚¬ì¼ ë°œì‚¬ ì…ë ¥
 		if (_input.fireMissile)
 		{
 			Shoot(PROJECTILE_TYPE.MISSILE);
 		}
-		//·¹ÀÌÀú¹ß»çÀÔ·Â
+		//ë ˆì´ì €ë°œì‚¬ì…ë ¥
 		if (_input.fireLaser)
 		{
 			Shoot(PROJECTILE_TYPE.LASER);
 		}
-		//ÀüÃ¼¹ß»ç(ÃÑ¾ËÁ¦¿Ü.ÃÑ¾ËÀº ÁÂÅ¬¸¯À¸·ÎÀ¯Áö)ÀÔ·Â
+		//ì „ì²´ë°œì‚¬(ì´ì•Œì œì™¸.ì´ì•Œì€ ì¢Œí´ë¦­ìœ¼ë¡œìœ ì§€)ì…ë ¥
 		if (_input.fireAll)
 		{
 			Shoot(PROJECTILE_TYPE.MISSILE);
@@ -215,30 +234,30 @@ public class Player : Unit
 	}
 
 	
-	//ºÎ½ºÆ® ·ÎÁ÷
-//W(ÀüÁø)     ¡æ BACK ºÎ½ºÅÍ(µÚ¿¡¼­ ¹Ğ¾îÁÜ)
-//S(ÈÄÁø)     ¡æ FRONT ºÎ½ºÅÍ(¾Õ¿¡¼­ ¹Ğ¾îÁÜ)
-//A(ÁÂÀÌµ¿)   ¡æ RIGHT ºÎ½ºÅÍ(¿À¸¥ÂÊ¿¡¼­ ¹Ğ¾îÁÜ)
-//D(¿ìÀÌµ¿)   ¡æ LEFT ºÎ½ºÅÍ(¿ŞÂÊ¿¡¼­ ¹Ğ¾îÁÜ)
-//Mouse4(»ó½Â) ¡æ ¾øÀ½ or ÇÏ´Ü ºÎ½ºÅÍ(ÃßÈÄ Ãß°¡)
-//Mouse3(ÇÏ°­) ¡æ ¾øÀ½ or »ó´Ü ºÎ½ºÅÍ(ÃßÈÄ Ãß°¡)
-//Q(ÁÂ·Ñ)     ¡æ À® rightdownºÎ½ºÅÍ, leftupºÎ½ºÅÍ
-//E(¿ì·Ñ)     ¡æ À® rightup ºÎ½ºÅÍ  leftdownºÎ½ºÅÍ
-//¸¶¿ì½º »óÇÏ  ¡æ FRONT or BACK ºÎ½ºÅÍ
-//¼Õ ¶À        ¡æ ¿ªºĞ»ç(¸ğµÎ ÄÑ°Å³ª ¹İ´ë ºÎ½ºÅÍ)
+	//ë¶€ìŠ¤íŠ¸ ë¡œì§
+//W(ì „ì§„)     â†’ BACK ë¶€ìŠ¤í„°(ë’¤ì—ì„œ ë°€ì–´ì¤Œ)
+//S(í›„ì§„)     â†’ FRONT ë¶€ìŠ¤í„°(ì•ì—ì„œ ë°€ì–´ì¤Œ)
+//A(ì¢Œì´ë™)   â†’ RIGHT ë¶€ìŠ¤í„°(ì˜¤ë¥¸ìª½ì—ì„œ ë°€ì–´ì¤Œ)
+//D(ìš°ì´ë™)   â†’ LEFT ë¶€ìŠ¤í„°(ì™¼ìª½ì—ì„œ ë°€ì–´ì¤Œ)
+//Mouse4(ìƒìŠ¹) â†’ ì—†ìŒ or í•˜ë‹¨ ë¶€ìŠ¤í„°(ì¶”í›„ ì¶”ê°€)
+//Mouse3(í•˜ê°•) â†’ ì—†ìŒ or ìƒë‹¨ ë¶€ìŠ¤í„°(ì¶”í›„ ì¶”ê°€)
+//Q(ì¢Œë¡¤)     â†’ ìœ™ rightdownë¶€ìŠ¤í„°, leftupë¶€ìŠ¤í„°
+//E(ìš°ë¡¤)     â†’ ìœ™ rightup ë¶€ìŠ¤í„°  leftdownë¶€ìŠ¤í„°
+//ë§ˆìš°ìŠ¤ ìƒí•˜  â†’ FRONT or BACK ë¶€ìŠ¤í„°
+//ì† ë—Œ        â†’ ì—­ë¶„ì‚¬(ëª¨ë‘ ì¼œê±°ë‚˜ ë°˜ëŒ€ ë¶€ìŠ¤í„°)
 
 	
-	// ==================È¸Àü (FixedUpdate¿¡¼­ È£Ãâ)==================
+	// ==================íšŒì „ (FixedUpdateì—ì„œ í˜¸ì¶œ)==================
 
 
-	// ¸¶¿ì½º/Å°º¸µå ÀÔ·ÂÀ¸·Î ¿ÀºêÁ§Æ® ÀÚÃ¼¸¦ 3Ãà È¸Àü.
-	// Rigidbody.freezeRotation = trueÀÌ¹Ç·Î transform.Rotate Á÷Á¢ »ç¿ë.
+	// ë§ˆìš°ìŠ¤/í‚¤ë³´ë“œ ì…ë ¥ìœ¼ë¡œ ì˜¤ë¸Œì íŠ¸ ìì²´ë¥¼ 3ì¶• íšŒì „.
+	// Rigidbody.freezeRotation = trueì´ë¯€ë¡œ transform.Rotate ì§ì ‘ ì‚¬ìš©.
 	//
-	// Yaw  (YÃà): ¸¶¿ì½º X ¡æ ÁÂ¿ì È¸Àü. Space.World ±âÁØ
-	// Pitch(XÃà): ¸¶¿ì½º Y ¡æ »óÇÏ È¸Àü. Space.Self ±âÁØ
-	// Roll (ZÃà): Q/E      ¡æ ÁÂ¿ì ½ºÇÉ. Space.Self ±âÁØ
+	// Yaw  (Yì¶•): ë§ˆìš°ìŠ¤ X â†’ ì¢Œìš° íšŒì „. Space.World ê¸°ì¤€
+	// Pitch(Xì¶•): ë§ˆìš°ìŠ¤ Y â†’ ìƒí•˜ íšŒì „. Space.Self ê¸°ì¤€
+	// Roll (Zì¶•): Q/E      â†’ ì¢Œìš° ìŠ¤í•€. Space.Self ê¸°ì¤€
 	// 
-	// Space.Self »ç¿ë ÀÌÀ¯: ¾î´À ¹æÇâ ¹Ù¶óºÁµµ Á÷°üÀûÀ¸·Î »óÇÏ/·Ñ È¸ÀüµÊ.
+	// Space.Self ì‚¬ìš© ì´ìœ : ì–´ëŠ ë°©í–¥ ë°”ë¼ë´ë„ ì§ê´€ì ìœ¼ë¡œ ìƒí•˜/ë¡¤ íšŒì „ë¨.
 	
 
 
@@ -248,9 +267,9 @@ public class Player : Unit
 	{
 		float yaw = _input.lookInput.x * xSensitivity * Time.fixedDeltaTime;
 		float pitch = -_input.lookInput.y * ySensitivity * Time.fixedDeltaTime;
-		// lookInput.y ¹İÀü: ¸¶¿ì½º À§·Î ¿Ã¸®¸é ±â¼ö°¡ ¿Ã¶ó°¡¾ß ÇÏ¹Ç·Î
+		// lookInput.y ë°˜ì „: ë§ˆìš°ìŠ¤ ìœ„ë¡œ ì˜¬ë¦¬ë©´ ê¸°ìˆ˜ê°€ ì˜¬ë¼ê°€ì•¼ í•˜ë¯€ë¡œ
 		float roll = -_input.rollInput * rollSensitivity * Time.fixedDeltaTime;
-		// rollInput ¹İÀü: EÅ° ´­·¶À» ¶§ ¿À¸¥ÂÊÀ¸·Î ±â¿ì´Â ¹æÇâ
+		// rollInput ë°˜ì „: Eí‚¤ ëˆŒë €ì„ ë•Œ ì˜¤ë¥¸ìª½ìœ¼ë¡œ ê¸°ìš°ëŠ” ë°©í–¥
 
 		transform.Rotate(transform.up, yaw, Space.World);
 		transform.Rotate(Vector3.right, pitch, Space.Self);
@@ -259,87 +278,90 @@ public class Player : Unit
 
 
 
-	// ==================ÀÌµ¿ (FixedUpdate¿¡¼­ È£Ãâ)==================
-	// ¿ÀºêÁ§Æ®°¡ ¹Ù¶óº¸´Â ¹æÇâ(·ÎÄÃÃà) ±âÁØÀ¸·Î 6¹æÇâ ¹°¸® ÀÌµ¿.
-	// RotateByInput() ÀÌÈÄ È£ÃâµÇ¹Ç·Î ÀÌ¹Ì È¸ÀüµÈ ¹æÇâ ±âÁØÀ¸·Î ÀÌµ¿.
+	// ==================ì´ë™ (FixedUpdateì—ì„œ í˜¸ì¶œ)==================
+	// ì˜¤ë¸Œì íŠ¸ê°€ ë°”ë¼ë³´ëŠ” ë°©í–¥(ë¡œì»¬ì¶•) ê¸°ì¤€ìœ¼ë¡œ 6ë°©í–¥ ë¬¼ë¦¬ ì´ë™.
+	// RotateByInput() ì´í›„ í˜¸ì¶œë˜ë¯€ë¡œ ì´ë¯¸ íšŒì „ëœ ë°©í–¥ ê¸°ì¤€ìœ¼ë¡œ ì´ë™.
 
-	// transform.forward = ¿ÀºêÁ§Æ®°¡ ¹Ù¶óº¸´Â ¹æÇâ (W/S)
-	// transform.right   = ¿ÀºêÁ§Æ® ±âÁØ ¿À¸¥ÂÊ    (A/D)
-	// transform.up      = ¿ÀºêÁ§Æ® ±âÁØ À§ÂÊ      (Mouse4/Mouse3)
+	// transform.forward = ì˜¤ë¸Œì íŠ¸ê°€ ë°”ë¼ë³´ëŠ” ë°©í–¥ (W/S)
+	// transform.right   = ì˜¤ë¸Œì íŠ¸ ê¸°ì¤€ ì˜¤ë¥¸ìª½    (A/D)
+	// transform.up      = ì˜¤ë¸Œì íŠ¸ ê¸°ì¤€ ìœ„ìª½      (Mouse4/Mouse3)
 
-	// ºÎ½ºÆ®: LeftShift + ÀÜ·® ÀÖÀ» ¶§ boostSpeed Àû¿ë.
-	//         Unit.UseBoost()·Î ÀÜ·® ¼Ò¸ğ ¹× È¸º¹ Å¸ÀÌ¸Ó ÃÊ±âÈ­.
-	// maxSpeed: ¼Óµµ ÃÊ°ú ½Ã ¹æÇâ À¯ÁöÇÏ°í Å©±â¸¸ Å¬·¥ÇÁ.
+	// ë¶€ìŠ¤íŠ¸: LeftShift + ì”ëŸ‰ ìˆì„ ë•Œ boostSpeed ì ìš©.
+	//         Unit.UseBoost()ë¡œ ì”ëŸ‰ ì†Œëª¨ ë° íšŒë³µ íƒ€ì´ë¨¸ ì´ˆê¸°í™”.
+	// maxSpeed: ì†ë„ ì´ˆê³¼ ì‹œ ë°©í–¥ ìœ ì§€í•˜ê³  í¬ê¸°ë§Œ í´ë¨í”„.
 	private void MovingByInput()
 	{
-		// ·ÎÄÃ Ãà ±âÁØ 6¹æÇâ ÇÕ»ê
+		// ë¡œì»¬ ì¶• ê¸°ì¤€ 6ë°©í–¥ í•©ì‚°
 		Vector3 dir =
 			transform.forward * _input.moveInput.z +
 			transform.right * _input.moveInput.x +
 			transform.up * _input.moveInput.y;
 
-		// ´ë°¢¼± ÀÌµ¿ ½Ã ¼Óµµ Æ¢´Â °Í ¹æÁö
+		// ëŒ€ê°ì„  ì´ë™ ì‹œ ì†ë„ íŠ€ëŠ” ê²ƒ ë°©ì§€
 		if (dir.magnitude > 1f)
 		{
 			dir.Normalize();
 		}
 
 
-		//float ¿ÀÂ÷ ÆĞµù°ª
+		//float ì˜¤ì°¨ íŒ¨ë”©ê°’
 		bool isMoving = dir.sqrMagnitude > 0.001f;
 
-		// ºÎ½ºÆ® Á¶°Ç: Shift ´©¸§ + ÀÜ·® ³²¾ÆÀÖÀ½
+		// ë¶€ìŠ¤íŠ¸ ì¡°ê±´: Shift ëˆ„ë¦„ + ì”ëŸ‰ ë‚¨ì•„ìˆìŒ
 		bool canBoost = _input.isBoosting && curBoostRemaining > minBoostRequired;
 		_isBoosting = canBoost;
 
 		if (canBoost)
 		{
-			// Unit.UseBoost(): ÀÜ·® °¨¼Ò + È¸º¹ Å¸ÀÌ¸Ó ÃÊ±âÈ­
+			// Unit.UseBoost(): ì”ëŸ‰ ê°ì†Œ + íšŒë³µ íƒ€ì´ë¨¸ ì´ˆê¸°í™”
 			UseBoost(20f * Time.fixedDeltaTime);
 		}
 
 		float speed = canBoost ? boostSpeed : baseMoveSpeed;
-		// speedMultiPlier: ÇÇ°İ/HP¿¡ µû¸¥ ¼Óµµ °¨¼Ò¿ë. 0ÀÌ¸é 1¹èÀ² Àû¿ë
+		// speedMultiPlier: í”¼ê²©/HPì— ë”°ë¥¸ ì†ë„ ê°ì†Œìš©. 0ì´ë©´ 1ë°°ìœ¨ ì ìš©
 		float multiplier = speedMultiPlier > 0f ? speedMultiPlier : 1f;
 
-		// ÃÖÁ¾ °¡ÇØÁú ÈûÀÇ Å©±â °è»ê
+		// ìµœì¢… ê°€í•´ì§ˆ í˜ì˜ í¬ê¸° ê³„ì‚°
 		float finalForce = speed * multiplier;
 
-		// AddForce¸¦ ÀÌ¿ëÇÑ ¹°¸® ±â¹İ °¡¼Ó ¹× ¿ªºĞ»ç Á¦¾î
+		// AddForceë¥¼ ì´ìš©í•œ ë¬¼ë¦¬ ê¸°ë°˜ ê°€ì† ë° ì—­ë¶„ì‚¬ ì œì–´
 		if (isMoving)
 		{
-			// ÀÔ·ÂÀÌ ÀÖÀ» ¶§ ÇØ´ç ¹æÇâÀ¸·Î °¡¼Ó
+			// ì…ë ¥ì´ ìˆì„ ë•Œ í•´ë‹¹ ë°©í–¥ìœ¼ë¡œ ê°€ì†
 			_rb.AddForce(dir * finalForce, ForceMode.Acceleration);
 		}
 		else
 		{
-			// ¹æÇâÅ° ÀÔ·ÂÀÌ ¾øÁö¸¸, ¿ìÁÖ¼±ÀÇ ¹°¸®Àû ¼Óµµ°¡ ³²¾ÆÀÖ¾î ¹Ì²ô·¯Áö´Â ÁßÀÏ ¶§
+			// ë°©í–¥í‚¤ ì…ë ¥ì´ ì—†ì§€ë§Œ, ìš°ì£¼ì„ ì˜ ë¬¼ë¦¬ì  ì†ë„ê°€ ë‚¨ì•„ìˆì–´ ë¯¸ë„ëŸ¬ì§€ëŠ” ì¤‘ì¼ ë•Œ
 			if (_rb.velocity.sqrMagnitude > 0.1f)
 			{
-				// ¿ªºĞ»ç ÀÌÆåÆ® È°¼ºÈ­ ¹× ¾Ö´Ï¸ŞÀÌ¼Ç Æ®¸®°Å ·ÎÁ÷À» ÀÛ¼º
+				// ì—­ë¶„ì‚¬ ì´í™íŠ¸ í™œì„±í™” ë° ì• ë‹ˆë©”ì´ì…˜ íŠ¸ë¦¬ê±° ë¡œì§ì„ ì‘ì„±
 				//ex PlayReverseThrusterEffect();
 				// ex anim.SetBool("isReverseThrusting", true);
 			}
 			else
 			{
-				//¿ìÁÖ¼±ÀÌ ¿ÏÀüÈ÷ Á¤ÁöÇßÀ» ¶§ ¿ªºĞ»ç ÀÌÆåÆ® ²ô±â
+				//ìš°ì£¼ì„ ì´ ì™„ì „íˆ ì •ì§€í–ˆì„ ë•Œ ì—­ë¶„ì‚¬ ì´í™íŠ¸ ë„ê¸°
 				// ex StopReverseThrusterEffect();
 				// ex anim.SetBool("isReverseThrusting", false);
 			}
 		}
 
-		// maxSpeed Å¬·¥ÇÁ (ÃÊ°ú ½Ã ¹æÇâ À¯ÁöÇÏ°í Å©±â¸¸ Á¦ÇÑ)
+		// maxSpeed í´ë¨í”„ (ì´ˆê³¼ ì‹œ ë°©í–¥ ìœ ì§€í•˜ê³  í¬ê¸°ë§Œ ì œí•œ)
 		float maxV = maxSpeed;
 		if (_rb.velocity.magnitude > maxV)
 		{
 			_rb.velocity = _rb.velocity.normalized * maxV;
 		}
 
-		// FSM »óÅÂ ÀüÈ¯
-		if (_input.isDodging)
-		{
-			CurState = UNIT_STATE.DODGE;
-		}
+		// FSM ìƒíƒœ ì „í™˜
+        if (curState != UNIT_STATE.DODGE)
+        {
+    		if (_input.isDodging)
+    		{
+    			CurState = UNIT_STATE.DODGE;
+    		}
+        }
 		else if (isMoving)
 		{
 			CurState = UNIT_STATE.MOVING;
@@ -351,7 +373,7 @@ public class Player : Unit
 
 	}
 
-	//==============ºÎ½ºÆ®ÀÌÆåÆ®====================(ÀÌµ¿¿¡¼­°°ÀÌ)
+	//==============ë¶€ìŠ¤íŠ¸ì´í™íŠ¸====================(ì´ë™ì—ì„œê°™ì´)
 
 
 
@@ -365,48 +387,48 @@ public class Player : Unit
 
 
 	// 
-	// ÃÑ¾Ë - ÁÂ¿ì ±³´ë ¹ß»ç
-	// bulletFirePos[0]=¿ŞÂÊ, bulletFirePos[1]=¿À¸¥ÂÊ
+	// ì´ì•Œ - ì¢Œìš° êµëŒ€ ë°œì‚¬
+	// bulletFirePos[0]=ì™¼ìª½, bulletFirePos[1]=ì˜¤ë¥¸ìª½
 
 
 
 
-	// ==================ÇÃ·¹ÀÌ¾î ·¹º§°ü·Ã================== Â÷ÈÄ ¼öÁ¤ÇÊ¿ä
+	// ==================í”Œë ˆì´ì–´ ë ˆë²¨ê´€ë ¨================== ì°¨í›„ ìˆ˜ì •í•„ìš”
 
 	//
-	// °æÇèÄ¡ È¹µæ. À½¼ö ¹æÁö Ã³¸® Æ÷ÇÔ.
-	// ·¹º§¾÷ Á¶°Ç ÃæÁ· ½Ã LevelUp() È£Ãâ.
-	// Enemy »ç¸Á ½Ã Enemy.Die()¿¡¼­ È£Ãâ ¿¹Á¤.
+	// ê²½í—˜ì¹˜ íšë“. ìŒìˆ˜ ë°©ì§€ ì²˜ë¦¬ í¬í•¨.
+	// ë ˆë²¨ì—… ì¡°ê±´ ì¶©ì¡± ì‹œ LevelUp() í˜¸ì¶œ.
+	// Enemy ì‚¬ë§ ì‹œ Enemy.Die()ì—ì„œ í˜¸ì¶œ ì˜ˆì •.
 	//
 	public void GainExp(int amount)
 	{
-		// À½¼ö ¹æÁö
+		// ìŒìˆ˜ ë°©ì§€
 		exp += Mathf.Max(0, amount);
 
-		// ·¹º§¾÷ Ã¼Å©
+		// ë ˆë²¨ì—… ì²´í¬
 		if (exp >= expToNextLevel)
 			LevelUp();
 	}
 
 	// 
-	// ·¹º§¾÷ Ã³¸®.
-	// °æÇèÄ¡ ÃÊ°úºĞ ÀÌ¿ù, ·¹º§ Áõ°¡, ´ÙÀ½ ·¹º§ ÇÊ¿ä °æÇèÄ¡ °»½Å.
-	// ·¹º§¾÷ ½Ã ½ºÅÈ Áõ°¡´Â ÃßÈÄ Àåºñ/½ºÅÈ ½Ã½ºÅÛ ±¸Çö ÈÄ ¿©±â¼­ Ã³¸®.
+	// ë ˆë²¨ì—… ì²˜ë¦¬.
+	// ê²½í—˜ì¹˜ ì´ˆê³¼ë¶„ ì´ì›”, ë ˆë²¨ ì¦ê°€, ë‹¤ìŒ ë ˆë²¨ í•„ìš” ê²½í—˜ì¹˜ ê°±ì‹ .
+	// ë ˆë²¨ì—… ì‹œ ìŠ¤íƒ¯ ì¦ê°€ëŠ” ì¶”í›„ ì¥ë¹„/ìŠ¤íƒ¯ ì‹œìŠ¤í…œ êµ¬í˜„ í›„ ì—¬ê¸°ì„œ ì²˜ë¦¬.
 	//
 	private void LevelUp()
 	{
-		// ÃÊ°ú °æÇèÄ¡ ÀÌ¿ù
+		// ì´ˆê³¼ ê²½í—˜ì¹˜ ì´ì›”
 		exp = exp - expToNextLevel;
 		exp = Mathf.Max(0, exp);
 
 		level++;
 
-		// ´ÙÀ½ ·¹º§ ÇÊ¿ä °æÇèÄ¡ Áõ°¡ (¿¹½Ã: ·¹º§´ç 50¾¿ Áõ°¡. ¼öÄ¡´Â ÃßÈÄ Á¶Á¤)
+		// ë‹¤ìŒ ë ˆë²¨ í•„ìš” ê²½í—˜ì¹˜ ì¦ê°€ (ì˜ˆì‹œ: ë ˆë²¨ë‹¹ 50ì”© ì¦ê°€. ìˆ˜ì¹˜ëŠ” ì¶”í›„ ì¡°ì •)
 		expToNextLevel += 50;
 
-		Debug.Log($"[Player] ·¹º§¾÷! ÇöÀç ·¹º§: {level}");
+		Debug.Log($"[Player] ë ˆë²¨ì—…! í˜„ì¬ ë ˆë²¨: {level}");
 
-		// ·¹º§¾÷ ½Ã ½ºÅÈ Áõ°¡ ¿¹Á¤
+		// ë ˆë²¨ì—… ì‹œ ìŠ¤íƒ¯ ì¦ê°€ ì˜ˆì •
 		// OnLevelUp();
 	}
 }

@@ -7,23 +7,23 @@ using UnityEngine.SceneManagement;
 // =====================================================================
 // GameManager
 //
-// ??��:
-//   1. 게임 ?�태(FSM) 관�?
-//   2. ???�환 (?�리 ??로드)
-//   3. 골드 / ?�카?�트 / 보스 ?�폰 조건 관�?
-//   4. ?�??/ 불러?�기 (STATION ?�에?�만 ?�??가??
-//   5. Player ?�퍼?�스 캐싱 (??로드 ???�동 ?�색)
+// 역할:
+//   1. 게임 상태(FSM) 관리
+//   2. 씬 전환 (정리 후 로드)
+//   3. 킬카운트 / 보스 스폰 조건 관리 (골드는 InventoryManager)
+//   4. 저장 / 불러오기 (STATION 씬에서만 저장 가능)
+//   5. Player 레퍼런스 캐싱 (씬 로드 후 자동 탐색)
 //
-// ???�름:
-//   STATION ??LOADING_SEQUENCE ??MAP_SELECT ??STAGE1
-//   ?�투 종료 ??STATION 복�?
+// 씬 흐름:
+//   STATION -> LOADING_SEQUENCE -> MAP_SELECT -> STAGE1
+//   전투 종료 -> STATION 복귀
 //
-// ?�???�이?? SaveData.cs 참고
+// 저장 데이터: SaveData.cs 참고
 // =====================================================================
 public class GameManager : MonoBehaviour
 {
     // =====================================================================
-    // ?��???
+    // 싱글톤
     // =====================================================================
     private static GameManager instance = null;
     public static GameManager Instance
@@ -34,14 +34,14 @@ public class GameManager : MonoBehaviour
             {
                 instance = FindObjectOfType<GameManager>();
                 if (instance == null)
-                    Debug.LogError("[GameManager] ?�에 GameManager ?�음! ?�이?�라?�에 추�? ?�요");
+                    Debug.LogError("[GameManager] 씬에 GameManager 없음! 하이어라키에 추가 필요");
             }
             return instance;
         }
     }
 
     // =====================================================================
-    // ??BGM 매핑 (??추�? ???�기????줄만 추�?)
+    // 씬-BGM 매핑 (씬 추가 시 여기에 한 줄만 추가)
     // =====================================================================
     private static readonly Dictionary<string, SOUND_TYPE> _sceneBGMMap = new Dictionary<string, SOUND_TYPE>
     {
@@ -51,64 +51,59 @@ public class GameManager : MonoBehaviour
         { "GAME_OVER",        SOUND_TYPE.BGM_GAMEOVER  },
         { "1F",               SOUND_TYPE.BGM_1F        },
         { "B2",               SOUND_TYPE.BGM_B2        },
-        // LOADING_SEQUENCE, MAP_SELECT ?�도 추�??�야??
+        // LOADING_SEQUENCE, MAP_SELECT 등도 추가해야함.
     };
 
     // =====================================================================
-    // 게임 ?�태
+    // 게임 상태
     // =====================================================================
     public GAME_STATE curState;
 
-    // ?�태 변????UI?�서 구독 (?�널 ?�환 ??
+    // 상태 변화 시 UI에서 구독 (패널 전환 등)
     public System.Action<GAME_STATE> OnGameStateChanged;
 
-    // Time.timeScale ?�???�래그로 ?�어
-    // Player, Enemy ??게임 로직?�서 ??값을 체크???�스�?멈춤
-    // UI / ?�악 / ?�출?� ?�향 ?�음
+    // Time.timeScale 대신 플래그로 제어
+    // Player, Enemy 등 게임 로직에서 이 값을 체크해 스스로 멈춤
+    // UI / 음악 / 연출은 영향 없음
     public bool IsPaused   { get; private set; }
     public bool IsGameOver { get; private set; }
 
     // =====================================================================
-    // Player ?�퍼?�스 (??로드 ???�동 캐싱)
+    // Player 레퍼런스 (씬 로드 후 자동 캐싱)
     // =====================================================================
     public Player playerRef;
 
     // =====================================================================
-    // ?�화
+    // 보스 스폰 조건
     // =====================================================================
-    public int gold;
-
-    // =====================================================================
-    // 보스 ?�폰 조건
-    // =====================================================================
-    [Header("?�━?�━?�━ 보스 ?�폰 조건 ?�━?�━?�━")]
-    [Tooltip("???�만???�을 처치?�면 보스 ?�폰 (0?�면 ?�카?�트 조건 미사??")]
+    [Header("━━━━━━ 보스 스폰 조건 ━━━━━━")]
+    [Tooltip("이 수만큼 적을 처치하면 보스 스폰 (0이면 킬카운트 조건 미사용)")]
     public int killCountToSpawnBoss = 20;
 
-    [Tooltip("???�만???�브?�트�??�괴?�면 보스 ?�폰 (0?�면 ?�괴 조건 미사??")]
+    [Tooltip("이 수만큼 오브젝트를 파괴하면 보스 스폰 (0이면 파괴 조건 미사용)")]
     public int destroyCountToSpawnBoss = 0;
 
     [HideInInspector] public int  killCount;
     [HideInInspector] public int  destroyedObjectCount;
     [HideInInspector] public bool bossSpawned;
 
-    // 보스 ?�폰 조건 ?�성 ??발행 (SpawnManager ?�이 구독)
+    // 보스 스폰 조건 달성 시 발행 (SpawnManager 등이 구독)
     public System.Action OnBossSpawn;
 
     // =====================================================================
-    // ?�??경로
+    // 저장 경로
     // =====================================================================
     private string SavePath(int slot) =>
         Path.Combine(Application.persistentDataPath, $"save{slot}.json");
 
     // =====================================================================
-    // ?�??가???��? (STATION ?�에?�만 true)
+    // 저장 가능 여부 (STATION 씬에서만 true)
     // =====================================================================
     public bool CanSave =>
         SceneManager.GetActiveScene().name == SCENE_TYPE.STATION.ToString();
 
     // =====================================================================
-    // 초기??
+    // 초기화
     // =====================================================================
     private void Awake()
     {
@@ -120,7 +115,7 @@ public class GameManager : MonoBehaviour
         }
         else if (instance != this)
         {
-            Debug.LogWarning("[GameManager] 중복 감�?. ?�괴 ??기존 ?��?");
+            Debug.LogWarning("[GameManager] 중복 감지. 파괴 후 기존 유지");
             Destroy(gameObject);
         }
     }
@@ -130,16 +125,16 @@ public class GameManager : MonoBehaviour
         SceneManager.sceneLoaded -= OnSceneLoaded;
     }
 
-    // ??로드 ?�료 ???�동 ?�출
+    // 씬 로드 완료 시 자동 호출
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        // Player ?�퍼?�스 갱신
+        // Player 레퍼런스 갱신
         playerRef = FindObjectOfType<Player>();
 
-        // BGM ?�생
+        // BGM 재생
         PlaySceneBGM(scene.name);
 
-        // ?�투 ??진입 ???�카?�트 초기??
+        // 전투 씬 진입 시 킬카운트 초기화
         if (scene.name == SCENE_TYPE.STAGE1.ToString())
         {
             ResetBattleData();
@@ -147,8 +142,8 @@ public class GameManager : MonoBehaviour
     }
 
     // =====================================================================
-    // ???�환
-    // 반드????메서?��? ?�해 ?�을 ?�환??�?(직접 SceneManager ?�출 금�?)
+    // 씬 전환
+    // 반드시 이 메서드를 통해 씬을 전환할 것 (직접 SceneManager 호출 금지)
     // =====================================================================
     public void LoadScene(string sceneName)
     {
@@ -162,12 +157,12 @@ public class GameManager : MonoBehaviour
 
     private IEnumerator LoadSceneRoutine(string sceneName)
     {
-        // ?�환 ???�리
+        // 전환 전 정리
         Time.timeScale = 1f;
         PoolManager.Instance.DisableAllProjectiles();
         SoundManager.Instance.StopSFXAll();
 
-        // ?�요 ???�이?�아???�출 추�?
+        // 필요 시 페이드아웃 연출 추가
         // yield return StartCoroutine(FadeOut());
 
         yield return null;
@@ -178,25 +173,25 @@ public class GameManager : MonoBehaviour
     {
         if (_sceneBGMMap.TryGetValue(sceneName, out SOUND_TYPE bgm))
             SoundManager.Instance.PlayBGM(bgm);
-        // 매핑 ?�는 ??로딩, 맵선?????� BGM ?��? or 중�? ?�택
-        // SoundManager.Instance.StopBGM(); // 중�? ?�할 ??주석 ?�제
+        // 매핑 없는 씬(로딩, 맵선택 등)은 BGM 유지 or 중지 선택
+        // SoundManager.Instance.StopBGM(); // 중지 원할 시 주석 해제
 
-        // switch 방식 메모 (Dictionary 방식?�로 교체?? ?�요 ???�래 복원)
+        // switch 방식 메모 (Dictionary 방식으로 교체됨, 필요 시 아래 복원)
         //switch (sceneName)
         //{
         //    case "MAIN":      SoundManager.Instance.PlayBGM(SOUND_TYPE.BGM_MAIN);     break;
         //    case "STAGE1":    SoundManager.Instance.PlayBGM(SOUND_TYPE.BGM_STAGE1);   break;
         //    case "STATION":   SoundManager.Instance.PlayBGM(SOUND_TYPE.BGM_STATION);  break;
         //    case "GAME_OVER": SoundManager.Instance.PlayBGM(SOUND_TYPE.BGM_GAMEOVER); break;
-        //    default:          /* BGM ?��? ?�는 StopBGM() */                           break;
+        //    default:          /* BGM 유지 또는 StopBGM() */                           break;
         //}
     }
 
     // =====================================================================
-    // UI?�서 ?�출?�는 공개 메서??
+    // UI에서 호출하는 공개 메서드
     // =====================================================================
 
-    /// <summary>??게임 ?�작. ?�이??초기????로딩 ?�퀀?�로 ?�동.</summary>
+    /// <summary>새 게임 시작. 데이터 초기화 후 로딩 시퀀스로 이동.</summary>
     public void NewGame()
     {
         ClearData();
@@ -204,7 +199,7 @@ public class GameManager : MonoBehaviour
         LoadScene(SCENE_TYPE.LOADING_SEQUENCE);
     }
 
-    /// <summary>?�?�된 게임 불러?�기. ?�이�??�롯 번호�??�출.</summary>
+    /// <summary>저장된 게임 불러오기. 세이브 슬롯 번호로 호출.</summary>
     public void LoadGame(int saveSlotNum)
     {
         LoadData(saveSlotNum);
@@ -213,37 +208,37 @@ public class GameManager : MonoBehaviour
     }
 
     //=================================
-    // ?�??로드 처리 ?�름 메모
-    // [?�???�름]
+    // 저장/로드 처리 흐름 메모
+    // [저장 흐름]
     //   GameManager.SaveGame()
-    //     ??Player?�서 ?�재 HP/?�드 ?�어??
-    //     ??PlayerLoadout?�서 ?�비/?�약 ?�어??
-    //     ??Inventory?�서 ?�이??목록 ?�어?�??
-    //     ???�나??SaveData�??�킹 ??JSON ?�일 ?�??
+    //     <- Player에서 현재 HP/실드 읽어옴
+    //     <- PlayerLoadout에서 장비/탄약 읽어옴
+    //     <- Inventory에서 아이템 목록 읽어와서
+    //     <- 하나의 SaveData로 패킹 후 JSON 파일 저장
     //
-    // [로드 ?�름]
+    // [로드 흐름]
     // GameManager.LoadGame()
-    //     ??JSON ?�일 ?�어 SaveData�??�싱
-    //     ??Player??HP/?�드 ??복원
-    //     ??PlayerLoadout???�비/?�약 복원
-    //     ??Inventory???�이??목록 복원
+    //     <- JSON 파일 읽어 SaveData로 파싱
+    //     <- Player에 HP/실드 등 복원
+    //     <- PlayerLoadout에 장비/탄약 복원
+    //     <- Inventory에 아이템 목록 복원
     //=================================
 
-    /// <summary>?�재 게임 ?�?? STATION ?�에?�만 가??</summary>
+    /// <summary>현재 게임 저장. STATION 씬에서만 가능.</summary>
     public void SaveGame(int saveSlotNum)
     {
         if (!CanSave)
         {
-            Debug.LogWarning("[GameManager] ?�?��? 마을(STATION)?�서�?가?�합?�다.");
+            Debug.LogWarning("[GameManager] 저장은 마을(STATION)에서만 가능합니다.");
             return;
         }
         SaveData(saveSlotNum);
     }
 
     /// <summary>
-    /// ?�시?��?. PLAYING ?�태?�서�??�작.
-    /// Time.timeScale??건드리�? ?�으므�?UI / ?�악 / ?�출?� 그�?�??�작.
-    /// Player, Enemy ??게임 로직?� IsPaused�?체크?�서 ?�스�?멈춰????
+    /// 일시정지. PLAYING 상태에서만 동작.
+    /// Time.timeScale을 건드리지 않으므로 UI / 음악 / 연출은 그대로 동작.
+    /// Player, Enemy 등 게임 로직은 IsPaused를 체크해서 스스로 멈춰야 함.
     /// </summary>
     public void PauseGame()
     {
@@ -252,7 +247,7 @@ public class GameManager : MonoBehaviour
         ChangeState(GAME_STATE.PAUSED);
     }
 
-    /// <summary>?�시?��? ?�제.</summary>
+    /// <summary>일시정지 해제.</summary>
     public void ResumeGame()
     {
         if (curState != GAME_STATE.PAUSED) return;
@@ -261,13 +256,13 @@ public class GameManager : MonoBehaviour
     }
 
     // =====================================================================
-    // 게임 ?��??�서 ?�출?�는 메서??
+    // 게임 내부에서 호출하는 메서드
     // =====================================================================
 
     /// <summary>
-    /// ?�레?�어 ?�망 ??Player.Die()?�서 ?�출.
-    /// Time.timeScale 건드리�? ?�음 - 죽음 ?�출(??�� ?????�생?�어???��?�?
-    /// UI / ?�악?� OnGameStateChanged ?�벤?�로 처리.
+    /// 플레이어 사망 시 Player.Die()에서 호출.
+    /// Time.timeScale 건드리지 않음 - 죽음 연출(폭발 등)이 재생되어야 하므로.
+    /// UI / 음악은 OnGameStateChanged 이벤트로 처리.
     /// </summary>
     public void GameOver()
     {
@@ -277,12 +272,12 @@ public class GameManager : MonoBehaviour
         }
         IsGameOver = true;
         ChangeState(GAME_STATE.GAME_OVER);
-        PoolManager.Instance.DisableAllProjectiles();//?�재 ?�사�?모두 비활?�화
-        SoundManager.Instance.StopSFXAll();//모든 ?�고?�던 ?�과?�중지
-        //기�? ?�요??ui?�출?�나 ?�운?? ?�펙?�연출�? 추�?�??�성?�요
+        PoolManager.Instance.DisableAllProjectiles();//현재 투사체 모두 비활성화
+        SoundManager.Instance.StopSFXAll();//모든 나고있던 효과음 중지
+        //기타 필요한 ui연출이나 사운드, 이펙트연출은 추가로 작성필요
     }
 
-    /// <summary>?�테?��? ?�리??조건 ?�성 ???�출.</summary>
+    /// <summary>스테이지 클리어 조건 달성 시 호출.</summary>
     public void GameClear()
     {
         if (curState == GAME_STATE.CLEAR)
@@ -293,20 +288,9 @@ public class GameManager : MonoBehaviour
         PoolManager.Instance.DisableAllProjectiles();
     }
 
-    /// <summary>
-    /// 골드 ?�득. ??처치 ??보상 지�????�출.
-    /// </summary>
-    public void AddGold(int amount)
-    {
-        gold += Mathf.Max(0, amount);
-        Debug.Log($"[GameManager] 골드 ?�득: +{amount} / 보유: {gold}");
-    }
-
-
-	
 	/// <summary>
-	/// ??처치 ??Enemy.Die()?�서 ?�출.
-	/// ?�카?�트 ?�적 ??보스 ?�폰 조건 체크.
+	/// 적 처치 시 Enemy.Die()에서 호출.
+	/// 킬카운트 누적 후 보스 스폰 조건 체크.
 	/// </summary>
 	public void OnEnemyKilled()
     {
@@ -315,8 +299,8 @@ public class GameManager : MonoBehaviour
     }
 
     /// <summary>
-    /// ?�괴 가???�브?�트 ?�괴 ???�당 ?�브?�트?�서 ?�출.
-    /// ?�괴 카운???�적 ??보스 ?�폰 조건 체크.
+    /// 파괴 가능 오브젝트 파괴 시 해당 오브젝트에서 호출.
+    /// 파괴 카운트 누적 후 보스 스폰 조건 체크.
     /// </summary>
     public void OnObjectDestroyed()
     {
@@ -325,7 +309,7 @@ public class GameManager : MonoBehaviour
     }
 
     // =====================================================================
-    // ?��? 메서??
+    // 내부 메서드
     // =====================================================================
     
     private void ChangeState(GAME_STATE state)
@@ -334,7 +318,7 @@ public class GameManager : MonoBehaviour
         OnGameStateChanged?.Invoke(curState);
     }
 
-    /// <summary>보스 ?�폰 조건 체크. 조건 ?�성 ??OnBossSpawn ?�벤??발행.</summary>
+    /// <summary>보스 스폰 조건 체크. 조건 달성 시 OnBossSpawn 이벤트 발행.</summary>
     private void CheckBossSpawnCondition()
     {
         if (bossSpawned) return;
@@ -345,12 +329,12 @@ public class GameManager : MonoBehaviour
         if (killCondition || destroyCondition)
         {
             bossSpawned = true;
-            Debug.Log($"[GameManager] 보스 ?�폰 조건 ?�성 (?? {killCount}, ?�괴: {destroyedObjectCount})");
+            Debug.Log($"[GameManager] 보스 스폰 조건 달성 (킬: {killCount}, 파괴: {destroyedObjectCount})");
             OnBossSpawn?.Invoke();
         }
     }
 
-    /// <summary>?�투 ??진입 ???�투 관??카운??초기??</summary>
+    /// <summary>전투 씬 진입 시 전투 관련 카운터 초기화.</summary>
     private void ResetBattleData()
     {
         killCount            = 0;
@@ -359,38 +343,38 @@ public class GameManager : MonoBehaviour
     }
 
     // =====================================================================
-    // ?�이�?/ 로드
+    // 세이브 / 로드
     // =====================================================================
 
-    /// <summary>Player ?�에???�재 ?�태�??�집??JSON ?�일�??�??</summary>
+    /// <summary>Player 등에서 현재 상태를 수집해 JSON 파일로 저장.</summary>
     private void SaveData(int saveSlot)
     {
         SaveData data = CollectSaveData();
         string json  = JsonUtility.ToJson(data, prettyPrint: true);
         File.WriteAllText(SavePath(saveSlot), json);
-        Debug.Log($"[GameManager] ?�???�료: {SavePath(saveSlot)}");
+        Debug.Log($"[GameManager] 저장 완료: {SavePath(saveSlot)}");
     }
 
-    /// <summary>JSON ?�일?�서 ?�이?��? ?�어 Player ?�에 분배.</summary>
+    /// <summary>JSON 파일에서 데이터를 읽어 Player 등에 분배.</summary>
     private void LoadData(int saveSlot)
     {
         string path = SavePath(saveSlot);
         if (!File.Exists(path))
         {
-            Debug.LogWarning($"[GameManager] ?�이�??�일 ?�음: {path}");
+            Debug.LogWarning($"[GameManager] 세이브 파일 없음: {path}");
             return;
         }
         string json = File.ReadAllText(path);
         SaveData data = JsonUtility.FromJson<SaveData>(json);
         ApplySaveData(data);
-        Debug.Log($"[GameManager] 로드 ?�료: {path}");
+        Debug.Log($"[GameManager] 로드 완료: {path}");
     }
 
-    /// <summary>Player / Loadout ?�에???�?�할 ?�이???�집.</summary>
+    /// <summary>Player / Loadout 등에서 저장할 데이터 수집.</summary>
     private SaveData CollectSaveData()
     {
         SaveData data = new SaveData();
-        data.gold = gold;
+        data.gold = InventoryManager.Instance != null ? InventoryManager.Instance.gold : 0;
 
         if (playerRef != null)
         {
@@ -402,18 +386,21 @@ public class GameManager : MonoBehaviour
             data.curArmor       = playerRef.curArmorRemaining;
             data.curBoost       = playerRef.curBoostRemaining;
 
-            // 미사???�약 (MissileAmmoInfo가 [Serializable]?��?�?직접 복사)
+            // 미사일 탄약 (MissileAmmoInfo가 [Serializable]이므로 직접 복사)
             data.missileAmmoList = new List<MissileAmmoInfo>(playerRef.weaponSystem.missileAmmoList);
 
-            // TODO: PlayerLoadout 구현 ??착용 ?�비 / ?�모??/ ?�벤?�리 추�?
+            // TODO: PlayerLoadout 구현 후 착용 장비 / 소모품 / 인벤토리 추가
         }
         return data;
     }
 
-    /// <summary>불러??SaveData�?Player / Loadout ?�에 ?�용.</summary>
+    /// <summary>불러온 SaveData를 Player / Loadout 등에 적용.</summary>
     private void ApplySaveData(SaveData data)
     {
-        gold = data.gold;
+        if (InventoryManager.Instance != null)
+        {
+            InventoryManager.Instance.gold = data.gold;
+        }
 
         if (playerRef != null)
         {
@@ -425,17 +412,20 @@ public class GameManager : MonoBehaviour
             playerRef.curArmorRemaining  = data.curArmor;
             playerRef.curBoostRemaining  = data.curBoost;
 
-            // 미사???�약
+            // 미사일 탄약
             playerRef.weaponSystem.missileAmmoList = new List<MissileAmmoInfo>(data.missileAmmoList);
 
-            // TODO: PlayerLoadout 구현 ??착용 ?�비 / ?�모??/ ?�벤?�리 ?�용
+            // TODO: PlayerLoadout 구현 후 착용 장비 / 소모품 / 인벤토리 적용
         }
     }
 
-    /// <summary>??게임 ?�작 ???�이???�체 초기??</summary>
+    /// <summary>새 게임 시작 시 데이터 전체 초기화.</summary>
     private void ClearData()
     {
-        gold = 0;
+        if (InventoryManager.Instance != null)
+        {
+            InventoryManager.Instance.gold = 0;
+        }
         ResetBattleData();
     }
 }

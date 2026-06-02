@@ -4,33 +4,33 @@ using UnityEngine;
 using UnityEngine.UI;
 
 
-// ####½ÇÁ¦ »ç¿ë ÇÔ¼ö´Â ¸Ç ¹Ø¿¡~~#####
+// ####ì‹¤ì œ ì‚¬ìš© í•¨ìˆ˜ëŠ” ë§¨ ë°‘ì—~~#####
 
 
-// °ÔÀÓ ³» ¸ğµç »ç¿îµå Á¾·ù¸¦ Á¤ÀÇ
-// Â÷ÈÄ STATE µîµî ¸ÂÃç¼­ ´õÃß°¡
+// ê²Œì„ ë‚´ ëª¨ë“  ì‚¬ìš´ë“œ ì¢…ë¥˜ë¥¼ ì •ì˜
+// ì°¨í›„ STATE ë“±ë“± ë§ì¶°ì„œ ë”ì¶”ê°€
 
 
-//ÀÎ½ºÆåÅÍ¿¡ ³ëÃâÇÏ±â À§ÇÑ Å¬·¡½º
+//ì¸ìŠ¤í™í„°ì— ë…¸ì¶œí•˜ê¸° ìœ„í•œ í´ë˜ìŠ¤
 [System.Serializable]
 public class SoundTypeClip
 {
-	[Tooltip("Àç»ıÇÒ »ç¿îµåÀÇ Á¾·ù¸¦ ¼±ÅÃ")]
-	public SOUND_TYPE type; // »ç¿îµå Á¾·ù
-	[Tooltip("¿¬°áÇÒ ¿Àµğ¿À Å¬¸³(.wav, .mp3 µî)À» ÇÒ´ç")]
-	public AudioClip clip;// ½ÇÁ¦ »ç¿îµå ÆÄÀÏ
+	[Tooltip("ì¬ìƒí•  ì‚¬ìš´ë“œì˜ ì¢…ë¥˜ë¥¼ ì„ íƒ")]
+	public SOUND_TYPE type; // ì‚¬ìš´ë“œ ì¢…ë¥˜
+	[Tooltip("ì—°ê²°í•  ì˜¤ë””ì˜¤ í´ë¦½(.wav, .mp3 ë“±)ì„ í• ë‹¹")]
+	public AudioClip clip;// ì‹¤ì œ ì‚¬ìš´ë“œ íŒŒì¼
 
 
 
 
-	[Header("3D »ç¿îµå ¼³Á¤ (BGM,UIµî 2D »ç¿îµå´Â Àû¿ë ¾È µÊ)")]
-	[Tooltip("3D È¿°úÀ½ Àü¿ë.ÀÌ °Å¸® ¾È¿¡¼­´Â ¼Ò¸®°¡ ÃÖ´ëÀ¯Áö")]
+	[Header("3D ì‚¬ìš´ë“œ ì„¤ì • (BGM,UIë“± 2D ì‚¬ìš´ë“œëŠ” ì ìš© ì•ˆ ë¨)")]
+	[Tooltip("3D íš¨ê³¼ìŒ ì „ìš©.ì´ ê±°ë¦¬ ì•ˆì—ì„œëŠ” ì†Œë¦¬ê°€ ìµœëŒ€ìœ ì§€")]
 	public float minDistance = 1.0f;
-	[Tooltip("3D È¿°úÀ½ Àü¿ë.ÀÌ °Å¸® ¹Û¿¡¼­´Â ¼Ò¸® X")]
+	[Tooltip("3D íš¨ê³¼ìŒ ì „ìš©.ì´ ê±°ë¦¬ ë°–ì—ì„œëŠ” ì†Œë¦¬ X")]
 	public float maxDistance = 50.0f;
 	[Range(0f, 1f)]
-	[Tooltip("3D »ç¿îµå ÇØ´çÅ¬¸³ º¼·ı °³º° ¹èÀ²(3D¿ë) (0~1)")]
-	public float volumeScale = 1.0f; // ±âº»°ªÀº 1 (ÃÖ´ë)
+	[Tooltip("3D ì‚¬ìš´ë“œ í•´ë‹¹í´ë¦½ ë³¼ë¥¨ ê°œë³„ ë°°ìœ¨(3Dìš©) (0~1)")]
+	public float volumeScale = 1.0f; // ê¸°ë³¸ê°’ì€ 1 (ìµœëŒ€)
 
 }
 
@@ -47,7 +47,7 @@ public class SoundManager : MonoBehaviour
 				instance = FindObjectOfType<SoundManager>();
 				if (instance == null)
 				{
-					Debug.LogError("¾À¿¡ SoundManager ´©¶ô! ÇÏÀÌ¾î¶óÅ°¿¡ »ç¿îµå¸Å´ÏÀú ÇÊ¿ä");
+					Debug.LogError("ì”¬ì— SoundManager ëˆ„ë½! í•˜ì´ì–´ë¼í‚¤ì— ì‚¬ìš´ë“œë§¤ë‹ˆì € í•„ìš”");
 				}
 			}
 			return instance;
@@ -55,37 +55,37 @@ public class SoundManager : MonoBehaviour
 	}
 
 
-	[Header("<size=18>»ç¿ë½Ã SoundManager.Instance.¸Ş¼­µå¸í</size>\n\n" +
-		"»ç¿îµå µ¥ÀÌÅÍ µî·Ï½Ã ÇÊ¿äÇÑ¸¸Å­ ¸®½ºÆ® ¿ìÃø ¼ıÀÚº¯°æ\n" +
+	[Header("<size=18>ì‚¬ìš©ì‹œ SoundManager.Instance.ë©”ì„œë“œëª…</size>\n\n" +
+		"ì‚¬ìš´ë“œ ë°ì´í„° ë“±ë¡ì‹œ í•„ìš”í•œë§Œí¼ ë¦¬ìŠ¤íŠ¸ ìš°ì¸¡ ìˆ«ìë³€ê²½\n" +
 		"" +
-		"====== »ç¿ë °¡´ÉÇÑ ¸Ş¼­µå ¸ñ·Ï ======\n" +
-		"1. PlayBGM(SOUND_TYPE) - ¹è°æÀ½ Àç»ıÇÔ\n" +
-		"2. PlaySFXUI(SOUND_TYPE) - UI(2D)È¿°úÀ½ Àç»ıÇÔ\n" +
-		"3. PlaySFX3DAtPosition(SOUND_TYPE, Vector3) - 3D È¿°úÀ½ Àç»ıÇÔ\n" +
-		"¡Ø ÇÃ·¹ÀÌ ÇÔ¼ö µÚ¿¡ ÇÇÄ¡°ª(floatÇü min, max) Ãß°¡ ½Ã ·£´ı Àç»ıµÊ(¿À¹ö·Îµù)\n" +
-		"4. StopBGM() - ¹è°æÀ½ Á¤ÁöÇÔ\n" +
-		"5. StopAll() - ¸ğµç ¼Ò¸® Á¤ÁöÇÔ\n" +
-		"6. SetBGM,SFXµî ¸Ş¼­µå - Â÷ÈÄ UI¿É¼ÇÃ¢°ú ¿¬µ¿")]
+		"====== ì‚¬ìš© ê°€ëŠ¥í•œ ë©”ì„œë“œ ëª©ë¡ ======\n" +
+		"1. PlayBGM(SOUND_TYPE) - ë°°ê²½ìŒ ì¬ìƒí•¨\n" +
+		"2. PlaySFXUI(SOUND_TYPE) - UI(2D)íš¨ê³¼ìŒ ì¬ìƒí•¨\n" +
+		"3. PlaySFX3DAtPosition(SOUND_TYPE, Vector3) - 3D íš¨ê³¼ìŒ ì¬ìƒí•¨\n" +
+		"â€» í”Œë ˆì´ í•¨ìˆ˜ ë’¤ì— í”¼ì¹˜ê°’(floatí˜• min, max) ì¶”ê°€ ì‹œ ëœë¤ ì¬ìƒë¨(ì˜¤ë²„ë¡œë”©)\n" +
+		"4. StopBGM() - ë°°ê²½ìŒ ì •ì§€í•¨\n" +
+		"5. StopAll() - ëª¨ë“  ì†Œë¦¬ ì •ì§€í•¨\n" +
+		"6. SetBGM,SFXë“± ë©”ì„œë“œ - ì°¨í›„ UIì˜µì…˜ì°½ê³¼ ì—°ë™")]
 
 
 	[Space(10)]
-	[Header("<size=14>1. »ç¿îµå µ¥ÀÌÅÍ µî·Ï</size>")]
-	[Tooltip("»ç¿îµå Å¸ÀÔ°ú ¿Àµğ¿À Å¬¸³À» Â¦Áö¾î µî·ÏÇÏ´Â ¸®½ºÆ®")]
+	[Header("<size=14>1. ì‚¬ìš´ë“œ ë°ì´í„° ë“±ë¡</size>")]
+	[Tooltip("ì‚¬ìš´ë“œ íƒ€ì…ê³¼ ì˜¤ë””ì˜¤ í´ë¦½ì„ ì§ì§€ì–´ ë“±ë¡í•˜ëŠ” ë¦¬ìŠ¤íŠ¸")]
 	[SerializeField] private SoundTypeClip[] soundList;
 
 	[Space(10)]
-	[Header("<size=14>2. ¿Àµğ¿À ¼Ò½º ¿¬°á BGM&UI(2D)</size>")]
+	[Header("<size=14>2. ì˜¤ë””ì˜¤ ì†ŒìŠ¤ ì—°ê²° BGM&UI(2D)</size>")]
 	[SerializeField]
-	[Tooltip("¹è°æÀ½¾Ç(BGM) SFXÀç»ıÀ» Àü´ãÇÒ ¼Ò½º ¿¬°á. Loop(¹İº¹ Àç»ı)°¡ ÀÚµ¿À¸·Î È°¼ºÈ­")]
-	private AudioSource bgmSource; // BGM Àü¿ë ½ºÇÇÄ¿ (¹İº¹ Àç»ı ÄÑµÎ±â)
+	[Tooltip("ë°°ê²½ìŒì•…(BGM) SFXì¬ìƒì„ ì „ë‹´í•  ì†ŒìŠ¤ ì—°ê²°. Loop(ë°˜ë³µ ì¬ìƒ)ê°€ ìë™ìœ¼ë¡œ í™œì„±í™”")]
+	private AudioSource bgmSource; // BGM ì „ìš© ìŠ¤í”¼ì»¤ (ë°˜ë³µ ì¬ìƒ ì¼œë‘ê¸°)
 	[SerializeField]
-	[Tooltip("UI(2D) SFXÀç»ıÀ» Àü´ãÇÒ ¼Ò½º¿¬°á.")]
-	private AudioSource sfxUISource; // UI/ÀÏ¹İ È¿°úÀ½ Àü¿ë ½ºÇÇÄ¿ (2D)
-	[Header("ÇöÀç BGM¼Ò½º¿¡ ÀÔ·ÂµÈ »ç¿îµå(Ãâ·Â È®ÀÎ¿ë)")]
+	[Tooltip("UI(2D) SFXì¬ìƒì„ ì „ë‹´í•  ì†ŒìŠ¤ì—°ê²°.")]
+	private AudioSource sfxUISource; // UI/ì¼ë°˜ íš¨ê³¼ìŒ ì „ìš© ìŠ¤í”¼ì»¤ (2D)
+	[Header("í˜„ì¬ BGMì†ŒìŠ¤ì— ì…ë ¥ëœ ì‚¬ìš´ë“œ(ì¶œë ¥ í™•ì¸ìš©)")]
 	public SOUND_TYPE curBGM;
 
 	[Space(10)]
-	[Header("<size=14>3. ±âº» º¼·ı ¼³Á¤</size>")]
+	[Header("<size=14>3. ê¸°ë³¸ ë³¼ë¥¨ ì„¤ì •</size>")]
 	[Range(0f, 1f)]
 	public float bgmVolume = 1.0f;
 	[Range(0f, 1f)]
@@ -94,64 +94,64 @@ public class SoundManager : MonoBehaviour
 	public float sfx3DVolume = 1.0f;
 
 	[Space(10)]
-	[Header("<size=14>4. 3D »ç¿îµå Ç®¸µ »çÀÌÁî ¼³Á¤</size>")]
-	[Tooltip("°ÔÀÓ ½ÃÀÛ ½Ã ¹Ì¸® ¸¸µé¾îµÑ 3D ½ºÇÇÄ¿ÀÇ °³¼ö.")]
+	[Header("<size=14>4. 3D ì‚¬ìš´ë“œ í’€ë§ ì‚¬ì´ì¦ˆ ì„¤ì •</size>")]
+	[Tooltip("ê²Œì„ ì‹œì‘ ì‹œ ë¯¸ë¦¬ ë§Œë“¤ì–´ë‘˜ 3D ìŠ¤í”¼ì»¤ì˜ ê°œìˆ˜.")]
 	[SerializeField]
 	private uint initialPoolSize = 20;
 
 
 
 
-	//¿­°ÅÇüÀ¸·Î ºü¸£°Ô Å¬¸³pÀ» Ã£±â À§ÇÑ µñ¼Å³Ê¸®
-	//»ç¿îµåÅ¸ÀÔÀ» Å°·Î¹Ş°í, Å¬·¡½º¸¦ °ªÀ¸·Î
+	//ì—´ê±°í˜•ìœ¼ë¡œ ë¹ ë¥´ê²Œ í´ë¦½pì„ ì°¾ê¸° ìœ„í•œ ë”•ì…”ë„ˆë¦¬
+	//ì‚¬ìš´ë“œíƒ€ì…ì„ í‚¤ë¡œë°›ê³ , í´ë˜ìŠ¤ë¥¼ ê°’ìœ¼ë¡œ
 	private Dictionary<SOUND_TYPE, SoundTypeClip> soundDict = new Dictionary<SOUND_TYPE, SoundTypeClip>();
-	//·çÇÁ »ç¿îµå¸¦ ÃßÀûÇÏ±â À§ÇÑ µñ¼Å³Ê¸® (¾î¶² ¿ÀºêÁ§Æ®°¡ ¾î¶² ¼Ò½º¸¦ ¾²°í ÀÖ´ÂÁö ±â·Ï)
+	//ë£¨í”„ ì‚¬ìš´ë“œë¥¼ ì¶”ì í•˜ê¸° ìœ„í•œ ë”•ì…”ë„ˆë¦¬ (ì–´ë–¤ ì˜¤ë¸Œì íŠ¸ê°€ ì–´ë–¤ ì†ŒìŠ¤ë¥¼ ì“°ê³  ìˆëŠ”ì§€ ê¸°ë¡)
 	private Dictionary<Transform, AudioSource> activeLoopSounds = new Dictionary<Transform, AudioSource>();
-	// 3D È¿°úÀ½ Àç»ıÀ» À§ÇÑ ¿Àµğ¿À ¼Ò½º Ç®(Pool)
+	// 3D íš¨ê³¼ìŒ ì¬ìƒì„ ìœ„í•œ ì˜¤ë””ì˜¤ ì†ŒìŠ¤ í’€(Pool)
 	private List<AudioSource> sfx3DPool = new List<AudioSource>();
 
 	private void Awake()
 	{
-		// ½Ì±ÛÅæ ±âº» ¼¼ÆÃ (¾ÀÀÌ ³Ñ¾î°¡µµ ÆÄ±«µÇÁö ¾Ê°Ô À¯Áö)
+		// ì‹±ê¸€í†¤ ê¸°ë³¸ ì„¸íŒ… (ì”¬ì´ ë„˜ì–´ê°€ë„ íŒŒê´´ë˜ì§€ ì•Šê²Œ ìœ ì§€)
 		if (instance == null)
 		{
 			instance = this;
 			DontDestroyOnLoad(gameObject);
-			InitializeDictionary(); // ½ÃÀÛÇÒ ¶§ µñ¼Å³Ê¸® ¼¼ÆÃ
-			InitializeSFXPool();    // ½ÃÀÛÇÒ ¶§ 3D »ç¿îµå Ç®¸µ ¼¼ÆÃ
+			InitializeDictionary(); // ì‹œì‘í•  ë•Œ ë”•ì…”ë„ˆë¦¬ ì„¸íŒ…
+			InitializeSFXPool();    // ì‹œì‘í•  ë•Œ 3D ì‚¬ìš´ë“œ í’€ë§ ì„¸íŒ…
 
 		}
 		else if (instance != this)
 		{
 
-			Debug.LogWarning("Áßº¹µÈ SoundManager ¹ß°ß. ÆÄ±« ÈÄ ½ÇÇà");
+			Debug.LogWarning("ì¤‘ë³µëœ SoundManager ë°œê²¬. íŒŒê´´ í›„ ì‹¤í–‰");
 			Destroy(gameObject);
 		}
 	}
 
-	//ÀÎ½ºÆåÅÍ¿¡ ¿Ã¸°°Å µñ¼Å³Ê¸®·Î ÀÚµ¿À¸·Î ¿Å°Ü ´ã´ÂÀÛ¾÷
+	//ì¸ìŠ¤í™í„°ì— ì˜¬ë¦°ê±° ë”•ì…”ë„ˆë¦¬ë¡œ ìë™ìœ¼ë¡œ ì˜®ê²¨ ë‹´ëŠ”ì‘ì—…
 	private void InitializeDictionary()
 	{
 		foreach (var item in soundList)
 		{
-			// Áßº¹ ¹æÁö: µñ¼Å³Ê¸®¿¡ °°Àº Å°°¡ ÀÌ¹Ì ÀÖ´ÂÁö È®ÀÎ
+			// ì¤‘ë³µ ë°©ì§€: ë”•ì…”ë„ˆë¦¬ì— ê°™ì€ í‚¤ê°€ ì´ë¯¸ ìˆëŠ”ì§€ í™•ì¸
 			if (!soundDict.ContainsKey(item.type))
 			{
-				//Å¬·¡½º³»ÀÇ Å¸ÀÔ¸â¹ö¸¦ Å°·Î, Å¬·¡½ºÀÚÃ¼¸¦ °ªÀ¸·Î´õÇÏ±â
+				//í´ë˜ìŠ¤ë‚´ì˜ íƒ€ì…ë©¤ë²„ë¥¼ í‚¤ë¡œ, í´ë˜ìŠ¤ìì²´ë¥¼ ê°’ìœ¼ë¡œë”í•˜ê¸°
 				soundDict.Add(item.type, item);
 			}
 			else
 			{
-				Debug.LogWarning($"[SoundManager] {item.type} »ç¿îµå Áßº¹ µî·Ï È®ÀÎ¿ä¸Á");
+				Debug.LogWarning($"[SoundManager] {item.type} ì‚¬ìš´ë“œ ì¤‘ë³µ ë“±ë¡ í™•ì¸ìš”ë§");
 			}
 		}
 	}
 
 
 
-	// ================== [¿ÀºêÁ§Æ® Ç®¸µ ÇÔ¼öµé] ==================
+	// ================== [ì˜¤ë¸Œì íŠ¸ í’€ë§ í•¨ìˆ˜ë“¤] ==================
 
-	// ÃÊ±â ½ºÇÇÄ¿ Ç® »ı¼º
+	// ì´ˆê¸° ìŠ¤í”¼ì»¤ í’€ ìƒì„±
 	private void InitializeSFXPool()
 	{
 		for (int i = 0; i < initialPoolSize; i++)
@@ -160,21 +160,21 @@ public class SoundManager : MonoBehaviour
 		}
 	}
 
-	// »õ·Î¿î ¿Àµğ¿À ¼Ò½º »ı¼º ¹× Ç®¸®½ºÆ®¿¡ Ãß°¡
+	// ìƒˆë¡œìš´ ì˜¤ë””ì˜¤ ì†ŒìŠ¤ ìƒì„± ë° í’€ë¦¬ìŠ¤íŠ¸ì— ì¶”ê°€
 	private AudioSource CreateNewAudioSourceToPool()
 	{
-		GameObject go = new GameObject($"SFX_Pool_Speaker_{sfx3DPool.Count}");//ÀÌ¸§¹øÈ£¸Å±â±â
-		go.transform.SetParent(this.transform); // ¸Å´ÏÀúÀÇ ÀÚ½Ä ¿ÀºêÁ§Æ®·Î Á¤¸®
+		GameObject go = new GameObject($"SFX_Pool_Speaker_{sfx3DPool.Count}");//ì´ë¦„ë²ˆí˜¸ë§¤ê¸°ê¸°
+		go.transform.SetParent(this.transform); // ë§¤ë‹ˆì €ì˜ ìì‹ ì˜¤ë¸Œì íŠ¸ë¡œ ì •ë¦¬
 
 		AudioSource source = go.AddComponent<AudioSource>();
-		source.spatialBlend = 1.0f; // 1.0 = ¿ÏÀüÇÑ 3D »ç¿îµå
+		source.spatialBlend = 1.0f; // 1.0 = ì™„ì „í•œ 3D ì‚¬ìš´ë“œ
 		source.playOnAwake = false;
 
 		sfx3DPool.Add(source);
 		return source;
 	}
 
-	// Ç®¿¡¼­ »ç¿ë °¡´ÉÇÑ(ÇöÀç Àç»ı ÁßÀÌ ¾Æ´Ñ) ½ºÇÇÄ¿¸¦ Ã£¾Æ ¹İÈ¯
+	// í’€ì—ì„œ ì‚¬ìš© ê°€ëŠ¥í•œ(í˜„ì¬ ì¬ìƒ ì¤‘ì´ ì•„ë‹Œ) ìŠ¤í”¼ì»¤ë¥¼ ì°¾ì•„ ë°˜í™˜
 	private AudioSource GetAvailableSFX3DSource()
 	{
 		for (int i = 0; i < sfx3DPool.Count; i++)
@@ -185,7 +185,7 @@ public class SoundManager : MonoBehaviour
 			}
 		}
 
-		//¸ğµç ½ºÇÇÄ¿°¡ »ç¿ë ÁßÀÏ °æ¿ì, »õ·Ó°Ô ÇÏ³ª¸¦ ´õ »ı¼ºÇÏ¿© ¹İÈ¯
+		//ëª¨ë“  ìŠ¤í”¼ì»¤ê°€ ì‚¬ìš© ì¤‘ì¼ ê²½ìš°, ìƒˆë¡­ê²Œ í•˜ë‚˜ë¥¼ ë” ìƒì„±í•˜ì—¬ ë°˜í™˜
 		return CreateNewAudioSourceToPool();
 	}
 
@@ -196,24 +196,24 @@ public class SoundManager : MonoBehaviour
 	//	{
 	//		return clip;
 	//	}
-	//	//µğ¹ö±ë
-	//	Debug.LogError($"[SoundManager] {type}¿¡ ÇØ´çÇÏ´Â »ç¿îµå ÆÄÀÏ´©¶ô! ÀÎ½ºÆåÅÍ È®ÀÎ¤·¸Á.");
+	//	//ë””ë²„ê¹…
+	//	Debug.LogError($"[SoundManager] {type}ì— í•´ë‹¹í•˜ëŠ” ì‚¬ìš´ë“œ íŒŒì¼ëˆ„ë½! ì¸ìŠ¤í™í„° í™•ì¸ã…‡ë§.");
 	//	return null;
 	//}
 
-	//Àç»ı¿ë, Å¬·¡½º  ²¨³»¿À±â(¿©±â¼­¸¸»ç¿ë)
+	//ì¬ìƒìš©, í´ë˜ìŠ¤  êº¼ë‚´ì˜¤ê¸°(ì—¬ê¸°ì„œë§Œì‚¬ìš©)
 	private SoundTypeClip GetSoundData(SOUND_TYPE type)
 	{
 		if (soundDict.TryGetValue(type, out SoundTypeClip data))
 		{
 			return data;
 		}
-		Debug.LogError($"[SoundManager] {type} µ¥ÀÌÅÍ ´©¶ôµÊ");
+		Debug.LogError($"[SoundManager] {type} ë°ì´í„° ëˆ„ë½ë¨");
 		return null;
 	}
 
-	//// ================== [½Ç½Ã°£ ¹èÀ² ÃßÀû ÇÔ¼ö] ==================//¹Ì»ç¿ë
-	//// ÇöÀç3D ½ºÇÇÄ¿¿¡¼­ Àç»ı ÁßÀÎ ¼Ò¸® ÆÄÀÏÀÌ ¹«¾ùÀÎÁö È®ÀÎÇÏ¿© °¢ÀÚ¸ÂÃçµĞ ¹èÀ²°®°í¿À±â
+	//// ================== [ì‹¤ì‹œê°„ ë°°ìœ¨ ì¶”ì  í•¨ìˆ˜] ==================//ë¯¸ì‚¬ìš©
+	//// í˜„ì¬3D ìŠ¤í”¼ì»¤ì—ì„œ ì¬ìƒ ì¤‘ì¸ ì†Œë¦¬ íŒŒì¼ì´ ë¬´ì—‡ì¸ì§€ í™•ì¸í•˜ì—¬ ê°ìë§ì¶°ë‘” ë°°ìœ¨ê°–ê³ ì˜¤ê¸°
 	//private float GetSFX3DVolumeScale(AudioClip targetClip)
 	//{
 	//	if (targetClip == null)
@@ -232,22 +232,22 @@ public class SoundManager : MonoBehaviour
 
 
 
-	#region ¿ÜºÎ È£Ãâ¿ë
-	// ================== [½ÇÁ¦ »ç¿ëµÇ´Â Àç»ı ÇÔ¼öµé] ==================
+	#region ì™¸ë¶€ í˜¸ì¶œìš©
+	// ================== [ì‹¤ì œ ì‚¬ìš©ë˜ëŠ” ì¬ìƒ í•¨ìˆ˜ë“¤] ==================
 
 
 
-	// PlayBGM(»ç¿îµå ¿­°ÅÇü) BGMÀç»ı
-	// PlaySFX(»ç¿îµå ¿­°ÅÇü) UI Å¬¸¯,ÁÖ»çÀ§±¼¸®±â µî È­¸éÀüÃ¼¿¡¼­ µé·Á¾ßÇÏ´Â 2d»ç¿îµåÀç»ı
-	// PlaySFXAtPosition(»ç¿îµå ¿­°ÅÇü, ÁÂÇ¥) ÀÌµ¿,ÃÑ¾Ë,Æø¹ßµîµî 3d»ç¿îµå Àç»ı
+	// PlayBGM(ì‚¬ìš´ë“œ ì—´ê±°í˜•) BGMì¬ìƒ
+	// PlaySFX(ì‚¬ìš´ë“œ ì—´ê±°í˜•) UI í´ë¦­,ì£¼ì‚¬ìœ„êµ´ë¦¬ê¸° ë“± í™”ë©´ì „ì²´ì—ì„œ ë“¤ë ¤ì•¼í•˜ëŠ” 2dì‚¬ìš´ë“œì¬ìƒ
+	// PlaySFXAtPosition(ì‚¬ìš´ë“œ ì—´ê±°í˜•, ì¢Œí‘œ) ì´ë™,ì´ì•Œ,í­ë°œë“±ë“± 3dì‚¬ìš´ë“œ ì¬ìƒ
 
 
 
 
 	/// <summary>
-	/// BGMÀç»ı
+	/// BGMì¬ìƒ
 	/// </summary>
-	/// <param name="type">»ç¿îµåÅ¸ÀÔ ÀÔ·Â</param>
+	/// <param name="type">ì‚¬ìš´ë“œíƒ€ì… ì…ë ¥</param>
 	public void PlayBGM(SOUND_TYPE type)
 	{
 		SoundTypeClip data = GetSoundData(type);
@@ -256,20 +256,20 @@ public class SoundManager : MonoBehaviour
 			curBGM = type;
 			bgmSource.volume = bgmVolume;
 			bgmSource.clip = data.clip;
-			bgmSource.loop = true; // BGMÀº ¹«ÇÑ¹İº¹
+			bgmSource.loop = true; // BGMì€ ë¬´í•œë°˜ë³µ
 			bgmSource.Play();
 		}
 	}
-	// »ç¿ë¿¹
+	// ì‚¬ìš©ì˜ˆ
 	//private void Start()
 	//{
-	//	// °ÔÀÓ ½ÃÀÛ(¶Ç´Â ·Îºñ ¾À ·Îµå) ½Ã ·Îºñ BGM Àç»ı
+	//	// ê²Œì„ ì‹œì‘(ë˜ëŠ” ë¡œë¹„ ì”¬ ë¡œë“œ) ì‹œ ë¡œë¹„ BGM ì¬ìƒ
 	//	SoundManager.Instance.PlayBGM(SOUND_TYPE.BGM_LOBBY);
 	//}
 
 
 	/// <summary>
-	/// UI Å¬¸¯, ÁÖ»çÀ§ ±¼¸®±â µî È­¸é ÀüÃ¼¿¡¼­ µé·Á¾ß ÇÏ´Â 2D È¿°úÀ½
+	/// UI í´ë¦­, ì£¼ì‚¬ìœ„ êµ´ë¦¬ê¸° ë“± í™”ë©´ ì „ì²´ì—ì„œ ë“¤ë ¤ì•¼ í•˜ëŠ” 2D íš¨ê³¼ìŒ
 	/// </summary>
 	/// <param name="type"></param>
 	public void PlaySFXUI(SOUND_TYPE type)
@@ -278,22 +278,22 @@ public class SoundManager : MonoBehaviour
 		if (data != null)
 		{
 
-			sfxUISource.pitch = 1.0f; // ±âº» ÇÇÄ¡·Î ÃÊ±âÈ­
+			sfxUISource.pitch = 1.0f; // ê¸°ë³¸ í”¼ì¹˜ë¡œ ì´ˆê¸°í™”
 			sfxUISource.PlayOneShot(data.clip, sfxUIVolume * data.volumeScale);
 		}
 	}
-	// »ç¿ë¿¹
+	// ì‚¬ìš©ì˜ˆ
 	// SoundManager.Instance.PlaySFX(SOUND_TYPE.SFX_DICE_ROLL);
 
 
 
 	/// <summary>
-	/// ´ÜÁ¶·Î¿òÀ» ¹æÁöÇÏ±â À§ÇØ ·£´ıÇÑ ÇÇÄ¡(À½³ôÀÌ)·Î 2D È¿°úÀ½ Àç»ı
+	/// ë‹¨ì¡°ë¡œì›€ì„ ë°©ì§€í•˜ê¸° ìœ„í•´ ëœë¤í•œ í”¼ì¹˜(ìŒë†’ì´)ë¡œ 2D íš¨ê³¼ìŒ ì¬ìƒ
 	/// </summary>
 	/// <param name="type"></param>
 	/// <param name="pitchMin"></param>
 	/// <param name="pitchMax"></param>
-	// »ç¿ë ¿¹: PlaySFX(SOUND_TYPE.SFX_SHOOT, 0.9f, 1.1f);
+	// ì‚¬ìš© ì˜ˆ: PlaySFX(SOUND_TYPE.SFX_SHOOT, 0.9f, 1.1f);
 	public void PlaySFXUI(SOUND_TYPE type, float pitchMin, float pitchMax)
 	{
 		SoundTypeClip data = GetSoundData(type);
@@ -308,8 +308,8 @@ public class SoundManager : MonoBehaviour
 
 
 	/// <summary>
-	/// ÃÑ¼Ò¸®, Æø¹ßÀ½,ÀÌµ¿ µî Æ¯Á¤ À§Ä¡¿¡¼­ ³ª¾ß ÇÏ´Â ´Ü¹ß¼º 3D È¿°úÀ½À» Àç»ı(·£´ıx)
-	///  Å¸ÀÔ°ú ÁÂÇ¥¹Ş±â
+	/// ì´ì†Œë¦¬, í­ë°œìŒ,ì´ë™ ë“± íŠ¹ì • ìœ„ì¹˜ì—ì„œ ë‚˜ì•¼ í•˜ëŠ” ë‹¨ë°œì„± 3D íš¨ê³¼ìŒì„ ì¬ìƒ(ëœë¤x)
+	///  íƒ€ì…ê³¼ ì¢Œí‘œë°›ê¸°
 	/// </summary>
 	/// <param name="type"></param>
 	/// <param name="position"></param>
@@ -320,25 +320,25 @@ public class SoundManager : MonoBehaviour
 		if (data != null)
 		{
 
-			// ÁöÁ¤µÈ À§Ä¡¿¡ ÀÓ½Ã ½ºÇÇÄ¿¸¦ ¸¸µé°í, ¼Ò¸®°¡ ³¡³ª¸é ¾Ë¾Æ¼­ »èÁ¦µÊ
-			AudioSource source = GetAvailableSFX3DSource();//°¡´ÉÇÑ ¼Ò½º Ç®¿¡¼­ °®°í¿À±â
-			source.transform.position = position;// ÀÔ·ÂÇÑÁÂÇ¥·Î Ãâ·ÂÇÒ ÁÂÇ¥ÁöÁ¤
-			source.clip = data.clip;//Å¸ÀÔÀ¸·Î °®°í¿Â Å¬¸³À» Ãâ·ÂÇÒ Å¬¸³À¸·Î ÁöÁ¤
+			// ì§€ì •ëœ ìœ„ì¹˜ì— ì„ì‹œ ìŠ¤í”¼ì»¤ë¥¼ ë§Œë“¤ê³ , ì†Œë¦¬ê°€ ëë‚˜ë©´ ì•Œì•„ì„œ ì‚­ì œë¨
+			AudioSource source = GetAvailableSFX3DSource();//ê°€ëŠ¥í•œ ì†ŒìŠ¤ í’€ì—ì„œ ê°–ê³ ì˜¤ê¸°
+			source.transform.position = position;// ì…ë ¥í•œì¢Œí‘œë¡œ ì¶œë ¥í•  ì¢Œí‘œì§€ì •
+			source.clip = data.clip;//íƒ€ì…ìœ¼ë¡œ ê°–ê³ ì˜¨ í´ë¦½ì„ ì¶œë ¥í•  í´ë¦½ìœ¼ë¡œ ì§€ì •
 
 			source.minDistance = data.minDistance;
 			source.maxDistance = data.maxDistance;
-			source.volume = sfx3DVolume * data.volumeScale;//º¼¤©¹ÂÁöÁ¤
-			source.pitch = 1.0f;//·£´ı ¾Æ´Ï¹Ç·Î ±âº»¼³Á¤
+			source.volume = sfx3DVolume * data.volumeScale;//ë³¼ã„¹ë®¤ì§€ì •
+			source.pitch = 1.0f;//ëœë¤ ì•„ë‹ˆë¯€ë¡œ ê¸°ë³¸ì„¤ì •
 			source.loop = false;
 			source.Play();
 
 		}
 	}
-	//»ç¿ë¿¹
+	//ì‚¬ìš©ì˜ˆ
 	//Soundmanager.Instance.PlaySFXAtPosition(SOUND_TYPE.SFX_SHOOT, transform.position);
 
 	/// <summary>
-	/// ÇÇÄ¡ ·£´ı Àç»ı(¿À¹ö·Îµù)
+	/// í”¼ì¹˜ ëœë¤ ì¬ìƒ(ì˜¤ë²„ë¡œë”©)
 	/// </summary>
 	/// <param name="type"></param>
 	/// <param name="position"></param>
@@ -351,15 +351,15 @@ public class SoundManager : MonoBehaviour
 		if (data != null)
 		{
 
-			// ÁöÁ¤µÈ À§Ä¡¿¡ ÀÓ½Ã ½ºÇÇÄ¿¸¦ ¸¸µé°í, ¼Ò¸®°¡ ³¡³ª¸é ¾Ë¾Æ¼­ »èÁ¦µÊ
-			AudioSource source = GetAvailableSFX3DSource();//°¡´ÉÇÑ ¼Ò½º°®°í¿À±â
-			source.transform.position = position;// ÀÔ·ÂÇÑÁÂÇ¥·Î Ãâ·ÂÇÒ ÁÂÇ¥ÁöÁ¤
-			source.clip = data.clip;//Å¸ÀÔÀ¸·Î °®°í¿Â Å¬¸³À» Ãâ·ÂÇÒ Å¬¸³À¸·Î ÁöÁ¤
+			// ì§€ì •ëœ ìœ„ì¹˜ì— ì„ì‹œ ìŠ¤í”¼ì»¤ë¥¼ ë§Œë“¤ê³ , ì†Œë¦¬ê°€ ëë‚˜ë©´ ì•Œì•„ì„œ ì‚­ì œë¨
+			AudioSource source = GetAvailableSFX3DSource();//ê°€ëŠ¥í•œ ì†ŒìŠ¤ê°–ê³ ì˜¤ê¸°
+			source.transform.position = position;// ì…ë ¥í•œì¢Œí‘œë¡œ ì¶œë ¥í•  ì¢Œí‘œì§€ì •
+			source.clip = data.clip;//íƒ€ì…ìœ¼ë¡œ ê°–ê³ ì˜¨ í´ë¦½ì„ ì¶œë ¥í•  í´ë¦½ìœ¼ë¡œ ì§€ì •
 			source.minDistance = data.minDistance;
 			source.maxDistance = data.maxDistance;
-			source.volume = sfx3DVolume * data.volumeScale;//º¼¤©¹ÂÁöÁ¤
+			source.volume = sfx3DVolume * data.volumeScale;//ë³¼ã„¹ë®¤ì§€ì •
 
-			source.pitch = Random.Range(pitchMin, pitchMax);//·£´ı
+			source.pitch = Random.Range(pitchMin, pitchMax);//ëœë¤
 			source.loop = false;
 			source.Play();
 
@@ -369,19 +369,19 @@ public class SoundManager : MonoBehaviour
 
 	public void PlaySFX3DLoop(SOUND_TYPE type, Transform targetTr)
 	{
-		//ÇØ´ç ¿ÀºêÁ§Æ®°¡ ÀÌ¹Ì »ç¿îµå·çÇÁÁßÀÌ¸é ½ÇÇàx
+		//í•´ë‹¹ ì˜¤ë¸Œì íŠ¸ê°€ ì´ë¯¸ ì‚¬ìš´ë“œë£¨í”„ì¤‘ì´ë©´ ì‹¤í–‰x
 		if (activeLoopSounds.ContainsKey(targetTr))
 		{
 			return;
 		}
-		//µ¥ÀÌÅ¸°®°í¿À±â
+		//ë°ì´íƒ€ê°–ê³ ì˜¤ê¸°
 		SoundTypeClip data = GetSoundData(type);
 		if (data != null)
 		{
 			AudioSource source = GetAvailableSFX3DSource();
-			//ÁÂÇ¥ÀÏÄ¡
+			//ì¢Œí‘œì¼ì¹˜
 			source.transform.position = targetTr.position;
-			//ÇØ´ç Å¸°Ù¿¡ ÀÌ ¿Àµğ¿À¼Ò½º ºÙÀÌ±â(Áö¼ÓÀç»ı¿ë)
+			//í•´ë‹¹ íƒ€ê²Ÿì— ì´ ì˜¤ë””ì˜¤ì†ŒìŠ¤ ë¶™ì´ê¸°(ì§€ì†ì¬ìƒìš©)
 			source.transform.SetParent(targetTr);
 
 			source.clip = data.clip;
@@ -400,10 +400,10 @@ public class SoundManager : MonoBehaviour
 	}
 
 
-	// ================== [Á¤Áö ÇÔ¼öµé] ==================
+	// ================== [ì •ì§€ í•¨ìˆ˜ë“¤] ==================
 
 
-	// Àç»ı ÁßÀÎ BGM Á¤Áö
+	// ì¬ìƒ ì¤‘ì¸ BGM ì •ì§€
 
 	public void StopBGM()
 	{
@@ -414,34 +414,34 @@ public class SoundManager : MonoBehaviour
 	}
 
 	
-	// 3D ·çÇÁ »ç¿îµå Á¤Áö ¹× È¸¼ö
+	// 3D ë£¨í”„ ì‚¬ìš´ë“œ ì •ì§€ ë° íšŒìˆ˜
 
 	public void StopSFX3DLoop(Transform targetTr)
 	{
-		//ÇØ´ç Æ®·£½ºÆû¿¡¼­ Àç»ı ÁßÀÎ ·çÇÁ »ç¿îµå°¡ ÀÖ´ÂÁö È®ÀÎ ¹× °¡Á®¿À±â
+		//í•´ë‹¹ íŠ¸ëœìŠ¤í¼ì—ì„œ ì¬ìƒ ì¤‘ì¸ ë£¨í”„ ì‚¬ìš´ë“œê°€ ìˆëŠ”ì§€ í™•ì¸ ë° ê°€ì ¸ì˜¤ê¸°
 		if (activeLoopSounds.TryGetValue(targetTr, out AudioSource source))
 		{
-			//»ç¿îµå Àç»ı Á¤Áö
+			//ì‚¬ìš´ë“œ ì¬ìƒ ì •ì§€
 			source.Stop();
 
-			//Ç®¸µ ½Ã½ºÅÛ Àç»ç¿ë ½Ã ¼³Á¤¿¡·¯¸¦ ¿¹¹æ ·çÇÁ ÇØÁ¦
+			//í’€ë§ ì‹œìŠ¤í…œ ì¬ì‚¬ìš© ì‹œ ì„¤ì •ì—ëŸ¬ë¥¼ ì˜ˆë°© ë£¨í”„ í•´ì œ
 			source.loop = false;
 
-			//´ë»ó ¿ÀºêÁ§Æ®¿¡¼­ ¶¼¾î³»¾î ´Ù½Ã SoundManagerÀÇ ÀÚ½ÄÀ¸·Î ¿ø»óº¹±¸
+			//ëŒ€ìƒ ì˜¤ë¸Œì íŠ¸ì—ì„œ ë–¼ì–´ë‚´ì–´ ë‹¤ì‹œ SoundManagerì˜ ìì‹ìœ¼ë¡œ ì›ìƒë³µêµ¬
 			source.transform.SetParent(this.transform);
 
-			//·çÇÁ »ç¿îµå ÃßÀû µñ¼Å³Ê¸®¿¡¼­ ÇØ´ç Ç×¸ñ Á¦°Å
+			//ë£¨í”„ ì‚¬ìš´ë“œ ì¶”ì  ë”•ì…”ë„ˆë¦¬ì—ì„œ í•´ë‹¹ í•­ëª© ì œê±°
 			activeLoopSounds.Remove(targetTr);
 		}
 	}
-	// ¸ğµç »ç¿îµå(BGM ¹× 2D SFX) Á¤Áö
+	// ëª¨ë“  ì‚¬ìš´ë“œ(BGM ë° 2D SFX) ì •ì§€
 
 	public void StopSFXAll()
 	{
 		bgmSource.Stop();
 		sfxUISource.Stop();
 
-		// Ç®¸µµÈ 3D ½ºÇÇÄ¿µéµµ ¸ğµÎ Àç»ı Á¤Áö
+		// í’€ë§ëœ 3D ìŠ¤í”¼ì»¤ë“¤ë„ ëª¨ë‘ ì¬ìƒ ì •ì§€
 		for (int i = 0; i < sfx3DPool.Count; i++)
 		{
 			if (sfx3DPool[i].isPlaying)
@@ -451,35 +451,35 @@ public class SoundManager : MonoBehaviour
 		}
 	}
 
-	// ================== [½Ç½Ã°£ º¼·ı Á¶Àı ÇÔ¼ö (UI ¿É¼Ç Ã¢ ¿¬µ¿¿ë)] ==================
+	// ================== [ì‹¤ì‹œê°„ ë³¼ë¥¨ ì¡°ì ˆ í•¨ìˆ˜ (UI ì˜µì…˜ ì°½ ì—°ë™ìš©)] ==================
 
-	// Â÷ÈÄ UIÆÀÀÌ È¯°æ¼³Á¤ Ã¢ÀÇ ½½¶óÀÌ´õ(OnValueChanged)¿¡ ¿¬°áÇÒ ÇÔ¼ö
+	// ì°¨í›„ UIíŒ€ì´ í™˜ê²½ì„¤ì • ì°½ì˜ ìŠ¬ë¼ì´ë”(OnValueChanged)ì— ì—°ê²°í•  í•¨ìˆ˜
 
 
 	public void SetBGMVolume(float volume)
 	{
-		bgmVolume = volume;//ÀÔ·ÂÇÑ º¼·ı°ª ÇöÀç¼³Á¤¿¡ ÀúÀå
+		bgmVolume = volume;//ì…ë ¥í•œ ë³¼ë¥¨ê°’ í˜„ì¬ì„¤ì •ì— ì €ì¥
 		if (bgmSource != null && bgmSource.clip != null)
 		{
-			bgmSource.volume = bgmVolume; //ÇöÀç¼³Á¤À» ½ÇÁ¦·Î ¹İ¿µ
+			bgmSource.volume = bgmVolume; //í˜„ì¬ì„¤ì •ì„ ì‹¤ì œë¡œ ë°˜ì˜
 		}
 	}
 
 	public void SetSFXUIVolume(float volume)
 	{
-		sfxUIVolume = volume;//ÀÔ·ÂÇÑ º¼·ı°ª ÇöÀç¼³Á¤¿¡ ÀúÀå
+		sfxUIVolume = volume;//ì…ë ¥í•œ ë³¼ë¥¨ê°’ í˜„ì¬ì„¤ì •ì— ì €ì¥
 		if (sfxUISource != null)
 		{
-			sfxUISource.volume = sfxUIVolume;//ÇöÀç¼³Á¤À» ½ÇÁ¦·Î ¹İ¿µ
+			sfxUISource.volume = sfxUIVolume;//í˜„ì¬ì„¤ì •ì„ ì‹¤ì œë¡œ ë°˜ì˜
 		}
 	}
 
 	public void SetSFX3DVolume(float volume)
 	{
-		sfx3DVolume = volume;//ÀÔ·ÂÇÑ º¼·ı°ª ÇöÀç¼³Á¤¿¡ ÀúÀå
+		sfx3DVolume = volume;//ì…ë ¥í•œ ë³¼ë¥¨ê°’ í˜„ì¬ì„¤ì •ì— ì €ì¥
 		foreach (var source in sfx3DPool)
 		{
-			if (source.isPlaying)//È¤¿©³ª ½ÇÇàµÇ°íÀÖ´Â°ÔÀÖµû¸é
+			if (source.isPlaying)//í˜¹ì—¬ë‚˜ ì‹¤í–‰ë˜ê³ ìˆëŠ”ê²Œìˆë”°ë©´
 			{
 				source.volume = sfx3DVolume;
 			}
@@ -492,7 +492,7 @@ public class SoundManager : MonoBehaviour
 #if UNITY_EDITOR
 	private void OnValidate()
 	{
-		// ¿¡µğÅÍ ÇÃ·¹ÀÌ Áß ÀÎ½ºÆåÅÍ Á¶ÀÛ ½Ã ¼¼ °¡Áö º¼·ı ¸ğµÎ ½Ç½Ã°£ °»½Å
+		// ì—ë””í„° í”Œë ˆì´ ì¤‘ ì¸ìŠ¤í™í„° ì¡°ì‘ ì‹œ ì„¸ ê°€ì§€ ë³¼ë¥¨ ëª¨ë‘ ì‹¤ì‹œê°„ ê°±ì‹ 
 		if (Application.isPlaying)
 		{
 			SetBGMVolume(bgmVolume);
@@ -509,21 +509,21 @@ public class SoundManager : MonoBehaviour
 
 
 
-//ºó ¿ÀºêÁ§Æ® »ı¼º: ÇÏÀÌ¾î¶óÅ°(Hierarchy) Ã¢¿¡¼­ ¿ìÅ¬¸¯ ÈÄ Create Empty¸¦ ´­·¯ ºó °ÔÀÓ ¿ÀºêÁ§Æ®¸¦ ¸¸µé°í,
-//ÀÌ¸§À» SoundManager·Î º¯°æ
+//ë¹ˆ ì˜¤ë¸Œì íŠ¸ ìƒì„±: í•˜ì´ì–´ë¼í‚¤(Hierarchy) ì°½ì—ì„œ ìš°í´ë¦­ í›„ Create Emptyë¥¼ ëˆŒëŸ¬ ë¹ˆ ê²Œì„ ì˜¤ë¸Œì íŠ¸ë¥¼ ë§Œë“¤ê³ ,
+//ì´ë¦„ì„ SoundManagerë¡œ ë³€ê²½
 
-//½ºÅ©¸³Æ® ºÎÂø: ¸¸µé¾îÁø SoundManager ¿ÀºêÁ§Æ®¿¡ ÀÛ¼ºÇÑ SoundManager.cs ½ºÅ©¸³Æ®¸¦ ÄÄÆ÷³ÍÆ®·Î Ãß°¡(Add Component)
+//ìŠ¤í¬ë¦½íŠ¸ ë¶€ì°©: ë§Œë“¤ì–´ì§„ SoundManager ì˜¤ë¸Œì íŠ¸ì— ì‘ì„±í•œ SoundManager.cs ìŠ¤í¬ë¦½íŠ¸ë¥¼ ì»´í¬ë„ŒíŠ¸ë¡œ ì¶”ê°€(Add Component)
 
-//¿Àµğ¿À ¼Ò½º Ãß°¡: ÇØ´ç ¿ÀºêÁ§Æ®¿¡ Audio Source ÄÄÆ÷³ÍÆ®¸¦ 2°³ Ãß°¡
+//ì˜¤ë””ì˜¤ ì†ŒìŠ¤ ì¶”ê°€: í•´ë‹¹ ì˜¤ë¸Œì íŠ¸ì— Audio Source ì»´í¬ë„ŒíŠ¸ë¥¼ 2ê°œ ì¶”ê°€
 
-//ÄÄÆ÷³ÍÆ® ÇÒ´ç: *ÀÎ½ºÆåÅÍ Ã¢ÀÇ SoundManager ½ºÅ©¸³Æ®¿¡¼­ Bgm Source ºóÄ­¿¡ Ã¹ ¹øÂ° Audio Source¸¦ µå·¡±×
+//ì»´í¬ë„ŒíŠ¸ í• ë‹¹: *ì¸ìŠ¤í™í„° ì°½ì˜ SoundManager ìŠ¤í¬ë¦½íŠ¸ì—ì„œ Bgm Source ë¹ˆì¹¸ì— ì²« ë²ˆì§¸ Audio Sourceë¥¼ ë“œë˜ê·¸
 
-//Sfx Source ºóÄ­¿¡ µÎ ¹øÂ° Audio Source¸¦ µå·¡±×
+//Sfx Source ë¹ˆì¹¸ì— ë‘ ë²ˆì§¸ Audio Sourceë¥¼ ë“œë˜ê·¸
 
-//¼¼ºÎ ¼³Á¤ (ÇÊ¼ö ÁÖÀÇ»çÇ×):
+//ì„¸ë¶€ ì„¤ì • (í•„ìˆ˜ ì£¼ì˜ì‚¬í•­):
 
-//Ãß°¡ÇÑ 2°³ÀÇ Audio Source ÄÄÆ÷³ÍÆ® ¸ğµÎ Play On Awake Ã¼Å©¸¦ ¹İµå½Ã ÇØÁ¦
-//(Ã¼Å©ÇØ µÎ¸é °ÔÀÓ ½ÃÀÛ°ú µ¿½Ã¿¡ ºó ¼Ò¸®°¡ Àç»ıµÇ·Á´Ù ¿¡·¯°¡ ³¯ ¼ö ÀÖ½À´Ï´Ù.)
+//ì¶”ê°€í•œ 2ê°œì˜ Audio Source ì»´í¬ë„ŒíŠ¸ ëª¨ë‘ Play On Awake ì²´í¬ë¥¼ ë°˜ë“œì‹œ í•´ì œ
+//(ì²´í¬í•´ ë‘ë©´ ê²Œì„ ì‹œì‘ê³¼ ë™ì‹œì— ë¹ˆ ì†Œë¦¬ê°€ ì¬ìƒë˜ë ¤ë‹¤ ì—ëŸ¬ê°€ ë‚  ìˆ˜ ìˆìŠµë‹ˆë‹¤.)
 
-//»ç¿îµå ÆÄÀÏ µî·Ï: ½ºÅ©¸³Æ®ÀÇ Sound List¸¦ ¿­¾î ÇÊ¿äÇÑ °³¼ö¸¸Å­ ´Ã¸° µÚ,
-//»ç¿îµå Å¸ÀÔ(Enum)°ú ½ÇÁ¦ ¿Àµğ¿À ÆÄÀÏ(.wav, .mp3)À» °¢°¢ Â¦Áö¾î ³Ö¾îÁİ´Ï´Ù.
+//ì‚¬ìš´ë“œ íŒŒì¼ ë“±ë¡: ìŠ¤í¬ë¦½íŠ¸ì˜ Sound Listë¥¼ ì—´ì–´ í•„ìš”í•œ ê°œìˆ˜ë§Œí¼ ëŠ˜ë¦° ë’¤,
+//ì‚¬ìš´ë“œ íƒ€ì…(Enum)ê³¼ ì‹¤ì œ ì˜¤ë””ì˜¤ íŒŒì¼(.wav, .mp3)ì„ ê°ê° ì§ì§€ì–´ ë„£ì–´ì¤ë‹ˆë‹¤.

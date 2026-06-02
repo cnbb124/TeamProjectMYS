@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class ExplodeRadiusVisualizerGizmo : MonoBehaviour
 {
-	[Header("Ãâ·ÂµÉ Æø¹ßÀÌÆåÆ® ¹üÀ§ ½Ã°¢È­(»¡°­»ö)")]
+	[Header("ì¶œë ¥ë  í­ë°œì´í™íŠ¸ ë²”ìœ„ ì‹œê°í™”(ë¹¨ê°•ìƒ‰)")]
 	public float explosionRadius;
 	private void OnDrawGizmosSelected()
 	{

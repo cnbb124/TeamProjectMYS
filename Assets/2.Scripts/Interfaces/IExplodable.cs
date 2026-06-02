@@ -4,14 +4,14 @@ using UnityEngine;
 
 public struct ExplosionInfo
 {
-	public float explosionRadius;//Æø¹ß¹İ°æ
-	public int explosionDamage;//Æø¹ßÇÇÇØ
+	public float explosionRadius;//í­ë°œë°˜ê²½
+	public int explosionDamage;//í­ë°œí”¼í•´
 	
 	
 }
 public interface IExplodable
 {
-	//Æø¹ß½Ã È£ÃâÇÒ ÇÔ¼ö
+	//í­ë°œì‹œ í˜¸ì¶œí•  í•¨ìˆ˜
 	void Explode(ExplosionInfo info);
 
 }

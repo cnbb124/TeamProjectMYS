@@ -8,15 +8,16 @@ public class PartSlotEntry
     public PartData equippedPart;
 }
 
-public class PlayerParts : MonoBehaviour
+public class UnitParts : MonoBehaviour
 {
     private Unit _unit;
 
-    [Header("Part Slots")]
+    [Header("<size=14>íŒŒì¸  ìŠ¬ë¡¯ (ì¶œë ¥ìš©, ìŠ¤í¬ë¦½íŠ¸ì—ì„œ ìë™ì…ë ¥)</size>")]
     public List<PartSlotEntry> partSlots = new List<PartSlotEntry>();
 
     private void Awake()
     {
+        //
         _unit = GetComponent<Unit>();
 
         if (partSlots.Count == 0)
@@ -24,13 +25,18 @@ public class PlayerParts : MonoBehaviour
             partSlots.Add(new PartSlotEntry { slotType = PART_TYPE.ENGINE });
             partSlots.Add(new PartSlotEntry { slotType = PART_TYPE.FRAME });
             partSlots.Add(new PartSlotEntry { slotType = PART_TYPE.ARMOR });
-            partSlots.Add(new PartSlotEntry { slotType = PART_TYPE.LAUNCHER });
-        }
+            partSlots.Add(new PartSlotEntry { slotType = PART_TYPE.LAUNCHER_MISSILE });
+            partSlots.Add(new PartSlotEntry { slotType = PART_TYPE.LAUNCHER_BULLET });
+            partSlots.Add(new PartSlotEntry { slotType = PART_TYPE.THRUSTER });
+            //í•„ìš”ì‹œ ê³„ì† ì¶”ê°€
+			//partSlots.Add(new PartSlotEntry { slotType = PART_TYPE. })
+
+		}
     }
 
     private void Start()
     {
-        // ÀÎ½ºÆåÅÍ¿¡ ¹Ì¸® ¼¼ÆÃµÈ ÆÄÃ÷ ½ºÅÈ Àû¿ë
+        // ì¸ìŠ¤í™í„°ì— ë¯¸ë¦¬ ì„¸íŒ…ëœ íŒŒì¸  ìŠ¤íƒ¯ ì ìš©
         foreach (PartSlotEntry slot in partSlots)
         {
             if (slot.equippedPart != null)
@@ -41,14 +47,14 @@ public class PlayerParts : MonoBehaviour
     }
 
     /// <summary>
-    /// ÁöÁ¤ ½½·Ô¿¡ ÆÄÃ÷ ÀåÂø. ±âÁ¸ ÆÄÃ÷´Â ÀÚµ¿ ÇØÁ¦.
+    /// ì§€ì • ìŠ¬ë¡¯ì— íŒŒì¸  ì¥ì°©. ê¸°ì¡´ íŒŒì¸ ëŠ” ìë™ í•´ì œ.
     /// </summary>
     public void Equip(PART_TYPE slotType, PartData newPart)
     {
         PartSlotEntry slot = GetSlot(slotType);
         if (slot == null)
         {
-            Debug.LogWarning("[PlayerParts] ½½·Ô ¾øÀ½: " + slotType);
+            Debug.LogWarning("[UnitParts] ìŠ¬ë¡¯ ì—†ìŒ: " + slotType);
             return;
         }
 
@@ -92,7 +98,7 @@ public class PlayerParts : MonoBehaviour
         return null;
     }
 
-    // multiplier: +1 = ÀåÂø, -1 = ÇØÁ¦
+    // multiplier: +1 = ì¥ì°©, -1 = í•´ì œ
     private void ApplyStatBonuses(PartData part, int multiplier)
     {
         if (_unit == null)

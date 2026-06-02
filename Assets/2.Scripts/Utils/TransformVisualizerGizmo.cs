@@ -2,12 +2,12 @@ using UnityEngine;
 
 public class TransformVisualizerGizmo : MonoBehaviour
 {
-    //±âÁî¸ğ »ö»ó 
+    //ê¸°ì¦ˆëª¨ ìƒ‰ìƒ 
     public Color Mycolor = Color.red;
-    //±âÁî¸ğ ¹İÁö¸§ 
+    //ê¸°ì¦ˆëª¨ ë°˜ì§€ë¦„ 
     public float Myraduis = 0.05f;
 
-    // À¯´ÏÆ¼ Äİ¹éÇÔ¼ö 
+    // ìœ ë‹ˆí‹° ì½œë°±í•¨ìˆ˜ 
     void OnDrawGizmos()
     {
         Gizmos.color = Mycolor;
