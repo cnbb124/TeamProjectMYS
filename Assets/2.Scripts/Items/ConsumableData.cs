@@ -8,15 +8,9 @@ public class ConsumableEffect
     public float value;
 }
 
-[CreateAssetMenu(fileName = "New Consumable", menuName = "Gallag/Consumable Data")]
-public class ConsumableData : ScriptableObject
+[CreateAssetMenu(fileName = "New Consumable", menuName = "Create Item Data/Consumable Data")]
+public class ConsumableData : ItemData
 {
-    [Header("Info")]
-    public string itemName;
-    public Sprite icon;
-    [TextArea]
-    public string description;
-
     [Header("Effects")]
     public List<ConsumableEffect> effects = new List<ConsumableEffect>();
 
