@@ -4,17 +4,17 @@ using UnityEngine;
 
 public class UnitAnimCtrl : MonoBehaviour
 {
-	[Header("¾Ö´Ï¸ŞÀÌ¼Ç Å¸ÀÔ,ÇØ´çÅ¬¸³")]
+	[Header("ì• ë‹ˆë©”ì´ì…˜ íƒ€ì…,í•´ë‹¹í´ë¦½")]
 	public AnimTypeClip[] animTypeClips;
-	[Header("¾Ö´Ï¸ŞÀÌÅÍ")]
+	[Header("ì• ë‹ˆë©”ì´í„°")]
 	public Animator animator;
 
 	private AnimDictionary animDic = new AnimDictionary();
 	// Start is called before the first frame update
 	void Start()
 	{
-		//ÀÎ½ºÆåÅÍ¿¡ÀÖ´Â Å¸ÀÔ,Å¬¸³À» µñ¼Å³Ê¸®¿¡ ½ÇÁ¦µî·Ï.
-		//Â÷ÈÄ ¾Ö´ÔÅ¬¸³=µñ.GetÀ¸·Î °®°í¿Í¼­ ÇÒ°Í
+		//ì¸ìŠ¤í™í„°ì—ìˆëŠ” íƒ€ì…,í´ë¦½ì„ ë”•ì…”ë„ˆë¦¬ì— ì‹¤ì œë“±ë¡.
+		//ì°¨í›„ ì• ë‹˜í´ë¦½=ë”•.Getìœ¼ë¡œ ê°–ê³ ì™€ì„œ í• ê²ƒ
 		foreach (var entry in animTypeClips)
 		{
 			animDic.Add(entry.animType, entry.animClip);

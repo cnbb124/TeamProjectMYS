@@ -4,50 +4,50 @@ using UnityEngine;
 
 
 
-// ¸ğµç Åõ»çÃ¼ÀÇ º£ÀÌ½º Å¬·¡½º.
-// UnitÃ³·³ °øÅë ·ÎÁ÷Àº ¿©±â¼­, ¼¼ºÎ µ¿ÀÛÀº ÀÚ½Ä¿¡¼­ override.
-// PoolManager¿¡¼­ ²¨³¾ ¶§ Init()À¸·Î ÃÊ±âÈ­, ¹İ³³ ½Ã OnDisable()·Î Ã³¸®.
+// ëª¨ë“  íˆ¬ì‚¬ì²´ì˜ ë² ì´ìŠ¤ í´ë˜ìŠ¤.
+// Unitì²˜ëŸ¼ ê³µí†µ ë¡œì§ì€ ì—¬ê¸°ì„œ, ì„¸ë¶€ ë™ì‘ì€ ìì‹ì—ì„œ override.
+// PoolManagerì—ì„œ êº¼ë‚¼ ë•Œ Init()ìœ¼ë¡œ ì´ˆê¸°í™”, ë°˜ë‚© ì‹œ OnDisable()ë¡œ ì²˜ë¦¬.
 public abstract class Projectile : MonoBehaviour
 {
 
-    [Header("<size=18>[Åõ»çÃ¼ °øÅë ½ºÅÈ ±âº» ¼³Á¤]</size>")]
+    [Header("<size=18>[íˆ¬ì‚¬ì²´ ê³µí†µ ìŠ¤íƒ¯ ê¸°ë³¸ ì„¤ì •]</size>")]
 
-    //ÃÖ´ë»ç°Å¸®
-    [Header("ÃÖ´ë »ç°Å¸® ¼³Á¤")]
+    //ìµœëŒ€ì‚¬ê±°ë¦¬
+    [Header("ìµœëŒ€ ì‚¬ê±°ë¦¬ ì„¤ì •")]
     public float maxRange;
 
 
-    //¹ß»çÁÂÇ¥(»ç°Å¸®°è»ê¿ë.)
+    //ë°œì‚¬ì¢Œí‘œ(ì‚¬ê±°ë¦¬ê³„ì‚°ìš©.)
     protected Vector3 startPos;
-    //ÀÌµ¿°Å¸® ±¸ÇÏ±âÀ§ÇÑ ÀÌÀüÁÂÇ¥
+    //ì´ë™ê±°ë¦¬ êµ¬í•˜ê¸°ìœ„í•œ ì´ì „ì¢Œí‘œ
     protected Vector3 prevPos;
-    //½ÇÁ¦ Åõ»çÃ¼°¡ ÀÌµ¿ÇÑ°Å¸®
+    //ì‹¤ì œ íˆ¬ì‚¬ì²´ê°€ ì´ë™í•œê±°ë¦¬
     protected float traveledDistance = 0f;
 
 
-    [Header("ÆÀÅ³ °¡´É ¿©ºÎ")]
+    [Header("íŒ€í‚¬ ê°€ëŠ¥ ì—¬ë¶€")]
     public bool friendlyFire = false;
-    //µ¥¹ÌÁöÅ¸ÀÔ
-    //ÀÚ½Ä Å¬·¡½º Awake¿¡¼­ ÁöÁ¤Bullet=BULLET, Missile=EXPLOSION, Laser=LASER
-    [Header("µ¥¹ÌÁö Å¸ÀÔ")]
+    //ë°ë¯¸ì§€íƒ€ì…
+    //ìì‹ í´ë˜ìŠ¤ Awakeì—ì„œ ì§€ì •Bullet=BULLET, Missile=EXPLOSION, Laser=LASER
+    [Header("ë°ë¯¸ì§€ íƒ€ì…")]
     public DAMAGE_TYPE dmgType;
-    //µ¥¹ÌÁö¼öÄ¡
-    //ÀÎ½ºÆåÅÍ¿¡¼­ ¼³Á¤ÇÏ´Â Åõ»çÃ¼ °íÀ¯ÀÇ ±âº» µ¥¹ÌÁö
-    [Header("Åõ»çÃ¼ ±âº» µ¥¹ÌÁö")]
+    //ë°ë¯¸ì§€ìˆ˜ì¹˜
+    //ì¸ìŠ¤í™í„°ì—ì„œ ì„¤ì •í•˜ëŠ” íˆ¬ì‚¬ì²´ ê³ ìœ ì˜ ê¸°ë³¸ ë°ë¯¸ì§€
+    [Header("íˆ¬ì‚¬ì²´ ê¸°ë³¸ ë°ë¯¸ì§€")]
     public int baseDamage;
-    //½ºÅÈ°ú ¹öÇÁ°¡ Àû¿ëµÈ ½ÇÁ¦ Àû¿ë µ¥¹ÌÁö (º¯µ¿ °ª)
-    [Header("Åõ»çÃ¼ ÇöÀç ½ÇÁ¦ µ¥¹ÌÁö")]
+    //ìŠ¤íƒ¯ê³¼ ë²„í”„ê°€ ì ìš©ëœ ì‹¤ì œ ì ìš© ë°ë¯¸ì§€ (ë³€ë™ ê°’)
+    [Header("íˆ¬ì‚¬ì²´ í˜„ì¬ ì‹¤ì œ ë°ë¯¸ì§€")]
     public int curDamage;
-    //°ø°İÀÚ
-    [Header("°ø°İÇÑ À¯´Ö(¹ß»ç)")]
+    //ê³µê²©ì
+    [Header("ê³µê²©í•œ ìœ ë‹›(ë°œì‚¬)")]
     public Unit attacker;
 
-    //Ç®¸Å´ÏÀú¿¡¼­ ½Äº°ÇÒ Åõ»çÃ¼ Å¸ÀÔ
+    //í’€ë§¤ë‹ˆì €ì—ì„œ ì‹ë³„í•  íˆ¬ì‚¬ì²´ íƒ€ì…
     [HideInInspector]
     public PROJECTILE_TYPE projectileType;
 
-    // Å©¸®Æ¼ÄÃ ¿©ºÎ. Init()¿¡¼­ attackerÀÇ criChance·Î ÆÇÁ¤.
-    // Åõ»çÃ¼°¡ Å©¸® ÆÇÁ¤ ´ã´ç ¡æ DamageInfo.isCritical·Î Àü´Ş.
+    // í¬ë¦¬í‹°ì»¬ ì—¬ë¶€. Init()ì—ì„œ attackerì˜ criChanceë¡œ íŒì •.
+    // íˆ¬ì‚¬ì²´ê°€ í¬ë¦¬ íŒì • ë‹´ë‹¹ â†’ DamageInfo.isCriticalë¡œ ì „ë‹¬.
     protected bool critical;
 
 
@@ -65,8 +65,8 @@ public abstract class Projectile : MonoBehaviour
     protected virtual void Update()
     {
 
-        //»ç°Å¸® ¹ş¾î³¯½Ã
-        //Ãâ¹ßÁöÁ¡°ú ÇöÀçÀÌµ¿ÇÑ°Å¸®°¡>=ÃÖ´ë»ç°Å¸® µµ´ŞÈ¤ÀºÃÊ°ú½Ã
+        //ì‚¬ê±°ë¦¬ ë²—ì–´ë‚ ì‹œ
+        //ì¶œë°œì§€ì ê³¼ í˜„ì¬ì´ë™í•œê±°ë¦¬ê°€>=ìµœëŒ€ì‚¬ê±°ë¦¬ ë„ë‹¬í˜¹ì€ì´ˆê³¼ì‹œ
         traveledDistance += (transform.position - prevPos).magnitude;
         prevPos = transform.position;
 
@@ -78,32 +78,32 @@ public abstract class Projectile : MonoBehaviour
       
     }
 
-    //È°¼ºÈ­½Ã ³ÖÀ» Á¤º¸. ÇÃ·¹ÀÌ¾î¿¡¼­ È£Ãâ
-    //²¨³¾ ¶§ È£Ãâ. ¸Å ¹ß»ç¸¶´Ù ÀçÃÊ±âÈ­.
-    //ÀÚ½Ä¿¡¼­ ¿À¹ö¶óÀÌµå ½Ã base.Init() ¹İµå½Ã È£Ãâ.
-    //Ãâ¹ßÁÂÇ¥(firePos),ÇâÇÒ¹æÇâ, °ø°İÀÚ(½ğ»ç¶÷)
+    //í™œì„±í™”ì‹œ ë„£ì„ ì •ë³´. í”Œë ˆì´ì–´ì—ì„œ í˜¸ì¶œ
+    //êº¼ë‚¼ ë•Œ í˜¸ì¶œ. ë§¤ ë°œì‚¬ë§ˆë‹¤ ì¬ì´ˆê¸°í™”.
+    //ìì‹ì—ì„œ ì˜¤ë²„ë¼ì´ë“œ ì‹œ base.Init() ë°˜ë“œì‹œ í˜¸ì¶œ.
+    //ì¶œë°œì¢Œí‘œ(firePos),í–¥í• ë°©í–¥, ê³µê²©ì(ìœì‚¬ëŒ)
     public virtual void Init(Vector3 startPos, Vector3 dir, Unit attacker)
     {
-        //Ãâ¹ßÇÑ ÁÂÇ¥ ÀúÀå
+        //ì¶œë°œí•œ ì¢Œí‘œ ì €ì¥
         this.startPos = startPos;
-        //°ø°İÀÚ ÀúÀå
+        //ê³µê²©ì ì €ì¥
         this.attacker = attacker;
         traveledDistance = 0f;
         prevPos = startPos;
-        //Ãâ¹ßÇÒÁÂÇ¥·Î ÇöÀçÁÂÇ¥ ÃÊ±âÈ­
+        //ì¶œë°œí• ì¢Œí‘œë¡œ í˜„ì¬ì¢Œí‘œ ì´ˆê¸°í™”
         transform.position = startPos;
-        //ÇâÇÒ ¹æÇâÃÊ±âÈ­
+        //í–¥í•  ë°©í–¥ì´ˆê¸°í™”
         transform.forward = dir;
 
 
-        //Åõ»çÃ¼ µ¥¹ÌÁö ÃÖ½ÅÈ­ (Ç®¸µ¿À¿°¹æÁö)
+        //íˆ¬ì‚¬ì²´ ë°ë¯¸ì§€ ìµœì‹ í™” (í’€ë§ì˜¤ì—¼ë°©ì§€)
 
-        curDamage = baseDamage;//Â÷ÈÄ ·ÎÁ÷ Ãß°¡ ÇÊ¿ä.
+        curDamage = baseDamage;//ì°¨í›„ ë¡œì§ ì¶”ê°€ í•„ìš”.
 
-        critical = Random.Range(0f, 100f) < attacker.criChance;//Å©¸®¿©ºÎ
+        critical = Random.Range(0f, 100f) < attacker.criChance;//í¬ë¦¬ì—¬ë¶€
 
 
-        //¹°¸®Ã³¸®¸¦ À§ÇÑ ·¹ÀÌ¾î ÀÔ·Â
+        //ë¬¼ë¦¬ì²˜ë¦¬ë¥¼ ìœ„í•œ ë ˆì´ì–´ ì…ë ¥
         if (attacker.gameObject.layer == (int)LAYER_TYPE.Unit_Player)
 
         {
@@ -119,17 +119,17 @@ public abstract class Projectile : MonoBehaviour
     }
 
 
-    //°°ÀºÆÀÀÎÁö Ã¼Å©
+    //ê°™ì€íŒ€ì¸ì§€ ì²´í¬
     protected bool IsSameTeam(Collider other)
     {
 
-        //ÀÌ Åõ»çÃ¼°¡ ÇÃ·¹ÀÌ¾î Åõ»çÃ¼°í,ºÎµúÈù³ğÀÌ ÇÃ·¹ÀÌ¾î¸é ¹«¤Ñ½Ã
+        //ì´ íˆ¬ì‚¬ì²´ê°€ í”Œë ˆì´ì–´ íˆ¬ì‚¬ì²´ê³ ,ë¶€ë”ªíŒë†ˆì´ í”Œë ˆì´ì–´ë©´ ë¬´ã…¡ì‹œ
         if (gameObject.layer == (int)LAYER_TYPE.Projectile_Player &&
             other.gameObject.layer == (int)LAYER_TYPE.Unit_Player)
         {
             return true;
         }
-        //ÀÌÅõ»çÃ¼°¡ ÀûÀÇ Åõ»çÃ¼°í ¸ÂÀº³ğÀÌ ÀûÀÌ¸é
+        //ì´íˆ¬ì‚¬ì²´ê°€ ì ì˜ íˆ¬ì‚¬ì²´ê³  ë§ì€ë†ˆì´ ì ì´ë©´
         if (gameObject.layer == (int)LAYER_TYPE.Projectile_Enemy &&
             other.gameObject.layer == (int)LAYER_TYPE.Unit_Enemy)
         {
@@ -148,31 +148,31 @@ public abstract class Projectile : MonoBehaviour
     protected virtual void OnTriggerEnter(Collider other)
     {
        
-        //Debug.Log($"OnTrigger¹ß»ı, ·¹ÀÌ¾î: {LayerMask.LayerToName(other.gameObject.layer)}");
+        //Debug.Log($"OnTriggerë°œìƒ, ë ˆì´ì–´: {LayerMask.LayerToName(other.gameObject.layer)}");
 
-        //´Ù¸¥ ½Ã¾ß°¨Áö¿ë Æ®¸®°Å¿Í Ãæµ¹¹æÁö.Â÷ÈÄ ¼öÁ¤ÇÊ¿äÇÒ¼öµµ.
+        //ë‹¤ë¥¸ ì‹œì•¼ê°ì§€ìš© íŠ¸ë¦¬ê±°ì™€ ì¶©ëŒë°©ì§€.ì°¨í›„ ìˆ˜ì •í•„ìš”í• ìˆ˜ë„.
 
-        ////¹ß»çÀÚ º»ÀÎ°úÀÇ Áï°¢ Ãæµ¹ ¹æÁö, ¸ÂÀº°Ô È÷Æ®¹Ú½º¸é
+        ////ë°œì‚¬ì ë³¸ì¸ê³¼ì˜ ì¦‰ê° ì¶©ëŒ ë°©ì§€, ë§ì€ê²Œ íˆíŠ¸ë°•ìŠ¤ë©´
         //if (other.transform.root != attacker.transform.root && other.gameObject.layer == (int)LAYER_TYPE.Trigger_HitBox)
         //{
-        //    //¿ÂÈı¹ß»ı
+        //    //ì˜¨í›ë°œìƒ
         //    OnHit(other);
         //}
-        //else//È÷Æ®¹Ú½º¿Ü¿£ ½Ï¹«½Ã
+        //else//íˆíŠ¸ë°•ìŠ¤ì™¸ì—” ì‹¹ë¬´ì‹œ
         //{
         //    return;
         //}
 
-        //¸ÂÀº°Ô È÷Æ®¹Ú½º°¡ ¾Æ´Ï¸é ÁË´Ù Ãë¼Ò
+        //ë§ì€ê²Œ íˆíŠ¸ë°•ìŠ¤ê°€ ì•„ë‹ˆë©´ ì£„ë‹¤ ì·¨ì†Œ
         if (other.gameObject.layer != (int)LAYER_TYPE.HitBox_Player && other.gameObject.layer != (int)LAYER_TYPE.HitBox_Enemy)
         {
             return;
         }
 
-        // ¸ÂÀº ´ë»óÀÇ ÃÖ»óÀ§ Unit ÄÄÆ÷³ÍÆ®
+        // ë§ì€ ëŒ€ìƒì˜ ìµœìƒìœ„ Unit ì»´í¬ë„ŒíŠ¸
         Unit hitUnit = other.GetComponentInParent<Unit>();
 
-        //´ë»ó UnitÀÌ Á¸Àç½Ã, ¹ß»çÀÚ º»ÀÎ ¾Æ´Ò °æ¿ì¿¡¸¸ OnHit ¹ß»ı
+        //ëŒ€ìƒ Unitì´ ì¡´ì¬ì‹œ, ë°œì‚¬ì ë³¸ì¸ ì•„ë‹ ê²½ìš°ì—ë§Œ OnHit ë°œìƒ
         if (hitUnit != null && hitUnit != attacker)
         {
             OnHit(other);
@@ -181,44 +181,44 @@ public abstract class Projectile : MonoBehaviour
 
     }
 
-    //¿ÂÆ®¸®°Å ÀçÁ¤ÀÇÇÒ ÇÔ¼öµé
+    //ì˜¨íŠ¸ë¦¬ê±° ì¬ì •ì˜í•  í•¨ìˆ˜ë“¤
     protected virtual void OnHit(Collider other)
     {
 		IDamageable target = other.GetComponentInParent<IDamageable>();
 		string targetName = (target as MonoBehaviour)?.gameObject.name ?? other.gameObject.name;
 		string hp = target != null ? target.CurHp.ToString() : "N/A";
-		Debug.Log($"[OnHit] ÇÇ°İ ´ë»ó: {targetName} | ·¹ÀÌ¾î: {LayerMask.LayerToName(other.gameObject.layer)} | HP: {hp}");
+		Debug.Log($"[OnHit] í”¼ê²© ëŒ€ìƒ: {targetName} | ë ˆì´ì–´: {LayerMask.LayerToName(other.gameObject.layer)} | HP: {hp}");
 	}
 
 
 
     /// <summary>
-    /// µ¥¹ÌÁö Çã¿ë ¸Ş¼­µå(¿ÂÈı¿¡¼­È£Ãâ)
+    /// ë°ë¯¸ì§€ í—ˆìš© ë©”ì„œë“œ(ì˜¨í›ì—ì„œí˜¸ì¶œ)
     ///  </summary>
-    /// <param name="targetCollider"> ÇÇ°İ´ë»óÀÇ colliderÁ¤º¸</param>
-    /// <param name="damage"> °è»êµÈ ÃÖÁ¾ µ¥¹ÌÁö</param>
-    /// <param name="currentDmgType"> µ¥¹ÌÁö Å¸ÀÔÁ¤º¸</param>
+    /// <param name="targetCollider"> í”¼ê²©ëŒ€ìƒì˜ colliderì •ë³´</param>
+    /// <param name="damage"> ê³„ì‚°ëœ ìµœì¢… ë°ë¯¸ì§€</param>
+    /// <param name="currentDmgType"> ë°ë¯¸ì§€ íƒ€ì…ì •ë³´</param>
     ///
     protected void ApplyDamage(Collider targetCollider, int damage, DAMAGE_TYPE currentDmgType)
     {
 
         IDamageable target = targetCollider.GetComponentInParent<IDamageable>();
 
-        // µ¥¹ÌÁö¸¦ ¹ŞÀ» ¼ö ¾ø´Â ´ë»ó(º® µî)ÀÌ¸é µ¥¹ÌÁö ·ÎÁ÷ »ı·«
+        // ë°ë¯¸ì§€ë¥¼ ë°›ì„ ìˆ˜ ì—†ëŠ” ëŒ€ìƒ(ë²½ ë“±)ì´ë©´ ë°ë¯¸ì§€ ë¡œì§ ìƒëµ
         if (target == null)
         {
-            Debug.Log("ApplyDamage »ó´ë°¡ null");
+            Debug.Log("ApplyDamage ìƒëŒ€ê°€ null");
             return;
         }
 
-        // ¾Æ±º Å¸°İ ¹æÁö (¿ÀÀÎ»ç°İ Off »óÅÂÀÏ ¶§ µ¥¹ÌÁö »ı·«)
+        // ì•„êµ° íƒ€ê²© ë°©ì§€ (ì˜¤ì¸ì‚¬ê²© Off ìƒíƒœì¼ ë•Œ ë°ë¯¸ì§€ ìƒëµ)
         if (IsSameTeam(targetCollider) && !friendlyFire)
         {
-            Debug.Log("ApplyDamage »ó´ë°¡ °°ÀºÆÀ");
+            Debug.Log("ApplyDamage ìƒëŒ€ê°€ ê°™ì€íŒ€");
             return;
         }
-        //Debug.Log("ApplyDamage ½ÇÁ¦ µ¥¹ÌÁö¹ß»ı");
-        // µ¥¹ÌÁö Á¤º¸ »ı¼º ¹× Àü´Ş
+        //Debug.Log("ApplyDamage ì‹¤ì œ ë°ë¯¸ì§€ë°œìƒ");
+        // ë°ë¯¸ì§€ ì •ë³´ ìƒì„± ë° ì „ë‹¬
         DamageInfo damageInfo = new DamageInfo
         {
             type = currentDmgType,
@@ -234,25 +234,25 @@ public abstract class Projectile : MonoBehaviour
 
 
     /// <summary>
-    /// ½ºÇÃµ©¿ë ¿À¹ö¶óÀÌµå
+    /// ìŠ¤í”Œë€ìš© ì˜¤ë²„ë¼ì´ë“œ
     /// </summary>
-    /// <param name="target"> ÇÇ°İÀÚ</param>
-    /// <param name="targetCollider"> ÇÇ°İ´ë»óÀÇ colliderÁ¤º¸</param>
-    /// <param name="damage"> °è»êµÈ ÃÖÁ¾ µ¥¹ÌÁö</param>
-    /// <param name="currentDmgType"> µ¥¹ÌÁö Å¸ÀÔÁ¤º¸</param>
+    /// <param name="target"> í”¼ê²©ì</param>
+    /// <param name="targetCollider"> í”¼ê²©ëŒ€ìƒì˜ colliderì •ë³´</param>
+    /// <param name="damage"> ê³„ì‚°ëœ ìµœì¢… ë°ë¯¸ì§€</param>
+    /// <param name="currentDmgType"> ë°ë¯¸ì§€ íƒ€ì…ì •ë³´</param>
     protected void ApplyDamage(IDamageable target, Collider targetCollider, int damage, DAMAGE_TYPE currentDmgType)
     {
-        // µ¥¹ÌÁö¸¦ ¹ŞÀ» ¼ö ¾ø´Â ´ë»ó(º® µî)ÀÌ¸é µ¥¹ÌÁö ·ÎÁ÷ »ı·«
+        // ë°ë¯¸ì§€ë¥¼ ë°›ì„ ìˆ˜ ì—†ëŠ” ëŒ€ìƒ(ë²½ ë“±)ì´ë©´ ë°ë¯¸ì§€ ë¡œì§ ìƒëµ
         if (target == null)
         {
-            Debug.Log("ApplyDamage »ó´ë°¡ null");
+            Debug.Log("ApplyDamage ìƒëŒ€ê°€ null");
             return;
         }
 
-        // ¾Æ±º Å¸°İ ¹æÁö (¿ÀÀÎ»ç°İ Off »óÅÂÀÏ ¶§ µ¥¹ÌÁö »ı·«)
+        // ì•„êµ° íƒ€ê²© ë°©ì§€ (ì˜¤ì¸ì‚¬ê²© Off ìƒíƒœì¼ ë•Œ ë°ë¯¸ì§€ ìƒëµ)
         if (IsSameTeam(targetCollider) && !friendlyFire)
         {
-            Debug.Log("ApplyDamage »ó´ë°¡ °°ÀºÆÀ");
+            Debug.Log("ApplyDamage ìƒëŒ€ê°€ ê°™ì€íŒ€");
             return;
         }
         DamageInfo damageInfo = new DamageInfo
@@ -270,11 +270,11 @@ public abstract class Projectile : MonoBehaviour
 
 
     /// <summary>
-    /// Åõ»çÃ¼¸¦ Ç®·Î ¹İ³³. ¼Ò¸ê ½Ã ¹İµå½Ã ÀÌ°É·Î Ã³¸®.
+    /// íˆ¬ì‚¬ì²´ë¥¼ í’€ë¡œ ë°˜ë‚©. ì†Œë©¸ ì‹œ ë°˜ë“œì‹œ ì´ê±¸ë¡œ ì²˜ë¦¬.
     /// </summary>
     protected void ReturnToPool()
     {
-        //gameObject.SetActive(false);Ç®¸Å´ÏÀú¿¡¼­ ºñÈ°¼ºÈ­·Î º¯°æ
+        //gameObject.SetActive(false);í’€ë§¤ë‹ˆì €ì—ì„œ ë¹„í™œì„±í™”ë¡œ ë³€ê²½
         PoolManager.Instance.ReturnProjectile(this);
     }
 

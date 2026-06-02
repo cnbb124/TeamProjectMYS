@@ -3,14 +3,14 @@ using UnityEngine;
 
 public class cs_Map_Auto_Move : MonoBehaviour
 {
-    [Header("¹® ¿À¸¥ÂÊ/¿ŞÂÊ")]
+    [Header("ë¬¸ ì˜¤ë¥¸ìª½/ì™¼ìª½")]
     public Transform[] door;
-    [Header("¿òÁ÷ÀÏ À¯´Ö")]
+    [Header("ì›€ì§ì¼ ìœ ë‹›")]
     public Transform unit;
-    [Header("¾ó¸¶³ª ÀÌµ¿ÇÒÁö")]
+    [Header("ì–¼ë§ˆë‚˜ ì´ë™í• ì§€")]
     public float openDistance = 20f;
     public float moveDistance = 150f;
-    [Header("¿òÁ÷ÀÓ ¼Óµµ")]
+    [Header("ì›€ì§ì„ ì†ë„")]
     public float doorSpeed = 3f;
     public float moveSpeed = 10f;
 
@@ -21,8 +21,8 @@ public class cs_Map_Auto_Move : MonoBehaviour
     private Vector3 startUnitPos;
     private bool isClosing = false;
 
-    [Header("ÀÌµ¿ÇÒ ¾À °ü·Ã")]
-    public string nextSceneName;  // Inspector¿¡¼­ ¾À ÀÌ¸§ ÀÔ·Â
+    [Header("ì´ë™í•  ì”¬ ê´€ë ¨")]
+    public string nextSceneName;  // Inspectorì—ì„œ ì”¬ ì´ë¦„ ì…ë ¥
     private bool isNextScene = false;
 
     void Start()
@@ -31,7 +31,7 @@ public class cs_Map_Auto_Move : MonoBehaviour
         closedPos_R = door[1].localPosition;
         openPos_L = door[0].localPosition + new Vector3(-openDistance, 0, 0);
         openPos_R = door[1].localPosition + new Vector3(openDistance, 0, 0);
-        startUnitPos = unit.localPosition + new Vector3(0, -7.0f, moveDistance);  // À¯´Ö ¿òÁ÷ÀÏ ÁÂÇ¥ ¼öÁ¤Àº ¿©±â¼­
+        startUnitPos = unit.localPosition + new Vector3(0, -7.0f, moveDistance);  // ìœ ë‹› ì›€ì§ì¼ ì¢Œí‘œ ìˆ˜ì •ì€ ì—¬ê¸°ì„œ
     }
 
     void Update()

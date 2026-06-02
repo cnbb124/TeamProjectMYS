@@ -7,19 +7,19 @@ using UnityEngine;
 
 
 // =====================================================================
-// ¹Ì»çÀÏ
-// Æø¹ßÇü. ¹üÀ§(½ºÇÃ)µ¥¹ÌÁö. barrel¶§¸¦ Âü°í.
-// ¶ô¿Â°¡´É. À¯µµ¼º´ÉÀÖÀ½.
+// ë¯¸ì‚¬ì¼
+// í­ë°œí˜•. ë²”ìœ„(ìŠ¤í”Œ)ë°ë¯¸ì§€. barrelë•Œë¥¼ ì°¸ê³ .
+// ë½ì˜¨ê°€ëŠ¥. ìœ ë„ì„±ëŠ¥ìˆìŒ.
 // 
-// Projectile »ó¼Ó. ¹üÀ§ Æø¹ß + À¯µµ ºñÇà.
+// Projectile ìƒì†. ë²”ìœ„ í­ë°œ + ìœ ë„ ë¹„í–‰.
 //
 // 
-// - Å¸°ÙÀÇ ÀÌµ¿ ¹æÇâ ¿¹ÃøÇØ¼­ ²ª´Â °¢µµ(turnRate) Á¦ÇÑ ÀÖÀ½.
-// - ¹ß»ç Á÷ÈÄ armDistance µ¿¾ÈÀº Á÷Áø (±Ù°Å¸® ÀÚÆø ¹æÁö).
-// - Å¸°Ù ¼Ò½Ç ½Ã Á÷Áø À¯Áö. maxRange µµ´ŞÇÏ¸é ÀÚµ¿ ¼Ò¸ê.
-// - »ç°Å¸®´Â Projectile ´©Àû ÀÌµ¿°Å¸® ±âÁØ.
+// - íƒ€ê²Ÿì˜ ì´ë™ ë°©í–¥ ì˜ˆì¸¡í•´ì„œ êº¾ëŠ” ê°ë„(turnRate) ì œí•œ ìˆìŒ.
+// - ë°œì‚¬ ì§í›„ armDistance ë™ì•ˆì€ ì§ì§„ (ê·¼ê±°ë¦¬ ìí­ ë°©ì§€).
+// - íƒ€ê²Ÿ ì†Œì‹¤ ì‹œ ì§ì§„ ìœ ì§€. maxRange ë„ë‹¬í•˜ë©´ ìë™ ì†Œë©¸.
+// - ì‚¬ê±°ë¦¬ëŠ” Projectile ëˆ„ì  ì´ë™ê±°ë¦¬ ê¸°ì¤€.
 //
-// [¹ß»ç Ãø È£Ãâ ¿¹½Ã]
+// [ë°œì‚¬ ì¸¡ í˜¸ì¶œ ì˜ˆì‹œ]
 //   Missile m = PoolManager.Instance.GetMissile();
 //   m.Init(firePos.position, firePos.forward, this, lockOnSystem.LockedTarget);
 // =====================================================================
@@ -28,57 +28,57 @@ public class Missile : Projectile, IExplodable
 	//[SerializeField]
 	//private int hitsArraySize = 30;
 	[Space(5)]
-	[Header("<size=18>[¹Ì»çÀÏ ¼³Á¤]</size>")]
-	[Header("Æø¹ß ¹üÀ§ ¼¼ÆÃ")]
+	[Header("<size=18>[ë¯¸ì‚¬ì¼ ì„¤ì •]</size>")]
+	[Header("í­ë°œ ë²”ìœ„ ì„¸íŒ…")]
 	public float explosionRadius = 8f;
 
-	private Collider[] explosionHits = new Collider[30]; //¸ÂÀº°Íµé Äİ¶óÀÌ´õ Ã¼Å©ÇÒ¹è¿­ ÇÊ¿äÇÏ¸é ½ºÅ¸Æ®³ª ÀÌ´ÖÂÊÀ¸·Î
-	private HashSet<IDamageable> damagedTargets = new HashSet<IDamageable>(); //Áßº¹µ¥¹ÌÁö¸¦ ¹æÁöÇÏ±âÀ§ÇÑ ÇØ½¬¼Â
+	private Collider[] explosionHits = new Collider[30]; //ë§ì€ê²ƒë“¤ ì½œë¼ì´ë” ì²´í¬í• ë°°ì—´ í•„ìš”í•˜ë©´ ìŠ¤íƒ€íŠ¸ë‚˜ ì´ë‹›ìª½ìœ¼ë¡œ
+	private HashSet<IDamageable> damagedTargets = new HashSet<IDamageable>(); //ì¤‘ë³µë°ë¯¸ì§€ë¥¼ ë°©ì§€í•˜ê¸°ìœ„í•œ í•´ì‰¬ì…‹
 
 	[Space(5)]
-	[Header("--À¯µµ ¼³Á¤--")]
-	[Tooltip("ÃÊ´ç ÃÖ´ë ¼±È¸ °¢µµ (µµ/ÃÊ). Å¬¼ö·Ï ³¯Ä«·Ó°Ô ²ªÀ½.")]
+	[Header("--ìœ ë„ ì„¤ì •--")]
+	[Tooltip("ì´ˆë‹¹ ìµœëŒ€ ì„ íšŒ ê°ë„ (ë„/ì´ˆ). í´ìˆ˜ë¡ ë‚ ì¹´ë¡­ê²Œ êº¾ìŒ.")]
 	public float turnRate = 120f;
 
-	[Tooltip("¹ß»ç Á÷ÈÄ Á÷Áø À¯Áö °Å¸®. ±Ù°Å¸® ÀÚÆø ¹æÁö.")]
+	[Tooltip("ë°œì‚¬ ì§í›„ ì§ì§„ ìœ ì§€ ê±°ë¦¬. ê·¼ê±°ë¦¬ ìí­ ë°©ì§€.")]
 	public float armDistance = 5.0f;
 
 
-	[Tooltip("ºñ·ÊÇ×¹ı °è¼ö (1~5). Å¬¼ö·Ï ¿¹Ãø ÃßÀû °­È­. 3 ±ÇÀå.")]
+	[Tooltip("ë¹„ë¡€í•­ë²• ê³„ìˆ˜ (1~5). í´ìˆ˜ë¡ ì˜ˆì¸¡ ì¶”ì  ê°•í™”. 3 ê¶Œì¥.")]
 	[Range(1f, 5f)]
 	public float navGain = 3f;
 
 
-	[Header("¶ô¿ÂµÇ´Â ¸ñÇ¥(È®ÀÎ¿ë)")]
+	[Header("ë½ì˜¨ë˜ëŠ” ëª©í‘œ(í™•ì¸ìš©)")]
 	public Transform targetTr;
 
 
 	[Space(5)]
-	[Header("--¼Óµµ¼³Á¤--")]
+	[Header("--ì†ë„ì„¤ì •--")]
 
-	//ÀÚ¿¬½º·¯¿î ¹Ì»çÀÏ ¿¬ÃâÀ» À§ÇÑ ¼Óµµ ¹Ì¼¼Á¶Á¤. ½ÃÀÛ¼Óµµ, ÃÖ°í¼Óµµ, °¡¼Ó½Ã°£
-	[Tooltip("¹ß»ç ½ÃÀÛ ¼Óµµ. accelerateTime µ¿¾È maxSpeed·Î °¡¼Ó.")]
+	//ìì—°ìŠ¤ëŸ¬ìš´ ë¯¸ì‚¬ì¼ ì—°ì¶œì„ ìœ„í•œ ì†ë„ ë¯¸ì„¸ì¡°ì •. ì‹œì‘ì†ë„, ìµœê³ ì†ë„, ê°€ì†ì‹œê°„
+	[Tooltip("ë°œì‚¬ ì‹œì‘ ì†ë„. accelerateTime ë™ì•ˆ maxSpeedë¡œ ê°€ì†.")]
 	public float launchSpeed = 10f;
 
-	//½ºÇÇµå¼³Á¤
-	[Header("ÃÖ´ë µµ´Ş ¼Óµµ ¼³Á¤")]
+	//ìŠ¤í”¼ë“œì„¤ì •
+	[Header("ìµœëŒ€ ë„ë‹¬ ì†ë„ ì„¤ì •")]
 	public float maxSpeed;
 
-	[Header("ÇöÀç ¹Ì»çÀÏ ¼Óµµ(ÀÔ·Âx Âü°í¿ë)")]
-	//ÇöÀç¼Óµµ
+	[Header("í˜„ì¬ ë¯¸ì‚¬ì¼ ì†ë„(ì…ë ¥x ì°¸ê³ ìš©)")]
+	//í˜„ì¬ì†ë„
 	public float curSpeed;
 
-	[Tooltip("ÃÖ°í ¼Óµµ µµ´Ş±îÁö °É¸®´Â ½Ã°£ (ÃÊ).")]
+	[Tooltip("ìµœê³  ì†ë„ ë„ë‹¬ê¹Œì§€ ê±¸ë¦¬ëŠ” ì‹œê°„ (ì´ˆ).")]
 	public float accelerateTime = 0.8f;
 
 	public ExplosionInfo explosionInfo;
 
-	//¹ß»çÈÄ °æ°ú½Ã°£
+	//ë°œì‚¬í›„ ê²½ê³¼ì‹œê°„
 	private float aliveTime = 0f;
-	//¶ô¿ÂÅ¸°Ù ÀÌÀüÁÂÇ¥(ÃßÀû¿ë)
+	//ë½ì˜¨íƒ€ê²Ÿ ì´ì „ì¢Œí‘œ(ì¶”ì ìš©)
 	private Vector3 prevTargetPos;
 
-	//°è»êµÈ ¹Ì»çÀÏÀÇ ÃßÁø ¼Óµµ
+	//ê³„ì‚°ëœ ë¯¸ì‚¬ì¼ì˜ ì¶”ì§„ ì†ë„
 	private float thrustSpeed;
 
 
@@ -93,25 +93,25 @@ public class Missile : Projectile, IExplodable
 	}
 
 	/// <summary>
-	/// ¹Ì»çÀÏ ±âº» Init (¶ô¿Âx)
+	/// ë¯¸ì‚¬ì¼ ê¸°ë³¸ Init (ë½ì˜¨x)
 	/// </summary>
-	/// <param name="startPos"> ¹ß»çµÇ´ÂÁÂÇ¥</param>
-	/// <param name="dir"> ¹ß»çµÇ´Â¹æÇâ</param>
-	/// <param name="attacker">½ğÀ¯´Ö</param>
+	/// <param name="startPos"> ë°œì‚¬ë˜ëŠ”ì¢Œí‘œ</param>
+	/// <param name="dir"> ë°œì‚¬ë˜ëŠ”ë°©í–¥</param>
+	/// <param name="attacker">ìœìœ ë‹›</param>
 	public override void Init(Vector3 startPos, Vector3 dir, Unit attacker)
 	{
 		base.Init(startPos, dir, attacker);
 
-		// Ç®¿¡¼­ ²¨³¾ ¶§¸¶´Ù ÀÎ½ºÆåÅÍÀÇ ÃÖ½Å damage °ªÀ¸·Î °»½Å
+		// í’€ì—ì„œ êº¼ë‚¼ ë•Œë§ˆë‹¤ ì¸ìŠ¤í™í„°ì˜ ìµœì‹  damage ê°’ìœ¼ë¡œ ê°±ì‹ 
 		explosionInfo.explosionDamage = this.curDamage;
 		explosionInfo.explosionRadius = this.explosionRadius;
-		//¹ß»çÈÄ°æ°ú½Ã°£
+		//ë°œì‚¬í›„ê²½ê³¼ì‹œê°„
 		aliveTime = 0f;
-		//ÇöÀç ÃßÁø ½ºÇÇµå¸¦ ¹ß»ç½ºÇÇµå·Î ÀÔ·Â
+		//í˜„ì¬ ì¶”ì§„ ìŠ¤í”¼ë“œë¥¼ ë°œì‚¬ìŠ¤í”¼ë“œë¡œ ì…ë ¥
 		thrustSpeed = launchSpeed;
 		curSpeed = 0f;
 		
-		//Å¸°ÙÀÌ ÀÖÀ»°æ¿ì. Å¸°ÙÀÇ Àü ÁÂÇ¥ ÃÊ±âÈ­
+		//íƒ€ê²Ÿì´ ìˆì„ê²½ìš°. íƒ€ê²Ÿì˜ ì „ ì¢Œí‘œ ì´ˆê¸°í™”
 		if (targetTr != null)
 		{
 			prevTargetPos = targetTr.position;
@@ -120,12 +120,12 @@ public class Missile : Projectile, IExplodable
 	}
 
 	/// <summary>
-	/// Å¸°Ù±îÁö °°ÀÌ ³Ñ±â´Â ¿À¹ö·Îµå(¶ô¿Âo)
+	/// íƒ€ê²Ÿê¹Œì§€ ê°™ì´ ë„˜ê¸°ëŠ” ì˜¤ë²„ë¡œë“œ(ë½ì˜¨o)
 	/// </summary>
-	/// <param name="startPos"> ¹ß»çµÇ´ÂÁÂÇ¥</param>
-	/// <param name="dir"> ¹ß»çµÇ´Â¹æÇâ</param>
-	/// <param name="attacker">½ğÀ¯´Ö</param>
-	/// <param name="target"> ¶ô¿ÂµÈ Å¸°Ù, nullÇã¿ë.</param>
+	/// <param name="startPos"> ë°œì‚¬ë˜ëŠ”ì¢Œí‘œ</param>
+	/// <param name="dir"> ë°œì‚¬ë˜ëŠ”ë°©í–¥</param>
+	/// <param name="attacker">ìœìœ ë‹›</param>
+	/// <param name="target"> ë½ì˜¨ëœ íƒ€ê²Ÿ, nullí—ˆìš©.</param>
 	public void Init(Vector3 startPos, Vector3 dir, Unit attacker, Transform target)
 	{
 		targetTr = target;
@@ -136,26 +136,26 @@ public class Missile : Projectile, IExplodable
 	// Update is called once per frame
 	protected override void Update()
 	{
-		//ÇÁ·¹ÀÓµû¸¥ Æ¦Çö»ó¹æÁö
+		//í”„ë ˆì„ë”°ë¥¸ íŠí˜„ìƒë°©ì§€
 		if (Time.deltaTime <= 0f)
 		{
 			return;
 		}
 
-		// ¹ß»çÈÄ °æ°ú½Ã°£ ¾÷µ¥ÀÌÆ®
+		// ë°œì‚¬í›„ ê²½ê³¼ì‹œê°„ ì—…ë°ì´íŠ¸
 		aliveTime += Time.deltaTime;
 
-		// ¼Óµµ °¡¼Ó, ¹ß»ç½Ã°£>ÃÖ´ë¼Óµµ
+		// ì†ë„ ê°€ì†, ë°œì‚¬ì‹œê°„>ìµœëŒ€ì†ë„
 		thrustSpeed = Mathf.Lerp(launchSpeed, maxSpeed, Mathf.Clamp01(aliveTime / accelerateTime));
 
 
-		// [Ãß°¡¼öÁ¤]Steer() ÁøÀÔ ¿©ºÎ¿Í ¹«°üÇÏ°Ô ¸Å ÇÁ·¹ÀÓ Å¸°ÙÀÇ ¼Óµµ¸¦ °è»êÇÏ°í ÀÌÀü ÁÂÇ¥¸¦ °»½Å
+		// [ì¶”ê°€ìˆ˜ì •]Steer() ì§„ì… ì—¬ë¶€ì™€ ë¬´ê´€í•˜ê²Œ ë§¤ í”„ë ˆì„ íƒ€ê²Ÿì˜ ì†ë„ë¥¼ ê³„ì‚°í•˜ê³  ì´ì „ ì¢Œí‘œë¥¼ ê°±ì‹ 
 		Vector3 targetVelocity = Vector3.zero;
 		if (targetTr != null)
 		{
 			float dt = Mathf.Max(Time.deltaTime, 0.001f);
 			targetVelocity = (targetTr.position - prevTargetPos) / dt;
-			prevTargetPos = targetTr.position; // Á÷Áø(armDistance) ±â°£¿¡µµ Á¤»ó °»½ÅµÊ
+			prevTargetPos = targetTr.position; // ì§ì§„(armDistance) ê¸°ê°„ì—ë„ ì •ìƒ ê°±ì‹ ë¨
 		}
 
 		if (traveledDistance < armDistance || targetTr == null)
@@ -164,7 +164,7 @@ public class Missile : Projectile, IExplodable
 		}
 		else
 		{
-			// °è»êµÈ Á¤»ó ¼Óµµ¸¦ À¯µµ ·ÎÁ÷¿¡ Àü´ŞÇÕ´Ï´Ù.
+			// ê³„ì‚°ëœ ì •ìƒ ì†ë„ë¥¼ ìœ ë„ ë¡œì§ì— ì „ë‹¬í•©ë‹ˆë‹¤.
 			Steer(targetVelocity);
 		}
 
@@ -178,8 +178,8 @@ public class Missile : Projectile, IExplodable
 		Vector3 toTarget = targetTr.position - transform.position;
 		float dist = toTarget.magnitude;
 
-		// Å¸°Ù°ú ÀÏÁ¤ °Å¸® ÀÌ³»·Î Á¼ÇôÁö¸é ¹Ì»çÀÏÀÌ ¸Éµµ´Â Çö»ó(Orbiting) ¹æÁö
-		// °Å¸®°¡ °¡±î¿ï ¶§´Â º¹ÀâÇÑ ¿¹ÃøÀ» ¹ö¸®°í Å¸°ÙÀ» ÇâÇØ Áï½Ã ³»¸®²Èµµ·Ï °­Á¦ÇÕ´Ï´Ù.
+		// íƒ€ê²Ÿê³¼ ì¼ì • ê±°ë¦¬ ì´ë‚´ë¡œ ì¢í˜€ì§€ë©´ ë¯¸ì‚¬ì¼ì´ ë§´ë„ëŠ” í˜„ìƒ(Orbiting) ë°©ì§€
+		// ê±°ë¦¬ê°€ ê°€ê¹Œìš¸ ë•ŒëŠ” ë³µì¡í•œ ì˜ˆì¸¡ì„ ë²„ë¦¬ê³  íƒ€ê²Ÿì„ í–¥í•´ ì¦‰ì‹œ ë‚´ë¦¬ê½‚ë„ë¡ ê°•ì œí•©ë‹ˆë‹¤.
 		if (dist < 4.0f)
 		{
 			Vector3 finalDir = Vector3.RotateTowards(transform.forward, toTarget.normalized, turnRate * 2f * Mathf.Deg2Rad * Time.deltaTime, 0f);
@@ -190,22 +190,22 @@ public class Missile : Projectile, IExplodable
 
 		Vector3 desiredDir = toTarget.normalized;
 
-		//[Ãß°¡¼öÁ¤] Å¸°ÙÀÇ ¹Ì·¡ À§Ä¡¸¦ °è»êÇÏ´Â ¿¹Ãø ÃßÀû(Predictive Pursuit) ¾Ë°í¸®Áò
+		//[ì¶”ê°€ìˆ˜ì •] íƒ€ê²Ÿì˜ ë¯¸ë˜ ìœ„ì¹˜ë¥¼ ê³„ì‚°í•˜ëŠ” ì˜ˆì¸¡ ì¶”ì (Predictive Pursuit) ì•Œê³ ë¦¬ì¦˜
 		if (targetVelocity.sqrMagnitude > 0.1f)
 		{
-			// ÇöÀç ¼Óµµ·Î Å¸°Ù±îÁö µµ´ŞÇÏ´Â µ¥ °É¸®´Â ¿¹»ó ½Ã°£(ETA)
+			// í˜„ì¬ ì†ë„ë¡œ íƒ€ê²Ÿê¹Œì§€ ë„ë‹¬í•˜ëŠ” ë° ê±¸ë¦¬ëŠ” ì˜ˆìƒ ì‹œê°„(ETA)
 			float timeToHit = dist / Mathf.Max(thrustSpeed, 1f);
 
-			// °Å¸®°¡ ³Ê¹« ¸Ö ¶§ ¿¹Ãø ÁÂÇ¥°¡ ¿ìÁÖ·Î Æ¢´Â °ÍÀ» ¸·±â À§ÇØ ÃÖ´ë 1.5ÃÊ ÈÄÀÇ À§Ä¡±îÁö¸¸ ¿¹Ãø
+			// ê±°ë¦¬ê°€ ë„ˆë¬´ ë©€ ë•Œ ì˜ˆì¸¡ ì¢Œí‘œê°€ ìš°ì£¼ë¡œ íŠ€ëŠ” ê²ƒì„ ë§‰ê¸° ìœ„í•´ ìµœëŒ€ 1.5ì´ˆ í›„ì˜ ìœ„ì¹˜ê¹Œì§€ë§Œ ì˜ˆì¸¡
 			timeToHit = Mathf.Min(timeToHit, 1.5f);
 
-			// Å¸°ÙÀÇ ¹Ì·¡ ¿¹Ãø À§Ä¡ µµÃâ
+			// íƒ€ê²Ÿì˜ ë¯¸ë˜ ì˜ˆì¸¡ ìœ„ì¹˜ ë„ì¶œ
 			Vector3 predictedPos = targetTr.position + (targetVelocity * timeToHit);
 
 			desiredDir = (predictedPos - transform.position).normalized;
 		}
 
-		//[Ãß°¡¼öÁ¤] ¿¹ÃøµÈ ¹æÇâÀ¸·Î ºÎµå·´°Ô È¸Àü ¹× ÀüÁø
+		//[ì¶”ê°€ìˆ˜ì •] ì˜ˆì¸¡ëœ ë°©í–¥ìœ¼ë¡œ ë¶€ë“œëŸ½ê²Œ íšŒì „ ë° ì „ì§„
 		Vector3 newDir = Vector3.RotateTowards(transform.forward, desiredDir, turnRate * Mathf.Deg2Rad * Time.deltaTime, 0f);
 		transform.forward = newDir;
 		transform.position += transform.forward * thrustSpeed * Time.deltaTime;
@@ -214,23 +214,23 @@ public class Missile : Projectile, IExplodable
 
 	protected override void OnTriggerEnter(Collider other)
 	{
-		//ÃÖ¼Ò°Å¸® µµ´Ş¾ÈÇßÀ¸¸é Æ®¸®°Å¹«½Ã
+		//ìµœì†Œê±°ë¦¬ ë„ë‹¬ì•ˆí–ˆìœ¼ë©´ íŠ¸ë¦¬ê±°ë¬´ì‹œ
 		if (traveledDistance < armDistance)
 		{
 			return;
 		}
-		//±×°Ô¾Æ´Ï¸é ÆÇÁ¤ÁÖ±â
+		//ê·¸ê²Œì•„ë‹ˆë©´ íŒì •ì£¼ê¸°
 		base.OnTriggerEnter(other);
 	}
 
 
-	//¿ÂÆ®¸®°Å¿¡ ¾µ ÀçÁ¤ÀÇÇÔ¼ö
+	//ì˜¨íŠ¸ë¦¬ê±°ì— ì“¸ ì¬ì •ì˜í•¨ìˆ˜
 
 	protected override void OnHit(Collider other)
 	{
 		base.OnHit(other);
-		//Debug.Log("¹Ì»çÀÏ OnHit¹ßµ¿");
-		// Æø¹ß ½ÇÇà ÈÄ Åõ»çÃ¼ ¼Ò¸ê
+		//Debug.Log("ë¯¸ì‚¬ì¼ OnHitë°œë™");
+		// í­ë°œ ì‹¤í–‰ í›„ íˆ¬ì‚¬ì²´ ì†Œë©¸
 		Explode(explosionInfo);
 		ReturnToPool();
 	}
@@ -239,33 +239,33 @@ public class Missile : Projectile, IExplodable
 	public void Explode(ExplosionInfo explosionInfo)
 	{
 
-		//ÀÌÆåÆ® Ãâ·Â ·ÎÁ÷ Ãß°¡(»ç¿îµå,ÆÄÆ¼Å¬)
+		//ì´í™íŠ¸ ì¶œë ¥ ë¡œì§ ì¶”ê°€(ì‚¬ìš´ë“œ,íŒŒí‹°í´)
 
-		//¸ÂÀº°ÍµéÀÇ Ãæµ¹¹Ú½º °¹¼ö Ä«¿îÆ®
+		//ë§ì€ê²ƒë“¤ì˜ ì¶©ëŒë°•ìŠ¤ ê°¯ìˆ˜ ì¹´ìš´íŠ¸
 		int hitCount = Physics.OverlapSphereNonAlloc(transform.position, explosionInfo.explosionRadius, explosionHits);
 		//Debug.Log($"hitCount: {hitCount}, radius: {explosionInfo.explosionRadius}");
-		// Áßº¹ Å¸°İ ¹æÁö¸¦ À§ÇÑ HashSet ÃÊ±âÈ­
+		// ì¤‘ë³µ íƒ€ê²© ë°©ì§€ë¥¼ ìœ„í•œ HashSet ì´ˆê¸°í™”
 		damagedTargets.Clear();
 
 
 
 
-		//¸ÂÀº°Íµé ÀüºÎÃ³¸®
+		//ë§ì€ê²ƒë“¤ ì „ë¶€ì²˜ë¦¬
 		for (int i = 0; i < hitCount; i++)
 		{
-			//¸ÂÀº°ÍµéÁß ºÎ¸ğ¿¡ µ¥¹ÌÁö¹Ş´Â¾Öµé °®°í¿À±â
+			//ë§ì€ê²ƒë“¤ì¤‘ ë¶€ëª¨ì— ë°ë¯¸ì§€ë°›ëŠ”ì• ë“¤ ê°–ê³ ì˜¤ê¸°
 			IDamageable target = explosionHits[i].GetComponentInParent<IDamageable>();
 
-			// Å¸°İ ´ë»ó ±â·Ï . Áßº¹ÀÌ¾øÀ¸¸é
+			// íƒ€ê²© ëŒ€ìƒ ê¸°ë¡ . ì¤‘ë³µì´ì—†ìœ¼ë©´
 			if (target != null && !damagedTargets.Contains(target))
 			{
 
-				// °Å¸® ºñ·Ê µ¥¹ÌÁö °¨¼è (Áß½É 100%, ¿Ü°û 50%)
+				// ê±°ë¦¬ ë¹„ë¡€ ë°ë¯¸ì§€ ê°ì‡  (ì¤‘ì‹¬ 100%, ì™¸ê³½ 50%)
 				float distRatio = 1f - (Vector3.Distance(transform.position, explosionHits[i].transform.position) / explosionInfo.explosionRadius);
 				int finalDamage = Mathf.RoundToInt(explosionInfo.explosionDamage * Mathf.Lerp(0.5f, 1f, distRatio));
-				//µ¥¹ÌÁö ½ÇÁ¦Àû¿ë
+				//ë°ë¯¸ì§€ ì‹¤ì œì ìš©
 				ApplyDamage(target, explosionHits[i], finalDamage, this.dmgType);
-				//Áßº¹Ã¼Å©¿ë ÇØ½¬¼ÂAdd
+				//ì¤‘ë³µì²´í¬ìš© í•´ì‰¬ì…‹Add
 				damagedTargets.Add(target);
 			}
 		}

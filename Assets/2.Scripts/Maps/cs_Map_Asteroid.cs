@@ -9,22 +9,22 @@ public class cs_Map_Asteroid : MonoBehaviour
 
     private void Start()
     {
-        //// ·£Á¡ÇÏ°Ô ÀÌµ¿ ¹× ¹æÇâ
+        //// ëœì í•˜ê²Œ ì´ë™ ë° ë°©í–¥
         moveDirection = Random.onUnitSphere;
         moveSpeed = Random.Range(0.1f, 0.5f);
 
 
-        //// ·£´ıÇÏ°Ô ÀÚÀü
+        //// ëœë¤í•˜ê²Œ ìì „
         rotationAxis = Random.onUnitSphere;
         rotationSpeed = Random.Range(1f, 10f);
     }
 
     private void Update()
     {
-        /// ÀÌµ¿
+        /// ì´ë™
         transform.position += moveDirection * moveSpeed * Time.deltaTime;
 
-        /// ÀÚÀü
+        /// ìì „
         transform.Rotate(rotationAxis, rotationSpeed * Time.deltaTime);
     }
 }

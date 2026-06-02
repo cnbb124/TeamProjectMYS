@@ -1,17 +1,17 @@
 
-//Àç»ýÇÒ ¾Ö´Ï¸ÞÀÌ¼Ç Å¸ÀÔ. Â÷ÈÄ À¯´ÖÀÇ STATE¿¡ µû¸¥ Àç»ý°¡´É.
-//ÇÊ¿äÇÑ¸¸Å­ Ãß°¡°¡´É
-//NONEÀ» 0¿¡³ÖÀ»±î?
+//ìž¬ìƒí•  ì• ë‹ˆë©”ì´ì…˜ íƒ€ìž…. ì°¨í›„ ìœ ë‹›ì˜ STATEì— ë”°ë¥¸ ìž¬ìƒê°€ëŠ¥.
+//í•„ìš”í•œë§Œí¼ ì¶”ê°€ê°€ëŠ¥
+//NONEì„ 0ì—ë„£ì„ê¹Œ?
 public enum ANIM_TYPE
 {
 	IDLE,
     BOOST,
-    DODGE,//¹«Àû½Ã°£¹× ·Ñ
-    SHOOT_BULLET,//ÁÂ¿ì ÃÑ±¸°¡ ¾ÕµÚ·Î ½ò´ë¸¶´Ù ¹Ð¸®°Ô
-    SHOOT_MISSILE_L,//¹Ì»çÀÏº£ÀÌ¿­¸®°Ô
+    DODGE,//ë¬´ì ì‹œê°„ë° ë¡¤
+    SHOOT_BULLET,//ì¢Œìš° ì´êµ¬ê°€ ì•žë’¤ë¡œ ì ëŒ€ë§ˆë‹¤ ë°€ë¦¬ê²Œ
+    SHOOT_MISSILE_L,//ë¯¸ì‚¬ì¼ë² ì´ì—´ë¦¬ê²Œ
     SHOOT_MISSILE_R,
     SHOOT_MISSILE_BOTH,
-    SHOOT_LASER,//±â¸ðÀ¸´Â ÆÄÃ÷?
+    SHOOT_LASER,//ê¸°ëª¨ìœ¼ëŠ” íŒŒì¸ ?
     MOVING,
     HIT,
     DIE
@@ -31,7 +31,7 @@ public enum LAYER_TYPE
     Projectile_Player = 8,
     Projectile_Enemy = 9,
     Environment = 10,
-    //ÀÓ½Ã
+    //ìž„ì‹œ
     Trigger_DetectionRange = 11,
     Trigger_LockonRange = 12,
     HitBox_Player = 13,
@@ -39,7 +39,7 @@ public enum LAYER_TYPE
 }
 
 
-//ÀûÁ¾·ù
+//ì ì¢…ë¥˜
 public enum ENEMY_TYPE
 {
     DROPSHIP,
@@ -47,31 +47,31 @@ public enum ENEMY_TYPE
     MISSLIESHIP,
     BOSS,
 }
-//ÇÇÇØÁ¾·ù
+//í”¼í•´ì¢…ë¥˜
 public enum DAMAGE_TYPE
 {
-    BULLET, //ÃÑ¾Ë
-    LASER, //·¹ÀÌÀú(½ºÅ³·Î º¯°æÇÏ°Å³ª ½ºÅ³À»ÀÌ°É·Î)
-    EXPLOSION, //Æø¹ßÇü(¹Ì»çÀÏ)
-    CONTACT, //Ãæµ¹µ©(ºýÄ¡±â)
+    BULLET, //ì´ì•Œ
+    LASER, //ë ˆì´ì €(ìŠ¤í‚¬ë¡œ ë³€ê²½í•˜ê±°ë‚˜ ìŠ¤í‚¬ì„ì´ê±¸ë¡œ)
+    EXPLOSION, //í­ë°œí˜•(ë¯¸ì‚¬ì¼)
+    CONTACT, //ì¶©ëŒëŽ€(ë¹¡ì¹˜ê¸°)
 }
 
-//½î´ÂÁ¾·ù(Åõ»çÃ¼)
+//ì˜ëŠ”ì¢…ë¥˜(íˆ¬ì‚¬ì²´)
 public enum PROJECTILE_TYPE
 {
-    BULLET, //ÃÑ¾Ë
-    LASER, //·¹ÀÌÀú(½ºÅ³·Î º¯°æÇÏ°Å³ª ½ºÅ³À»ÀÌ°É·Î)
+    BULLET, //ì´ì•Œ
+    LASER, //ë ˆì´ì €(ìŠ¤í‚¬ë¡œ ë³€ê²½í•˜ê±°ë‚˜ ìŠ¤í‚¬ì„ì´ê±¸ë¡œ)
 
-    //(¹Ì»çÀÏ)
+    //(ë¯¸ì‚¬ì¼)
     MISSILE,
-    //MISSILE_BOTH,//ÇöÀç¹Ì»ç¿ë
+    //MISSILE_BOTH,//í˜„ìž¬ë¯¸ì‚¬ìš©
 
-    //ÀüÃ¼µ¿½Ã
-    ALL,//ÇÊ¿äÇÑ°¡?
+    //ì „ì²´ë™ì‹œ
+    ALL,//í•„ìš”í•œê°€?
 
 }
 
-//ÃÑ±¸Á¾·ù
+//ì´êµ¬ì¢…ë¥˜
 public enum FIREPOS_TYPE
 {
     BULLET_LEFT,
@@ -97,78 +97,78 @@ public enum BOOSTPOS_TYPE
 
 public enum SOUND_TYPE
 {
-    BGM_LOBBY,          // Á¤°ÅÀå(»óÁ¡) ¹è°æÀ½
-    BGM_BATTLE,         // ¿ìÁÖ ÀüÅõ ¹è°æÀ½
-    BGM_1F,             // 1Ãþ ¹è°æÀ½
-    BGM_B2,             // ÁöÇÏ2Ãþ¹è°æÀ½
+    BGM_LOBBY,          // ì •ê±°ìž¥(ìƒì ) ë°°ê²½ìŒ
+    BGM_BATTLE,         // ìš°ì£¼ ì „íˆ¬ ë°°ê²½ìŒ
+    BGM_1F,             // 1ì¸µ ë°°ê²½ìŒ
+    BGM_B2,             // ì§€í•˜2ì¸µë°°ê²½ìŒ
 	BGM_MAIN,
 	BGM_STAGE1,
 	BGM_STATION,
 	BGM_GAMEOVER,
 
 
-	//UI°ü·Ã
-	SFX_DICE_ROLL,      // ÁÖ»çÀ§ ±¼¸®´Â ¼Ò¸®
-    SFX_UI_CLICK,       // ¹öÆ° Å¬¸¯À½
+	//UIê´€ë ¨
+	SFX_DICE_ROLL,      // ì£¼ì‚¬ìœ„ êµ´ë¦¬ëŠ” ì†Œë¦¬
+    SFX_UI_CLICK,       // ë²„íŠ¼ í´ë¦­ìŒ
 	SFX_UI_LOCKON_COMPLETE,
     
 
-	// ¹ß»çÀ½
-	SFX_BULLETSHOOT,    //Åº
-    SFX_MISSILESHOOT,   //¹Ì»çÀÏ
-    SFX_LASERSHOOT,     //·¹ÀÌÀú
+	// ë°œì‚¬ìŒ
+	SFX_BULLETSHOOT,    //íƒ„
+    SFX_MISSILESHOOT,   //ë¯¸ì‚¬ì¼
+    SFX_LASERSHOOT,     //ë ˆì´ì €
                         
-    // ÇÇ°ÝÀ½
-    SFX_BULLETHIT,      //Åº
-    SFX_EXPLOSION,      // ¹Ì»çÀÏµî Æø¹ßÀ½
-    SFX_CONTACTSHIP,    //ºÎµúÇûÀ»¶§.
-    SFX_CONTACTGROUND,  //Çà¼ºµî ºÎµúÇûÀ»‹š. Â÷ÈÄ ÇÊµå¸í ¼öÁ¤ÇÒ¼öÀÖÀ½
-    SFX_LASERHIT,       //·¹ÀÌÀú
-    SFX_BULLETHIT_SHIELD,//½Çµå µµÅº
-    SFX_EXPLOSION_SHIELD,//½Çµå Æø¹ß
-	SFX_CONTACTSHIP_SHIELD,    //ºÎµúÇûÀ»¶§. ½Çµå
-	SFX_CONTACTGROUND_SHIELD,  //Çà¼ºµî ºÎµúÇûÀ» ¶§, ½Çµå
-	SFX_LASERHIT_SHIELD,    //·¹ÀÌÀú¸Â¾ÒÀ»¶§, ½Çµå
+    // í”¼ê²©ìŒ
+    SFX_BULLETHIT,      //íƒ„
+    SFX_EXPLOSION,      // ë¯¸ì‚¬ì¼ë“± í­ë°œìŒ
+    SFX_CONTACTSHIP,    //ë¶€ë”ªí˜”ì„ë•Œ.
+    SFX_CONTACTGROUND,  //í–‰ì„±ë“± ë¶€ë”ªí˜”ì„ë–„. ì°¨í›„ í•„ë“œëª… ìˆ˜ì •í• ìˆ˜ìžˆìŒ
+    SFX_LASERHIT,       //ë ˆì´ì €
+    SFX_BULLETHIT_SHIELD,//ì‹¤ë“œ ë„íƒ„
+    SFX_EXPLOSION_SHIELD,//ì‹¤ë“œ í­ë°œ
+	SFX_CONTACTSHIP_SHIELD,    //ë¶€ë”ªí˜”ì„ë•Œ. ì‹¤ë“œ
+	SFX_CONTACTGROUND_SHIELD,  //í–‰ì„±ë“± ë¶€ë”ªí˜”ì„ ë•Œ, ì‹¤ë“œ
+	SFX_LASERHIT_SHIELD,    //ë ˆì´ì €ë§žì•˜ì„ë•Œ, ì‹¤ë“œ
 
 
 
 
 
-	SFX_NONE,//ºó°Å¼³Á¤¿ë
+	SFX_NONE,//ë¹ˆê±°ì„¤ì •ìš©
 }
 
 public enum LOCK_ON_MODE
 {
-	SINGLE, // ±âÁ¸ 1°³ Ç¥Àû ¼±ÅÃ ¸ðµå(È£¹Ö¿ë)
-	MULTI,   // ´ÙÁß Ç¥Àû µ¿½Ã ¶ô¿Â ¸ðµå(Å¬·¯½ºÅÍ¿ë)
-    NONE,//¶ô¿Â¾ÈµÊ(Dumb¹Ì»çÀÏ¿ë)
+	SINGLE, // ê¸°ì¡´ 1ê°œ í‘œì  ì„ íƒ ëª¨ë“œ(í˜¸ë°ìš©)
+	MULTI,   // ë‹¤ì¤‘ í‘œì  ë™ì‹œ ë½ì˜¨ ëª¨ë“œ(í´ëŸ¬ìŠ¤í„°ìš©)
+    NONE,//ë½ì˜¨ì•ˆë¨(Dumbë¯¸ì‚¬ì¼ìš©)
 }
 
 public enum MISSILE_TYPE
 {
-	HOMING,     // ±âº» ¶ô¿Â ÃßÀû ¹Ì»çÀÏ
-	CLUSTER,    // ºÐ¿­ ¹Ì»çÀÏ (¸ÖÆ¼¶ô¿Â ÈÄ ºÐ¿­)
-	DUMB,       // Á÷¼± ¹«À¯µµ ¹Ì»çÀÏ (ÀÏÁ¤½Ã°£/Ãæµ¹ ÈÄ ±¤¿ªÆø¹ß)
+	HOMING,     // ê¸°ë³¸ ë½ì˜¨ ì¶”ì  ë¯¸ì‚¬ì¼
+	CLUSTER,    // ë¶„ì—´ ë¯¸ì‚¬ì¼ (ë©€í‹°ë½ì˜¨ í›„ ë¶„ì—´)
+	DUMB,       // ì§ì„  ë¬´ìœ ë„ ë¯¸ì‚¬ì¼ (ì¼ì •ì‹œê°„/ì¶©ëŒ í›„ ê´‘ì—­í­ë°œ)
 }
 
-// ¹Ì»çÀÏ ¹ß»ç ¸ðµå 
+// ë¯¸ì‚¬ì¼ ë°œì‚¬ ëª¨ë“œ 
 public enum MISSILE_FIRE_MODE
 {
-	DOUBLE, // µ¿½Ã ¹ß»ç
-	SINGLE, // ±³´ë ¹ß»ç
+	DOUBLE, // ë™ì‹œ ë°œì‚¬
+	SINGLE, // êµëŒ€ ë°œì‚¬
 }
 
 
-//Build SettingsÀÇ ¾À ¼ø¼­¿Í ÀÏÄ¡ÇØ¾ß ÇÔ. LoadScene(SCENE_TYPE)¿À¹ö·Îµå°¡(int)sceneTypeÀ¸·Î ·ÎµåÇÔ.
-// ÇöÀç Build Settings ¼ø¼­ È®ÀÎ ÈÄ ¸ÂÃâ°Í
+//Build Settingsì˜ ì”¬ ìˆœì„œì™€ ì¼ì¹˜í•´ì•¼ í•¨. LoadScene(SCENE_TYPE)ì˜¤ë²„ë¡œë“œê°€(int)sceneTypeìœ¼ë¡œ ë¡œë“œí•¨.
+// í˜„ìž¬ Build Settings ìˆœì„œ í™•ì¸ í›„ ë§žì¶œê²ƒ
 public enum SCENE_TYPE
 {
 	MAIN = 0,
 	STATION = 1,
-	LOADING_SEQUENCE = 2,   // ¡ç Ãß°¡ (·Îµù ½ÃÄö½º ¾À)
-	MAP_SELECT = 3,   // ¡ç Ãß°¡ (¸Ê ¼±ÅÃ È­¸é)
-	STAGE1 = 4,   // ¡ç ±âÁ¸ ÀÎµ¦½º ¹Ð¸± ¼ö ÀÖÀ½
-	GAME_OVER = 5,   // ¡ç ±âÁ¸ ÀÎµ¦½º ¹Ð¸± ¼ö ÀÖÀ½
+	LOADING_SEQUENCE = 2,   // â† ì¶”ê°€ (ë¡œë”© ì‹œí€€ìŠ¤ ì”¬)
+	MAP_SELECT = 3,   // â† ì¶”ê°€ (ë§µ ì„ íƒ í™”ë©´)
+	STAGE1 = 4,   // â† ê¸°ì¡´ ì¸ë±ìŠ¤ ë°€ë¦´ ìˆ˜ ìžˆìŒ
+	GAME_OVER = 5,   // â† ê¸°ì¡´ ì¸ë±ìŠ¤ ë°€ë¦´ ìˆ˜ ìžˆìŒ
 }
 public enum INPUT_CONTROL_TYPE
 {
@@ -178,29 +178,31 @@ public enum INPUT_CONTROL_TYPE
 }
 public enum POOL_TYPE
 {
-    // Åõ»çÃ¼ (DisableAllProjectiles ´ë»ó)
+    // íˆ¬ì‚¬ì²´ (DisableAllProjectiles ëŒ€ìƒ)
     BULLET,
     MISSILE,
     LASER,
     CLUSTER_MISSILE,
     DUMB_MISSILE,
 
-    // Àû
+    // ì 
     ENEMY_GUNSHIP,
     ENEMY_DROPSHIP,
     ENEMY_MISSILESHIP,
 
-    // ¾ÆÀÌÅÛ / ÀÌÆåÆ® (ÃßÈÄ ¼¼ºÐÈ­)
+    // ì•„ì´í…œ / ì´íŽ™íŠ¸ (ì¶”í›„ ì„¸ë¶„í™”)
     ITEM,
     VFX,
 }
 
 public enum PART_TYPE
 {
-    ENGINE,
-    FRAME,
+    ENGINE,//ë¶€ìŠ¤íŠ¸ê²Œì´ì§€, ë¶€ìŠ¤íŠ¸ê²Œì´ì§€íšŒë³µëŸ‰,ì‹¤ë“œíšŒë³µëŸ‰
+    FRAME,//ê¸°ì´ˆ í”„ë ˆìž„. ë¬´ê²Œ, ì°©ìš©ìž¥ë¹„ê°€ëŠ¥ì¢…ë¥˜? HP
     ARMOR,
-    LAUNCHER,
+    LAUNCHER_MISSILE,//ë™ì‹œ ì‚¬ì¶œ ì¦ê°€ê´€ë ¨
+    LAUNCHER_BULLET,//íƒ„ì†, ì—°ì‚¬ì†ë„ì¦ê°€
+    THRUSTER,//ì¶”ì§„ê¸°, ë¶€ìŠ¤íŠ¸ì†ë„
 }
 
 public enum STAT_TYPE

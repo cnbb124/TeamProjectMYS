@@ -3,28 +3,28 @@ using UnityEngine;
 public class cs_Map_AsteroidSpawner : MonoBehaviour
 {
 
-    [Header("¼ÒÇà¼º ¼³Á¤")]
+    [Header("ì†Œí–‰ì„± ì„¤ì •")]
     public int asteroidCount = 50;
     public float spawnRadius = 500f;
     public float minSize = 10f;
     public float maxSize = 20f;
 
-    [Header("ÀÌµ¿ ¼³Á¤")]
+    [Header("ì´ë™ ì„¤ì •")]
     public float minSpeed = 0.1f;
     public float maxSpeed = 0.5f;
 
-    [Header("¸Ş½Ã ¼³Á¤")]
+    [Header("ë©”ì‹œ ì„¤ì •")]
     public Mesh[] asteroidMeshes;
 
-    [Header("¸ÓÆ¼¸®¾ó")]
+    [Header("ë¨¸í‹°ë¦¬ì–¼")]
     public Material asteroidMaterial;
 
-    [Header("½ºÆù Æ÷ÀÎÆ®")]
+    [Header("ìŠ¤í° í¬ì¸íŠ¸")]
     public Transform[] spawnPoints;
 
     void Awake()
     {
-        /// ¸Ş½¬ µ¥ÀÌÅÍ ÀÚµ¿ ³Ö±â
+        /// ë©”ì‰¬ ë°ì´í„° ìë™ ë„£ê¸°
         asteroidMeshes = new Mesh[]
         {
         Resources.Load<Mesh>("Meshes/Asteroid-001-MediumPoly"),
@@ -32,14 +32,14 @@ public class cs_Map_AsteroidSpawner : MonoBehaviour
         Resources.Load<Mesh>("Meshes/Asteroid-003-MediumPoly")
         };
 
-        /// ½ºÆù Æ÷ÀÎÆ® ÀÚµ¿ ³Ö±â
+        /// ìŠ¤í° í¬ì¸íŠ¸ ìë™ ë„£ê¸°
         
         Transform[] all = GetComponentsInChildren<Transform>();
         spawnPoints = new Transform[all.Length - 1];
         for (int i = 0; i < spawnPoints.Length; i++)
             spawnPoints[i] = all[i + 1];
 
-        /// ¸ÓÆ¼¸®¾ó ÀÚµ¿ ³Ö±â
+        /// ë¨¸í‹°ë¦¬ì–¼ ìë™ ë„£ê¸°
         asteroidMaterial = Resources.Load<Material>("Materials/Mat_AsteroidMaterial");
     }
 
@@ -53,30 +53,30 @@ public class cs_Map_AsteroidSpawner : MonoBehaviour
 
     void SpawnAsteroid()
     {
-        // ½ºÆù Æ÷ÀÎÆ® Áß ·£´ı ¼±ÅÃ
+        // ìŠ¤í° í¬ì¸íŠ¸ ì¤‘ ëœë¤ ì„ íƒ
         Vector3 center = transform.position;
         if (spawnPoints != null && spawnPoints.Length > 0)
             center = spawnPoints[Random.Range(0, spawnPoints.Length)].position;
 
         Vector3 pos = center + Random.insideUnitSphere * spawnRadius;
 
-        /// ¼ÒÇà¼º »ı¼º
+        /// ì†Œí–‰ì„± ìƒì„±
         GameObject asteroid = GameObject.CreatePrimitive(PrimitiveType.Sphere);
         asteroid.transform.position = pos;
 
 
-        // ·£´ı Å©±â
+        // ëœë¤ í¬ê¸°
         float size = Random.Range(minSize, maxSize);
         asteroid.transform.localScale = Vector3.one * size;
 
 
-        // ·£´ı È¸Àü
+        // ëœë¤ íšŒì „
         asteroid.transform.rotation = Random.rotation;
 
-        /// ºÎ¸ğ ¼³Á¤
+        /// ë¶€ëª¨ ì„¤ì •
         asteroid.transform.parent = this.transform;
 
-        // ¸Ş½Ã ºÙÀÌ±â
+        // ë©”ì‹œ ë¶™ì´ê¸°
         MeshFilter mf = asteroid.GetComponent<MeshFilter>();
         MeshRenderer mr = asteroid.GetComponent<MeshRenderer>();
 
@@ -90,10 +90,10 @@ public class cs_Map_AsteroidSpawner : MonoBehaviour
                 mr.material = asteroidMaterial;
             }
 
-        // Äİ¶óÀÌ´õ
+        // ì½œë¼ì´ë”
         asteroid.AddComponent<MeshCollider>().sharedMesh = mf.mesh;
 
-        // ½ºÅ©¸³Æ® ¿¬°á
+        // ìŠ¤í¬ë¦½íŠ¸ ì—°ê²°
         asteroid.AddComponent<cs_Map_Asteroid>();
     }
 }

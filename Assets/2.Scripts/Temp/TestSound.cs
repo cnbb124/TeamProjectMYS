@@ -19,10 +19,10 @@ public class SoundTest : MonoBehaviour
 	// Update is called once per frame
 	void Update()
 	{
-		//Å¸ÀÌ¸Ó0¿¡¼­ ÇÁ·¹ÀÓ¹ÝÈ¯½Ã°£´õÇÏ±â
+		//íƒ€ì´ë¨¸0ì—ì„œ í”„ë ˆìž„ë°˜í™˜ì‹œê°„ë”í•˜ê¸°
 		sfx3DTimer += Time.deltaTime;
 		sfxUiTimer += Time.deltaTime;
-		//Å¸ÀÌ¸Ó°¡ µô·¹ÀÌ½Ã°£ÀÌ µÇ¸é
+		//íƒ€ì´ë¨¸ê°€ ë”œë ˆì´ì‹œê°„ì´ ë˜ë©´
 		if (sfx3DTimer >= sfx3DDelay)
 		{
 			sfx3DTimer = 0;

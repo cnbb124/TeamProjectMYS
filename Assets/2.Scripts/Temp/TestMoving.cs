@@ -38,8 +38,8 @@ public class TestMoving : MonoBehaviour
 
         //if (rb.velocity.magnitude > 400f)
         //{
-        //    // ¼ø¼ö ¹æÇâ(normalized)¿¡ ÃÖ´ë ¼Ó·Â(400)À» °öÇØÁÝ´Ï´Ù.
-        //    // ¿ÞÂÊ(-1)À¸·Î °¡°í ÀÖ¾ú´Ù¸é -400ÀÌ µË´Ï´Ù.
+        //    // ìˆœìˆ˜ ë°©í–¥(normalized)ì— ìµœëŒ€ ì†ë ¥(400)ì„ ê³±í•´ì¤ë‹ˆë‹¤.
+        //    // ì™¼ìª½(-1)ìœ¼ë¡œ ê°€ê³  ìžˆì—ˆë‹¤ë©´ -400ì´ ë©ë‹ˆë‹¤.
         //    rb.velocity = rb.velocity.normalized * 400f;
         //}
 

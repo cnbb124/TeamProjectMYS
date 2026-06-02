@@ -3,13 +3,13 @@ using System.Collections.Generic;
 using UnityEngine;
 
 
-//±âº»ÃÑ¾Ë
-//³Ë¹é¾øÀ½
+//ê¸°ë³¸ì´ì•Œ
+//ë„‰ë°±ì—†ìŒ
 
 public class Bullet : Projectile
 {
-	//½ºÇÇµå¼³Á¤
-	[Header("ÃÑ¾Ë ¼Óµµ ¼³Á¤")]
+	//ìŠ¤í”¼ë“œì„¤ì •
+	[Header("ì´ì•Œ ì†ë„ ì„¤ì •")]
 	public float speed;
 
 
@@ -26,9 +26,9 @@ public class Bullet : Projectile
 	// Update is called once per frame
 	protected override void Update()
 	{
-		//ÀÌµ¿ ·ÎÁ÷
+		//ì´ë™ ë¡œì§
 		transform.Translate(Vector3.forward * speed * Time.deltaTime);
-		//±âº» ¾÷µ¥ÀÌÆ® ½ÇÇà(»ç°Å¸® ¾÷µ«)
+		//ê¸°ë³¸ ì—…ë°ì´íŠ¸ ì‹¤í–‰(ì‚¬ê±°ë¦¬ ì—…ëƒ)
 		base.Update();
 		
 	}
@@ -37,19 +37,19 @@ public class Bullet : Projectile
 
 	
 	/// <summary>
-	/// ¿ÂÆ®¸®°Å¿¡ ¾µ ÀçÁ¤ÀÇÇÔ¼ö
+	/// ì˜¨íŠ¸ë¦¬ê±°ì— ì“¸ ì¬ì •ì˜í•¨ìˆ˜
 	/// </summary>
 	/// <param name="other"></param>
 	protected override void OnHit(Collider other)
 	{
 		base.OnHit(other);
-		// ÀÌÆåÆ® Ãâ·Â (»ç¿îµå,ÆÄÆ¼Å¬)·ÎÁ÷Ãß°¡ 
+		// ì´í™íŠ¸ ì¶œë ¥ (ì‚¬ìš´ë“œ,íŒŒí‹°í´)ë¡œì§ì¶”ê°€ 
 
 		SoundManager.Instance.PlaySFX3DAtPosition(SOUND_TYPE.SFX_BULLETHIT, this.transform.position);
-		//°øÅë µ¥¹ÌÁö ÇÔ¼ö È£Ãâ (´ÜÀÏ ´ë»ó)
+		//ê³µí†µ ë°ë¯¸ì§€ í•¨ìˆ˜ í˜¸ì¶œ (ë‹¨ì¼ ëŒ€ìƒ)
 		ApplyDamage(other, this.curDamage, this.dmgType);
 
-		// ÀÌÆåÆ® ¹× µ¥¹ÌÁö ¿¬»ê ÈÄ Åõ»çÃ¼ ¼Ò¸ê
+		// ì´í™íŠ¸ ë° ë°ë¯¸ì§€ ì—°ì‚° í›„ íˆ¬ì‚¬ì²´ ì†Œë©¸
 		ReturnToPool();
 	}
 

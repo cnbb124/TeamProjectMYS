@@ -4,39 +4,39 @@ using UnityEngine;
 
 // =====================================================================
 // WeaponSystem : MonoBehaviour
-// Unit °øÅë ÄÄÆ÷³ÍÆ®. Player / Enemy ¸ğµÎ »ç¿ë.
-// - ÃÑ¾Ë/·¹ÀÌÀú/¹Ì»çÀÏ ¹ß»ç ·ÎÁ÷ Àü´ã.
-// - ½½·Ô °ü¸®, ÀÜÅº °ü¸®, ¹ß»ç ¸ğµå °ü¸®.
-// - ÀÔ·Â °¨Áö´Â Player¿¡¼­. Shoot() È£Ãâ·Î À§ÀÓ.
-// - Enemy ´Â AI ¿¡¼­ Shoot() Á÷Á¢ È£Ãâ.
+// Unit ê³µí†µ ì»´í¬ë„ŒíŠ¸. Player / Enemy ëª¨ë‘ ì‚¬ìš©.
+// - ì´ì•Œ/ë ˆì´ì €/ë¯¸ì‚¬ì¼ ë°œì‚¬ ë¡œì§ ì „ë‹´.
+// - ìŠ¬ë¡¯ ê´€ë¦¬, ì”íƒ„ ê´€ë¦¬, ë°œì‚¬ ëª¨ë“œ ê´€ë¦¬.
+// - ì…ë ¥ ê°ì§€ëŠ” Playerì—ì„œ. Shoot() í˜¸ì¶œë¡œ ìœ„ì„.
+// - Enemy ëŠ” AI ì—ì„œ Shoot() ì§ì ‘ í˜¸ì¶œ.
 // =====================================================================
 public class WeaponSystem : MonoBehaviour
 {
-	// ================== [·¹ÆÛ·±½º] ==================
+	// ================== [ë ˆí¼ëŸ°ìŠ¤] ==================
 	private Unit _unit;
 	private PoolManager _pool;
 	private SoundManager _sound;
 
-	[Header("¶ô¿Â ½Ã½ºÅÛ (Player Àü¿ë)")]
-	[Tooltip("Player Àü¿ë. Enemy ´Â null ·Î µÑ °Í.")]
+	[Header("ë½ì˜¨ ì‹œìŠ¤í…œ (Player ì „ìš©)")]
+	[Tooltip("Player ì „ìš©. Enemy ëŠ” null ë¡œ ë‘˜ ê²ƒ.")]
 	public MissileLockOnSystem lockOnSystem;
 
 
-	// ================== [ÃÑ¾Ë ¼³Á¤] ==================
+	// ================== [ì´ì•Œ ì„¤ì •] ==================
 	[Space(5)]
-	[Header("<size=18>[¹«±â ½Ã½ºÅÛ]</size>")]
-	[Header("ÃÑ¾Ë ¼³Á¤")]
-	[Tooltip("ÃÑ¾Ë ¹ß»ç °£°İ (ÃÊ)")]
+	[Header("<size=18>[ë¬´ê¸° ì‹œìŠ¤í…œ]</size>")]
+	[Header("ì´ì•Œ ì„¤ì •")]
+	[Tooltip("ì´ì•Œ ë°œì‚¬ ê°„ê²© (ì´ˆ)")]
 	public float fireDelay = 0.1f;
 	private float _lastFireTime = 0f;
-	// ÃÑ¾Ë ±³´ë ¹ß»ç ÀÎµ¦½º (0=Left, 1=Right)
+	// ì´ì•Œ êµëŒ€ ë°œì‚¬ ì¸ë±ìŠ¤ (0=Left, 1=Right)
 	private int _bulletFireIndex = 0;
 
 
-	// ================== [¹Ì»çÀÏ ¼³Á¤] ==================
+	// ================== [ë¯¸ì‚¬ì¼ ì„¤ì •] ==================
 	[Space(5)]
-	[Header("¹Ì»çÀÏ ½½·Ô")]
-	[Tooltip("ÀÎº¥Åä¸®/ÀåºñÃ¢¿¡¼­ ÀåÂøÇÑ ¹Ì»çÀÏ Å¸ÀÔ ¸ñ·Ï")]
+	[Header("ë¯¸ì‚¬ì¼ ìŠ¬ë¡¯")]
+	[Tooltip("ì¸ë²¤í† ë¦¬/ì¥ë¹„ì°½ì—ì„œ ì¥ì°©í•œ ë¯¸ì‚¬ì¼ íƒ€ì… ëª©ë¡")]
 	public MISSILE_TYPE[] equippedMissiles = new MISSILE_TYPE[3]
 	{
 		MISSILE_TYPE.HOMING,
@@ -44,28 +44,28 @@ public class WeaponSystem : MonoBehaviour
 		MISSILE_TYPE.DUMB
 	};
 
-	[Header("ÇöÀç ¹Ì»çÀÏ Å¸ÀÔ")]
+	[Header("í˜„ì¬ ë¯¸ì‚¬ì¼ íƒ€ì…")]
 	public MISSILE_TYPE curMissileType = MISSILE_TYPE.HOMING;
 
-	[Header("¹ß»ç ¸ğµå (DOUBLE=µ¿½Ã / SINGLE=±³´ë)")]
+	[Header("ë°œì‚¬ ëª¨ë“œ (DOUBLE=ë™ì‹œ / SINGLE=êµëŒ€)")]
 	public MISSILE_FIRE_MODE missileFireMode = MISSILE_FIRE_MODE.DOUBLE;
 
-	// ÀåÂø ¿©ºÎ - UpdateEquipStatus()¿¡¼­ ¸Å ÇÁ·¹ÀÓ ÀÚµ¿ °»½Å
+	// ì¥ì°© ì—¬ë¶€ - UpdateEquipStatus()ì—ì„œ ë§¤ í”„ë ˆì„ ìë™ ê°±ì‹ 
 	public bool isMissile_EquippedLeft = false;
 	public bool isMissile_EquippedRight = false;
 
 	[Space(5)]
-	[Header("ÀÜÅº ¸ñ·Ï")]
-	[Tooltip("ÀÎ½ºÆåÅÍ¿¡¼­ ¹Ì»çÀÏ Á¾·ùº° ÀÜÅº/ÃÖ´ëÄ¡ ¼³Á¤")]
+	[Header("ì”íƒ„ ëª©ë¡")]
+	[Tooltip("ì¸ìŠ¤í™í„°ì—ì„œ ë¯¸ì‚¬ì¼ ì¢…ë¥˜ë³„ ì”íƒ„/ìµœëŒ€ì¹˜ ì„¤ì •")]
 	public List<MissileAmmoInfo> missileAmmoList = new List<MissileAmmoInfo>();
 
-	// ½½·Ô ¼øÈ¯ ÀÎµ¦½º
+	// ìŠ¬ë¡¯ ìˆœí™˜ ì¸ë±ìŠ¤
 	private int _missileSlotIndex = 0;
-	// ±³´ë ¹ß»ç¿ë ÀÎµ¦½º (0=Left, 1=Right)
+	// êµëŒ€ ë°œì‚¬ìš© ì¸ë±ìŠ¤ (0=Left, 1=Right)
 	private int _missileFireIndex = 0;
 
 
-	// ================== [ÃÊ±âÈ­] ==================
+	// ================== [ì´ˆê¸°í™”] ==================
 
 	private void Awake()
 	{
@@ -79,7 +79,7 @@ public class WeaponSystem : MonoBehaviour
 	}
 
 	/// <summary>
-	/// 1¹ø ½½·ÔÀ¸·Î ÃÊ±âÈ­. Unit.Start()¿¡¼­ È£Ãâ.
+	/// 1ë²ˆ ìŠ¬ë¡¯ìœ¼ë¡œ ì´ˆê¸°í™”. Unit.Start()ì—ì„œ í˜¸ì¶œ.
 	/// </summary>
 	public void Init()
 	{
@@ -90,10 +90,10 @@ public class WeaponSystem : MonoBehaviour
 	}
 
 
-	// ================== [¹ß»ç ¸ŞÀÎ] ==================
+	// ================== [ë°œì‚¬ ë©”ì¸] ==================
 
 	/// <summary>
-	/// ¹ß»ç ¸ŞÀÎ ÁøÀÔÁ¡. Unit.Shoot() ¿¡¼­ È£Ãâ. ¾Ö´Ï+»ç¿îµå+Åõ»çÃ¼ »ı¼º Àü´ã.
+	/// ë°œì‚¬ ë©”ì¸ ì§„ì…ì . Unit.Shoot() ì—ì„œ í˜¸ì¶œ. ì• ë‹ˆ+ì‚¬ìš´ë“œ+íˆ¬ì‚¬ì²´ ìƒì„± ì „ë‹´.
 	/// </summary>
 	public void Shoot(PROJECTILE_TYPE type)
 	{
@@ -102,7 +102,7 @@ public class WeaponSystem : MonoBehaviour
 		switch (type)
 		{
 			case PROJECTILE_TYPE.BULLET:
-				// ¹ß»ç µô·¹ÀÌ Ã¼Å©
+				// ë°œì‚¬ ë”œë ˆì´ ì²´í¬
 				if (Time.time < _lastFireTime + fireDelay)
 				{
 					return;
@@ -147,10 +147,10 @@ public class WeaponSystem : MonoBehaviour
 	}
 
 
-	// ================== [°³º° ¹ß»ç ·ÎÁ÷] ==================
+	// ================== [ê°œë³„ ë°œì‚¬ ë¡œì§] ==================
 
 	/// <summary>
-	/// ÃÑ¾Ë - ÁÂ¿ì ±³´ë ¹ß»ç
+	/// ì´ì•Œ - ì¢Œìš° êµëŒ€ ë°œì‚¬
 	/// </summary>
 	private void ShootBullet()
 	{
@@ -167,7 +167,7 @@ public class WeaponSystem : MonoBehaviour
 	}
 
 	/// <summary>
-	/// ·¹ÀÌÀú - Áß¾Ó °íÁ¤ ¹ß»ç
+	/// ë ˆì´ì € - ì¤‘ì•™ ê³ ì • ë°œì‚¬
 	/// </summary>
 	private void ShootLaser()
 	{
@@ -182,7 +182,7 @@ public class WeaponSystem : MonoBehaviour
 	}
 
 	/// <summary>
-	/// ¹Ì»çÀÏ - ÁöÁ¤ ÃÑ±¸¿¡¼­ ¹ß»ç. ÀÜÅº ¼Ò¸ğ ¹× ±³´ë ÀÎµ¦½º Ã³¸® Æ÷ÇÔ.
+	/// ë¯¸ì‚¬ì¼ - ì§€ì • ì´êµ¬ì—ì„œ ë°œì‚¬. ì”íƒ„ ì†Œëª¨ ë° êµëŒ€ ì¸ë±ìŠ¤ ì²˜ë¦¬ í¬í•¨.
 	/// </summary>
 	private void ShootMissile(FIREPOS_TYPE firePosType)
 	{
@@ -192,15 +192,15 @@ public class WeaponSystem : MonoBehaviour
 			return;
 		}
 
-		// Åõ»çÃ¼ »ı¼º Àü ÀÜÅº 1 ¼Ò¸ğ
+		// íˆ¬ì‚¬ì²´ ìƒì„± ì „ ì”íƒ„ 1 ì†Œëª¨
 		RemoveMissileAmmo(curMissileType);
 
-		// ±³´ë ¸ğµå - ¿À¸¥ÂÊ ¹ß»ç ºÒ°¡ ½Ã ÀÎµ¦½º ¸®¼Â
+		// êµëŒ€ ëª¨ë“œ - ì˜¤ë¥¸ìª½ ë°œì‚¬ ë¶ˆê°€ ì‹œ ì¸ë±ìŠ¤ ë¦¬ì…‹
 		if (missileFireMode == MISSILE_FIRE_MODE.SINGLE && !isMissile_EquippedRight)
 		{
 			ResetMissileFireIndex();
 		}
-		// ±³´ë ¸ğµå - ´ÙÀ½ ¹ß»ç¸¦ À§ÇÑ ÀÎµ¦½º ÀüÈ¯
+		// êµëŒ€ ëª¨ë“œ - ë‹¤ìŒ ë°œì‚¬ë¥¼ ìœ„í•œ ì¸ë±ìŠ¤ ì „í™˜
 		if (missileFireMode == MISSILE_FIRE_MODE.SINGLE)
 		{
 			AdvanceMissileFireIndex();
@@ -233,10 +233,10 @@ public class WeaponSystem : MonoBehaviour
 	}
 
 
-	// ================== [½½·Ô ÀüÈ¯] ==================
+	// ================== [ìŠ¬ë¡¯ ì „í™˜] ==================
 
 	/// <summary>
-	/// ´ÙÀ½ ¹Ì»çÀÏ ½½·ÔÀ¸·Î ÀüÈ¯.
+	/// ë‹¤ìŒ ë¯¸ì‚¬ì¼ ìŠ¬ë¡¯ìœ¼ë¡œ ì „í™˜.
 	/// </summary>
 	public void SwitchMissileNext()
 	{
@@ -250,7 +250,7 @@ public class WeaponSystem : MonoBehaviour
 	}
 
 	/// <summary>
-	/// ÀÌÀü ¹Ì»çÀÏ ½½·ÔÀ¸·Î ÀüÈ¯.
+	/// ì´ì „ ë¯¸ì‚¬ì¼ ìŠ¬ë¡¯ìœ¼ë¡œ ì „í™˜.
 	/// </summary>
 	public void SwitchMissilePrev()
 	{
@@ -264,7 +264,7 @@ public class WeaponSystem : MonoBehaviour
 	}
 
 	/// <summary>
-	/// ¹ß»ç ¸ğµå Åä±Û (DOUBLE <-> SINGLE).
+	/// ë°œì‚¬ ëª¨ë“œ í† ê¸€ (DOUBLE <-> SINGLE).
 	/// </summary>
 	public void ToggleFireMode()
 	{
@@ -280,12 +280,12 @@ public class WeaponSystem : MonoBehaviour
 	}
 
 
-	// ================== [ÀåÂø »óÅÂ °»½Å] ==================
+	// ================== [ì¥ì°© ìƒíƒœ ê°±ì‹ ] ==================
 
 	/// <summary>
-	/// ÀÜÅº°ú ¹ß»ç ¸ğµå¿¡ µû¶ó ÁÂ/¿ì ÃÑ±¸ È°¼ºÈ­ »óÅÂ¸¦ °»½Å.
-	/// Shoot()ÀÇ if¹®À» Á¦¾îÇÏ´Â ½ºÀ§Ä¡ ¿ªÇÒ.
-	/// Player.Update()¿¡¼­ ¸Å ÇÁ·¹ÀÓ È£Ãâ.
+	/// ì”íƒ„ê³¼ ë°œì‚¬ ëª¨ë“œì— ë”°ë¼ ì¢Œ/ìš° ì´êµ¬ í™œì„±í™” ìƒíƒœë¥¼ ê°±ì‹ .
+	/// Shoot()ì˜ ifë¬¸ì„ ì œì–´í•˜ëŠ” ìŠ¤ìœ„ì¹˜ ì—­í• .
+	/// Player.Update()ì—ì„œ ë§¤ í”„ë ˆì„ í˜¸ì¶œ.
 	/// </summary>
 	public void UpdateEquipStatus()
 	{
@@ -321,7 +321,7 @@ public class WeaponSystem : MonoBehaviour
 	}
 
 
-	// ================== [±³´ë ¹ß»ç ÀÎµ¦½º] ==================
+	// ================== [êµëŒ€ ë°œì‚¬ ì¸ë±ìŠ¤] ==================
 
 	public void AdvanceMissileFireIndex()
 	{
@@ -334,7 +334,7 @@ public class WeaponSystem : MonoBehaviour
 	}
 
 
-	// ================== [ÀÜÅº °ü¸®] ==================
+	// ================== [ì”íƒ„ ê´€ë¦¬] ==================
 
 	public bool HasMissileAmmo(MISSILE_TYPE type)
 	{

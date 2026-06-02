@@ -1,23 +1,23 @@
 using UnityEngine;
 
-//Â÷ÈÄ Åõ»çÃ¼¿¡ ³ÖÀ» µ¥¹ÌÁö Á¤º¸
+//ì°¨í›„ íˆ¬ì‚¬ì²´ì— ë„£ì„ ë°ë¯¸ì§€ ì •ë³´
 public struct DamageInfo
 {
-	public DAMAGE_TYPE type;//µ¥¹ÌÁöÅ¸ÀÔ
-	public int damageAmount;//µ¥¹ÌÁö¼öÄ¡
-	public bool isCritical; //Å©¸®ÀÎÁö µ¥¹ÌÁöÁõ°¡¹× Ä«¸Ş¶ó ÀÌµ¿¹èÀ²Áõ°¡?
-	public Vector3 hitPosition; //¸ÂÀºÀ§Ä¡(ÀÌÆåÆ® »ı¼º¿ë)
-	public Vector3 hitDiriection; //¸ÂÀº ¹æÇâ(¹Ğ·Á³ª°Å³ª ÇÏ´Â¿ë)
-	public GameObject attacker; //´©°¡ °ø°İÇß´ÂÁö
+	public DAMAGE_TYPE type;//ë°ë¯¸ì§€íƒ€ì…
+	public int damageAmount;//ë°ë¯¸ì§€ìˆ˜ì¹˜
+	public bool isCritical; //í¬ë¦¬ì¸ì§€ ë°ë¯¸ì§€ì¦ê°€ë° ì¹´ë©”ë¼ ì´ë™ë°°ìœ¨ì¦ê°€?
+	public Vector3 hitPosition; //ë§ì€ìœ„ì¹˜(ì´í™íŠ¸ ìƒì„±ìš©)
+	public Vector3 hitDiriection; //ë§ì€ ë°©í–¥(ë°€ë ¤ë‚˜ê±°ë‚˜ í•˜ëŠ”ìš©)
+	public GameObject attacker; //ëˆ„ê°€ ê³µê²©í–ˆëŠ”ì§€
 	
 }
 
 
 public interface IDamageable
 {
-	//ÇÇ°İ½Ã ÀÛµ¿
+	//í”¼ê²©ì‹œ ì‘ë™
     void TakeDamage(DamageInfo info);
-	//Ã¼·Â Âü°í¿ë
+	//ì²´ë ¥ ì°¸ê³ ìš©
 	int CurHp { get; }
 }
 

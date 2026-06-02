@@ -5,21 +5,21 @@ using UnityEngine;
 
 
 [System.Serializable]
-public class FirePosEntry///ÃÑ±¸ ÁÂÇ¥ ¿¬°á¿ë
+public class FirePosEntry///ì´êµ¬ ì¢Œí‘œ ì—°ê²°ìš©
 {
     public FIREPOS_TYPE type;
     public Transform pos;
 }
 
 [System.Serializable]
-public class BoostPosEntry///ºÎ½ºÅÍ(ÃßÁø±â ¾²·¯½ºÅÍ)ÁÂÇ¥ ¿¬°á¿ë
+public class BoostPosEntry///ë¶€ìŠ¤í„°(ì¶”ì§„ê¸° ì“°ëŸ¬ìŠ¤í„°)ì¢Œí‘œ ì—°ê²°ìš©
 {
     public BOOSTPOS_TYPE type;
     public Transform pos;
 }
 
 [System.Serializable]
-public class MissileAmmoInfo//¹Ì»çÀÏ ÀÜÅºÈ®ÀÎ¿ë
+public class MissileAmmoInfo//ë¯¸ì‚¬ì¼ ì”íƒ„í™•ì¸ìš©
 {
 	public MISSILE_TYPE missileType;
 	public int curAmmo;
@@ -31,44 +31,44 @@ public abstract class Unit : MonoBehaviour, IDamageable
 {
 
     
-	//==================·¹ÆÛ·±½º==================//
+	//==================ë ˆí¼ëŸ°ìŠ¤==================//
 
 
-	//=============±âÅ¸ ·¹ÆÛ·±½º===============
-	//¾Ö´Ï¸ŞÀÌ¼Ç ÄÁÆ®·Ñ·¯ ÇÒ´ç¿ë
+	//=============ê¸°íƒ€ ë ˆí¼ëŸ°ìŠ¤===============
+	//ì• ë‹ˆë©”ì´ì…˜ ì»¨íŠ¸ë¡¤ëŸ¬ í• ë‹¹ìš©
 	protected UnitAnimCtrl _animCtrl;
-	//¸®Áöµå¹Ùµğ ÇÒ´ç¿ë ·¹ÆÛ·±½º
+	//ë¦¬ì§€ë“œë°”ë”” í• ë‹¹ìš© ë ˆí¼ëŸ°ìŠ¤
 	protected Rigidbody _rb;
-	//¸Å´ÏÀú ÇÒ´ç¿ë ·¹ÆÛ·±½º
+	//ë§¤ë‹ˆì € í• ë‹¹ìš© ë ˆí¼ëŸ°ìŠ¤
 	protected SoundManager _sound;
 	protected PoolManager _pool;
 	public WeaponSystem weaponSystem;
 
-	//==================À¯´Öµ¥ÀÌÅÍ==================//
+	//==================ìœ ë‹›ë°ì´í„°==================//
 
-	[Header("<size=18>À¯´Ö °øÅë ±âº» ½ºÅÈ ¼³Á¤Ã¢</size>")]
+	[Header("<size=18>ìœ ë‹› ê³µí†µ ê¸°ë³¸ ìŠ¤íƒ¯ ì„¤ì •ì°½</size>")]
 
     [Header("HP")]
-    public int maxHpRemaining; //ÃÖ´ë,ÇöÀçHP¼öÄ¡
+    public int maxHpRemaining; //ìµœëŒ€,í˜„ì¬HPìˆ˜ì¹˜
 
 
-    [Header("Shield - ÇÇ°İÈÄ ÀÏÁ¤µô·¹ÀÌ ÈÄ ÀÚµ¿È¸º¹")]
-    public int maxShieldCapacity;//ÃÖ´ë,ÇöÀç½Çµå¼öÄ¡
+    [Header("Shield - í”¼ê²©í›„ ì¼ì •ë”œë ˆì´ í›„ ìë™íšŒë³µ")]
+    public int maxShieldCapacity;//ìµœëŒ€,í˜„ì¬ì‹¤ë“œìˆ˜ì¹˜
 
-    public float shieldRegainDelay;//ÇÇ°İÈÄ È¸º¹±îÁöµô·¹ÀÌ½Ã°£
-    public float shieldRegainRate; //½ÇµåÈ¸º¹¼öÄ¡
-    //private float shieldRegainTimer = 0f;//µô·¹ÀÌ ½Ã°£±îÁöÀê Å¸ÀÌ¸Ó >0516 ÄÚ·çÆ¾À¸·Îº¯°æ
-    public bool isShieldRegaining = false; //È¸º¹ÁßÀÎÁö ¿©ºÎ
-    private Coroutine _shieldRegenCoroutine;//Áß°£ Á¤ÁöµîÀ» À§ÇÑ ÄÚ·çÆ¾º¯¼ö µû·Î
-    //½Çµå¿¬°á¿ë
+    public float shieldRegainDelay;//í”¼ê²©í›„ íšŒë³µê¹Œì§€ë”œë ˆì´ì‹œê°„
+    public float shieldRegainRate; //ì‹¤ë“œíšŒë³µìˆ˜ì¹˜
+    //private float shieldRegainTimer = 0f;//ë”œë ˆì´ ì‹œê°„ê¹Œì§€ì´ íƒ€ì´ë¨¸ >0516 ì½”ë£¨í‹´ìœ¼ë¡œë³€ê²½
+    public bool isShieldRegaining = false; //íšŒë³µì¤‘ì¸ì§€ ì—¬ë¶€
+    private Coroutine _shieldRegenCoroutine;//ì¤‘ê°„ ì •ì§€ë“±ì„ ìœ„í•œ ì½”ë£¨í‹´ë³€ìˆ˜ ë”°ë¡œ
+    //ì‹¤ë“œì—°ê²°ìš©
     public GameObject shield;
 
-    [Header("Armor - ÀÚµ¿È¸º¹x")]
-    public int maxArmor;//ÃÖ´ë,ÇöÀç¾Æ¸Ó¼öÄ¡
+    [Header("Armor - ìë™íšŒë³µx")]
+    public int maxArmor;//ìµœëŒ€,í˜„ì¬ì•„ë¨¸ìˆ˜ì¹˜
 
 
-    [Tooltip("Armorº¸À¯½Ã µ¥¹ÌÁö °æ°¨µÇ´Â ¼öÄ¡.")]
-    public int defense;//¾Æ¸Ó ÀÖÀ»½Ã µ¥¹ÌÁö °æ°¨¼öÄ¡(damageAmount=damage-defense)
+    [Tooltip("Armorë³´ìœ ì‹œ ë°ë¯¸ì§€ ê²½ê°ë˜ëŠ” ìˆ˜ì¹˜.")]
+    public int defense;//ì•„ë¨¸ ìˆì„ì‹œ ë°ë¯¸ì§€ ê²½ê°ìˆ˜ì¹˜(damageAmount=damage-defense)
 
 
 
@@ -79,52 +79,52 @@ public abstract class Unit : MonoBehaviour, IDamageable
 
 
 
-	// Å©¸®¿©ºÎ ÆÇÁ¤Àº Åõ»çÃ¼°¡ ´ã´ç Å©È®Àº À¯´ÖÀÌ. ¡æ DamageInfo.isCritical·Î Àü´Ş¹ŞÀ½
-	// criChance´Â Åõ»çÃ¼ »ı¼º ½Ã attacker¿¡¼­ º¹»çÇØ¼­ »ç¿ë
-	//µ¥¹ÌÁö °è»ê½Ä
-	//shield>armor>hp¼ø ½Çµå¾ø°í armorÀÖÀ»¶§´Â °æ°¨¼öÄ¡¸¸Å­ µ¥¹ÌÁö °æ°¨
+	// í¬ë¦¬ì—¬ë¶€ íŒì •ì€ íˆ¬ì‚¬ì²´ê°€ ë‹´ë‹¹ í¬í™•ì€ ìœ ë‹›ì´. â†’ DamageInfo.isCriticalë¡œ ì „ë‹¬ë°›ìŒ
+	// criChanceëŠ” íˆ¬ì‚¬ì²´ ìƒì„± ì‹œ attackerì—ì„œ ë³µì‚¬í•´ì„œ ì‚¬ìš©
+	//ë°ë¯¸ì§€ ê³„ì‚°ì‹
+	//shield>armor>hpìˆœ ì‹¤ë“œì—†ê³  armorìˆì„ë•ŒëŠ” ê²½ê°ìˆ˜ì¹˜ë§Œí¼ ë°ë¯¸ì§€ ê²½ê°
 	//damageAmount=
-	//(½Çµåo,¾Æ¸Óx)(Damageinfo.damage) * (Å©¸®½Ã)criDamageMultiplier;
-	//(½Çµåx,¾Æ¸Óo)Damageinfo.damage-defense *(Å©¸®½Ã)criDamageMultiplier;
-	//(½Çµåx,¾Æ¸Óx)Damageinfo.damage) * (Å©¸®½Ã)criDamageMultiplier;
+	//(ì‹¤ë“œo,ì•„ë¨¸x)(Damageinfo.damage) * (í¬ë¦¬ì‹œ)criDamageMultiplier;
+	//(ì‹¤ë“œx,ì•„ë¨¸o)Damageinfo.damage-defense *(í¬ë¦¬ì‹œ)criDamageMultiplier;
+	//(ì‹¤ë“œx,ì•„ë¨¸x)Damageinfo.damage) * (í¬ë¦¬ì‹œ)criDamageMultiplier;
 	//curHp-=damageAmount;
 
-	[Header("ÀÌµ¿ °ü·Ã")]
-    [Tooltip("±âº» ÀÌµ¿¼Óµµ")]
-    public float baseMoveSpeed;//±âº»ÀÌµ¿¼Ó¤§
-    [Tooltip("ºÎ½ºÆ® »ç¿ë½Ã ÀÌµ¿¼Óµµ")]
-    public float boostSpeed;//ºÎ½ºÆ®»ç¿ë½Ã ÀÌµ¿¼Óµµ
-    [Tooltip("ÃÖ´ë¼Óµµvelocity°¡ ³Ñ¾î°¥½Ã °íÁ¤½ÃÅ³¼Óµµ")]
+	[Header("ì´ë™ ê´€ë ¨")]
+    [Tooltip("ê¸°ë³¸ ì´ë™ì†ë„")]
+    public float baseMoveSpeed;//ê¸°ë³¸ì´ë™ì†ã„·
+    [Tooltip("ë¶€ìŠ¤íŠ¸ ì‚¬ìš©ì‹œ ì´ë™ì†ë„")]
+    public float boostSpeed;//ë¶€ìŠ¤íŠ¸ì‚¬ìš©ì‹œ ì´ë™ì†ë„
+    [Tooltip("ìµœëŒ€ì†ë„velocityê°€ ë„˜ì–´ê°ˆì‹œ ê³ ì •ì‹œí‚¬ì†ë„")]
 	public float maxSpeed;
-    [Tooltip("ºÎ½ºÆ® ÃÖ´ëÄ¡")]
+    [Tooltip("ë¶€ìŠ¤íŠ¸ ìµœëŒ€ì¹˜")]
 	public float maxBoostCapacity;
-    [Tooltip("ºÎ½ºÆ® »ç¿ë ÃÖ¼Ò ¿ä±¸Ä¡")]
-    public float minBoostRequired;//ÃÖ¼Ò ºÎ½ºÆ®»ç¿ë¿ä±¸Ä¡
+    [Tooltip("ë¶€ìŠ¤íŠ¸ ì‚¬ìš© ìµœì†Œ ìš”êµ¬ì¹˜")]
+    public float minBoostRequired;//ìµœì†Œ ë¶€ìŠ¤íŠ¸ì‚¬ìš©ìš”êµ¬ì¹˜
 
 
-	public float boostRegainDelay;//ºÎ½ºÆ® È¸º¹µô·¹ÀÌ
-    public float boostRegainRate;//ÃÊ´ç ºÎ½ºÆ® ÀÜ·®È¸º¹¼öÄ¡
-    private float boostRegainTimer = 0f;//ºÎ½ºÆ® È¸º¹µô·¹ÀÌ±îÁö Àê Å¸ÀÌ¸Ó
-    private bool isBoostRegaining = false;//È¸º¹À¯¹«
-    protected bool _isBoosting = false;//ºÎ½ºÆ® »ç¿ë Áß ¿©ºÎ (ÀÚ½Ä¿¡¼­ ¼³Á¤)
+	public float boostRegainDelay;//ë¶€ìŠ¤íŠ¸ íšŒë³µë”œë ˆì´
+    public float boostRegainRate;//ì´ˆë‹¹ ë¶€ìŠ¤íŠ¸ ì”ëŸ‰íšŒë³µìˆ˜ì¹˜
+    private float boostRegainTimer = 0f;//ë¶€ìŠ¤íŠ¸ íšŒë³µë”œë ˆì´ê¹Œì§€ ì´ íƒ€ì´ë¨¸
+    private bool isBoostRegaining = false;//íšŒë³µìœ ë¬´
+    protected bool _isBoosting = false;//ë¶€ìŠ¤íŠ¸ ì‚¬ìš© ì¤‘ ì—¬ë¶€ (ìì‹ì—ì„œ ì„¤ì •)
 
 
    
-    [Header("È¸ÇÇ & ¹«Àû")]
-    [Tooltip("È¸ÇÇ Áö¼Ó½Ã°£")]
+    [Header("íšŒí”¼ & ë¬´ì ")]
+    [Tooltip("íšŒí”¼ ì§€ì†ì‹œê°„")]
     public float dodgeDuration = 0.5f;
-    [Tooltip("¹«Àû Áö¼Ó½Ã°£")]
+    [Tooltip("ë¬´ì  ì§€ì†ì‹œê°„")]
     public float dodgeInvincibleTime = 0.4f;
     private float _dodgeTimer = 0f;
     public bool IsInvincible { get; private set; }
-	[Tooltip("ÇÇ°İºÎÀ§ È¤Àº HPÀÜ·®¿¡ µû¸¥ÀÌµ¿¼Óµµ º¯°æ¿ë")]
-	public float speedMultiPlier;//HP È¤Àº ÇÇ°İºÎÀ§¿¡µû¸¥ ¼ÓµµÁ¶Àı¿ë.
+	[Tooltip("í”¼ê²©ë¶€ìœ„ í˜¹ì€ HPì”ëŸ‰ì— ë”°ë¥¸ì´ë™ì†ë„ ë³€ê²½ìš©")]
+	public float speedMultiPlier;//HP í˜¹ì€ í”¼ê²©ë¶€ìœ„ì—ë”°ë¥¸ ì†ë„ì¡°ì ˆìš©.
 
 
 
-    [Header("ÀÌÆåÆ® À§Ä¡(ÃÑ±¸,ºÎ½ºÅÍµî)")]
-    public FirePosEntry[] firePositions; // ÀÎ½ºÆåÅÍ¿¡¼­ Å¸ÀÔ+Transform ½ÖÀ¸·Î µî·Ï
-    public BoostPosEntry[] boosterEffectPositions;//¿·¹«ºù½Ã ºÎ½ºÅÍÀÌÆåÆ® Ãß°¡ÇÊ¿ä.enum¿¡ Å¸ÀÔµîÃß°¡ÇÊ¿ä.left,right,¿ªºĞ»ç,Á¤ºĞ»ç,ºÎ½ºÆ®»óÅÂµî
+    [Header("ì´í™íŠ¸ ìœ„ì¹˜(ì´êµ¬,ë¶€ìŠ¤í„°ë“±)")]
+    public FirePosEntry[] firePositions; // ì¸ìŠ¤í™í„°ì—ì„œ íƒ€ì…+Transform ìŒìœ¼ë¡œ ë“±ë¡
+    public BoostPosEntry[] boosterEffectPositions;//ì˜†ë¬´ë¹™ì‹œ ë¶€ìŠ¤í„°ì´í™íŠ¸ ì¶”ê°€í•„ìš”.enumì— íƒ€ì…ë“±ì¶”ê°€í•„ìš”.left,right,ì—­ë¶„ì‚¬,ì •ë¶„ì‚¬,ë¶€ìŠ¤íŠ¸ìƒíƒœë“±
     private Dictionary<FIREPOS_TYPE, Transform> _firePosDict = new Dictionary<FIREPOS_TYPE, Transform>();
     private Dictionary<BOOSTPOS_TYPE, Transform> _boostPosDict = new Dictionary<BOOSTPOS_TYPE, Transform>();
 
@@ -135,7 +135,7 @@ public abstract class Unit : MonoBehaviour, IDamageable
         {
             return pos;
         }
-        Debug.LogWarning($"[Unit] FirePos ¹Ì¼³Á¤: {type}");
+        Debug.LogWarning($"[Unit] FirePos ë¯¸ì„¤ì •: {type}");
         return null;
     }
     protected Transform GetBoostPos(BOOSTPOS_TYPE type)
@@ -144,36 +144,36 @@ public abstract class Unit : MonoBehaviour, IDamageable
         {
             return pos;
         }
-        Debug.LogWarning($"[Unit] BoostPos ¹Ì¼³Á¤: {type}");
+        Debug.LogWarning($"[Unit] BoostPos ë¯¸ì„¤ì •: {type}");
         return null;
     }
 
 
     //[HideInInspector]
-    //public Transform curFirePos;//¹Ø¿¡¼­ ÃÑ±¸½ºÀ§Äª¿ë 
-    //ÇÊ¿ä¾øÀ½.
+    //public Transform curFirePos;//ë°‘ì—ì„œ ì´êµ¬ìŠ¤ìœ„ì¹­ìš© 
+    //í•„ìš”ì—†ìŒ.
 
-    [Header("===============<size=14>ÇöÀç »óÅÂ(ÀÔ·Âx Âü°í¿ë)</size>================")]
+    [Header("===============<size=14>í˜„ì¬ ìƒíƒœ(ì…ë ¥x ì°¸ê³ ìš©)</size>================")]
     public UNIT_STATE curState = UNIT_STATE.IDLE;
     public int curHpRemaining;
-   	public int CurHp => curHpRemaining;//ÀÎÅÍÆäÀÌ½º ÇÁ·ÎÆÛÆ¼¿ë
+   	public int CurHp => curHpRemaining;//ì¸í„°í˜ì´ìŠ¤ í”„ë¡œí¼í‹°ìš©
 	public int curShieldRemaining;
     public int curArmorRemaining;
     public float curSpeed;
-    public float curBoostRemaining;//ºÎ½ºÆ®ÀÜ·®
-                                   //ÀÜÅºµµÃß°¡¿¹Á¤
+    public float curBoostRemaining;//ë¶€ìŠ¤íŠ¸ì”ëŸ‰
+                                   //ì”íƒ„ë„ì¶”ê°€ì˜ˆì •
     
     private float updateTimer = 0f;
 
-    //// ==================·¹ÀÌ¾î==================
+    //// ==================ë ˆì´ì–´==================
     //[HideInInspector]
     //public int playerLayer;
     //[HideInInspector]
     //public int enemyLayer;
     //[HideInInspector]
-    //public int groundLayer;//Çà¼ºµî ÁöÇüÁö¹°, Â÷ÈÄ ¼öÁ¤ÇÊ¿ä
+    //public int groundLayer;//í–‰ì„±ë“± ì§€í˜•ì§€ë¬¼, ì°¨í›„ ìˆ˜ì •í•„ìš”
     //[HideInInspector]
-    //public int ItemLayer;//¾ÆÀÌÅÛ·¹ÀÌ¾î Ãß°¡ÇÊ¿ä
+    //public int ItemLayer;//ì•„ì´í…œë ˆì´ì–´ ì¶”ê°€í•„ìš”
     //[HideInInspector]
     //public int playerProjectileLayer;
     //[HideInInspector]
@@ -187,9 +187,9 @@ public abstract class Unit : MonoBehaviour, IDamageable
     
 
     // =====================================================================
-    // ÀÏ½ÃÁ¤Áö / °ÔÀÓ¿À¹ö Ã¼Å©
-    // Player, Enemy µî ÀÚ½Ä Å¬·¡½ºÀÇ Update/FixedUpdate Ã¹ ÁÙ¿¡¼­ »ç¿ë.
-    // Unit.Update() ¿¡µµ Àû¿ë - ÀÚ½ÄÀÌ base.Update() È£Ãâ ½Ã ÀÌÁß ¾ÈÀü¸Á.
+    // ì¼ì‹œì •ì§€ / ê²Œì„ì˜¤ë²„ ì²´í¬
+    // Player, Enemy ë“± ìì‹ í´ë˜ìŠ¤ì˜ Update/FixedUpdate ì²« ì¤„ì—ì„œ ì‚¬ìš©.
+    // Unit.Update() ì—ë„ ì ìš© - ìì‹ì´ base.Update() í˜¸ì¶œ ì‹œ ì´ì¤‘ ì•ˆì „ë§.
     // =====================================================================
     protected bool ShouldPause =>
         GameManager.Instance != null &&
@@ -210,8 +210,8 @@ public abstract class Unit : MonoBehaviour, IDamageable
     {
         _sound = SoundManager.Instance;
         _pool = PoolManager.Instance;
-        //ÀÎ½ºÆåÅÍ¿¡¼­ ÀÔ·ÂµÈ °ª ÇöÀç ½ºÅÈÀ¸·Î ¼³Á¤
-        //ÀúÀå ±â´É »ı±æ½Ã º¯°æÇÊ¿ä.
+        //ì¸ìŠ¤í™í„°ì—ì„œ ì…ë ¥ëœ ê°’ í˜„ì¬ ìŠ¤íƒ¯ìœ¼ë¡œ ì„¤ì •
+        //ì €ì¥ ê¸°ëŠ¥ ìƒê¸¸ì‹œ ë³€ê²½í•„ìš”.
         curHpRemaining = maxHpRemaining;
         curShieldRemaining = maxShieldCapacity;
         curArmorRemaining = maxArmor;
@@ -220,7 +220,7 @@ public abstract class Unit : MonoBehaviour, IDamageable
         //playerLayer = LayerMask.NameToLayer("UNIT_Player");
         //enemyLayer = LayerMask.NameToLayer("UNIT_Enemy");
         //groundLayer = LayerMask.NameToLayer("Environment");
-        ////¾ÆÀÌÅÛ ·¹ÀÌ¾î Ãß°¡ÇÊ¿äItemLayer = LayerMask.NameToLayer("");
+        ////ì•„ì´í…œ ë ˆì´ì–´ ì¶”ê°€í•„ìš”ItemLayer = LayerMask.NameToLayer("");
         //playerProjectileLayer = LayerMask.NameToLayer("PlayerProjectile");
         //enemyProjectileLayer = LayerMask.NameToLayer("EnemyProjectile");
 
@@ -236,7 +236,7 @@ public abstract class Unit : MonoBehaviour, IDamageable
     {
         if (ShouldPause) return;
         UpdateFSM();
-        //UpdateShieldRegen(); >>0516 ÄÚ·çÆ¾À¸·Îº¯°æ
+        //UpdateShieldRegen(); >>0516 ì½”ë£¨í‹´ìœ¼ë¡œë³€ê²½
         UpdateBoostRegen();
 
         updateTimer += Time.deltaTime;
@@ -264,15 +264,15 @@ public abstract class Unit : MonoBehaviour, IDamageable
         }
         set
         {
-            if (curState == value)//¼ÂÇÒ¶§ ¶È°°À¸¸é ÇÊ¿ä¾øÀ½·Î
+            if (curState == value)//ì…‹í• ë•Œ ë˜‘ê°™ìœ¼ë©´ í•„ìš”ì—†ìŒë¡œ
             {
                 return;
             }
-            //ÇöÀç»óÅÂ¿¡¼­ ³ª°¡´Â ¸Ş¼²
+            //í˜„ì¬ìƒíƒœì—ì„œ ë‚˜ê°€ëŠ” ë©”ì„£
             OnStateExit(curState);
-            //³ÖÀº°ª Àû¿ëÇØÁÖ°í
+            //ë„£ì€ê°’ ì ìš©í•´ì£¼ê³ 
             curState = value;
-            //µé¾î°¡´Â ¸Ş¼­µå
+            //ë“¤ì–´ê°€ëŠ” ë©”ì„œë“œ
             OnStateEnter(curState);
         }
     }
@@ -296,14 +296,18 @@ public abstract class Unit : MonoBehaviour, IDamageable
         }
     }
 
-    //===============ÀÚ½Ä¿¡¼­ Á÷Á¢ override==================
+    //===============ìì‹ì—ì„œ ì§ì ‘ override==================
     protected virtual void OnStateEnter(UNIT_STATE state)
     {
         switch (state)
         {
             case UNIT_STATE.IDLE:   _animCtrl.Play(ANIM_TYPE.IDLE);   break;
             case UNIT_STATE.MOVING: _animCtrl.Play(ANIM_TYPE.MOVING); break;
-            case UNIT_STATE.DODGE:  _animCtrl.Play(ANIM_TYPE.DODGE);  break;
+            case UNIT_STATE.DODGE:
+                _animCtrl.Play(ANIM_TYPE.DODGE);
+                _dodgeTimer = dodgeDuration;
+                IsInvincible = true;
+                break;
             case UNIT_STATE.DIE:    _animCtrl.Play(ANIM_TYPE.DIE);    break;
         }
     }
@@ -313,63 +317,73 @@ public abstract class Unit : MonoBehaviour, IDamageable
     }
     protected virtual void OnIdle()
     {
-        //¾Ö´Ï¸ŞÀÌ¼Ç¸í·É, »ç¿îµåÀç»ı?
+        //ì• ë‹ˆë©”ì´ì…˜ëª…ë ¹, ì‚¬ìš´ë“œì¬ìƒ?
     }
     protected virtual void OnMoving()
     {
-        //¾Ö´Ï¸ŞÀÌ¼Ç¸í·É, »ç¿îµåÀç»ı?
+        //ì• ë‹ˆë©”ì´ì…˜ëª…ë ¹, ì‚¬ìš´ë“œì¬ìƒ?
     }
     protected virtual void OnDodge()
     {
-        //¾Ö´Ï¸ŞÀÌ¼Ç¸í·É, »ç¿îµåÀç»ı?
+        //ì• ë‹ˆë©”ì´ì…˜ëª…ë ¹, ì‚¬ìš´ë“œì¬ìƒ?
+        _dodgeTimer -= Time.deltaTime;
+        if (IsInvincible && _dodgeTimer <= dodgeDuration - dodgeInvincibleTime)
+        {
+            IsInvincible = false;
+        }
+        if (_dodgeTimer <= 0f)
+        {
+            _dodgeTimer = 0f;
+            CurState = UNIT_STATE.IDLE;
+        }
     }
     protected virtual void OnDying()
     {
-        //¾Ö´Ï¸ŞÀÌ¼Ç¸í·É, »ç¿îµåÀç»ı?
-        //Á×´ÂÃ³¸® - Ç®¸Å´ÏÀú
+        //ì• ë‹ˆë©”ì´ì…˜ëª…ë ¹, ì‚¬ìš´ë“œì¬ìƒ?
+        //ì£½ëŠ”ì²˜ë¦¬ - í’€ë§¤ë‹ˆì €
     }
 
-    //½ÇµåÈ¸º¹
+    //ì‹¤ë“œíšŒë³µ
     protected IEnumerator ShieldRegenerationRoutine()
     {
-        //ÇÇ°İ ÈÄ ¼³Á¤µÈ µô·¹ÀÌ(ÃÊ)¸¸Å­ ´ë±âÇÕ´Ï´Ù. (UpdateÀÇ Å¸ÀÌ¸Ó ¿¬»êÀ» ¿Ïº®È÷ ´ëÃ¼)
+        //í”¼ê²© í›„ ì„¤ì •ëœ ë”œë ˆì´(ì´ˆ)ë§Œí¼ ëŒ€ê¸°í•©ë‹ˆë‹¤. (Updateì˜ íƒ€ì´ë¨¸ ì—°ì‚°ì„ ì™„ë²½íˆ ëŒ€ì²´)
         yield return new WaitForSeconds(shieldRegainDelay);
 
         isShieldRegaining = true;
 
-        // ÃÖÀûÈ­¸¦ À§ÇØ 0.1ÃÊ¸¶´Ù ´ë±âÇÒ Ä³½Ì °´Ã¼ »ı¼º
+        // ìµœì í™”ë¥¼ ìœ„í•´ 0.1ì´ˆë§ˆë‹¤ ëŒ€ê¸°í•  ìºì‹± ê°ì²´ ìƒì„±
         WaitForSeconds tick = new WaitForSeconds(0.1f);
 
-        //  ½Çµå°¡ ²Ë Â÷Áö ¾Ê¾Ò°í, À¯´ÖÀÌ »ì¾ÆÀÖ´Â µ¿¾È ¹İº¹ÇØ¼­ È¸º¹
+        //  ì‹¤ë“œê°€ ê½‰ ì°¨ì§€ ì•Šì•˜ê³ , ìœ ë‹›ì´ ì‚´ì•„ìˆëŠ” ë™ì•ˆ ë°˜ë³µí•´ì„œ íšŒë³µ
         while (curShieldRemaining < maxShieldCapacity && curState != UNIT_STATE.DIE)
         {
-            // ÃÊ´ç È¸º¹·®(shieldRegainRate)À» 0.1ÃÊ ±âÁØ ´ÜÀ§·Î °è»êÇÏ¿© ´õÇÔ
+            // ì´ˆë‹¹ íšŒë³µëŸ‰(shieldRegainRate)ì„ 0.1ì´ˆ ê¸°ì¤€ ë‹¨ìœ„ë¡œ ê³„ì‚°í•˜ì—¬ ë”í•¨
             curShieldRemaining += Mathf.RoundToInt(shieldRegainRate * 0.1f);
             curShieldRemaining = Mathf.Min(curShieldRemaining, maxShieldCapacity);
 
-            // ´ÙÀ½ 0.1ÃÊ±îÁö ´ë±â
+            // ë‹¤ìŒ 0.1ì´ˆê¹Œì§€ ëŒ€ê¸°
             yield return tick;
         }
 
-        // È¸º¹ÀÌ ¿Ï·áµÇ¾ú°Å³ª Á×¾úÀ» °æ¿ì »óÅÂ ÃÊ±âÈ­
+        // íšŒë³µì´ ì™„ë£Œë˜ì—ˆê±°ë‚˜ ì£½ì—ˆì„ ê²½ìš° ìƒíƒœ ì´ˆê¸°í™”
         isShieldRegaining = false;
         _shieldRegenCoroutine = null;
     }
 
-    //0516 ½ÇµåÈ¸º¹ ÄÚ·çÆ¾À¸·Îº¯°Ü¤Á¤·
+    //0516 ì‹¤ë“œíšŒë³µ ì½”ë£¨í‹´ìœ¼ë¡œë³€ê²¨ã…‘ã…‡
     //private void UpdateShieldRegen()
     //{
     //    if (curState == UNIT_STATE.DIE || curShieldRemaining >= maxShieldRemaining)
     //    {
     //        return;
     //    }
-    //    //if(curShieldRemaning>=maxShieldRemaning)//µğ¹ö±× ·Î±ë°°Àº°Å ÇÊ¿äÇÏ¸é ÁÖ¼®Ç®°í À§¿¡¼­ Áö¿ï°Í
+    //    //if(curShieldRemaning>=maxShieldRemaning)//ë””ë²„ê·¸ ë¡œê¹…ê°™ì€ê±° í•„ìš”í•˜ë©´ ì£¼ì„í’€ê³  ìœ„ì—ì„œ ì§€ìš¸ê²ƒ
     //    //{
     //    //	return;
     //    //}
-    //    //Å¸ÀÌ¸Ó¿¡ ÀÏÁ¤½Ã°£´õÇØÁÖ°í
+    //    //íƒ€ì´ë¨¸ì— ì¼ì •ì‹œê°„ë”í•´ì£¼ê³ 
     //    shieldRegainTimer += Time.deltaTime;
-    //    //Å¸ÀÌ¸Ó°¡ µô·¹ÀÌº¸´Ù Ä¿Á³°í ÃæÀüÁßÀÌ¾Æ´Ò¶§, Áï µô·¹ÀÌ¸¸Å­½Ã°£Áö³µÀ»‹š
+    //    //íƒ€ì´ë¨¸ê°€ ë”œë ˆì´ë³´ë‹¤ ì»¤ì¡Œê³  ì¶©ì „ì¤‘ì´ì•„ë‹ë•Œ, ì¦‰ ë”œë ˆì´ë§Œí¼ì‹œê°„ì§€ë‚¬ì„ë–„
     //    if (!isShieldRegaining && shieldRegainTimer >= shieldRegainDelay)
     //    {
     //        isShieldRegaining = true;
@@ -377,14 +391,14 @@ public abstract class Unit : MonoBehaviour, IDamageable
 
     //    if (isShieldRegaining)
     //    {
-    //        //¹İ¿Ã¸²°ø½Ä
+    //        //ë°˜ì˜¬ë¦¼ê³µì‹
     //        curShieldRemaining += Mathf.RoundToInt(shieldRegainRate * Time.deltaTime);
-    //        //È¤¿©³ª ÃÊ°ú½Ã Á¦ÇÑ°Éµµ·Ï µÑÁß ÀÛÀº°ª ¹İÈ¯ÇÏ´Â ÇÔ¼ö(µ¿ÀÏ½Ã ±×°ª¹İÈ¯)
+    //        //í˜¹ì—¬ë‚˜ ì´ˆê³¼ì‹œ ì œí•œê±¸ë„ë¡ ë‘˜ì¤‘ ì‘ì€ê°’ ë°˜í™˜í•˜ëŠ” í•¨ìˆ˜(ë™ì¼ì‹œ ê·¸ê°’ë°˜í™˜)
     //        curShieldRemaining = Mathf.Min(curShieldRemaining, maxShieldRemaining);
     //    }
 
     //}
-    //ºÎ½ºÆ®È¸º¹
+    //ë¶€ìŠ¤íŠ¸íšŒë³µ
     private void UpdateBoostRegen()
     {
         if (curState == UNIT_STATE.DIE || curBoostRemaining >= maxBoostCapacity)
@@ -397,13 +411,13 @@ public abstract class Unit : MonoBehaviour, IDamageable
             isBoostRegaining = false;
             return;
         }
-        //if(curBoostRemaining>=maxBoostRemaining)//µğ¹ö±× ·Î±ë°°Àº°Å ÇÊ¿äÇÏ¸é ÁÖ¼®Ç®°í À§¿¡¼­ Áö¿ï°Í
+        //if(curBoostRemaining>=maxBoostRemaining)//ë””ë²„ê·¸ ë¡œê¹…ê°™ì€ê±° í•„ìš”í•˜ë©´ ì£¼ì„í’€ê³  ìœ„ì—ì„œ ì§€ìš¸ê²ƒ
         //{
         //	return;
         //}
-        //Å¸ÀÌ¸Ó¿¡ ÀÏÁ¤½Ã°£´õÇØÁÖ°í
+        //íƒ€ì´ë¨¸ì— ì¼ì •ì‹œê°„ë”í•´ì£¼ê³ 
         boostRegainTimer += Time.deltaTime;
-        //Å¸ÀÌ¸Ó°¡ µô·¹ÀÌº¸´Ù Ä¿Á³°í ÃæÀüÁßÀÌ¾Æ´Ò¶§, Áï µô·¹ÀÌ¸¸Å­½Ã°£Áö³µÀ»‹š
+        //íƒ€ì´ë¨¸ê°€ ë”œë ˆì´ë³´ë‹¤ ì»¤ì¡Œê³  ì¶©ì „ì¤‘ì´ì•„ë‹ë•Œ, ì¦‰ ë”œë ˆì´ë§Œí¼ì‹œê°„ì§€ë‚¬ì„ë–„
         if (!isBoostRegaining && boostRegainTimer >= boostRegainDelay)
         {
             isBoostRegaining = true;
@@ -412,11 +426,11 @@ public abstract class Unit : MonoBehaviour, IDamageable
         if (isBoostRegaining)
         {
             curBoostRemaining += boostRegainRate * Time.deltaTime;
-            curBoostRemaining = Mathf.Min(curBoostRemaining, maxBoostCapacity);//½Çµå¿Íµ¿ÀÏ
+            curBoostRemaining = Mathf.Min(curBoostRemaining, maxBoostCapacity);//ì‹¤ë“œì™€ë™ì¼
         }
     }
 
-    //ºÎ½ºÆ®»ç¿ë
+    //ë¶€ìŠ¤íŠ¸ì‚¬ìš©
     public void UseBoost(float amount)
     {
         curBoostRemaining = Mathf.Max(0f, curBoostRemaining - amount);
@@ -426,12 +440,12 @@ public abstract class Unit : MonoBehaviour, IDamageable
 
 
 
-    //(½Çµåo,¾Æ¸Óx)(Damageinfo.damage) * (Å©¸®½Ã)criDamageMultiplier;
-    //(½Çµåx,¾Æ¸Óo)Damageinfo.damage-defense *(Å©¸®½Ã)criDamageMultiplier;
-    //(½Çµåx,¾Æ¸Óx)Damageinfo.damage) * (Å©¸®½Ã)criDamageMultiplier;
-    //¹İ¿Ã¸²ÇÒ°Í. 0.5->1 0.4->0
+    //(ì‹¤ë“œo,ì•„ë¨¸x)(Damageinfo.damage) * (í¬ë¦¬ì‹œ)criDamageMultiplier;
+    //(ì‹¤ë“œx,ì•„ë¨¸o)Damageinfo.damage-defense *(í¬ë¦¬ì‹œ)criDamageMultiplier;
+    //(ì‹¤ë“œx,ì•„ë¨¸x)Damageinfo.damage) * (í¬ë¦¬ì‹œ)criDamageMultiplier;
+    //ë°˜ì˜¬ë¦¼í• ê²ƒ. 0.5->1 0.4->0
 
-    //ÀÚ½Ä¿¡¼­ ¿À¹ö¶óÀÌµå
+    //ìì‹ì—ì„œ ì˜¤ë²„ë¼ì´ë“œ
     public virtual void Shoot(PROJECTILE_TYPE type)
     {
         if (weaponSystem != null)
@@ -441,7 +455,7 @@ public abstract class Unit : MonoBehaviour, IDamageable
     }
 
     /// <summary>
-    /// WeaponSystem¿¡¼­ ¾Ö´Ï¸ŞÀÌ¼Ç Àç»ı È£Ãâ¿ë
+    /// WeaponSystemì—ì„œ ì• ë‹ˆë©”ì´ì…˜ ì¬ìƒ í˜¸ì¶œìš©
     /// </summary>
     public void PlayAnim(ANIM_TYPE type)
     {
@@ -452,27 +466,32 @@ public abstract class Unit : MonoBehaviour, IDamageable
     }
 
     /// <summary>
-    /// Unit TakeDamage(IDamageable »ó¼Ó½Ã ÇÊ¼ö±¸ÇöÇÏ´Â ¸Ş¼­µå) 
+    /// Unit TakeDamage(IDamageable ìƒì†ì‹œ í•„ìˆ˜êµ¬í˜„í•˜ëŠ” ë©”ì„œë“œ) 
     /// </summary>
-    /// <param name="info"> µ¥¹ÌÁöÁ¤º¸±¸Á¶Ã¼ ¹ŞÀ½</param>
+    /// <param name="info"> ë°ë¯¸ì§€ì •ë³´êµ¬ì¡°ì²´ ë°›ìŒ</param>
     public virtual void TakeDamage(DamageInfo info)
     {
 
-        //info.isCritical = Random.Range(0f, 100f) < criChance; //Å©¸®ÆÇÁ¤Àº Åõ»çÃ¼¿¡¼­ Á÷Á¢´ã´ç.
+        if (IsInvincible)
+        {
+            return;
+        }
+
+        //info.isCritical = Random.Range(0f, 100f) < criChance; //í¬ë¦¬íŒì •ì€ íˆ¬ì‚¬ì²´ì—ì„œ ì§ì ‘ë‹´ë‹¹.
         int damageAmount = info.isCritical ? Mathf.RoundToInt(info.damageAmount * criDamageMultiplier) : info.damageAmount;
-        //½ÇµåÈ¸º¹ÁßÁö, Å¸ÀÌ¸Ó ÃÊ±âÈ­
-        //shieldRegainTimer = 0f; //0516 ÄÚ·çÆ¾À¸·Î º¯°æ
+        //ì‹¤ë“œíšŒë³µì¤‘ì§€, íƒ€ì´ë¨¸ ì´ˆê¸°í™”
+        //shieldRegainTimer = 0f; //0516 ì½”ë£¨í‹´ìœ¼ë¡œ ë³€ê²½
         isShieldRegaining = false;
 
         if (_shieldRegenCoroutine != null)
         {
             StopCoroutine(_shieldRegenCoroutine);
         }
-        //ÇÇ°İ µ¥¹ÌÁö¼öÄ¡ÇÊ¿ä(½ÇµåÀÖÀ»½Ã, ¾øÀ»½Ã),½ÇÁ¦·Î µ¥¹ÌÁö¹ŞÀ½
+        //í”¼ê²© ë°ë¯¸ì§€ìˆ˜ì¹˜í•„ìš”(ì‹¤ë“œìˆì„ì‹œ, ì—†ì„ì‹œ),ì‹¤ì œë¡œ ë°ë¯¸ì§€ë°›ìŒ
         calculTakeDamage(damageAmount);
 
 
-        //ÇÇ°İ ¹æÇâ¿¡ µû¸¥ ¸®¾×¼Ç(»ç¿îµå,ÀÌÆåÆ®,Ä«¸Ş¶óÈçµé¸², È¤Àº ¹Ğ·Á³²µî)
+        //í”¼ê²© ë°©í–¥ì— ë”°ë¥¸ ë¦¬ì•¡ì…˜(ì‚¬ìš´ë“œ,ì´í™íŠ¸,ì¹´ë©”ë¼í”ë“¤ë¦¼, í˜¹ì€ ë°€ë ¤ë‚¨ë“±)
         OnHitReaction(info);
 
         if (curHpRemaining <= 0)
@@ -480,22 +499,22 @@ public abstract class Unit : MonoBehaviour, IDamageable
             CurState = UNIT_STATE.DIE;
             Die();
         }
-        else//½Çµå ¹èÅÍ¸®?¿£Áø?ÀÌ ÆÄÃ÷°¡ ¸»Â¯ÇÒ°æ¿ì Á¶°ÇÃß°¡
+        else//ì‹¤ë“œ ë°°í„°ë¦¬?ì—”ì§„?ì´ íŒŒì¸ ê°€ ë§ì§±í• ê²½ìš° ì¡°ê±´ì¶”ê°€
         {
-            // Á×Áö ¾Ê¾Ò´Ù¸é µô·¹ÀÌ ÈÄ ´Ù½Ã ½Çµå°¡ Â÷¿À¸£µµ·Ï ÄÚ·çÆ¾À» »õ·Î ½ÃÀÛÇÔ
+            // ì£½ì§€ ì•Šì•˜ë‹¤ë©´ ë”œë ˆì´ í›„ ë‹¤ì‹œ ì‹¤ë“œê°€ ì°¨ì˜¤ë¥´ë„ë¡ ì½”ë£¨í‹´ì„ ìƒˆë¡œ ì‹œì‘í•¨
             _shieldRegenCoroutine = StartCoroutine(ShieldRegenerationRoutine());
         }
 
     }
 
     /// <summary>
-    /// ÇÇ°İ ¹İµ¿(Ä«¸Ş¶ó ½¦ÀÌÅ©, ³Ë¹éµî ÀÚ½Ä¿¡¼­ override)
+    /// í”¼ê²© ë°˜ë™(ì¹´ë©”ë¼ ì‰ì´í¬, ë„‰ë°±ë“± ìì‹ì—ì„œ override)
     /// </summary>
     /// <param name="info"></param>
     protected virtual void OnHitReaction(DamageInfo info)
     {
-        //ÇÇ°İ ¾Ö´Ï¸ŞÀÌ¼ÇÀç»ı ÇÊ¿ä
-        //ÇÇ°İ »ç¿îµåÀç»ı ÇÊ¿ä ½ÇµåÀÖÀ»‹š´Â ½Çµå»ç¿îµå, ¾Æ´Ï¸é Å¸ÀÔ¸ÂÃç¼­
+        //í”¼ê²© ì• ë‹ˆë©”ì´ì…˜ì¬ìƒ í•„ìš”
+        //í”¼ê²© ì‚¬ìš´ë“œì¬ìƒ í•„ìš” ì‹¤ë“œìˆì„ë–„ëŠ” ì‹¤ë“œì‚¬ìš´ë“œ, ì•„ë‹ˆë©´ íƒ€ì…ë§ì¶°ì„œ
         if (curShieldRemaining <= 0)
         {
             _playSoundType = GetPlaySoundType(info);
@@ -505,23 +524,23 @@ public abstract class Unit : MonoBehaviour, IDamageable
             _playSoundType = GetPlaySoundTypeShield(info);
         }
             _sound.PlaySFX3DAtPosition(_playSoundType, info.hitPosition);
-        //ÇÇ°İ Ä«¸Ş¶ó¹«ºùÇÊ¿ä
+        //í”¼ê²© ì¹´ë©”ë¼ë¬´ë¹™í•„ìš”
 
-        //Å©¸®¸é µ¥¹ÌÁö ¹èÀ², ¾Æ´Ï¸é ±×³É µ¥¹ÌÁö
-        //µ¥¹ÌÁöÀÎÆ÷¿¡¼­ ÃÑ¾ËÀÎÁö Æø¹ßÀÎÁö ·¹ÀÌÀúÀÎÁö¿¡ µû¶ó¼­
+        //í¬ë¦¬ë©´ ë°ë¯¸ì§€ ë°°ìœ¨, ì•„ë‹ˆë©´ ê·¸ëƒ¥ ë°ë¯¸ì§€
+        //ë°ë¯¸ì§€ì¸í¬ì—ì„œ ì´ì•Œì¸ì§€ í­ë°œì¸ì§€ ë ˆì´ì €ì¸ì§€ì— ë”°ë¼ì„œ
     }
 
 
 
 
     /// <summary>
-    /// »ç¸ÁÃ³¸®(¿ÀºêÁ§Æ® Ç®¹İ³³, ºñÈ°¼ºÈ­µî. ÇÃ·¹ÀÌ¾î¿Í´Â ´Ù¸£°Ô Ã³¸®ÇÒ°Å±â¶§¹®¿¡ ÀÚ½Ä¿¡¼­ override)
+    /// ì‚¬ë§ì²˜ë¦¬(ì˜¤ë¸Œì íŠ¸ í’€ë°˜ë‚©, ë¹„í™œì„±í™”ë“±. í”Œë ˆì´ì–´ì™€ëŠ” ë‹¤ë¥´ê²Œ ì²˜ë¦¬í• ê±°ê¸°ë•Œë¬¸ì— ìì‹ì—ì„œ override)
     /// </summary>
     protected virtual void Die(){ }
 
     //bool isCritical()
     //{
-    //	float rand = Random.Range(0f, 100f);//0~100ÆÛ
+    //	float rand = Random.Range(0f, 100f);//0~100í¼
     //	return rand < criChance;
     //}
 
@@ -530,17 +549,17 @@ public abstract class Unit : MonoBehaviour, IDamageable
 
         if (curShieldRemaining > 0)
         {
-            int shieldDamage = Mathf.Min(curShieldRemaining, damageAmount);//ÇöÁö½Çµå·®º¸´Ù ÃÊ°úÇØ¼­ -°¡µÇ¸é ¾ÈµÊ
-            curShieldRemaining -= shieldDamage;//½Çµå¿¡ °¡ÇØÁø ÇÇÇØ·®¸¸Å­ ÇöÀç½Çµå·® ±ğ±â
-            damageAmount -= shieldDamage;//½Çµå¿¡ °¡ÇØÁøÇÇÇØ·®¸¸Å­ µ¥¹ÌÁöÀÜ·®µµ ±ğ±â
+            int shieldDamage = Mathf.Min(curShieldRemaining, damageAmount);//í˜„ì§€ì‹¤ë“œëŸ‰ë³´ë‹¤ ì´ˆê³¼í•´ì„œ -ê°€ë˜ë©´ ì•ˆë¨
+            curShieldRemaining -= shieldDamage;//ì‹¤ë“œì— ê°€í•´ì§„ í”¼í•´ëŸ‰ë§Œí¼ í˜„ì¬ì‹¤ë“œëŸ‰ ê¹ê¸°
+            damageAmount -= shieldDamage;//ì‹¤ë“œì— ê°€í•´ì§„í”¼í•´ëŸ‰ë§Œí¼ ë°ë¯¸ì§€ì”ëŸ‰ë„ ê¹ê¸°
 
         }
-        if (damageAmount > 0 && curArmorRemaining > 0)//µ¥¹ÌÁöÀÜ·®0ÃÊ°ú,½Çµå0,¾Æ¸Ó0ÃÊ°ú
+        if (damageAmount > 0 && curArmorRemaining > 0)//ë°ë¯¸ì§€ì”ëŸ‰0ì´ˆê³¼,ì‹¤ë“œ0,ì•„ë¨¸0ì´ˆê³¼
         {
-            int reducedDamage = Mathf.Max(1, damageAmount - defense);//¾Æ¸Ó°¡¸îÀÌ°Ç ÃÖ¼Ò 1ÀÌ°Ç µ¥¹ÌÁöµé¾î°¨
-            int armorDamage = Mathf.Min(curArmorRemaining, reducedDamage);//¾Æ¸Ó·Î °æ°¨ÇÑµ¥¹ÌÁö¸¸Å­ ÇöÀç¾Æ¸Ó·®±ğ±â ÃÊ°úÇØ¼­ -°¡µÇ¸é¾ÈµÇ¹Ç·Î
-            curArmorRemaining -= armorDamage;//¾Æ¸Ó¿¡ °¡ÇØÁøÇÇÇØ·®¸¸Å­±ğ±â
-            damageAmount -= armorDamage;//¾Æ¸Ó¿¡ °¡ÇØÁø ÇÇÇØ·®¸¸Å­ µ¥¹ÌÁöÀÜ·®µµ±ğ±â
+            int reducedDamage = Mathf.Max(1, damageAmount - defense);//ì•„ë¨¸ê°€ëª‡ì´ê±´ ìµœì†Œ 1ì´ê±´ ë°ë¯¸ì§€ë“¤ì–´ê°
+            int armorDamage = Mathf.Min(curArmorRemaining, reducedDamage);//ì•„ë¨¸ë¡œ ê²½ê°í•œë°ë¯¸ì§€ë§Œí¼ í˜„ì¬ì•„ë¨¸ëŸ‰ê¹ê¸° ì´ˆê³¼í•´ì„œ -ê°€ë˜ë©´ì•ˆë˜ë¯€ë¡œ
+            curArmorRemaining -= armorDamage;//ì•„ë¨¸ì— ê°€í•´ì§„í”¼í•´ëŸ‰ë§Œí¼ê¹ê¸°
+            damageAmount -= armorDamage;//ì•„ë¨¸ì— ê°€í•´ì§„ í”¼í•´ëŸ‰ë§Œí¼ ë°ë¯¸ì§€ì”ëŸ‰ë„ê¹ê¸°
 
         }
         if (damageAmount > 0)
@@ -562,10 +581,10 @@ public abstract class Unit : MonoBehaviour, IDamageable
 
 
 	/// <summary>
-	/// Àç»ıÇÒ »ç¿îµå Ã£´Â ÇÔ¼ö (¿À¹ö·Îµù)
-	/// ÇÇ°İ
+	/// ì¬ìƒí•  ì‚¬ìš´ë“œ ì°¾ëŠ” í•¨ìˆ˜ (ì˜¤ë²„ë¡œë”©)
+	/// í”¼ê²©
 	/// </summary>
-	/// <param name="info">¸ÂÀº Åõ»çÃ¼ Á¤º¸</param>
+	/// <param name="info">ë§ì€ íˆ¬ì‚¬ì²´ ì •ë³´</param>
 	/// <returns></returns>
 	protected SOUND_TYPE GetPlaySoundType(DamageInfo info)
     {
@@ -596,9 +615,9 @@ public abstract class Unit : MonoBehaviour, IDamageable
         return SOUND_TYPE.SFX_NONE;
     }
     /// <summary>
-    /// »ç°İ½Ã
+    /// ì‚¬ê²©ì‹œ
     /// </summary>
-    /// <param name="type">¹ß»çÇÒ Åõ»çÃ¼ Å¸ÀÔ</param>
+    /// <param name="type">ë°œì‚¬í•  íˆ¬ì‚¬ì²´ íƒ€ì…</param>
     /// <returns></returns>
     public SOUND_TYPE GetPlaySoundType(PROJECTILE_TYPE type)
     {
@@ -613,7 +632,7 @@ public abstract class Unit : MonoBehaviour, IDamageable
                 //	case SHOOT_TYPE.MISSILE_RIGHT:
                 //case SHOOT_TYPE.MISSILE_BOTH:
                 return SOUND_TYPE.SFX_MISSILESHOOT;
-                //case SHOOT_TYPE.ALL://ÀüÃ¼½î´ÂÅ°¸¦ ±¸ÇöÇÒÁö...±Ùµ¥ ±×·¯¸é ¼Ò¸®¸¦¾îÄÉÇØ¾ßµÇ³ª?±×³É ´Ù ´©¸£¸é ´Ù Àç»ıµÇÁö¾Ê³ª
+                //case SHOOT_TYPE.ALL://ì „ì²´ì˜ëŠ”í‚¤ë¥¼ êµ¬í˜„í• ì§€...ê·¼ë° ê·¸ëŸ¬ë©´ ì†Œë¦¬ë¥¼ì–´ì¼€í•´ì•¼ë˜ë‚˜?ê·¸ëƒ¥ ë‹¤ ëˆ„ë¥´ë©´ ë‹¤ ì¬ìƒë˜ì§€ì•Šë‚˜
                 //	break;
         }
         return SOUND_TYPE.SFX_NONE;

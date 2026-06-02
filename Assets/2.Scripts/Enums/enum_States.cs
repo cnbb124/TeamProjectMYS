@@ -2,10 +2,10 @@ public enum UNIT_STATE
 {
 	IDLE,
 	DIE,
-	MOVING,//ÇÊ¿äÇÑ°¡?
-	BOOSTING,//ÇÊ¿äÇÑ°¡?
-	DODGE,//¹«Àû·ÎÁ÷ È¸ÇÇ
-	HIT,//ÇÊ¿äÇÑ°¡?
+	MOVING,//í•„ìš”í•œê°€?
+	BOOSTING,//í•„ìš”í•œê°€?
+	DODGE,//ë¬´ì ë¡œì§ íšŒí”¼
+	HIT,//í•„ìš”í•œê°€?
 }
 
 public enum UNIT_PLAYER_STATE
@@ -17,7 +17,7 @@ public enum UNIT_PLAYER_STATE
 public enum UNIT_ENEMY_STATE
 {
 	
-	//Â÷ÈÄ FSM°ü·ÃÃß°¡?
+	//ì°¨í›„ FSMê´€ë ¨ì¶”ê°€?
 
 }
 

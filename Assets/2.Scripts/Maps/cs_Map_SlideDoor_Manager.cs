@@ -3,9 +3,9 @@ using UnityEngine;
 
 public class cs_Map_SlideDoor_Manager : MonoBehaviour
 {
-    [Header("¹® ¿©´ÝÈû ¼Ò¸®")]
+    [Header("ë¬¸ ì—¬ë‹«íž˜ ì†Œë¦¬")]
     private AudioSource audioSource;
-    [Header("¹® ¼³Á¤")]
+    [Header("ë¬¸ ì„¤ì •")]
     public Transform[] door;
     public float openDistance = 2f;
     public float speed = 2f;

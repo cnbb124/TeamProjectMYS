@@ -3,27 +3,27 @@ using System.Collections.Generic;
 using UnityEngine;
 
 
-//ÀÌ ½ºÅ©¸³Æ®¸¦ ÆÄÆ¼Å¬ ÀÌÆåÆ® ÇÁ¸®ÆÕ¿¡ ºÎÂøÇÏ¸é, ¾À ºä¿¡¼­ ÇÁ¸®ÆÕÀ» Å¬¸¯ÇÒ ¶§¸¶´Ù ¼³Á¤ÇÑ ¹İ°æÀÌ ¿øÇüÀ¸·Î ³ªÅ¸³³´Ï´Ù.
+//ì´ ìŠ¤í¬ë¦½íŠ¸ë¥¼ íŒŒí‹°í´ ì´í™íŠ¸ í”„ë¦¬íŒ¹ì— ë¶€ì°©í•˜ë©´, ì”¬ ë·°ì—ì„œ í”„ë¦¬íŒ¹ì„ í´ë¦­í•  ë•Œë§ˆë‹¤ ì„¤ì •í•œ ë°˜ê²½ì´ ì›í˜•ìœ¼ë¡œ ë‚˜íƒ€ë‚©ë‹ˆë‹¤.
 
-//È­¸éÀ» º¸¸ç ¼öÄ¡¸¦ Á÷°üÀûÀ¸·Î Á¶ÀıÇÑ µÚ, È®Á¤µÈ ¼öÄ¡¸¦ SoundManager¿¡ ±âÀÔÇÏ¿© µ¿±âÈ­ÇÕ´Ï´Ù.
+//í™”ë©´ì„ ë³´ë©° ìˆ˜ì¹˜ë¥¼ ì§ê´€ì ìœ¼ë¡œ ì¡°ì ˆí•œ ë’¤, í™•ì •ëœ ìˆ˜ì¹˜ë¥¼ SoundManagerì— ê¸°ì…í•˜ì—¬ ë™ê¸°í™”í•©ë‹ˆë‹¤.
 
-//È¤Àº ÇØ´ç ÀÌÆåÆ®°¡ ½ºÆùµÇ¾î SoundManager¸¦ È£ÃâÇÒ ¶§, minDistance¿Í maxDistance °ªÀ» ¸Å°³º¯¼ö·Î ÇÔ²² ³Ñ°ÜÁÖ¾î À¯µ¿ÀûÀ¸·Î ¹üÀ§¸¦ Àû¿ëÇÏ°Ô ÇÒ ¼öµµ ÀÖ½À´Ï´Ù.
+//í˜¹ì€ í•´ë‹¹ ì´í™íŠ¸ê°€ ìŠ¤í°ë˜ì–´ SoundManagerë¥¼ í˜¸ì¶œí•  ë•Œ, minDistanceì™€ maxDistance ê°’ì„ ë§¤ê°œë³€ìˆ˜ë¡œ í•¨ê»˜ ë„˜ê²¨ì£¼ì–´ ìœ ë™ì ìœ¼ë¡œ ë²”ìœ„ë¥¼ ì ìš©í•˜ê²Œ í•  ìˆ˜ë„ ìˆìŠµë‹ˆë‹¤.
 public class SoundRangeVisualizerGizmos : MonoBehaviour
 {
-	[Header("<size=15>ÀÌÆåÆ® ¹ß»ı ½Ã Ãâ·ÂµÉ »ç¿îµå ¹üÀ§ ½Ã°¢È­</size>")]
-	[Header("ÃÖ¼Ò°Å¸® ÇÏ´Ã»ö")]
+	[Header("<size=15>ì´í™íŠ¸ ë°œìƒ ì‹œ ì¶œë ¥ë  ì‚¬ìš´ë“œ ë²”ìœ„ ì‹œê°í™”</size>")]
+	[Header("ìµœì†Œê±°ë¦¬ í•˜ëŠ˜ìƒ‰")]
 	public float minDistance = 1.0f;
-	[Header("ÃÖ´ë°Å¸® ÆÄ¶õ»ö")]
+	[Header("ìµœëŒ€ê±°ë¦¬ íŒŒë€ìƒ‰")]
 	public float maxDistance = 50.0f;
 
-	// ¿¡µğÅÍÀÇ ¾À ºä¿¡¼­¸¸ ½ÇÇàµÇ´Â ±âÁî¸ğ ±×¸®±â ÇÔ¼ö
+	// ì—ë””í„°ì˜ ì”¬ ë·°ì—ì„œë§Œ ì‹¤í–‰ë˜ëŠ” ê¸°ì¦ˆëª¨ ê·¸ë¦¬ê¸° í•¨ìˆ˜
 	private void OnDrawGizmosSelected()
 	{
-		// Min Distance ½Ã°¢È­ (ÇÏ´Ã»ö ¿ø)
+		// Min Distance ì‹œê°í™” (í•˜ëŠ˜ìƒ‰ ì›)
 		Gizmos.color = Color.cyan;
 		Gizmos.DrawWireSphere(transform.position, minDistance);
 
-		// Max Distance ½Ã°¢È­ (ÆÄ¶õ»ö ¿ø)
+		// Max Distance ì‹œê°í™” (íŒŒë€ìƒ‰ ì›)
 		Gizmos.color = Color.blue;
 		Gizmos.DrawWireSphere(transform.position, maxDistance);
 	}

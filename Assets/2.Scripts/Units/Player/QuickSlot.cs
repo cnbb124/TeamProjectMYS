@@ -2,7 +2,22 @@ using UnityEngine;
 
 public class QuickSlot : MonoBehaviour
 {
-    public static QuickSlot Instance { get; private set; }
+    private static QuickSlot instance;
+    public static QuickSlot Instance
+    {
+        get
+        {
+            if (instance == null)
+            {
+                instance = FindObjectOfType<QuickSlot>();
+                if (instance == null)
+                {
+                    Debug.Log("ì”¨ì— QuickSlot ëˆ„ë½! í•˜ì´ì–´ë¼í‚¤ì— ì¶”ê°€ í•„ìš”");
+                }
+            }
+            return instance;
+        }
+    }
 
     private const int SLOT_COUNT = 3;
 
@@ -15,12 +30,16 @@ public class QuickSlot : MonoBehaviour
 
     private void Awake()
     {
-        if (Instance != null && Instance != this)
+        if (instance == null)
         {
+            instance = this;
+        }
+        else if (instance != this)
+        {
+            Debug.LogWarning("ì¤‘ë³µëœ QuickSlot ë°œê²¬. íŒŒê´´ í›„ ì‹¤í–‰");
             Destroy(gameObject);
             return;
         }
-        Instance = this;
         _unit = GetComponent<Unit>();
     }
 
@@ -45,7 +64,6 @@ public class QuickSlot : MonoBehaviour
         }
     }
 
-    // Inventory¿¡¼­ ½½·Ô¿¡ ¼Ò¸ğÇ° ÇÒ´ç
     public void AssignSlot(int slotIndex, ConsumableData data)
     {
         if (!IsValidIndex(slotIndex))
@@ -56,7 +74,6 @@ public class QuickSlot : MonoBehaviour
         _cooldownTimers[slotIndex] = 0f;
     }
 
-    // ½½·Ô »ç¿ë (InputManager¿¡¼­ Å° ÀÔ·Â ½Ã È£Ãâ)
     public void UseSlot(int slotIndex)
     {
         if (!IsValidIndex(slotIndex))
@@ -75,7 +92,6 @@ public class QuickSlot : MonoBehaviour
         {
             return;
         }
-
         if (!InventoryManager.Instance.ConsumeOne(slots[slotIndex]))
         {
             return;
@@ -84,14 +100,12 @@ public class QuickSlot : MonoBehaviour
         ApplyEffect(slots[slotIndex]);
         _cooldownTimers[slotIndex] = slots[slotIndex].cooldown;
 
-        // ÀÎº¥Åä¸® ¼ö·® ¼ÒÁø ½Ã ½½·Ô ºñ¿ì±â
         if (InventoryManager.Instance.GetCount(slots[slotIndex]) <= 0)
         {
             slots[slotIndex] = null;
         }
     }
 
-    // HUD¿ë - Äğ´Ù¿î ÁøÇà·ü (0=»ç¿ë°¡´É, 1=Äğ´Ù¿î ½ÃÀÛ Á÷ÈÄ)
     public float GetCooldownRatio(int slotIndex)
     {
         if (!IsValidIndex(slotIndex) || slots[slotIndex] == null)
@@ -105,7 +119,6 @@ public class QuickSlot : MonoBehaviour
         return _cooldownTimers[slotIndex] / slots[slotIndex].cooldown;
     }
 
-    // HUD¿ë - ³²Àº Äğ´Ù¿î ÃÊ
     public float GetCooldownRemaining(int slotIndex)
     {
         if (!IsValidIndex(slotIndex))
@@ -122,26 +135,29 @@ public class QuickSlot : MonoBehaviour
             return;
         }
 
-        switch (data.consumableType)
+        foreach (ConsumableEffect effect in data.effects)
         {
-            case CONSUMABLE_TYPE.HP_RESTORE:
-                _unit.curHpRemaining = Mathf.Min(
-                    _unit.curHpRemaining + (int)data.value,
-                    _unit.maxHpRemaining
-                );
-                break;
-            case CONSUMABLE_TYPE.SHIELD_RESTORE:
-                _unit.curShieldRemaining = Mathf.Min(
-                    _unit.curShieldRemaining + (int)data.value,
-                    _unit.maxShieldCapacity
-                );
-                break;
-            case CONSUMABLE_TYPE.BOOST_RESTORE:
-                _unit.curBoostRemaining = Mathf.Min(
-                    _unit.curBoostRemaining + data.value,
-                    _unit.maxBoostCapacity
-                );
-                break;
+            switch (effect.effectType)
+            {
+                case CONSUMABLE_TYPE.HP_RESTORE:
+                    _unit.curHpRemaining = Mathf.Min(
+                        _unit.curHpRemaining + (int)effect.value,
+                        _unit.maxHpRemaining
+                    );
+                    break;
+                case CONSUMABLE_TYPE.SHIELD_RESTORE:
+                    _unit.curShieldRemaining = Mathf.Min(
+                        _unit.curShieldRemaining + (int)effect.value,
+                        _unit.maxShieldCapacity
+                    );
+                    break;
+                case CONSUMABLE_TYPE.BOOST_RESTORE:
+                    _unit.curBoostRemaining = Mathf.Min(
+                        _unit.curBoostRemaining + effect.value,
+                        _unit.maxBoostCapacity
+                    );
+                    break;
+            }
         }
     }
 
