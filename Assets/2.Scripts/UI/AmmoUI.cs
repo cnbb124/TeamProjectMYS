@@ -32,21 +32,33 @@ public class AmmoUI : MonoBehaviour
 	}
 	private void Update()
     {
-        if (player == null) return;
+        if (player == null)
+        {
+            return;
+        }
 
-        MissileAmmoInfo info = weaponSystem.missileAmmoList
-            .Find(x => x.missileType == weaponSystem.curMissileType);
-
-        if (info == null) return;
+        MissileSlot slot = weaponSystem.CurMissileSlot;
+        if (slot == null)
+        {
+            return;
+        }
 
         // 무기 변경 or 최대 탄약 변경 시 아이콘 재생성
-        if (info.missileType != _lastType || info.maxAmmo != _lastMaxAmmo)
-            RebuildIcons(info.maxAmmo);
+        if (slot.type != _lastType || slot.maxAmmo != _lastMaxAmmo)
+        {
+            RebuildIcons(slot.maxAmmo);
+        }
 
-        UpdateIcons(info.curAmmo);
+        UpdateIcons(slot.curAmmo);
 
-        if (curAmmoText != null) curAmmoText.text = info.curAmmo.ToString();
-        if (maxAmmoText != null) maxAmmoText.text  = $"/ {info.maxAmmo}";
+        if (curAmmoText != null)
+        {
+            curAmmoText.text = slot.curAmmo.ToString();
+        }
+        if (maxAmmoText != null)
+        {
+            maxAmmoText.text = "/ " + slot.maxAmmo;
+        }
     }
 
     private void RebuildIcons(int maxAmmo)

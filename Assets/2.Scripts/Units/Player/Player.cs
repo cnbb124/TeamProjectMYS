@@ -110,13 +110,14 @@ public class Player : Unit
 			weaponSystem.lockOnSystem.SwitchTarget(_input.switchLockOnTarget > 0 ? 1 : -1);
 		}
 
-		if (_input.switchMissileShootMode)
-		{
-			weaponSystem.ToggleFireMode();
-		}
-		// 매 프레임 잔탄을 체크하여 좌우 장착 여부 갱신
-		weaponSystem.UpdateEquipStatus();
+		// 발사 모드 토글 제거 — 발사 수는 firePositions.Count와 curAmmo로 자동 결정
 		ShootByInput();
+
+		// 회피 입력 — GetKeyDown은 Update에서만 안정적으로 감지됨 (FixedUpdate에서 씹힘)
+		if (curState != UNIT_STATE.DODGE && _input.isDodging)
+		{
+			CurState = UNIT_STATE.DODGE;
+		}
 	}
 
 	protected override void FixedUpdate()
@@ -128,13 +129,6 @@ public class Player : Unit
 		MovingByInput();
 
 	}
-
-
-	// ==================================상태 업데이트 관련=======================
-	/// <summary>
-	/// 잔탄과 발사 모드에 따라 좌/우 총구의 활성화 상태(isMissile_Equipped)를 갱신
-	/// 기존 Shoot() 메서드의 if문을 제어하는 스위치 역할
-	/// </summary>
 
 
 	//===============override 메서드 FSM==================
@@ -166,7 +160,7 @@ public class Player : Unit
 	protected override void OnStateExit(UNIT_STATE state) { }
 	protected override void OnIdle() { }
 	protected override void OnMoving() { }
-	protected override void OnDodge() { }
+	protected override void OnDodge() { base.OnDodge(); }
 	protected override void OnDying() { }
 
 	// 피격 반동 - 카메라 쉐이크, 넉백 등
@@ -354,21 +348,23 @@ public class Player : Unit
 			_rb.velocity = _rb.velocity.normalized * maxV;
 		}
 
-		// FSM 상태 전환
-        if (curState != UNIT_STATE.DODGE)
-        {
-    		if (_input.isDodging)
-    		{
-    			CurState = UNIT_STATE.DODGE;
-    		}
-        }
+		// FSM 상태 전환 (MOVING / IDLE — 물리 기반이므로 FixedUpdate에서)
+		// DODGE 전환은 GetKeyDown 특성상 Update()에서 처리
+		if (curState == UNIT_STATE.DODGE)
+		{
+			// 회피 중 — Unit.OnDodge()의 타이머가 IDLE 복귀를 담당
+		}
 		else if (isMoving)
 		{
 			CurState = UNIT_STATE.MOVING;
 		}
 		else
 		{
-			CurState = UNIT_STATE.IDLE;
+			// 입력 없음 — 관성 드리프트 중이면 현재 상태 유지, 거의 정지 시 IDLE
+			if (_rb.velocity.sqrMagnitude <= 0.1f)
+			{
+				CurState = UNIT_STATE.IDLE;
+			}
 		}
 
 	}
