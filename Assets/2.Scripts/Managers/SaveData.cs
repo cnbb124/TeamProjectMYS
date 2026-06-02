@@ -8,7 +8,7 @@ using UnityEngine;
 // GameManager.LoadGame() 에서 역직렬화 후 각 스크립트에 분배.
 //
 // ※ MissileAmmoSaveData 별도 클래스 불필요.
-//   MissileAmmoInfo가 이미 [System.Serializable]이고 필드 동일해서 직접 사용.
+//   MissileSlot이 이미 [System.Serializable]이고 필드 동일해서 직접 사용.
 // ※ 착용 장비 / 인벤토리 항목은 PlayerLoadout 구현 후 추가
 // =====================================================================
 [System.Serializable]
@@ -28,8 +28,8 @@ public class SaveData
     [Header("재화")]
     public int gold;
 
-    [Header("미사일 탄약")]
-    public List<MissileAmmoInfo> missileAmmoList = new List<MissileAmmoInfo>();
+    [Header("미사일 슬롯")]
+    public MissileSlot[] missileSlots;
 
     // =====================================================================
     // 아래 항목은 PlayerLoadout.cs 구현 후 추가 예정

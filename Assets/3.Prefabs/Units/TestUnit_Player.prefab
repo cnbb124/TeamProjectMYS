@@ -1740,18 +1740,17 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   lockOnSystem: {fileID: 1161755328960943635}
   fireDelay: 0.1
-  equippedMissiles: 000000000100000002000000
+  missileSlots:
+  - type: 0
+    curAmmo: 999
+    maxAmmo: 999
+  - type: 0
+    curAmmo: 100
+    maxAmmo: 100
   curMissileType: 0
   missileFireMode: 0
   isMissile_EquippedLeft: 0
   isMissile_EquippedRight: 0
-  missileAmmoList:
-  - missileType: 0
-    curAmmo: 9999
-    maxAmmo: 9999
-  - missileType: 0
-    curAmmo: 100
-    maxAmmo: 100
 --- !u!114 &2532570374250757226
 MonoBehaviour:
   m_ObjectHideFlags: 0

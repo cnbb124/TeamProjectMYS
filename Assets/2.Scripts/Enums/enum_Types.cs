@@ -71,28 +71,14 @@ public enum PROJECTILE_TYPE
 
 }
 
-//총구종류
-public enum FIREPOS_TYPE
+// 파츠 프리팹 내 발사/이펙트 위치 오브젝트에 붙이는 WeaponFirePos 컴포넌트의 타입 구분
+// Unit.firePositions[] / FIREPOS_TYPE / BOOSTPOS_TYPE 제거 — 모두 파츠 프리팹으로 동적 관리
+public enum WEAPON_POS_TYPE
 {
-    BULLET_LEFT,
-    BULLET_RIGHT,
-    MISSILE_LEFT,
-    MISSILE_RIGHT,
-    LASER,
-}
-
-public enum BOOSTPOS_TYPE
-{
-    THRUSTER_MAIN,
-	THRUSTER_L_INNER,
-	THRUSTER_L_OUTER,
-	THRUSTER_R_INNER,
-	THRUSTER_R_OUTER,
-    REVERSAL,
-    WING_L_TOP,
-    WING_L_BOTTTOM,
-    WING_R_TOP,
-    WING_R_BOTTOM,
+    BULLET,   // 총알 총구 — LAUNCHER_BULLET 파츠
+    MISSILE,  // 미사일 총구 — LAUNCHER_MISSILE 파츠
+    LASER,    // 레이저 총구 — LAUNCHER_LASER 파츠
+    THRUSTER, // 부스터 이펙트 위치 — THRUSTER 파츠 (이펙트 시스템 구현 시 연동)
 }
 
 public enum SOUND_TYPE
@@ -151,12 +137,7 @@ public enum MISSILE_TYPE
 	DUMB,       // 직선 무유도 미사일 (일정시간/충돌 후 광역폭발)
 }
 
-// 미사일 발사 모드 
-public enum MISSILE_FIRE_MODE
-{
-	DOUBLE, // 동시 발사
-	SINGLE, // 교대 발사
-}
+// MISSILE_FIRE_MODE 삭제 — 발사 수는 missileFirePositions.Count와 curAmmo 중 작은 값으로 자동 결정
 
 
 //Build Settings의 씬 순서와 일치해야 함. LoadScene(SCENE_TYPE)오버로드가(int)sceneType으로 로드함.
@@ -194,7 +175,9 @@ public enum POOL_TYPE
     ITEM,
     VFX,
 }
-
+/// <summary>
+/// 파츠종류
+/// </summary>
 public enum PART_TYPE
 {
     ENGINE,//부스트게이지, 부스트게이지회복량,실드회복량
@@ -202,9 +185,13 @@ public enum PART_TYPE
     ARMOR,
     LAUNCHER_MISSILE,//동시 사출 증가관련
     LAUNCHER_BULLET,//탄속, 연사속도증가
+    LAUNCHER_LASER,
     THRUSTER,//추진기, 부스트속도
 }
 
+/// <summary>
+/// 파츠데이터에 들어갈 스탯들
+/// </summary>
 public enum STAT_TYPE
 {
     MAX_HP,
@@ -218,10 +205,32 @@ public enum STAT_TYPE
     CRI_CHANCE,
     CRI_DAMAGE_MULT,
 }
-
+/// <summary>
+/// 소모품종류
+/// </summary>
 public enum CONSUMABLE_TYPE
 {
     HP_RESTORE,
     SHIELD_RESTORE,
     BOOST_RESTORE,
+}
+
+/// <summary>
+/// 레벨업 보너스 종류.
+/// STAT_TYPE(파츠/장비용)과 분리 — 인벤토리 슬롯 등 비전투 보너스 포함.
+/// LevelStatData에서 사용.
+/// </summary>
+public enum LEVEL_BONUS_TYPE
+{
+    MAX_HP,
+    MAX_SHIELD,
+    MAX_ARMOR,
+    DEFENSE,
+    BASE_MOVE_SPEED,
+    BOOST_SPEED,
+    MAX_SPEED,
+    MAX_BOOST,
+    CRI_CHANCE,
+    CRI_DAMAGE_MULT,
+    INVENTORY_SLOTS,    // 인벤토리 슬롯 수 증가
 }

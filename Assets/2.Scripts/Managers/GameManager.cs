@@ -386,8 +386,20 @@ public class GameManager : MonoBehaviour
             data.curArmor       = playerRef.curArmorRemaining;
             data.curBoost       = playerRef.curBoostRemaining;
 
-            // 미사일 탄약 (MissileAmmoInfo가 [Serializable]이므로 직접 복사)
-            data.missileAmmoList = new List<MissileAmmoInfo>(playerRef.weaponSystem.missileAmmoList);
+            // 미사일 슬롯 복사
+            if (playerRef.weaponSystem.missileSlots != null)
+            {
+                data.missileSlots = new MissileSlot[playerRef.weaponSystem.missileSlots.Count];
+                for (int i = 0; i < playerRef.weaponSystem.missileSlots.Count; i++)
+                {
+                    data.missileSlots[i] = new MissileSlot
+                    {
+                        type    = playerRef.weaponSystem.missileSlots[i].type,
+                        curAmmo = playerRef.weaponSystem.missileSlots[i].curAmmo,
+                        maxAmmo = playerRef.weaponSystem.missileSlots[i].maxAmmo
+                    };
+                }
+            }
 
             // TODO: PlayerLoadout 구현 후 착용 장비 / 소모품 / 인벤토리 추가
         }
@@ -412,8 +424,20 @@ public class GameManager : MonoBehaviour
             playerRef.curArmorRemaining  = data.curArmor;
             playerRef.curBoostRemaining  = data.curBoost;
 
-            // 미사일 탄약
-            playerRef.weaponSystem.missileAmmoList = new List<MissileAmmoInfo>(data.missileAmmoList);
+            // 미사일 슬롯 복원
+            if (data.missileSlots != null)
+            {
+                playerRef.weaponSystem.missileSlots = new List<MissileSlot>();
+                for (int i = 0; i < data.missileSlots.Length; i++)
+                {
+                    playerRef.weaponSystem.missileSlots.Add(new MissileSlot
+                    {
+                        type    = data.missileSlots[i].type,
+                        curAmmo = data.missileSlots[i].curAmmo,
+                        maxAmmo = data.missileSlots[i].maxAmmo
+                    });
+                }
+            }
 
             // TODO: PlayerLoadout 구현 후 착용 장비 / 소모품 / 인벤토리 적용
         }

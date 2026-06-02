@@ -4,26 +4,18 @@ using System.Collections.Generic;
 using UnityEngine;
 
 
-[System.Serializable]
-public class FirePosEntry///총구 좌표 연결용
-{
-    public FIREPOS_TYPE type;
-    public Transform pos;
-}
+// FirePosEntry / BoostPosEntry 제거 — WeaponFirePos 마커 컴포넌트 + 파츠 프리팹으로 동적 관리
 
 [System.Serializable]
-public class BoostPosEntry///부스터(추진기 쓰러스터)좌표 연결용
+public class MissileSlot // 미사일 슬롯 — 타입+잔탄 통합 관리. equippedMissiles+MissileAmmoInfo 통합.
 {
-    public BOOSTPOS_TYPE type;
-    public Transform pos;
-}
-
-[System.Serializable]
-public class MissileAmmoInfo//미사일 잔탄확인용
-{
-	public MISSILE_TYPE missileType;
+	public MISSILE_TYPE type;
 	public int curAmmo;
 	public int maxAmmo;
+
+	// maxAmmo > 0 이면 장착된 슬롯 (타입과 최대치가 설정됨)
+	public bool IsEquipped { get { return maxAmmo > 0; } }
+	public bool HasAmmo    { get { return curAmmo > 0; } }
 }
 
 [RequireComponent(typeof(Rigidbody))]
@@ -42,6 +34,7 @@ public abstract class Unit : MonoBehaviour, IDamageable
 	//매니저 할당용 레퍼런스
 	protected SoundManager _sound;
 	protected PoolManager _pool;
+    [HideInInspector]
 	public WeaponSystem weaponSystem;
 
 	//==================유닛데이터==================//
@@ -122,31 +115,62 @@ public abstract class Unit : MonoBehaviour, IDamageable
 
 
 
-    [Header("이펙트 위치(총구,부스터등)")]
-    public FirePosEntry[] firePositions; // 인스펙터에서 타입+Transform 쌍으로 등록
-    public BoostPosEntry[] boosterEffectPositions;//옆무빙시 부스터이펙트 추가필요.enum에 타입등추가필요.left,right,역분사,정분사,부스트상태등
-    private Dictionary<FIREPOS_TYPE, Transform> _firePosDict = new Dictionary<FIREPOS_TYPE, Transform>();
-    private Dictionary<BOOSTPOS_TYPE, Transform> _boostPosDict = new Dictionary<BOOSTPOS_TYPE, Transform>();
+    // 총구/부스터 위치는 각 파츠 프리팹의 WeaponFirePos 컴포넌트로 관리. Unit에서 직접 보유 안 함.
 
 
-    public Transform GetFirePos(FIREPOS_TYPE type)
-    {
-        if (_firePosDict.TryGetValue(type, out Transform pos))
-        {
-            return pos;
-        }
-        Debug.LogWarning($"[Unit] FirePos 미설정: {type}");
-        return null;
-    }
-    protected Transform GetBoostPos(BOOSTPOS_TYPE type)
-    {
-        if (_boostPosDict.TryGetValue(type, out Transform pos))
-        {
-            return pos;
-        }
-        Debug.LogWarning($"[Unit] BoostPos 미설정: {type}");
-        return null;
-    }
+
+
+	protected virtual void Awake()
+	{
+		_rb = GetComponent<Rigidbody>();
+		_animCtrl = GetComponent<UnitAnimCtrl>();
+		weaponSystem = GetComponent<WeaponSystem>();
+	}
+
+
+	// Start is called before the first frame update
+	protected virtual void Start()
+	{
+		_sound = SoundManager.Instance;
+		_pool = PoolManager.Instance;
+		//인스펙터에서 입력된 값 현재 스탯으로 설정
+		//저장 기능 생길시 변경필요.
+		curHpRemaining = maxHpRemaining;
+		curShieldRemaining = maxShieldCapacity;
+		curArmorRemaining = maxArmor;
+		curBoostRemaining = maxBoostCapacity;
+
+		//playerLayer = LayerMask.NameToLayer("UNIT_Player");
+		//enemyLayer = LayerMask.NameToLayer("UNIT_Enemy");
+		//groundLayer = LayerMask.NameToLayer("Environment");
+		////아이템 레이어 추가필요ItemLayer = LayerMask.NameToLayer("");
+		//playerProjectileLayer = LayerMask.NameToLayer("PlayerProjectile");
+		//enemyProjectileLayer = LayerMask.NameToLayer("EnemyProjectile");
+
+		CurState = UNIT_STATE.IDLE;
+	}
+
+	// Update is called once per frame
+	protected virtual void Update()
+	{
+		if (ShouldPause) return;
+		UpdateFSM();
+		//UpdateShieldRegen(); >>0516 코루틴으로변경
+		UpdateBoostRegen();
+
+		updateTimer += Time.deltaTime;
+		if (updateTimer > 0.5f)
+		{
+			curSpeed = _rb.velocity.magnitude < 0.01f ? 0f : _rb.velocity.magnitude;
+			updateTimer = 0f;
+		}
+	}
+
+	protected virtual void FixedUpdate()
+	{
+
+	}
+    // GetFirePos / GetBoostPos 제거 — WeaponSystem이 직접 _bulletFirePositions 등을 보유
 
 
     //[HideInInspector]
@@ -195,62 +219,12 @@ public abstract class Unit : MonoBehaviour, IDamageable
         GameManager.Instance != null &&
         (GameManager.Instance.IsPaused || GameManager.Instance.IsGameOver);
 
-    protected virtual void Awake()
-    {
-        _rb = GetComponent<Rigidbody>();
-        _animCtrl = GetComponent<UnitAnimCtrl>();
-        weaponSystem = GetComponent<WeaponSystem>();
-    }
+   
 
 
 
 
-    // Start is called before the first frame update
-    protected virtual void Start()
-    {
-        _sound = SoundManager.Instance;
-        _pool = PoolManager.Instance;
-        //인스펙터에서 입력된 값 현재 스탯으로 설정
-        //저장 기능 생길시 변경필요.
-        curHpRemaining = maxHpRemaining;
-        curShieldRemaining = maxShieldCapacity;
-        curArmorRemaining = maxArmor;
-        curBoostRemaining = maxBoostCapacity;
-
-        //playerLayer = LayerMask.NameToLayer("UNIT_Player");
-        //enemyLayer = LayerMask.NameToLayer("UNIT_Enemy");
-        //groundLayer = LayerMask.NameToLayer("Environment");
-        ////아이템 레이어 추가필요ItemLayer = LayerMask.NameToLayer("");
-        //playerProjectileLayer = LayerMask.NameToLayer("PlayerProjectile");
-        //enemyProjectileLayer = LayerMask.NameToLayer("EnemyProjectile");
-
-        CurState = UNIT_STATE.IDLE;
-        foreach (FirePosEntry entry in firePositions)
-        {
-            _firePosDict[entry.type] = entry.pos;
-        }
-    }
-
-    // Update is called once per frame
-    protected virtual void Update()
-    {
-        if (ShouldPause) return;
-        UpdateFSM();
-        //UpdateShieldRegen(); >>0516 코루틴으로변경
-        UpdateBoostRegen();
-
-        updateTimer += Time.deltaTime;
-        if (updateTimer > 0.5f)
-        {
-            curSpeed = _rb.velocity.magnitude < 0.01f ? 0f : _rb.velocity.magnitude;
-            updateTimer = 0f;
-        }
-    }
-
-    protected virtual void FixedUpdate()
-    {
-
-    }
+   
 
 
 	//===================FSM======================d

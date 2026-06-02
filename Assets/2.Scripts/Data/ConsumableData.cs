@@ -8,7 +8,7 @@ public class ConsumableEffect
     public float value;
 }
 
-[CreateAssetMenu(fileName = "New Consumable", menuName = "Create Item Data/Consumable Data")]
+[CreateAssetMenu(fileName = "New Consumable Data", menuName = "Create Item Data/Consumable Data")]
 public class ConsumableData : ItemData
 {
     [Header("Effects")]

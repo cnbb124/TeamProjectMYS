@@ -15,6 +15,9 @@ public class PartData : ItemData
     public string partID;
     public PART_TYPE partType;
 
+    [Tooltip("장착 시 기체에 붙일 프리팹.")]
+    public GameObject partPrefab;
+
     [Header("Stat Bonuses")]
     public List<PartStatBonus> statBonuses = new List<PartStatBonus>();
 }
