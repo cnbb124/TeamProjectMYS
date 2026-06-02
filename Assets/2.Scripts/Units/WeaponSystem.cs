@@ -258,9 +258,7 @@ public class WeaponSystem : MonoBehaviour
 			case WEAPON_POS_TYPE.LASER:
 				_laserFirePos = pos;
 				break;
-			case WEAPON_POS_TYPE.THRUSTER:
-				// 부스터 이펙트 시스템 구현 시 연동
-				break;
+			
 		}
 	}
 
@@ -287,8 +285,7 @@ public class WeaponSystem : MonoBehaviour
 					_laserFirePos = null;
 				}
 				break;
-			case WEAPON_POS_TYPE.THRUSTER:
-				break;
+			
 		}
 	}
 
