@@ -20,6 +20,9 @@ public class UnitParts : MonoBehaviour
     // ENGINE, FRAME은 프레임과 무관하게 항상 존재하는 기본 슬롯
     private static readonly PART_TYPE[] BASE_SLOT_TYPES = { PART_TYPE.ENGINE, PART_TYPE.FRAME };
 
+    [Header("<size=14>기본 로드아웃 (설정 시 인스펙터 파츠 슬롯 무시)</size>")]
+    [SerializeField] private DefaultLoadout _defaultLoadout;
+
     [Header("<size=14>파츠 슬롯 (출력용)</size>")]
     public List<PartSlotEntry> partSlots = new List<PartSlotEntry>();
 
@@ -45,6 +48,12 @@ public class UnitParts : MonoBehaviour
 
     private void Start()
     {
+        if (_defaultLoadout != null)
+        {
+            ApplyDefaultLoadout();
+            return;
+        }
+
         // 인스펙터에 미리 세팅된 파츠 스탯 + 프리팹 적용
         foreach (PartSlotEntry slot in partSlots)
         {
@@ -56,6 +65,72 @@ public class UnitParts : MonoBehaviour
             ApplyStatBonuses(slot.equippedPart, 1);
             slot.curPartHp = slot.equippedPart.maxPartHp;
         }
+    }
+
+    /// <summary>
+    /// DefaultLoadout SO 기반으로 자동 장착.
+    /// FRAME 먼저 처리해야 providedSlots 기반 런처 슬롯이 생성됨.
+    /// </summary>
+    private void ApplyDefaultLoadout()
+    {
+        // 인스펙터 슬롯 전체 제거 후 기본 슬롯만 재생성 (이전 슬롯 구조 완전 무시)
+        partSlots.Clear();
+        EnsureBaseSlots();
+
+        // FRAME 먼저 처리 — RebuildSlotsFromFrame으로 런처 슬롯 생성
+        foreach (PartData part in _defaultLoadout.defaultParts)
+        {
+            if (part == null || part.partType != PART_TYPE.FRAME)
+            {
+                continue;
+            }
+            EquipFromDefault(part);
+            break;
+        }
+
+        // 나머지 파츠
+        foreach (PartData part in _defaultLoadout.defaultParts)
+        {
+            if (part == null || part.partType == PART_TYPE.FRAME)
+            {
+                continue;
+            }
+            EquipFromDefault(part);
+        }
+    }
+
+    // DefaultLoadout 전용 장착. 빈 슬롯에 순서대로 채움.
+    private void EquipFromDefault(PartData newPart)
+    {
+        PartSlotEntry slot = GetFirstEmptySlot(newPart.partType);
+        if (slot == null)
+        {
+            Debug.LogWarning("[UnitParts] DefaultLoadout: 빈 슬롯 없음 - " + newPart.partType);
+            return;
+        }
+
+        slot.equippedPart = newPart;
+        SpawnPartPrefab(slot);
+        ApplyStatBonuses(newPart, 1);
+        slot.curPartHp = newPart.maxPartHp;
+
+        if (newPart.partType == PART_TYPE.FRAME)
+        {
+            RebuildSlotsFromFrame(newPart);
+        }
+    }
+
+    // 해당 타입의 equippedPart가 없는 첫 번째 슬롯 반환
+    private PartSlotEntry GetFirstEmptySlot(PART_TYPE slotType)
+    {
+        foreach (PartSlotEntry slot in partSlots)
+        {
+            if (slot.slotType == slotType && slot.equippedPart == null)
+            {
+                return slot;
+            }
+        }
+        return null;
     }
 
     /// <summary>
@@ -200,9 +275,22 @@ public class UnitParts : MonoBehaviour
             return;
         }
 
-        // 프레임이 정의한 슬롯 추가
+        // 프레임이 정의한 슬롯 추가 (BASE 슬롯은 이미 존재하므로 제외)
         foreach (PART_TYPE slotType in frameData.providedSlots)
         {
+            bool isBase = false;
+            foreach (PART_TYPE baseType in BASE_SLOT_TYPES)
+            {
+                if (slotType == baseType)
+                {
+                    isBase = true;
+                    break;
+                }
+            }
+            if (isBase)
+            {
+                continue;
+            }
             partSlots.Add(new PartSlotEntry { slotType = slotType });
         }
     }

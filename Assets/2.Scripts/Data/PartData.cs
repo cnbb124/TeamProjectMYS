@@ -15,7 +15,8 @@ public class PartData : ItemData
     public string partID;
     public PART_TYPE partType;
 
-    [Tooltip("장착 시 기체에 붙일 프리팹.")]
+    [Header("장착시 기체에 붙일 프리펩, 툴팁확인")]
+    [Tooltip("LAUNCHER류는 WeaponFirePos필수")]
     public GameObject partPrefab;
 
     [Tooltip("기체 중심 기준 장착 오프셋. 플레이어 프리팹에 임시 배치해서 localPosition 값 옮겨오기.")]
@@ -25,8 +26,8 @@ public class PartData : ItemData
     [Tooltip("이 프레임이 제공하는 파츠 슬롯 목록. FRAME 타입 파츠에만 설정.")]
     public List<PART_TYPE> providedSlots = new List<PART_TYPE>();
 
-    [Header("Part HP")]
-    [Tooltip("이 파츠의 최대 HP. 0이면 HP 없음(FRAME 등).")]
+    [Header("Part HP 프레임 제외")]
+    [Tooltip("이 파츠의 최대 HP. 0이면 HP 없음(FRAME은제외).")]
     public int maxPartHp = 100;
 
     [Header("Stat Bonuses")]
