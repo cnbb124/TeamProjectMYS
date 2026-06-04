@@ -267,6 +267,32 @@ public abstract class Projectile : MonoBehaviour
         target.TakeDamage(damageInfo);
     }
 
+    /// <summary>
+    /// AOE 스플뎀 전용. 폭발 중심 좌표와 반경을 함께 전달해 파츠 범위 피격 처리.
+    /// </summary>
+    protected void ApplyDamage(IDamageable target, Collider targetCollider, int damage, DAMAGE_TYPE currentDmgType, Vector3 explosionCenter, float aoeRadius)
+    {
+        if (target == null)
+        {
+            return;
+        }
+        if (IsSameTeam(targetCollider) && !friendlyFire)
+        {
+            return;
+        }
+        DamageInfo damageInfo = new DamageInfo
+        {
+            type = currentDmgType,
+            damageAmount = damage,
+            isCritical = critical,
+            hitPosition = explosionCenter,
+            hitDiriection = (targetCollider.transform.position - explosionCenter).normalized,
+            attacker = this.attacker != null ? this.attacker.gameObject : null,
+            aoeRadius = aoeRadius
+        };
+        target.TakeDamage(damageInfo);
+    }
+
 
 
     /// <summary>

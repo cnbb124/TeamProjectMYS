@@ -25,6 +25,10 @@ public class PartData : ItemData
     [Tooltip("이 프레임이 제공하는 파츠 슬롯 목록. FRAME 타입 파츠에만 설정.")]
     public List<PART_TYPE> providedSlots = new List<PART_TYPE>();
 
+    [Header("Part HP")]
+    [Tooltip("이 파츠의 최대 HP. 0이면 HP 없음(FRAME 등).")]
+    public int maxPartHp = 100;
+
     [Header("Stat Bonuses")]
     public List<PartStatBonus> statBonuses = new List<PartStatBonus>();
 }

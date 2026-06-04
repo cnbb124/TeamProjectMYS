@@ -28,6 +28,8 @@ public class InventoryManager : MonoBehaviour
         }
     }
 
+    private Player _player;
+
     [Header("보유 골드")]
     public int gold;
 
@@ -160,6 +162,12 @@ public class InventoryManager : MonoBehaviour
 
     // ==================== QuickSlot 연결 ====================
 
+    /// <summary>씬 로드 시 Player.Start()에서 호출. QuickSlot 접근 경로 등록.</summary>
+    public void RegisterPlayer(Player player)
+    {
+        _player = player;
+    }
+
     /// <summary>소모품을 퀵슬롯에 할당. Inventory -> QuickSlot 단방향.</summary>
     public void AssignToQuickSlot(ItemData data, int slotIndex)
     {
@@ -169,12 +177,12 @@ public class InventoryManager : MonoBehaviour
             Debug.LogWarning("[Inventory] 소모품만 퀵슬롯에 등록 가능.");
             return;
         }
-        if (QuickSlot.Instance == null)
+        if (_player == null || _player.quickSlot == null)
         {
-            Debug.LogWarning("[Inventory] QuickSlot.Instance is null");
+            Debug.LogWarning("[Inventory] Player 또는 QuickSlot 참조 없음");
             return;
         }
-        QuickSlot.Instance.AssignSlot(slotIndex, consumable);
+        _player.quickSlot.AssignSlot(slotIndex, consumable);
     }
 
     // ==================== 내부 ====================

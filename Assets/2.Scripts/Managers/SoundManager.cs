@@ -357,7 +357,7 @@ public class SoundManager : MonoBehaviour
 			source.clip = data.clip;//타입으로 갖고온 클립을 출력할 클립으로 지정
 			source.minDistance = data.minDistance;
 			source.maxDistance = data.maxDistance;
-			source.volume = sfx3DVolume * data.volumeScale;//볼ㄹ뮤지정
+			source.volume = sfx3DVolume * data.volumeScale;//볼륨 개별지정.
 
 			source.pitch = Random.Range(pitchMin, pitchMax);//랜덤
 			source.loop = false;

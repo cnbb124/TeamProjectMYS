@@ -2,23 +2,6 @@ using UnityEngine;
 
 public class QuickSlot : MonoBehaviour
 {
-    private static QuickSlot instance;
-    public static QuickSlot Instance
-    {
-        get
-        {
-            if (instance == null)
-            {
-                instance = FindObjectOfType<QuickSlot>();
-                if (instance == null)
-                {
-                    Debug.Log("씨에 QuickSlot 누락! 하이어라키에 추가 필요");
-                }
-            }
-            return instance;
-        }
-    }
-
     private const int SLOT_COUNT = 3;
 
     [Header("Slots (0~2)")]
@@ -30,16 +13,6 @@ public class QuickSlot : MonoBehaviour
 
     private void Awake()
     {
-        if (instance == null)
-        {
-            instance = this;
-        }
-        else if (instance != this)
-        {
-            Debug.LogWarning("중복된 QuickSlot 발견. 파괴 후 실행");
-            Destroy(gameObject);
-            return;
-        }
         _unit = GetComponent<Unit>();
     }
 

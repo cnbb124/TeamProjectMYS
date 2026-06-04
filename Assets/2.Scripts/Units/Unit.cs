@@ -36,6 +36,7 @@ public abstract class Unit : MonoBehaviour, IDamageable
 	protected PoolManager _pool;
     [HideInInspector]
 	public WeaponSystem weaponSystem;
+    protected UnitParts _unitParts;
 
 	//==================유닛데이터==================//
 
@@ -125,6 +126,7 @@ public abstract class Unit : MonoBehaviour, IDamageable
 		_rb = GetComponent<Rigidbody>();
 		_animCtrl = GetComponent<UnitAnimCtrl>();
 		weaponSystem = GetComponent<WeaponSystem>();
+		_unitParts = GetComponent<UnitParts>();
 	}
 
 
@@ -464,6 +466,18 @@ public abstract class Unit : MonoBehaviour, IDamageable
         //피격 데미지수치필요(실드있을시, 없을시),실제로 데미지받음
         calculTakeDamage(damageAmount);
 
+        // 파츠 피격 — FRAME HP는 본체가 담당하므로 FRAME 제외한 파츠만 처리
+        if (_unitParts != null)
+        {
+            if (info.aoeRadius > 0f)
+            {
+                _unitParts.DamagePartsInRange(info.hitPosition, info.aoeRadius, damageAmount);
+            }
+            else
+            {
+                _unitParts.DamageNearestPart(info.hitPosition, damageAmount);
+            }
+        }
 
         //피격 방향에 따른 리액션(사운드,이펙트,카메라흔들림, 혹은 밀려남등)
         OnHitReaction(info);

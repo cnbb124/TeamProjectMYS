@@ -194,16 +194,18 @@ public enum PART_TYPE
 /// </summary>
 public enum STAT_TYPE
 {
-    MAX_HP,
-    MAX_SHIELD,
-    MAX_ARMOR,
-    DEFENSE,
-    BASE_MOVE_SPEED,
-    BOOST_SPEED,
-    MAX_SPEED,
-    MAX_BOOST,
-    CRI_CHANCE,
-    CRI_DAMAGE_MULT,
+    HP_MAX,
+    SHIELD_MAX,
+    SHIELD_REGEN_RATE,  // 실드 회복률 (ENGINE 스탯)
+    ARMOR_MAX,
+    ARMOR_DEF,          // 데미지 경감 수치
+    MOVE_SPEED_BASE,
+    MOVE_SPEED_MAX,
+    MOVE_SPEED_BOOST,
+    BOOST_MAX,
+    BOOST_REGEN_RATE,   // 부스트 회복률 (ENGINE 스탯)
+    CRI_RATE,
+    CRI_DMG_MULT,
 }
 /// <summary>
 /// 소모품종류
@@ -222,15 +224,15 @@ public enum CONSUMABLE_TYPE
 /// </summary>
 public enum LEVEL_BONUS_TYPE
 {
-    MAX_HP,
-    MAX_SHIELD,
-    MAX_ARMOR,
-    DEFENSE,
-    BASE_MOVE_SPEED,
-    BOOST_SPEED,
-    MAX_SPEED,
-    MAX_BOOST,
-    CRI_CHANCE,
-    CRI_DAMAGE_MULT,
+    HP_MAX,
+    SHIELD_MAX,
+    ARMOR_MAX,
+    ARMOR_DEF,
+    MOVE_SPEED_BASE,
+    MOVE_SPEED_MAX,
+    MOVE_SPEED_BOOST,
+    BOOST_MAX,
+    CRI_RATE,
+    CRI_DMG_MULT,
     INVENTORY_SLOTS,    // 인벤토리 슬롯 수 증가
 }

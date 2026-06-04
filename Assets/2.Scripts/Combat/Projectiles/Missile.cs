@@ -263,8 +263,8 @@ public class Missile : Projectile, IExplodable
 				// 거리 비례 데미지 감쇠 (중심 100%, 외곽 50%)
 				float distRatio = 1f - (Vector3.Distance(transform.position, explosionHits[i].transform.position) / explosionInfo.explosionRadius);
 				int finalDamage = Mathf.RoundToInt(explosionInfo.explosionDamage * Mathf.Lerp(0.5f, 1f, distRatio));
-				//데미지 실제적용
-				ApplyDamage(target, explosionHits[i], finalDamage, this.dmgType);
+				//데미지 실제적용 (AOE 오버로드: 폭발 중심 + 반경 전달)
+				ApplyDamage(target, explosionHits[i], finalDamage, this.dmgType, transform.position, explosionInfo.explosionRadius);
 				//중복체크용 해쉬셋Add
 				damagedTargets.Add(target);
 			}

@@ -25,6 +25,8 @@ public class Player : Unit
 	//매니저 할당용 레퍼런스
 	private InputManager _input;
 
+	public QuickSlot quickSlot { get; private set; }
+
 
 
 
@@ -71,6 +73,7 @@ public class Player : Unit
 		// 우주 공간 = 중력 없음. 회전은 직접 제어하므로 물리 회전 고정
 		_rb.useGravity = false;
 		_rb.freezeRotation = true;
+		quickSlot = GetComponent<QuickSlot>();
 	}
 	// Start is called before the first frame update
 	protected override void Start()
@@ -79,6 +82,10 @@ public class Player : Unit
 		_input = InputManager.Instance;
 		// 게임 시작 시 1번 슬롯 무기로 초기화
 		weaponSystem.Init();
+		if (InventoryManager.Instance != null)
+		{
+			InventoryManager.Instance.RegisterPlayer(this);
+		}
 	}
 
 	// Update is called once per frame

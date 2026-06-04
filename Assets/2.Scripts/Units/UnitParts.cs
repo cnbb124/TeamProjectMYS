@@ -8,6 +8,8 @@ public class PartSlotEntry
     public PartData equippedPart;
     // 장착 시 Instantiate된 파츠 오브젝트 (런타임 전용, 직렬화 제외)
     [System.NonSerialized] public GameObject spawnedInstance;
+    // 파츠 현재 HP (런타임 전용)
+    [System.NonSerialized] public int curPartHp;
 }
 
 public class UnitParts : MonoBehaviour
@@ -52,6 +54,7 @@ public class UnitParts : MonoBehaviour
             }
             SpawnPartPrefab(slot);
             ApplyStatBonuses(slot.equippedPart, 1);
+            slot.curPartHp = slot.equippedPart.maxPartHp;
         }
     }
 
@@ -80,6 +83,7 @@ public class UnitParts : MonoBehaviour
         {
             SpawnPartPrefab(slot);
             ApplyStatBonuses(newPart, 1);
+            slot.curPartHp = newPart.maxPartHp;
         }
 
         // 프레임 교체 시 슬롯 재구성
@@ -113,6 +117,7 @@ public class UnitParts : MonoBehaviour
         {
             SpawnPartPrefab(slot);
             ApplyStatBonuses(newPart, 1);
+            slot.curPartHp = newPart.maxPartHp;
         }
     }
 
@@ -252,6 +257,73 @@ public class UnitParts : MonoBehaviour
     }
 
 
+    // ================== [파츠 피격] ==================
+
+    /// <summary>
+    /// hitPosition에서 가장 가까운 파츠(FRAME 제외) 1개에 데미지.
+    /// 단발 투사체(총알 등) 피격 시 호출.
+    /// </summary>
+    public void DamageNearestPart(Vector3 hitPosition, int damage)
+    {
+        PartSlotEntry nearest = null;
+        float nearestDist = float.MaxValue;
+
+        foreach (PartSlotEntry slot in partSlots)
+        {
+            if (slot.equippedPart == null || slot.slotType == PART_TYPE.FRAME || slot.equippedPart.maxPartHp <= 0)
+            {
+                continue;
+            }
+            float dist = Vector3.Distance(hitPosition, GetPartWorldPos(slot));
+            if (dist < nearestDist)
+            {
+                nearestDist = dist;
+                nearest = slot;
+            }
+        }
+
+        if (nearest != null)
+        {
+            ApplyPartDamage(nearest, damage);
+        }
+    }
+
+    /// <summary>
+    /// center 기준 radius 반경 내 모든 파츠(FRAME 제외)에 각 1회 데미지.
+    /// 미사일 폭발 AOE 피격 시 호출.
+    /// </summary>
+    public void DamagePartsInRange(Vector3 center, float radius, int damage)
+    {
+        foreach (PartSlotEntry slot in partSlots)
+        {
+            if (slot.equippedPart == null || slot.slotType == PART_TYPE.FRAME || slot.equippedPart.maxPartHp <= 0)
+            {
+                continue;
+            }
+            float dist = Vector3.Distance(center, GetPartWorldPos(slot));
+            if (dist <= radius)
+            {
+                ApplyPartDamage(slot, damage);
+            }
+        }
+    }
+
+    // 파츠의 월드 좌표 반환. 프리팹 없는 파츠(ENGINE/ARMOR 등)는 기체 중심 사용.
+    private Vector3 GetPartWorldPos(PartSlotEntry slot)
+    {
+        if (slot.spawnedInstance != null)
+        {
+            return slot.spawnedInstance.transform.position;
+        }
+        return transform.position;
+    }
+
+    // 파츠 HP 감소. 향후 HP 티어 변화 처리 위치.
+    private void ApplyPartDamage(PartSlotEntry slot, int damage)
+    {
+        slot.curPartHp = Mathf.Max(0, slot.curPartHp - damage);
+    }
+
     // ================== [스탯 보너스] ==================
 
     // multiplier: +1 = 장착, -1 = 해제
@@ -273,34 +345,40 @@ public class UnitParts : MonoBehaviour
     {
         switch (statType)
         {
-            case STAT_TYPE.MAX_HP:
+            case STAT_TYPE.HP_MAX:
                 _unit.maxHpRemaining += (int)val;
                 break;
-            case STAT_TYPE.MAX_SHIELD:
+            case STAT_TYPE.SHIELD_MAX:
                 _unit.maxShieldCapacity += (int)val;
                 break;
-            case STAT_TYPE.MAX_ARMOR:
+            case STAT_TYPE.SHIELD_REGEN_RATE:
+                _unit.shieldRegainRate += val;
+                break;
+            case STAT_TYPE.ARMOR_MAX:
                 _unit.maxArmor += (int)val;
                 break;
-            case STAT_TYPE.DEFENSE:
+            case STAT_TYPE.ARMOR_DEF:
                 _unit.defense += (int)val;
                 break;
-            case STAT_TYPE.BASE_MOVE_SPEED:
+            case STAT_TYPE.MOVE_SPEED_BASE:
                 _unit.baseMoveSpeed += val;
                 break;
-            case STAT_TYPE.BOOST_SPEED:
-                _unit.boostSpeed += val;
-                break;
-            case STAT_TYPE.MAX_SPEED:
+            case STAT_TYPE.MOVE_SPEED_MAX:
                 _unit.maxSpeed += val;
                 break;
-            case STAT_TYPE.MAX_BOOST:
+            case STAT_TYPE.MOVE_SPEED_BOOST:
+                _unit.boostSpeed += val;
+                break;
+            case STAT_TYPE.BOOST_MAX:
                 _unit.maxBoostCapacity += val;
                 break;
-            case STAT_TYPE.CRI_CHANCE:
+            case STAT_TYPE.BOOST_REGEN_RATE:
+                _unit.boostRegainRate += val;
+                break;
+            case STAT_TYPE.CRI_RATE:
                 _unit.criChance += val;
                 break;
-            case STAT_TYPE.CRI_DAMAGE_MULT:
+            case STAT_TYPE.CRI_DMG_MULT:
                 _unit.criDamageMultiplier += val;
                 break;
         }
