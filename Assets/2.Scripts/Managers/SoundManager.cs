@@ -19,18 +19,18 @@ public class SoundTypeClip
 	public SOUND_TYPE type; // 사운드 종류
 	[Tooltip("연결할 오디오 클립(.wav, .mp3 등)을 할당")]
 	public AudioClip clip;// 실제 사운드 파일
+	[Range(0f, 1f)]
+	[Tooltip("해당 사운드 클립 볼륨 개별 배율 (0~1)")]
+	public float volumeScale = 1.0f; // 기본값은 1 (최대)
 
 
 
-
-	[Header("3D 사운드 설정 (BGM,UI등 2D 사운드는 적용 안 됨)")]
+	[Header("3D 사운드 범위 설정 (BGM,UI등 2D 사운드는 적용 안 됨)")]
 	[Tooltip("3D 효과음 전용.이 거리 안에서는 소리가 최대유지")]
 	public float minDistance = 1.0f;
 	[Tooltip("3D 효과음 전용.이 거리 밖에서는 소리 X")]
 	public float maxDistance = 50.0f;
-	[Range(0f, 1f)]
-	[Tooltip("3D 사운드 해당클립 볼륨 개별 배율(3D용) (0~1)")]
-	public float volumeScale = 1.0f; // 기본값은 1 (최대)
+	
 
 }
 
@@ -69,12 +69,12 @@ public class SoundManager : MonoBehaviour
 
 
 	[Space(10)]
-	[Header("<size=14>1. 사운드 데이터 등록</size>")]
+	[Header("<size=14>사운드 데이터 등록</size>")]
 	[Tooltip("사운드 타입과 오디오 클립을 짝지어 등록하는 리스트")]
 	[SerializeField] private SoundTypeClip[] soundList;
 
 	[Space(10)]
-	[Header("<size=14>2. 오디오 소스 연결 BGM&UI(2D)</size>")]
+	[Header("<size=14>오디오 소스 연결 BGM&UI(2D)</size>")]
 	[SerializeField]
 	[Tooltip("배경음악(BGM) SFX재생을 전담할 소스 연결. Loop(반복 재생)가 자동으로 활성화")]
 	private AudioSource bgmSource; // BGM 전용 스피커 (반복 재생 켜두기)
@@ -85,7 +85,7 @@ public class SoundManager : MonoBehaviour
 	public SOUND_TYPE curBGM;
 
 	[Space(10)]
-	[Header("<size=14>3. 기본 볼륨 설정</size>")]
+	[Header("<size=14>기본 볼륨 설정</size>")]
 	[Range(0f, 1f)]
 	public float bgmVolume = 1.0f;
 	[Range(0f, 1f)]
@@ -94,7 +94,7 @@ public class SoundManager : MonoBehaviour
 	public float sfx3DVolume = 1.0f;
 
 	[Space(10)]
-	[Header("<size=14>4. 3D 사운드 풀링 사이즈 설정</size>")]
+	[Header("<size=14>3D 사운드 풀링 사이즈 설정</size>")]
 	[Tooltip("게임 시작 시 미리 만들어둘 3D 스피커의 개수.")]
 	[SerializeField]
 	private uint initialPoolSize = 20;
