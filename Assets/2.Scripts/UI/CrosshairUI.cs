@@ -6,9 +6,9 @@ public class CrosshairUI : MonoBehaviour
     [SerializeField] private RectTransform crosshairRect;
 
     [Header("Scale")]
-    [SerializeField] private float normalScale = 1f;
-    [SerializeField] private float aimScale    = 1.4f;  // 우클릭 시 커지는 배율
-    [SerializeField] private float scaleSpeed  = 10f;   // 전환 속도
+    [SerializeField] private float normalScale  = 1f;
+    [SerializeField] private float firingScale  = 1.4f; // 기관총 발사 시 커지는 배율
+    [SerializeField] private float scaleSpeed   = 10f;  // 전환 속도
 
     [Header("Opacity")]
     [SerializeField] private CanvasGroup canvasGroup;
@@ -29,10 +29,10 @@ public class CrosshairUI : MonoBehaviour
 
     private void Update()
     {
-        bool isAiming = Input.GetMouseButton(1);
+        bool isFiring = Input.GetMouseButton(0); // 좌클릭 = 기관총 발사
 
-        _targetScale   = isAiming ? aimScale    : normalScale;
-        _targetOpacity = isAiming ? aimOpacity  : normalOpacity;
+        _targetScale   = isFiring ? firingScale  : normalScale;
+        _targetOpacity = isFiring ? aimOpacity   : normalOpacity;
 
         // 스케일 부드럽게 전환
         float currentScale = crosshairRect.localScale.x;
