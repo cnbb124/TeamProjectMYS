@@ -408,6 +408,7 @@ public class Player : Unit
 
 	private void UpdateBoostEffect()
 	{
+		if (_step1Particles == null) return;
 		bool isMoving = _input.moveInput.z > 0.001f;
 		bool isBoosting = _isBoosting;
 
