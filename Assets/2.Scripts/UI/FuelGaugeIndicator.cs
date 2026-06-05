@@ -25,10 +25,10 @@ public class FuelGaugeIndicator : MonoBehaviour
     [SerializeField] [Range(0f, 1f)] private float mediumThreshold = 0.5f;
     [SerializeField] [Range(0f, 1f)] private float lowThreshold    = 0.25f;
 
-    [Header("Toggle (Z Key)")]
-    [SerializeField] private RectTransform panelRect;     // 접히는 패널
+    [Header("Toggle (G Key)")]
+    [SerializeField] private RectTransform panelRect;
     [SerializeField] private float         animDuration = 0.3f;
-    [SerializeField] private KeyCode       toggleKey    = KeyCode.Z;
+    [SerializeField] private KeyCode       toggleKey    = KeyCode.G;
 
     private float     _currentFuel;
     private float     _expandedHeight;
@@ -104,7 +104,7 @@ public class FuelGaugeIndicator : MonoBehaviour
         }
     }
 
-    // ==================== Z키 토글 ====================
+    // ==================== G키 토글 ====================
 
     private void Toggle()
     {
