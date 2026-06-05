@@ -6,7 +6,7 @@ Shader "Custom/NASASkybox"
         
         [Header(Twinkling Settings)]
         _TwinkleSpeed ("Twinkle Speed", Range(0.1, 5.0)) = 2.0
-        _TwinkleIntensity ("Twinkle Intensity", Range(0.0, 2.0)) = 2.0
+        _TwinkleIntensity ("Twinkle Intensity", Range(0.0, 3.0)) = 2.0
         _TwinkleScale ("Twinkle Scale (Star Size Threshold)", Range(1.0, 500.0)) = 10.0
         
         [Header(Color Settings)]
