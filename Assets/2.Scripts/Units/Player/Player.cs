@@ -22,6 +22,13 @@ public class Player : Unit
 	// missileFirePos, laserFirePos도 Unit 그대로 사용
 	// =================================================
 
+	// 추진기 파티클
+	private ParticleSystem[] _step1Particles;
+	private ParticleSystem[] _step2Particles;
+	private ParticleSystem[] _step3Particles;
+	private bool _wasBoosting = false;
+	private ParticleSystem _boostBurstParticle;
+
 	//매니저 할당용 레퍼런스
 	private InputManager _input;
 
@@ -57,14 +64,14 @@ public class Player : Unit
 	[Tooltip("현재 레벨에서 다음 레벨까지 필요한 경험치")]
 	public int expToNextLevel = 100;
 
-	
+
 
 	// ==================락온 시스템==================
 
-    [Header("회피")]
-    [Tooltip("회피 시 가해지는 순간 힘")]
-    public float dodgeForce = 800f;
-    private Vector3 _dodgeDir;
+	[Header("회피")]
+	[Tooltip("회피 시 가해지는 순간 힘")]
+	public float dodgeForce = 800f;
+	private Vector3 _dodgeDir;
 
 
 	protected override void Awake()
@@ -86,6 +93,26 @@ public class Player : Unit
 		{
 			InventoryManager.Instance.RegisterPlayer(this);
 		}
+
+		StartCoroutine(InitParticlesNextFrame());
+	}
+
+	private IEnumerator InitParticlesNextFrame()
+	{
+		yield return null;
+		_step1Particles = FindParticlesByName("Step1_Slow");
+		_step2Particles = FindParticlesByName("Step2_Normal");
+		_step3Particles = FindParticlesByNameExclude("Step3_Boost", "fire_3-3");
+
+		Transform[] allChildren = GetComponentsInChildren<Transform>();
+		foreach (Transform child in allChildren)
+		{
+			if (child.name == "fire_3-3")
+			{
+				_boostBurstParticle = child.GetComponent<ParticleSystem>();
+				break;
+			}
+		}
 	}
 
 	// Update is called once per frame
@@ -95,7 +122,7 @@ public class Player : Unit
 		base.Update(); //FSM, 실드/부스트 회복 호출
 					   // 입력처리 - InputManager 구현 뒤 여기서 호출
 					   // ex. InputManager.Instance.HandleInput(this);
-		
+
 		if (_input == null)
 		{
 			return;
@@ -134,6 +161,7 @@ public class Player : Unit
 		//항상 회전이먼저!!!
 		RotateByInput();
 		MovingByInput();
+		UpdateBoostEffect();
 
 	}
 
@@ -144,23 +172,23 @@ public class Player : Unit
 		base.OnStateEnter(state);
 		switch (state)
 		{
-            case UNIT_STATE.DODGE:
-                if (_input != null && _input.moveInput.magnitude > 0.1f)
-                {
-                    _dodgeDir = transform.forward * _input.moveInput.z
-                              + transform.right   * _input.moveInput.x
-                              + transform.up      * _input.moveInput.y;
-                    _dodgeDir.Normalize();
-                }
-                else
-                {
-                    _dodgeDir = transform.forward;
-                }
-                _rb.AddForce(_dodgeDir * dodgeForce, ForceMode.Impulse);
-                break;
+			case UNIT_STATE.DODGE:
+				if (_input != null && _input.moveInput.magnitude > 0.1f)
+				{
+					_dodgeDir = transform.forward * _input.moveInput.z
+							  + transform.right * _input.moveInput.x
+							  + transform.up * _input.moveInput.y;
+					_dodgeDir.Normalize();
+				}
+				else
+				{
+					_dodgeDir = transform.forward;
+				}
+				_rb.AddForce(_dodgeDir * dodgeForce, ForceMode.Impulse);
+				break;
 			case UNIT_STATE.DIE:
 				Debug.Log("[Player] 사망");
-				
+
 				break;
 		}
 	}
@@ -184,7 +212,7 @@ public class Player : Unit
 		//기타 필요한거 반납??여기서해야하나
 	}
 
-	
+
 
 
 	// ===========================================
@@ -234,20 +262,20 @@ public class Player : Unit
 		}
 	}
 
-	
-	//부스트 로직
-//W(전진)     → BACK 부스터(뒤에서 밀어줌)
-//S(후진)     → FRONT 부스터(앞에서 밀어줌)
-//A(좌이동)   → RIGHT 부스터(오른쪽에서 밀어줌)
-//D(우이동)   → LEFT 부스터(왼쪽에서 밀어줌)
-//Mouse4(상승) → 없음 or 하단 부스터(추후 추가)
-//Mouse3(하강) → 없음 or 상단 부스터(추후 추가)
-//Q(좌롤)     → 윙 rightdown부스터, leftup부스터
-//E(우롤)     → 윙 rightup 부스터  leftdown부스터
-//마우스 상하  → FRONT or BACK 부스터
-//손 뗌        → 역분사(모두 켜거나 반대 부스터)
 
-	
+	//부스트 로직
+	//W(전진)     → BACK 부스터(뒤에서 밀어줌)
+	//S(후진)     → FRONT 부스터(앞에서 밀어줌)
+	//A(좌이동)   → RIGHT 부스터(오른쪽에서 밀어줌)
+	//D(우이동)   → LEFT 부스터(왼쪽에서 밀어줌)
+	//Mouse4(상승) → 없음 or 하단 부스터(추후 추가)
+	//Mouse3(하강) → 없음 or 상단 부스터(추후 추가)
+	//Q(좌롤)     → 윙 rightdown부스터, leftup부스터
+	//E(우롤)     → 윙 rightup 부스터  leftdown부스터
+	//마우스 상하  → FRONT or BACK 부스터
+	//손 뗌        → 역분사(모두 켜거나 반대 부스터)
+
+
 	// ==================회전 (FixedUpdate에서 호출)==================
 
 
@@ -259,7 +287,7 @@ public class Player : Unit
 	// Roll (Z축): Q/E      → 좌우 스핀. Space.Self 기준
 	// 
 	// Space.Self 사용 이유: 어느 방향 바라봐도 직관적으로 상하/롤 회전됨.
-	
+
 
 
 
@@ -378,14 +406,67 @@ public class Player : Unit
 
 	//==============부스트이펙트====================(이동에서같이)
 
-
-
 	private void UpdateBoostEffect()
 	{
+		bool isMoving = _input.moveInput.z > 0.001f;
+		bool isBoosting = _isBoosting;
 
+		SetParticles(_step1Particles, true);
+		SetParticles(_step2Particles, isMoving);
+		SetParticles(_step3Particles, isBoosting);
+
+		if (isBoosting && !_wasBoosting && curBoostRemaining > minBoostRequired)
+		{
+			if (_boostBurstParticle != null)
+				_boostBurstParticle.Play();
+		}
+		_wasBoosting = isBoosting;
 	}
 
+	private ParticleSystem[] FindParticlesByNameExclude(string stepName, string excludeName)
+	{
+		List<ParticleSystem> list = new List<ParticleSystem>();
+		Transform[] allChildren = GetComponentsInChildren<Transform>();
+		foreach (Transform child in allChildren)
+		{
+			if (child.name == stepName)
+			{
+				ParticleSystem[] particles = child.GetComponentsInChildren<ParticleSystem>();
+				foreach (var ps in particles)
+				{
+					if (ps.name != excludeName)
+						list.Add(ps);
+				}
+			}
+		}
+		return list.ToArray();
+	}
 
+	private ParticleSystem[] FindParticlesByName(string stepName)
+	{
+		List<ParticleSystem> list = new List<ParticleSystem>();
+		Transform[] allChildren = GetComponentsInChildren<Transform>();
+		foreach (Transform child in allChildren)
+		{
+			if (child.name == stepName)
+			{
+				ParticleSystem[] particles = child.GetComponentsInChildren<ParticleSystem>();
+				list.AddRange(particles);
+			}
+		}
+		return list.ToArray();
+	}
+
+	private void SetParticles(ParticleSystem[] particles, bool shouldPlay)
+	{
+		foreach (var ps in particles)
+		{
+			if (ps == null) continue;
+			if (shouldPlay && !ps.isPlaying) ps.Play();
+			else if (!shouldPlay && ps.isPlaying)
+				ps.Stop(true, ParticleSystemStopBehavior.StopEmitting);
+		}
+	}
 
 
 
