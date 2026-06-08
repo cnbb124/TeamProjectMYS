@@ -23,8 +23,9 @@ public class FuelGaugeIndicator : MonoBehaviour
     [SerializeField] [Range(0f, 1f)] private float lowThresholdSignal = 0.2f; // 20%
 
     [Header("Fuel Settings")]
-    [SerializeField] private float maxFuel     = 100f;
-    [SerializeField] private float consumeRate = 1.5f;
+    [SerializeField] private float maxFuel          = 100f;
+    [SerializeField] private float consumeRate      = 1.5f;
+    [SerializeField] private float boostMultiplier  = 2f;  // 부스터 시 소모 배율
 
     [Header("Engine Icon Colors")]
     [SerializeField] private Color fullColor   = Color.green;
@@ -74,8 +75,15 @@ public class FuelGaugeIndicator : MonoBehaviour
             ? Mathf.Clamp01(playerRb.velocity.magnitude / player.maxSpeed)
             : 0f;
 
+        // 부스터 사용 중이면 소모량 배율 적용
+        bool isBoosting = InputManager.Instance != null
+            && InputManager.Instance.isBoosting
+            && player.curBoostRemaining > 0f;
+
+        float multiplier = isBoosting ? boostMultiplier : 1f;
+
         _currentFuel = Mathf.Clamp(
-            _currentFuel - consumeRate * speedRatio * Time.deltaTime,
+            _currentFuel - consumeRate * speedRatio * multiplier * Time.deltaTime,
             0f, maxFuel);
     }
 

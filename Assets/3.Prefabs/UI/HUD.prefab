@@ -2156,18 +2156,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6f8a4e2853dd1784f98c1702d6a390fe, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  lockOnSystem: {fileID: 0}
+  player: {fileID: 0}
+  playerRb: {fileID: 0}
   indicatorRect: {fileID: 1390846155785286250}
   indicatorImage: {fileID: 8513804551842803565}
-  boundaryRect: {fileID: 0}
+  boundaryRect: {fileID: 1657238005239446176}
+  minSpeed: 1
   trackSpeed: 8
-  baseSize: 50
-  baseAngle: 60
-  idleColor: {r: 0, g: 1, b: 0.8, a: 0.4}
-  candidateColor: {r: 1, g: 1, b: 0, a: 0.7}
-  lockedColor: {r: 1, g: 0, b: 0, a: 0.9}
-  pulseSpeed: 3
-  pulseAmount: 0.05
+  indicatorSize: 80
+  normalColor: {r: 0, g: 1, b: 0.8, a: 0.8}
 --- !u!1 &2713663403924760225
 GameObject:
   m_ObjectHideFlags: 0
@@ -5744,6 +5741,7 @@ MonoBehaviour:
   lowThresholdSignal: 0.2
   maxFuel: 100
   consumeRate: 1.5
+  boostMultiplier: 2
   fullColor: {r: 0, g: 1, b: 0, a: 1}
   mediumColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
   lowColor: {r: 1, g: 0, b: 0, a: 1}
