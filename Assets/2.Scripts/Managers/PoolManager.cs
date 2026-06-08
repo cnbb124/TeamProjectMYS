@@ -313,11 +313,11 @@ public class PoolManager : MonoBehaviour
     public void DisableAllProjectiles()
     {
         foreach (var type in _projectileTypes)
-            DisableAll(type);
+            DisableProjectiles(type);
     }
 
     /// <summary>특정 POOL_TYPE 전체 비활성화.</summary>
-    public void DisableAll(POOL_TYPE poolType)
+    public void DisableProjectiles(POOL_TYPE poolType)
     {
         if (_pools.TryGetValue(poolType, out var pool))
         {
@@ -331,16 +331,16 @@ public class PoolManager : MonoBehaviour
 	// 개별 비활성화 (필요 시 외부에서 직접 호출)
 	public void DisableBullet()
 	{
-		DisableAll(POOL_TYPE.BULLET);
+		DisableProjectiles(POOL_TYPE.BULLET);
 	}
 
 	public void DisableMissile()
 	{
-		DisableAll(POOL_TYPE.MISSILE);
+		DisableProjectiles(POOL_TYPE.MISSILE);
 	}
 
 	public void DisableLaser()
 	{
-		DisableAll(POOL_TYPE.LASER);
+		DisableProjectiles(POOL_TYPE.LASER);
 	}
 }

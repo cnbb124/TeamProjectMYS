@@ -15,8 +15,8 @@ public class FuelGaugeIndicator : MonoBehaviour
     [SerializeField] private Image    engineIcon;
 
     [Header("Warning Signals")]
-    [SerializeField] private Image engineLowSignal; // EngineLowSignal Image
-    [SerializeField] private Image noFuelSignal;    // NoFuelSignal Image
+    [SerializeField] private TMP_Text engineLowSignal; // EngineLowSignal Text
+    [SerializeField] private TMP_Text noFuelSignal;    // NoFuelSignal Text
     [SerializeField] private Color engineLowColor  = new Color(1f, 0.5f, 0f, 1f); // 주홍
     [SerializeField] private Color noFuelColor     = Color.red;
     [SerializeField] private float blinkSpeed      = 3f;   // 경고등 깜빡임 속도
@@ -156,9 +156,10 @@ public class FuelGaugeIndicator : MonoBehaviour
                 engineLowSignal.color = c;
             }
         }
+
     }
 
-    private void SetSignal(Image signal, bool active, Color color)
+    private void SetSignal(TMP_Text signal, bool active, Color color)
     {
         if (signal == null) return;
         signal.gameObject.SetActive(active);

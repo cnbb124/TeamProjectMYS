@@ -187,6 +187,7 @@ public class GameManager : MonoBehaviour
         Time.timeScale = 1f;
         PoolManager.Instance.DisableAllProjectiles();
         SoundManager.Instance.StopSFXAll();
+        VFXManager.Instance.ReturnAll();
 
         // 필요 시 페이드아웃 연출 추가
         // yield return StartCoroutine(FadeOut());
@@ -404,13 +405,13 @@ public class GameManager : MonoBehaviour
 
         if (playerRef != null)
         {
-            data.level          = playerRef.level;
-            data.exp            = playerRef.exp;
+            data.level = playerRef.level;
+            data.exp = playerRef.exp;
             data.expToNextLevel = playerRef.expToNextLevel;
-            data.curHp          = playerRef.curHpRemaining;
-            data.curShield      = playerRef.curShieldRemaining;
-            data.curArmor       = playerRef.curArmorRemaining;
-            data.curBoost       = playerRef.curBoostRemaining;
+            data.curHp = playerRef.curHpRemaining;
+            data.curShield = playerRef.curShieldRemaining;
+            data.curArmor = playerRef.curArmorRemaining;
+            data.curBoost = playerRef.curBoostRemaining;
 
             // 미사일 슬롯 복사
             if (playerRef.weaponSystem.missileSlots != null)
