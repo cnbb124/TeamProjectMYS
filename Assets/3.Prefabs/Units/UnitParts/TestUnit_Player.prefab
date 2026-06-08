@@ -1149,8 +1149,8 @@ MonoBehaviour:
   boostSpeed: 550
   maxSpeed: 1000
   maxBoostCapacity: 150
-  minBoostRequired: 30
-  boostRegainDelay: 0.2
+  minBoostRequired: 10
+  boostRegainDelay: 1
   boostRegainRate: 20
   dodgeDuration: 0.5
   dodgeInvincibleTime: 0.4
@@ -1168,6 +1168,10 @@ MonoBehaviour:
   level: 1
   exp: 0
   expToNextLevel: 100
+  maxFuelCapacity: 0
+  fuelMoveConsumeRate: 5
+  fuelBoostConsumeRate: 10
+  curFuelRemaining: 0
   dodgeForce: 800
 --- !u!114 &1161755328960943635
 MonoBehaviour:

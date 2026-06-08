@@ -85,20 +85,22 @@ public class Player : Unit
 	[Tooltip("현재 레벨에서 다음 레벨까지 필요한 경험치")]
 	public int expToNextLevel = 100;
 
-	[Header("연료")]
+	[Header("연료 최대량(입력x 참고용)")]
 	[Tooltip("최대 연료량. ENGINE 파츠 FUEL_MAX 스탯으로 추가 가능.")]
 	public float maxFuelCapacity = 0f;
+	[Header("연료 현재 상태 (입력x 참고용)")]
+	public float curFuelRemaining;
 	[Tooltip("이동 시 초당 연료 소모량")]
 	public float fuelMoveConsumeRate = 5f;
 	[Tooltip("부스트 사용 시 추가 초당 연료 소모량")]
 	public float fuelBoostConsumeRate = 10f;
 
 
+
 	// ==================락온 시스템==================
 
 
-	[Header("연료 현재 상태 (입력x 참고용)")]
-	public float curFuelRemaining;
+
 
 	[Header("회피")]
 	[Tooltip("회피 시 가해지는 순간 힘")]
