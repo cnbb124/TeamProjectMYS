@@ -4,6 +4,32 @@ using System.IO;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
+// ================================================================
+// [외부 참조 가이드]
+// ================================================================
+// ▶ 전체 팀 공통 참조
+//   IsPaused   : 일시정지 여부. Update/FixedUpdate 첫 줄에서 ShouldPause로 체크.
+//   IsGameOver : 게임오버 여부
+//   curState   : 현재 게임 상태 (GAME_STATE enum)
+//   playerRef  : Player 레퍼런스. 씬 로드 후 자동 갱신.
+//
+// ▶ 적 / 스폰 참조용
+//   OnEnemyKilled()     : 적 사망 시 Enemy.Die()에서 호출
+//   OnObjectDestroyed() : 파괴 오브젝트 파괴 시 호출
+//   OnBossSpawn         : 보스 스폰 조건 달성 시 발행 이벤트
+//   예시) GameManager.Instance.OnBossSpawn += 내스폰함수;
+//
+// ▶ UI 참조용
+//   PauseGame() / ResumeGame()  : 일시정지 / 해제
+//   OnGameStateChanged          : 상태 변화 이벤트. 패널 전환 등에 구독.
+//   예시) GameManager.Instance.OnGameStateChanged += OnStateChange;
+//
+// ▶ 씬 전환 참조용
+//   LoadScene(SCENE_TYPE)       : enum으로 씬 전환 (권장)
+//   LoadScene(string sceneName) : 씬 이름으로 전환
+//   SaveGame(int) / LoadGame(int) : 저장/로드 (STATION 씬에서만 저장 가능)
+// ================================================================
+
 // =====================================================================
 // GameManager
 //

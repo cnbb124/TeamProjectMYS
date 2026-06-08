@@ -1,3 +1,24 @@
+// ================================================================
+// [외부 참조 가이드]
+// ================================================================
+// ▶ 투사체 / 전투팀 참조용
+//   GetBullet()                    : Bullet 꺼내기
+//   GetMissile()                   : Missile 꺼내기
+//   GetLaser()                     : Laser 꺼내기
+//   GetProjectile(PROJECTILE_TYPE) : 타입으로 투사체 꺼내기 (Player/Enemy 공용)
+//   Get(POOL_TYPE)                 : 일반 오브젝트 꺼내기 (적, 아이템 등)
+//   Return(GameObject)             : 오브젝트 반납 (비활성화)
+//
+//   예시)
+//   Bullet b = PoolManager.Instance.GetBullet();
+//   b.Init(firePos.position, firePos.forward, this);
+//   // 투사체 자체 반납: PoolManager.Instance.Return(gameObject);
+//
+// ▶ 씬 전환 / 게임오버 참조용
+//   DisableAllProjectiles() : 씬 전환·게임오버 시 GameManager에서 호출
+//   DisableAll(POOL_TYPE)   : 특정 타입 전체 비활성화
+// ================================================================
+
 using System.Collections.Generic;
 using UnityEngine;
 

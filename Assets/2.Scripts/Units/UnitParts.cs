@@ -1,3 +1,29 @@
+// ================================================================
+// [외부 참조 가이드]
+// ================================================================
+// ▶ HUD팀 참조용 (읽기 전용으로 사용할 것)
+//   partSlots[i].slotType      : 슬롯 종류 (PART_TYPE)
+//   partSlots[i].equippedPart  : 장착된 파츠 데이터. null이면 미장착.
+//   partSlots[i].curPartHp     : 현재 파츠 HP (런타임 전용)
+//
+//   예시)
+//   foreach (var slot in unitParts.partSlots)
+//   {
+//       if (slot.equippedPart == null) continue;
+//       float ratio = (float)slot.curPartHp / slot.equippedPart.maxPartHp;
+//   }
+//
+// ▶ 격납고 UI팀 참조용
+//   Equip(PART_TYPE, PartData)   : 파츠 장착 (기존 파츠 자동 해제)
+//   EquipAt(int, PartData)       : 인덱스로 장착 (런처 다중 슬롯 구분 시)
+//   Unequip(PART_TYPE)           : 파츠 해제
+//   GetEquipped(PART_TYPE)       : 현재 장착된 PartData 반환
+//
+//   예시)
+//   unitParts.Equip(PART_TYPE.ARMOR, selectedPartData);
+//   PartData cur = unitParts.GetEquipped(PART_TYPE.ENGINE);
+// ================================================================
+
 using System.Collections.Generic;
 using UnityEngine;
 

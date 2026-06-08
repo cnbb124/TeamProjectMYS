@@ -6,6 +6,24 @@ using UnityEngine;
 
 
 
+// ================================================================
+// [외부 참조 가이드]
+// ================================================================
+// ▶ HUD팀 참조용 (읽기 전용으로 사용할 것)
+//   level          : 현재 레벨
+//   exp            : 현재 경험치
+//   expToNextLevel : 다음 레벨까지 필요 경험치
+//   (HP / 실드 / 부스트 등은 Unit.cs 참조)
+//
+//   예시)
+//   float expRatio = (float)player.exp / player.expToNextLevel;
+//   hudManager.SetLevel(player.level);
+//
+// ▶ 저장/로드 시스템 참조용
+//   GameManager.CollectSaveData()에서 직접 읽어감 (별도 호출 불필요)
+//   GameManager.Instance.playerRef 로 접근
+// ================================================================
+
 //
 // 플레이어 전용 컴포넌트.
 // Unit을 상속받아 스탯/FSM/데미지 처리는 Unit에서,

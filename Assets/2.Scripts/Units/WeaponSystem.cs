@@ -2,6 +2,25 @@ using System.Collections.Generic;
 using UnityEngine;
 
 
+// ================================================================
+// [외부 참조 가이드]
+// ================================================================
+// ▶ HUD팀 참조용 (읽기 전용으로 사용할 것)
+//   missileSlots        : 전체 미사일 슬롯 목록 (List<MissileSlot>)
+//   CurMissileSlot      : 현재 선택된 슬롯 (MissileSlot). 없으면 null.
+//   curMissileType      : 현재 선택된 미사일 종류 (MISSILE_TYPE)
+//   SimultaneousFire    : 동시 발사 수 (등록된 발사 위치 수)
+//   lockOnSystem        : 락온 시스템 참조 (IsLocked, LockedTarget 등)
+//
+//   예시)
+//   MissileSlot slot = unit.weaponSystem.CurMissileSlot;
+//   if (slot != null) hudManager.SetMissileAmmo(slot.curAmmo, slot.maxAmmo);
+//
+// ▶ 이펙트팀 참조용
+//   ShootBullet() 내부 : 머즐플래시 호출 예정 위치
+//   → VFXManager.Instance.PlayEffect(EFFECT_TYPE.MUZZLE_BULLET, pos, rot, 0.05f)
+// ================================================================
+
 // =====================================================================
 // WeaponSystem : MonoBehaviour
 // Unit 공통 컴포넌트. Player / Enemy 모두 사용.

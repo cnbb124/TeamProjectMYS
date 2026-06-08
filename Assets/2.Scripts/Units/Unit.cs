@@ -4,6 +4,32 @@ using System.Collections.Generic;
 using UnityEngine;
 
 
+// ================================================================
+// [외부 참조 가이드]
+// ================================================================
+// ▶ HUD팀 참조용 (읽기 전용으로 사용할 것)
+//   curHpRemaining      : 현재 HP
+//   maxHpRemaining      : 최대 HP
+//   curShieldRemaining  : 현재 실드
+//   maxShieldCapacity   : 최대 실드
+//   curArmorRemaining   : 현재 방어구
+//   maxArmor            : 최대 방어구
+//   curBoostRemaining   : 현재 부스트 잔량
+//   maxBoostCapacity    : 최대 부스트
+//   curSpeed            : 현재 속도 (0.5초마다 갱신)
+//   curState            : 현재 FSM 상태 (IDLE / MOVING / DODGE / DIE)
+//   IsInvincible        : 무적 여부
+//
+//   예시)
+//   float hpRatio     = (float)unit.curHpRemaining / unit.maxHpRemaining;
+//   float shieldRatio = (float)unit.curShieldRemaining / unit.maxShieldCapacity;
+//   float boostRatio  = unit.curBoostRemaining / unit.maxBoostCapacity;
+//
+// ▶ 이펙트팀 참조용
+//   OnHitReaction(DamageInfo info) : 피격 시 Player/Enemy에서 override → 여기서 VFXManager 호출
+//   OnStateEnter(UNIT_STATE.DIE)   : 사망 진입 시 이펙트 호출 위치
+// ================================================================
+
 // FirePosEntry / BoostPosEntry 제거 — WeaponFirePos 마커 컴포넌트 + 파츠 프리팹으로 동적 관리
 
 [System.Serializable]
@@ -587,7 +613,7 @@ public abstract class Unit : MonoBehaviour, IDamageable
                 return SOUND_TYPE.SFX_LASERHIT;
 
             case DAMAGE_TYPE.EXPLOSION:
-                return SOUND_TYPE.SFX_EXPLOSION;
+                return SOUND_TYPE.SFX_NONE; // 폭발 소리는 Missile.Explode()가 담당
 
             case DAMAGE_TYPE.CONTACT:
                 if (info.attacker.CompareTag("Enemy"))

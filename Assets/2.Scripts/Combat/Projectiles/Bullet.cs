@@ -45,7 +45,7 @@ public class Bullet : Projectile
 		base.OnHit(other);
 		// 이펙트 출력 (사운드,파티클)로직추가 
 
-		SoundManager.Instance.PlaySFX3DAtPosition(SOUND_TYPE.SFX_BULLETHIT, this.transform.position);
+		
 		//공통 데미지 함수 호출 (단일 대상)
 		ApplyDamage(other, this.curDamage, this.dmgType);
 

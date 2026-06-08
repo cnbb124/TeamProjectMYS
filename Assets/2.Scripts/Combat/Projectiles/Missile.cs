@@ -240,7 +240,8 @@ public class Missile : Projectile, IExplodable
 	{
 
 		//이펙트 출력 로직 추가(사운드,파티클)
-
+		VFXManager.Instance.PlayEffect(EFFECT_TYPE.VFX_EXPLOSION_MISSILE, transform.position, Quaternion.identity);
+		SoundManager.Instance.PlaySFX3DAtPosition(SOUND_TYPE.SFX_EXPLOSION, transform.position);
 		//맞은것들의 충돌박스 갯수 카운트
 		int hitCount = Physics.OverlapSphereNonAlloc(transform.position, explosionInfo.explosionRadius, explosionHits);
 		//Debug.Log($"hitCount: {hitCount}, radius: {explosionInfo.explosionRadius}");

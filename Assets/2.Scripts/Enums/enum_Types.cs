@@ -236,3 +236,11 @@ public enum LEVEL_BONUS_TYPE
     CRI_DMG_MULT,
     INVENTORY_SLOTS,    // 인벤토리 슬롯 수 증가
 }
+
+public enum EFFECT_TYPE
+{
+    VFX_EXPLOSION_MISSILE,//Missile.Explode()에서 호출
+    VFX_BULLETHIT,
+    VFX_LASERHIT,
+    VFX_BULLET_MUZZLE,
+}
