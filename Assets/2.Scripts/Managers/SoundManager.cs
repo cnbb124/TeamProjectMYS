@@ -251,7 +251,7 @@ public class SoundManager : MonoBehaviour
 	public void PlayBGM(SOUND_TYPE type)
 	{
 		SoundTypeClip data = GetSoundData(type);
-		if (data != null)
+		if (data != null && data.type != SOUND_TYPE.SFX_NONE)
 		{
 			curBGM = type;
 			bgmSource.volume = bgmVolume;
@@ -275,7 +275,7 @@ public class SoundManager : MonoBehaviour
 	public void PlaySFXUI(SOUND_TYPE type)
 	{
 		SoundTypeClip data = GetSoundData(type);
-		if (data != null)
+		if (data != null && data.type != SOUND_TYPE.SFX_NONE)
 		{
 
 			sfxUISource.pitch = 1.0f; // 기본 피치로 초기화
@@ -297,7 +297,7 @@ public class SoundManager : MonoBehaviour
 	public void PlaySFXUI(SOUND_TYPE type, float pitchMin, float pitchMax)
 	{
 		SoundTypeClip data = GetSoundData(type);
-		if (data != null)
+		if (data != null && data.type != SOUND_TYPE.SFX_NONE)
 		{
 
 			sfxUISource.pitch = Random.Range(pitchMin, pitchMax);
@@ -317,7 +317,7 @@ public class SoundManager : MonoBehaviour
 	public void PlaySFX3DAtPosition(SOUND_TYPE type, Vector3 position)
 	{
 		SoundTypeClip data = GetSoundData(type);
-		if (data != null)
+		if (data != null && data.type != SOUND_TYPE.SFX_NONE)
 		{
 
 			// 지정된 위치에 임시 스피커를 만들고, 소리가 끝나면 알아서 삭제됨
@@ -348,7 +348,7 @@ public class SoundManager : MonoBehaviour
 	public void PlaySFX3DAtPosition(SOUND_TYPE type, Vector3 position, float pitchMin, float pitchMax)
 	{
 		SoundTypeClip data = GetSoundData(type);
-		if (data != null)
+		if (data != null && data.type != SOUND_TYPE.SFX_NONE)
 		{
 
 			// 지정된 위치에 임시 스피커를 만들고, 소리가 끝나면 알아서 삭제됨
@@ -376,7 +376,7 @@ public class SoundManager : MonoBehaviour
 		}
 		//데이타갖고오기
 		SoundTypeClip data = GetSoundData(type);
-		if (data != null)
+		if (data != null && data.type != SOUND_TYPE.SFX_NONE)
 		{
 			AudioSource source = GetAvailableSFX3DSource();
 			//좌표일치

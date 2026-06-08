@@ -25,6 +25,7 @@ public class EffectAutoReturn : MonoBehaviour
         {
             // 루트에 PS 없음 → 더미 PS 자동 생성
             ps = gameObject.AddComponent<ParticleSystem>();
+            ps.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
 
             // 파티클 발생 없음
             var emission = ps.emission;
