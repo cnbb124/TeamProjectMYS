@@ -11,8 +11,4 @@ public class FreezeParticles : MonoBehaviour {
 		part.Pause() ;
 	}
 	
-	// Update is called once per frame
-	void Update () {
-	
-	}
 }

@@ -27,6 +27,7 @@ public class Player : Unit
 	private ParticleSystem[] _step2Particles;
 	private ParticleSystem[] _step3Particles;
 	private bool _wasBoosting = false;
+	private bool _wasMoving = false;
 	private ParticleSystem _boostBurstParticle;
 
 	//매니저 할당용 레퍼런스
@@ -412,6 +413,8 @@ public class Player : Unit
 		bool isMoving = _input.moveInput.z > 0.001f;
 		bool isBoosting = _isBoosting;
 
+		if (isMoving == _wasMoving && isBoosting == _wasBoosting) return;
+
 		SetParticles(_step1Particles, true);
 		SetParticles(_step2Particles, isMoving);
 		SetParticles(_step3Particles, isBoosting);
@@ -419,8 +422,11 @@ public class Player : Unit
 		if (isBoosting && !_wasBoosting && curBoostRemaining > minBoostRequired)
 		{
 			if (_boostBurstParticle != null)
+			{
 				_boostBurstParticle.Play();
+			}
 		}
+		_wasMoving = isMoving;
 		_wasBoosting = isBoosting;
 	}
 
