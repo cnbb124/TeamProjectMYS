@@ -4,83 +4,70 @@ using UnityEngine.UI;
 public class GimbalIndicatorUI : MonoBehaviour
 {
     [Header("References")]
-    [SerializeField] private MissileLockOnSystem lockOnSystem;
-    [SerializeField] private RectTransform       indicatorRect;
-    [SerializeField] private Image               indicatorImage;
-    [SerializeField] private RectTransform       boundaryRect;  // 이동 가능한 패널 경계
+    [SerializeField] private Transform     player;
+    [SerializeField] private Rigidbody     playerRb;
+    [SerializeField] private RectTransform indicatorRect;
+    [SerializeField] private Image         indicatorImage;
+    [SerializeField] private RectTransform boundaryRect;   // 이동 범위 제한 패널
 
-    [Header("Tracking")]
-    [SerializeField] private float trackSpeed   = 8f;   // 추적 속도
+    [Header("Settings")]
+    [SerializeField] private float minSpeed      = 1f;   // 이 속도 이하면 중앙 고정
+    [SerializeField] private float trackSpeed    = 8f;   // 추적 부드러움
+    [SerializeField] private float indicatorSize = 80f;  // 인디케이터 크기
 
-    [Header("Size")]
-    [SerializeField] private float baseSize     = 200f;
-    [SerializeField] private float baseAngle    = 60f;
+    [Header("Color")]
+    [SerializeField] private Color normalColor = new Color(0f, 1f, 0.8f, 0.8f);
 
-    [Header("Colors")]
-    [SerializeField] private Color idleColor      = new Color(0f, 1f, 0.8f, 0.4f);
-    [SerializeField] private Color candidateColor = new Color(1f, 1f, 0f,   0.7f);
-    [SerializeField] private Color lockedColor    = new Color(1f, 0f, 0f,   0.9f);
-
-    [Header("Pulse")]
-    [SerializeField] private float pulseSpeed   = 3f;
-    [SerializeField] private float pulseAmount  = 0.05f;
-
-    private Camera _cam;
-    private Vector2 _centerPos; // 화면 중앙 스크린 좌표
+    private Camera  _cam;
+    private Vector2 _centerScreenPos;
 
     private void Start()
     {
-        _cam = Camera.main;
-        _centerPos = new Vector2(Screen.width * 0.5f, Screen.height * 0.5f);
+        _cam             = Camera.main;
+        _centerScreenPos = new Vector2(Screen.width * 0.5f, Screen.height * 0.5f);
+
+        if (indicatorRect  != null) indicatorRect.sizeDelta = Vector2.one * indicatorSize;
+        if (indicatorImage != null) indicatorImage.color    = normalColor;
     }
 
     private void Update()
     {
-        if (lockOnSystem == null || _cam == null) return;
+        if (player == null || playerRb == null || _cam == null) return;
 
         UpdatePosition();
-        UpdateSize();
-        UpdateColor();
     }
 
     private void UpdatePosition()
     {
-        // 추적할 타겟 결정 (락온 완료 > 후보 > 없으면 중앙)
-        Transform target = lockOnSystem.IsLocked
-            ? lockOnSystem.LockedTarget
-            : lockOnSystem.LockOnCandidate;
+        Vector2 targetPos;
 
-        Vector2 targetScreenPos;
-
-        if (target == null)
+        // 속도가 충분할 때만 velocity vector 방향으로 이동
+        if (playerRb.velocity.magnitude < minSpeed)
         {
-            targetScreenPos = _centerPos;
+            targetPos = _centerScreenPos;
         }
         else
         {
-            Vector3 screenPos = _cam.WorldToScreenPoint(target.position);
+            // 실제 이동 방향 → 화면 좌표 투영
+            Vector3 headingWorldPos = player.position + playerRb.velocity.normalized * 100f;
+            Vector3 screenPos       = _cam.WorldToScreenPoint(headingWorldPos);
 
-            // 카메라 뒤에 있으면 중앙으로
+            // 카메라 뒤면 중앙으로
             if (screenPos.z < 0f)
             {
-                targetScreenPos = _centerPos;
+                targetPos = _centerScreenPos;
             }
             else
             {
-                targetScreenPos = new Vector2(screenPos.x, screenPos.y);
+                targetPos = new Vector2(screenPos.x, screenPos.y);
 
                 // 패널 경계 안으로 클램프
                 if (boundaryRect != null)
                 {
                     Vector3[] corners = new Vector3[4];
                     boundaryRect.GetWorldCorners(corners);
-                    float minX = corners[0].x;
-                    float minY = corners[0].y;
-                    float maxX = corners[2].x;
-                    float maxY = corners[2].y;
-
-                    targetScreenPos.x = Mathf.Clamp(targetScreenPos.x, minX, maxX);
-                    targetScreenPos.y = Mathf.Clamp(targetScreenPos.y, minY, maxY);
+                    targetPos.x = Mathf.Clamp(targetPos.x, corners[0].x, corners[2].x);
+                    targetPos.y = Mathf.Clamp(targetPos.y, corners[0].y, corners[2].y);
                 }
             }
         }
@@ -88,34 +75,8 @@ public class GimbalIndicatorUI : MonoBehaviour
         // 부드럽게 이동
         indicatorRect.position = Vector2.Lerp(
             indicatorRect.position,
-            targetScreenPos,
+            targetPos,
             trackSpeed * Time.deltaTime
         );
-    }
-
-    private void UpdateSize()
-    {
-        float sizeRatio = lockOnSystem.lockOnAngle / baseAngle;
-        float size      = baseSize * sizeRatio;
-
-        if (lockOnSystem.LockOnCandidate != null && !lockOnSystem.IsLocked)
-        {
-            float pulse = Mathf.Sin(Time.time * pulseSpeed) * pulseAmount;
-            size *= (1f + pulse);
-        }
-
-        indicatorRect.sizeDelta = Vector2.one * size;
-    }
-
-    private void UpdateColor()
-    {
-        if (lockOnSystem.IsLocked)
-            indicatorImage.color = lockedColor;
-        else if (lockOnSystem.LockOnCandidate != null)
-            indicatorImage.color = Color.Lerp(
-                indicatorImage.color, candidateColor, Time.deltaTime * 5f);
-        else
-            indicatorImage.color = Color.Lerp(
-                indicatorImage.color, idleColor, Time.deltaTime * 5f);
     }
 }
