@@ -375,8 +375,8 @@ public class Player : Unit
 		//float 오차 패딩값
 		bool isMoving = dir.sqrMagnitude > 0.001f;
 
-		// 부스트 조건: Shift 누름 + 잔량 남아있음
-		bool canBoost = _input.isBoosting && curBoostRemaining > minBoostRequired;
+		// 부스트 조건: Shift 누름 + 잔량 남아있음 + 전진
+		bool canBoost = _input.isBoosting && curBoostRemaining > minBoostRequired && _input.moveInput.z > 0;
 		_isBoosting = canBoost;
 
 		if (canBoost)

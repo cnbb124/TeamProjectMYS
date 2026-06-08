@@ -116,6 +116,10 @@ public enum SOUND_TYPE
 	SFX_CONTACTGROUND_SHIELD,  //행성등 부딪혔을 때, 실드
 	SFX_LASERHIT_SHIELD,    //레이저맞았을때, 실드
 
+    //이동음
+    SFX_IDLE,
+    SFX_MOVING,
+    SFX_BOOST,
 
 
 
