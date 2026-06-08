@@ -204,6 +204,10 @@ public class SoundManager : MonoBehaviour
 	//재생용, 클래스  꺼내오기(여기서만사용)
 	private SoundTypeClip GetSoundData(SOUND_TYPE type)
 	{
+		if (type == SOUND_TYPE.SFX_NONE)
+		{
+			return null;
+		}
 		if (soundDict.TryGetValue(type, out SoundTypeClip data))
 		{
 			return data;
