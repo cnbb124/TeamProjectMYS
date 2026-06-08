@@ -8,75 +8,70 @@ public class GimbalIndicatorUI : MonoBehaviour
     [SerializeField] private Rigidbody     playerRb;
     [SerializeField] private RectTransform indicatorRect;
     [SerializeField] private Image         indicatorImage;
-    [SerializeField] private RectTransform boundaryRect;   // 이동 범위 제한 패널
 
     [Header("Settings")]
-    [SerializeField] private float minSpeed      = 1f;   // 이 속도 이하면 중앙 고정
-    [SerializeField] private float trackSpeed    = 8f;   // 추적 부드러움
-    [SerializeField] private float indicatorSize = 80f;  // 인디케이터 크기
+    [SerializeField] private float minSpeed      = 1f;    // 이 속도 이하면 중앙 고정
+    [SerializeField] private float maxSpeed      = 1000f; // 정규화 기준 최대 속도
+    [SerializeField] private float screenRange   = 150f;  // 중앙에서 최대 이탈 거리 (픽셀)
+    [SerializeField] private float trackSpeed    = 10f;   // 추적 부드러움
+    [SerializeField] private float indicatorSize = 80f;
 
     [Header("Color")]
     [SerializeField] private Color normalColor = new Color(0f, 1f, 0.8f, 0.8f);
 
-    private Camera  _cam;
-    private Vector2 _centerScreenPos;
-
     private void Start()
     {
-        _cam             = Camera.main;
-        _centerScreenPos = new Vector2(Screen.width * 0.5f, Screen.height * 0.5f);
-
-        if (indicatorRect  != null) indicatorRect.sizeDelta = Vector2.one * indicatorSize;
-        if (indicatorImage != null) indicatorImage.color    = normalColor;
+        if (indicatorRect  != null) indicatorRect.sizeDelta  = Vector2.one * indicatorSize;
+        if (indicatorImage != null) indicatorImage.color     = normalColor;
+        if (indicatorRect  != null) indicatorRect.anchoredPosition = Vector2.zero;
     }
 
     private void Update()
     {
-        if (player == null || playerRb == null || _cam == null) return;
+        if (player == null || playerRb == null) return;
 
-        UpdatePosition();
+        UpdateFPM();
     }
 
-    private void UpdatePosition()
+    private void UpdateFPM()
     {
-        Vector2 targetPos;
+        Vector2 targetOffset;
 
-        // 속도가 충분할 때만 velocity vector 방향으로 이동
         if (playerRb.velocity.magnitude < minSpeed)
         {
-            targetPos = _centerScreenPos;
+            // 속도 없으면 중앙
+            targetOffset = Vector2.zero;
         }
         else
         {
-            // 실제 이동 방향 → 화면 좌표 투영
-            Vector3 headingWorldPos = player.position + playerRb.velocity.normalized * 100f;
-            Vector3 screenPos       = _cam.WorldToScreenPoint(headingWorldPos);
+            // 속도를 플레이어 로컬 좌표로 변환
+            // X = 우측 이탈, Y = 상하 이탈, Z = 전진
+            Vector3 localVel = player.InverseTransformDirection(playerRb.velocity);
 
-            // 카메라 뒤면 중앙으로
-            if (screenPos.z < 0f)
-            {
-                targetPos = _centerScreenPos;
-            }
-            else
-            {
-                targetPos = new Vector2(screenPos.x, screenPos.y);
+            float reference = maxSpeed > 0f ? maxSpeed : 1f;
 
-                // 패널 경계 안으로 클램프
-                if (boundaryRect != null)
-                {
-                    Vector3[] corners = new Vector3[4];
-                    boundaryRect.GetWorldCorners(corners);
-                    targetPos.x = Mathf.Clamp(targetPos.x, corners[0].x, corners[2].x);
-                    targetPos.y = Mathf.Clamp(targetPos.y, corners[0].y, corners[2].y);
-                }
-            }
+            // Z(전진) 제외하고 X, Y 이탈만 스크린 오프셋으로 매핑
+            targetOffset = new Vector2(
+                (localVel.x / reference) * screenRange,
+                (localVel.y / reference) * screenRange
+            );
+
+            // screenRange 범위 안으로 클램프
+            if (targetOffset.magnitude > screenRange)
+                targetOffset = targetOffset.normalized * screenRange;
         }
 
-        // 부드럽게 이동
-        indicatorRect.position = Vector2.Lerp(
-            indicatorRect.position,
-            targetPos,
+        // 부드럽게 중앙 기준 이동
+        indicatorRect.anchoredPosition = Vector2.Lerp(
+            indicatorRect.anchoredPosition,
+            targetOffset,
             trackSpeed * Time.deltaTime
         );
+    }
+
+    public void SetVisible(bool visible)
+    {
+        if (indicatorRect != null)
+            indicatorRect.gameObject.SetActive(visible);
     }
 }
