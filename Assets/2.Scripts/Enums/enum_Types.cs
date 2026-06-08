@@ -206,6 +206,7 @@ public enum STAT_TYPE
     BOOST_REGEN_RATE,   // 부스트 회복률 (ENGINE 스탯)
     CRI_RATE,
     CRI_DMG_MULT,
+    FUEL_MAX
 }
 /// <summary>
 /// 소모품종류

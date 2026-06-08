@@ -495,6 +495,13 @@ public class UnitParts : MonoBehaviour
             case STAT_TYPE.CRI_DMG_MULT:
                 _unit.criDamageMultiplier += val;
                 break;
+            case STAT_TYPE.FUEL_MAX:
+                Player fuelPlayer = _unit as Player;
+                if (fuelPlayer != null)
+                {
+                    fuelPlayer.maxFuelCapacity += val;
+                }
+                break;
         }
     }
 }

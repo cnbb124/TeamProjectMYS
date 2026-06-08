@@ -10,9 +10,11 @@ using UnityEngine;
 // [외부 참조 가이드]
 // ================================================================
 // ▶ HUD팀 참조용 (읽기 전용으로 사용할 것)
-//   level          : 현재 레벨
-//   exp            : 현재 경험치
-//   expToNextLevel : 다음 레벨까지 필요 경험치
+//   level            : 현재 레벨
+//   exp              : 현재 경험치
+//   expToNextLevel   : 다음 레벨까지 필요 경험치
+//   curFuelRemaining : 현재 연료량
+//   maxFuelCapacity  : 최대 연료량
 //   (HP / 실드 / 부스트 등은 Unit.cs 참조)
 //
 //   예시)
@@ -83,9 +85,20 @@ public class Player : Unit
 	[Tooltip("현재 레벨에서 다음 레벨까지 필요한 경험치")]
 	public int expToNextLevel = 100;
 
+	[Header("연료")]
+	[Tooltip("최대 연료량. ENGINE 파츠 FUEL_MAX 스탯으로 추가 가능.")]
+	public float maxFuelCapacity = 0f;
+	[Tooltip("이동 시 초당 연료 소모량")]
+	public float fuelMoveConsumeRate = 5f;
+	[Tooltip("부스트 사용 시 추가 초당 연료 소모량")]
+	public float fuelBoostConsumeRate = 10f;
 
 
 	// ==================락온 시스템==================
+
+
+	[Header("연료 현재 상태 (입력x 참고용)")]
+	public float curFuelRemaining;
 
 	[Header("회피")]
 	[Tooltip("회피 시 가해지는 순간 힘")]
@@ -105,6 +118,7 @@ public class Player : Unit
 	protected override void Start()
 	{
 		base.Start(); //유닛 초기화 호출
+		curFuelRemaining = maxFuelCapacity;
 		_input = InputManager.Instance;
 		// 게임 시작 시 1번 슬롯 무기로 초기화
 		weaponSystem.Init();
@@ -375,8 +389,20 @@ public class Player : Unit
 		// AddForce를 이용한 물리 기반 가속 및 역분사 제어
 		if (isMoving)
 		{
-			// 입력이 있을 때 해당 방향으로 가속
-			_rb.AddForce(dir * finalForce, ForceMode.Acceleration);
+			if (curFuelRemaining > 0f)
+			{
+				// 연료 소모 (이동 기본 + 부스트 중이면 추가)
+				float fuelCost = fuelMoveConsumeRate;
+				if (canBoost)
+				{
+					fuelCost += fuelBoostConsumeRate;
+				}
+				curFuelRemaining = Mathf.Max(0f, curFuelRemaining - fuelCost * Time.fixedDeltaTime);
+
+				// 입력이 있을 때 해당 방향으로 가속
+				_rb.AddForce(dir * finalForce, ForceMode.Acceleration);
+			}
+			// 연료 없으면 추진력 없음 (관성은 유지)
 		}
 		else
 		{
@@ -501,6 +527,24 @@ public class Player : Unit
 
 
 
+
+	// ==================연료 충전==================
+
+	/// <summary>
+	/// 연료 부분 충전. 맵 상호작용 오브젝트 등에서 호출.
+	/// </summary>
+	public void Refuel(float amount)
+	{
+		curFuelRemaining = Mathf.Min(maxFuelCapacity, curFuelRemaining + amount);
+	}
+
+	/// <summary>
+	/// 연료 완전 충전. 마을(STATION) 귀환 시 호출.
+	/// </summary>
+	public void RefuelFull()
+	{
+		curFuelRemaining = maxFuelCapacity;
+	}
 
 	// ==================플레이어 레벨관련================== 차후 수정필요
 
