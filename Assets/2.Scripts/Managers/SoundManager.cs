@@ -312,7 +312,7 @@ public class SoundManager : MonoBehaviour
 
 
 	/// <summary>
-	/// 총소리, 폭발음,이동 등 특정 위치에서 나야 하는 단발성 3D 효과음을 재생(랜덤x)
+	/// 피격음등 특정 위치에서 나야 하는 단발성 3D 효과음을 재생(랜덤x)
 	///  타입과 좌표받기
 	/// </summary>
 	/// <param name="type"></param>
@@ -338,18 +338,18 @@ public class SoundManager : MonoBehaviour
 
 		}
 	}
-	//사용예
-	//Soundmanager.Instance.PlaySFXAtPosition(SOUND_TYPE.SFX_SHOOT, transform.position);
+    //사용예
+    //Soundmanager.Instance.PlaySFXAtPosition(SOUND_TYPE.SFX_SHOOT, transform.position);
 
-	/// <summary>
-	/// 피치 랜덤 재생(오버로딩)
-	/// </summary>
-	/// <param name="type"></param>
-	/// <param name="position"></param>
-	/// <param name="pitchMin"></param>
-	/// <param name="pitchMax"></param>
+    /// <summary>
+    /// 피격음등 특정 위치에서 나야 하는 단발성 3D 효과음을 재생(피치랜덤)
+    /// </summary>
+    /// <param name="type"></param>
+    /// <param name="position"></param>
+    /// <param name="pitchMin"></param>
+    /// <param name="pitchMax"></param>
 
-	public void PlaySFX3DAtPosition(SOUND_TYPE type, Vector3 position, float pitchMin, float pitchMax)
+    public void PlaySFX3DAtPosition(SOUND_TYPE type, Vector3 position, float pitchMin, float pitchMax)
 	{
 		SoundTypeClip data = GetSoundData(type);
 		if (data != null && data.type != SOUND_TYPE.SFX_NONE)
@@ -370,8 +370,43 @@ public class SoundManager : MonoBehaviour
 		}
 	}
 
+	/// <summary>
+	/// 발사음등 특정 유닛이 단발로 재생할 사운드
+	/// </summary>
+	/// <param name="type"></param>
+	/// <param name="position"></param>
+    public void PlaySFX3DAtUnit(SOUND_TYPE type, Transform targetTr)
+    {
+        SoundTypeClip data = GetSoundData(type);
+        if (data != null && data.type != SOUND_TYPE.SFX_NONE)
+        {
 
-	public void PlaySFX3DLoop(SOUND_TYPE type, Transform targetTr)
+            // 지정된 위치에 임시 스피커를 만들고, 소리가 끝나면 알아서 삭제됨
+            AudioSource source = GetAvailableSFX3DSource();//가능한 소스 풀에서 갖고오기
+            //좌표일치
+            source.transform.position = targetTr.position;
+            //해당 타겟에 이 오디오소스 붙이기(지속재생용)
+            source.transform.SetParent(targetTr);
+            source.clip = data.clip;//타입으로 갖고온 클립을 출력할 클립으로 지정
+
+            source.minDistance = data.minDistance;
+            source.maxDistance = data.maxDistance;
+            source.volume = sfx3DVolume * data.volumeScale;//볼ㄹ뮤지정
+            source.pitch = 1.0f;//랜덤 아니므로 기본설정
+            source.loop = false;
+            source.Play();
+
+        }
+    }
+
+
+    /// <summary>
+    /// 상태에 따른 루프 사운드 사용시(ex 부스터 사운드)
+    /// </summary>
+    /// <param name="type"></param>
+    /// <param name="targetTr"></param>
+
+    public void PlaySFX3DLoop(SOUND_TYPE type, Transform targetTr)
 	{
 		//해당 오브젝트가 이미 사운드루프중이면 실행x
 		if (activeLoopSounds.ContainsKey(targetTr))
