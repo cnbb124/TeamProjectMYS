@@ -2272,6 +2272,7 @@ GameObject:
   - component: {fileID: 6417366610560108401}
   - component: {fileID: 6464757241480213034}
   - component: {fileID: 4081960649374767423}
+  - component: {fileID: 3382724495637456261}
   m_Layer: 5
   m_Name: Inventory
   m_TagString: Untagged
@@ -2337,6 +2338,19 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &3382724495637456261
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2294360451762380550}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a2b82efcdf438604b9ad727fe06717fa, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  panelRoot: {fileID: 4556816193524448064}
 --- !u!1 &2465091691064262560
 GameObject:
   m_ObjectHideFlags: 0
@@ -4654,7 +4668,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 5847918948564124342}
-  - component: {fileID: 6033959840068233175}
   m_Layer: 5
   m_Name: InventoryPanel
   m_TagString: Untagged
@@ -4687,19 +4700,6 @@ RectTransform:
   m_AnchoredPosition: {x: 0.0089664, y: 0.000026703}
   m_SizeDelta: {x: 1600, y: 900}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &6033959840068233175
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4556816193524448064}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a2b82efcdf438604b9ad727fe06717fa, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  panelRoot: {fileID: 4556816193524448064}
 --- !u!1 &4654119352194939865
 GameObject:
   m_ObjectHideFlags: 0

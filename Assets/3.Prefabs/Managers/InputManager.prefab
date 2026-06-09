@@ -25,7 +25,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 417953749035928536}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -60,6 +60,9 @@ MonoBehaviour:
     missileNext: 120
     switchConsumable: 114
     useConsumable: 116
+    dicePanelToggle: 9
+    fuelGaugeToggle: 103
+    inventoryToggle: 105
     switchFireMode: 99
     axisHorizontal: Horizontal
     axisVertical: Vertical
@@ -69,20 +72,21 @@ MonoBehaviour:
   gamepadConfig:
     axisLeftStickX: LeftStickX
     axisLeftStickY: LeftStickY
-    axisRightStickX: RightStickX
-    axisRightStickY: RightStickY
     axisVerticalMove: VerticalMove
-    axisDPadX: DPadX
-    axisDPadY: DPadY
+    rollLeft: 336
+    rollRight: 337
+    boost: 338
+    dodge: 339
     fireBullet: 335
     fireMissile: 334
     fireLaser: 333
     fireAll: 332
-    boost: 338
-    dodge: 339
-    rollLeft: 336
-    rollRight: 337
+    axisDPadX: DPadX
+    axisDPadY: DPadY
+    dicePanelToggle: 331
     switchFireMode: 340
+    axisRightStickX: RightStickX
+    axisRightStickY: RightStickY
   moveInput: {x: 0, y: 0, z: 0}
   lookInput: {x: 0, y: 0}
   rollInput: 0
@@ -98,3 +102,6 @@ MonoBehaviour:
   switchMissileShootMode: 0
   switchConsumable: 0
   useConsumable: 0
+  dicePanelToggle: 0
+  fuelGaugeToggle: 0
+  inventoryToggle: 0
