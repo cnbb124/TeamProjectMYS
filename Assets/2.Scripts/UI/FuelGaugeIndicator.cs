@@ -60,8 +60,16 @@ public class FuelGaugeIndicator : MonoBehaviour
         UpdateUI();
         UpdateWarningSignals();
 
-        if (InputManager.Instance != null && InputManager.Instance.fuelGaugeToggle)
+        if (InputManager.Instance == null)
+        {
+            Debug.LogWarning("[FuelGaugeIndicator] InputManager.Instance가 null!");
+            return;
+        }
+        if (InputManager.Instance.fuelGaugeToggle)
+        {
+            Debug.Log("[FuelGaugeIndicator] G키 감지 → Toggle()");
             Toggle();
+        }
     }
 
     // ==================== 연료 소모 ====================
