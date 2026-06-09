@@ -215,12 +215,23 @@ public class Player : Unit
 		switch (state)
 		{
 			case UNIT_STATE.IDLE:
-				
+				PlayAnim(ANIM_TYPE.IDLE);
+				_sound.PlaySFX3DLoop(SOUND_TYPE.SFX_IDLE, this.transform);
 				break;
+
 			case UNIT_STATE.MOVING:
-				
+				PlayAnim(ANIM_TYPE.MOVING);
+				_sound.PlaySFX3DLoop(SOUND_TYPE.SFX_MOVING, this.transform);
 				break;
+
+			case UNIT_STATE.BOOSTING:
+				PlayAnim(ANIM_TYPE.BOOST);
+				_sound.PlaySFX3DLoop(SOUND_TYPE.SFX_BOOST, this.transform);
+				break;
+
 			case UNIT_STATE.DODGE:
+				PlayAnim(ANIM_TYPE.DODGE);
+				//_sound.PlaySFX3DAtPosition(SOUND_TYPE.)
 				if (_input != null && _input.moveInput.magnitude > 0.1f)
 				{
 					_dodgeDir = transform.forward * _input.moveInput.z
@@ -290,7 +301,7 @@ public class Player : Unit
 		// 총알발사 입력
 		if (_input.fireBullet)
 		{
-			
+
 			Shoot(PROJECTILE_TYPE.BULLET);
 		}
 		//미사일 발사 입력

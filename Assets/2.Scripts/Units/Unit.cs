@@ -41,14 +41,14 @@ public class MissileSlot // 미사일 슬롯 — 타입+잔탄 통합 관리. eq
 
 	// maxAmmo > 0 이면 장착된 슬롯 (타입과 최대치가 설정됨)
 	public bool IsEquipped { get { return maxAmmo > 0; } }
-	public bool HasAmmo    { get { return curAmmo > 0; } }
+	public bool HasAmmo { get { return curAmmo > 0; } }
 }
 
 [RequireComponent(typeof(Rigidbody))]
 public abstract class Unit : MonoBehaviour, IDamageable
 {
 
-    
+
 	//==================레퍼런스==================//
 
 
@@ -60,41 +60,41 @@ public abstract class Unit : MonoBehaviour, IDamageable
 	//매니저 할당용 레퍼런스
 	protected SoundManager _sound;
 	protected PoolManager _pool;
-    [HideInInspector]
+	[HideInInspector]
 	public WeaponSystem weaponSystem;
-    protected UnitParts _unitParts;
+	protected UnitParts _unitParts;
 
 	//==================유닛데이터==================//
 
 	[Header("<size=18>유닛 공통 기본 스탯 설정창</size>")]
 
-    [Header("HP")]
-    public int maxHpRemaining; //최대,현재HP수치
+	[Header("HP")]
+	public int maxHpRemaining; //최대,현재HP수치
 
 
-    [Header("Shield - 피격후 일정딜레이 후 자동회복")]
-    public int maxShieldCapacity;//최대,현재실드수치
+	[Header("Shield - 피격후 일정딜레이 후 자동회복")]
+	public int maxShieldCapacity;//최대,현재실드수치
 
-    public float shieldRegainDelay;//피격후 회복까지딜레이시간
-    public float shieldRegainRate; //실드회복수치
-    //private float shieldRegainTimer = 0f;//딜레이 시간까지잴 타이머 >0516 코루틴으로변경
-    public bool isShieldRegaining = false; //회복중인지 여부
-    private Coroutine _shieldRegenCoroutine;//중간 정지등을 위한 코루틴변수 따로
-    //실드연결용
-    public GameObject shield;
+	public float shieldRegainDelay;//피격후 회복까지딜레이시간
+	public float shieldRegainRate; //실드회복수치
+								   //private float shieldRegainTimer = 0f;//딜레이 시간까지잴 타이머 >0516 코루틴으로변경
+	public bool isShieldRegaining = false; //회복중인지 여부
+	private Coroutine _shieldRegenCoroutine;//중간 정지등을 위한 코루틴변수 따로
+											//실드연결용
+	public GameObject shield;
 
-    [Header("Armor - 자동회복x")]
-    public int maxArmor;//최대,현재아머수치
-
-
-    [Tooltip("Armor보유시 데미지 경감되는 수치.")]
-    public int defense;//아머 있을시 데미지 경감수치(damageAmount=damage-defense)
+	[Header("Armor - 자동회복x")]
+	public int maxArmor;//최대,현재아머수치
 
 
+	[Tooltip("Armor보유시 데미지 경감되는 수치.")]
+	public int defense;//아머 있을시 데미지 경감수치(damageAmount=damage-defense)
 
-    [Header("Critical")]
-    public float criChance;
-    public float criDamageMultiplier;
+
+
+	[Header("Critical")]
+	public float criChance;
+	public float criDamageMultiplier;
 
 
 
@@ -110,43 +110,43 @@ public abstract class Unit : MonoBehaviour, IDamageable
 	//curHp-=damageAmount;
 
 	[Header("이동 관련")]
-    [Tooltip("기본 이동속도")]
-    public float baseMoveSpeed;//기본이동속ㄷ
-    [Tooltip("부스트 사용시 이동속도")]
-    public float boostSpeed;//부스트사용시 이동속도
-    [Tooltip("최대속도velocity가 넘어갈시 고정시킬속도")]
+	[Tooltip("기본 이동속도")]
+	public float baseMoveSpeed;//기본이동속ㄷ
+	[Tooltip("부스트 사용시 이동속도")]
+	public float boostSpeed;//부스트사용시 이동속도
+	[Tooltip("최대속도velocity가 넘어갈시 고정시킬속도")]
 	public float maxSpeed;
-    [Tooltip("부스트 최대치")]
+	[Tooltip("부스트 최대치")]
 	public float maxBoostCapacity;
-    [Tooltip("부스트 사용 최소 요구치")]
-    public float minBoostRequired;//최소 부스트사용요구치
-    [Tooltip("부스트 사용시 게이지 소모량")]
-    public float boostConsumeAmont;
-    [Tooltip("부스트 회복 딜레이 ")]
+	[Tooltip("부스트 사용 최소 요구치")]
+	public float minBoostRequired;//최소 부스트사용요구치
+	[Tooltip("부스트 사용시 게이지 소모량")]
+	public float boostConsumeAmont;
+	[Tooltip("부스트 회복 딜레이 ")]
 	public float boostRegainDelay;//부스트 회복딜레이
-    [Tooltip("부스트 자연회복량")]
-    public float boostRegainRate;//초당 부스트 잔량회복수치
-    
-
-    private float boostRegainTimer = 0f;//부스트 회복딜레이까지 잴 타이머
-    private bool isBoostRegaining = false;//회복유무
-    protected bool _isBoosting = false;//부스트 사용 중 여부 (자식에서 설정)
+	[Tooltip("부스트 자연회복량")]
+	public float boostRegainRate;//초당 부스트 잔량회복수치
 
 
-   
-    [Header("회피 & 무적")]
-    [Tooltip("회피 지속시간")]
-    public float dodgeDuration = 0.5f;
-    [Tooltip("무적 지속시간")]
-    public float dodgeInvincibleTime = 0.4f;
-    private float _dodgeTimer = 0f;
-    public bool IsInvincible { get; private set; }
+	private float boostRegainTimer = 0f;//부스트 회복딜레이까지 잴 타이머
+	private bool isBoostRegaining = false;//회복유무
+	protected bool _isBoosting = false;//부스트 사용 중 여부 (자식에서 설정)
+
+
+
+	[Header("회피 & 무적")]
+	[Tooltip("회피 지속시간")]
+	public float dodgeDuration = 0.5f;
+	[Tooltip("무적 지속시간")]
+	public float dodgeInvincibleTime = 0.4f;
+	private float _dodgeTimer = 0f;
+	public bool IsInvincible { get; private set; }
 	[Tooltip("피격부위 혹은 HP잔량에 따른이동속도 변경용")]
 	public float speedMultiPlier;//HP 혹은 피격부위에따른 속도조절용.
 
 
 
-    // 총구/부스터 위치는 각 파츠 프리팹의 WeaponFirePos 컴포넌트로 관리. Unit에서 직접 보유 안 함.
+	// 총구/부스터 위치는 각 파츠 프리팹의 WeaponFirePos 컴포넌트로 관리. Unit에서 직접 보유 안 함.
 
 
 
@@ -202,424 +202,417 @@ public abstract class Unit : MonoBehaviour, IDamageable
 	{
 
 	}
-    // GetFirePos / GetBoostPos 제거 — WeaponSystem이 직접 _bulletFirePositions 등을 보유
+	// GetFirePos / GetBoostPos 제거 — WeaponSystem이 직접 _bulletFirePositions 등을 보유
 
 
-    //[HideInInspector]
-    //public Transform curFirePos;//밑에서 총구스위칭용 
-    //필요없음.
+	//[HideInInspector]
+	//public Transform curFirePos;//밑에서 총구스위칭용 
+	//필요없음.
 
-    [Header("===============<size=14>현재 상태(입력x 참고용)</size>================")]
-    public UNIT_STATE curState = UNIT_STATE.IDLE;
-    public int curHpRemaining;
-   	public int CurHp => curHpRemaining;//인터페이스 프로퍼티용
+	[Header("===============<size=14>현재 상태(입력x 참고용)</size>================")]
+	public UNIT_STATE curState = UNIT_STATE.IDLE;
+	public int curHpRemaining;
+	public int CurHp => curHpRemaining;//인터페이스 프로퍼티용
 	public int curShieldRemaining;
-    public int curArmorRemaining;
-    public float curSpeed;
-    public float curBoostRemaining;//부스트잔량
-                                   //잔탄도추가예정
-    
-    private float updateTimer = 0f;
+	public int curArmorRemaining;
+	public float curSpeed;
+	public float curBoostRemaining;//부스트잔량
+								   //잔탄도추가예정
 
-    //// ==================레이어==================
-    //[HideInInspector]
-    //public int playerLayer;
-    //[HideInInspector]
-    //public int enemyLayer;
-    //[HideInInspector]
-    //public int groundLayer;//행성등 지형지물, 차후 수정필요
-    //[HideInInspector]
-    //public int ItemLayer;//아이템레이어 추가필요
-    //[HideInInspector]
-    //public int playerProjectileLayer;
-    //[HideInInspector]
-    //public int enemyProjectileLayer;
+	private float updateTimer = 0f;
 
-
-    [HideInInspector]
-    public SOUND_TYPE _playSoundType;
+	//// ==================레이어==================
+	//[HideInInspector]
+	//public int playerLayer;
+	//[HideInInspector]
+	//public int enemyLayer;
+	//[HideInInspector]
+	//public int groundLayer;//행성등 지형지물, 차후 수정필요
+	//[HideInInspector]
+	//public int ItemLayer;//아이템레이어 추가필요
+	//[HideInInspector]
+	//public int playerProjectileLayer;
+	//[HideInInspector]
+	//public int enemyProjectileLayer;
 
 
-    
-
-    // =====================================================================
-    // 일시정지 / 게임오버 체크
-    // Player, Enemy 등 자식 클래스의 Update/FixedUpdate 첫 줄에서 사용.
-    // Unit.Update() 에도 적용 - 자식이 base.Update() 호출 시 이중 안전망.
-    // =====================================================================
-    protected bool ShouldPause =>
-        GameManager.Instance != null &&
-        (GameManager.Instance.IsPaused || GameManager.Instance.IsGameOver);
-
-   
+	[HideInInspector]
+	public SOUND_TYPE _playSoundType;
 
 
 
 
-   
+	// =====================================================================
+	// 일시정지 / 게임오버 체크
+	// Player, Enemy 등 자식 클래스의 Update/FixedUpdate 첫 줄에서 사용.
+	// Unit.Update() 에도 적용 - 자식이 base.Update() 호출 시 이중 안전망.
+	// =====================================================================
+	protected bool ShouldPause =>
+		GameManager.Instance != null &&
+		(GameManager.Instance.IsPaused || GameManager.Instance.IsGameOver);
+
+
+
+
+
+
+
 
 
 	//===================FSM======================d
 
 
 	public UNIT_STATE CurState
-    {
-        get
-        {
-            return curState;
-        }
-        set
-        {
-            if (curState == value)//셋할때 똑같으면 필요없음로
-            {
-                return;
-            }
-            //현재상태에서 나가는 메섣
-            OnStateExit(curState);
-            //넣은값 적용해주고
-            curState = value;
-            //들어가는 메서드
-            OnStateEnter(curState);
-        }
-    }
+	{
+		get
+		{
+			return curState;
+		}
+		set
+		{
+			if (curState == value)//셋할때 똑같으면 필요없음로
+			{
+				return;
+			}
+			//현재상태에서 나가는 메섣
+			OnStateExit(curState);
+			//넣은값 적용해주고
+			curState = value;
+			//들어가는 메서드
+			OnStateEnter(curState);
+		}
+	}
 
-    private void UpdateFSM()
-    {
-        switch (CurState)
-        {
-            case UNIT_STATE.IDLE:
-                OnIdle();
-                break;
-            case UNIT_STATE.MOVING:
-                OnMoving();
-                break;
-            case UNIT_STATE.DODGE:
-                OnDodge();
-                break;
-            case UNIT_STATE.DIE:
-                OnDying();
-                break;
-        }
-    }
+	private void UpdateFSM()
+	{
+		switch (CurState)
+		{
+			case UNIT_STATE.IDLE:
+				OnIdle();
+				break;
+			case UNIT_STATE.MOVING:
+				OnMoving();
+				break;
+			case UNIT_STATE.DODGE:
+				OnDodge();
+				break;
+			case UNIT_STATE.DIE:
+				OnDying();
+				break;
+		}
+	}
 
-    //===============자식에서 직접 override==================
-    /// <summary>
-    /// 진입시 한번만 할것들(애니재생, 이펙트싲,ㄱ 사운드재생)
-    /// </summary>
-    /// <param name="state"></param>
-    protected virtual void OnStateEnter(UNIT_STATE state)
-    {
-        switch (state)
-        {
-            case UNIT_STATE.IDLE:
-                if (_animCtrl != null)
-                {
-                    _animCtrl.Play(ANIM_TYPE.IDLE);
-                }
-                break;
-            case UNIT_STATE.MOVING:
-                if (_animCtrl != null)
-                {
-                    _animCtrl.Play(ANIM_TYPE.MOVING);
-                }
-                break;
-            case UNIT_STATE.DODGE:
-                if (_animCtrl != null)
-                {
-                    _animCtrl.Play(ANIM_TYPE.DODGE);
-                }
-                _dodgeTimer = dodgeDuration;
-                IsInvincible = true;
-                break;
-            case UNIT_STATE.DIE:
-                if (_animCtrl != null)
-                {
-                    _animCtrl.Play(ANIM_TYPE.DIE);
-                }
-                break;
-        }
-    }
-    protected virtual void OnStateExit(UNIT_STATE state)
-    {
+	//===============자식에서 직접 override==================
+	/// <summary>
+	/// 진입시 한번만 할것들(애니재생. 이펙트,사운드는 자식에서 따로(서로다르고 매니저에서관리중이니))
+	/// </summary>
+	/// <param name="state"></param>
+	protected virtual void OnStateEnter(UNIT_STATE state)
+	{
+		switch (state)
+		{
+			case UNIT_STATE.IDLE:
+				PlayAnim(ANIM_TYPE.IDLE);
+				break;
 
-    }
-    protected virtual void OnIdle()
-    {
-        
-        //애니메이션명령, 사운드재생?
-    }
-    protected virtual void OnMoving()
-    {
-        //애니메이션명령, 사운드재생?
-    }
-    protected virtual void OnDodge()
-    {
-        //애니메이션명령, 사운드재생?
-        PlayAnim(ANIM_TYPE.DODGE);
-        //SoundManager.Instance.PlaySFX3DAtPosition(SOUND_TYPE.) 회피소스넣기
-        _dodgeTimer -= Time.deltaTime;
-        if (IsInvincible && _dodgeTimer <= dodgeDuration - dodgeInvincibleTime)
-        {
-            IsInvincible = false;
-        }
-        if (_dodgeTimer <= 0f)
-        {
-            _dodgeTimer = 0f;
-            CurState = UNIT_STATE.IDLE;
-        }
-    }
-    protected virtual void OnDying()
-    {
-        //애니메이션명령, 사운드재생?
-        //죽는처리 - 풀매니저
-    }
+			case UNIT_STATE.MOVING:
+				PlayAnim(ANIM_TYPE.MOVING);
+				break;
 
-    //실드회복
-    protected IEnumerator ShieldRegenerationRoutine()
-    {
-        //피격 후 설정된 딜레이(초)만큼 대기합니다. (Update의 타이머 연산을 완벽히 대체)
-        yield return new WaitForSeconds(shieldRegainDelay);
+			case UNIT_STATE.DODGE:
+				PlayAnim(ANIM_TYPE.DODGE);
+				_dodgeTimer = dodgeDuration;
+				IsInvincible = true;
+				break;
 
-        isShieldRegaining = true;
+			case UNIT_STATE.DIE:
+				PlayAnim(ANIM_TYPE.DIE);
+				break;
 
-        // 최적화를 위해 0.1초마다 대기할 캐싱 객체 생성
-        WaitForSeconds tick = new WaitForSeconds(0.1f);
+		}
 
-        //  실드가 꽉 차지 않았고, 유닛이 살아있는 동안 반복해서 회복
-        while (curShieldRemaining < maxShieldCapacity && curState != UNIT_STATE.DIE)
-        {
-            // 초당 회복량(shieldRegainRate)을 0.1초 기준 단위로 계산하여 더함
-            curShieldRemaining += Mathf.RoundToInt(shieldRegainRate * 0.1f);
-            curShieldRemaining = Mathf.Min(curShieldRemaining, maxShieldCapacity);
+	}
+	protected virtual void OnStateExit(UNIT_STATE state)
+	{
 
-            // 다음 0.1초까지 대기
-            yield return tick;
-        }
+	}
+	protected virtual void OnIdle()
+	{
 
-        // 회복이 완료되었거나 죽었을 경우 상태 초기화
-        isShieldRegaining = false;
-        _shieldRegenCoroutine = null;
-    }
+		//애니메이션명령, 사운드재생?
+	}
+	protected virtual void OnMoving()
+	{
+		//애니메이션명령, 사운드재생?
+	}
+	protected virtual void OnDodge()
+	{
+		//애니메이션명령, 사운드재생?
+		PlayAnim(ANIM_TYPE.DODGE);
+		//SoundManager.Instance.PlaySFX3DAtPosition(SOUND_TYPE.) 회피소스넣기
+		_dodgeTimer -= Time.deltaTime;
+		if (IsInvincible && _dodgeTimer <= dodgeDuration - dodgeInvincibleTime)
+		{
+			IsInvincible = false;
+		}
+		if (_dodgeTimer <= 0f)
+		{
+			_dodgeTimer = 0f;
+			CurState = UNIT_STATE.IDLE;
+		}
+	}
+	protected virtual void OnDying()
+	{
+		//애니메이션명령, 사운드재생?
+		//죽는처리 - 풀매니저
+	}
 
-    //0516 실드회복 코루틴으로변겨ㅑㅇ
-    //private void UpdateShieldRegen()
-    //{
-    //    if (curState == UNIT_STATE.DIE || curShieldRemaining >= maxShieldRemaining)
-    //    {
-    //        return;
-    //    }
-    //    //if(curShieldRemaning>=maxShieldRemaning)//디버그 로깅같은거 필요하면 주석풀고 위에서 지울것
-    //    //{
-    //    //	return;
-    //    //}
-    //    //타이머에 일정시간더해주고
-    //    shieldRegainTimer += Time.deltaTime;
-    //    //타이머가 딜레이보다 커졌고 충전중이아닐때, 즉 딜레이만큼시간지났을떄
-    //    if (!isShieldRegaining && shieldRegainTimer >= shieldRegainDelay)
-    //    {
-    //        isShieldRegaining = true;
-    //    }
+	//실드회복
+	protected IEnumerator ShieldRegenerationRoutine()
+	{
+		//피격 후 설정된 딜레이(초)만큼 대기합니다. (Update의 타이머 연산을 완벽히 대체)
+		yield return new WaitForSeconds(shieldRegainDelay);
 
-    //    if (isShieldRegaining)
-    //    {
-    //        //반올림공식
-    //        curShieldRemaining += Mathf.RoundToInt(shieldRegainRate * Time.deltaTime);
-    //        //혹여나 초과시 제한걸도록 둘중 작은값 반환하는 함수(동일시 그값반환)
-    //        curShieldRemaining = Mathf.Min(curShieldRemaining, maxShieldRemaining);
-    //    }
+		isShieldRegaining = true;
 
-    //}
-    //부스트회복
-    private void UpdateBoostRegen()
-    {
-        if (curState == UNIT_STATE.DIE || curBoostRemaining >= maxBoostCapacity)
-        {
-            return;
-        }
-        if (_isBoosting)
-        {
-            boostRegainTimer = 0f;
-            isBoostRegaining = false;
-            return;
-        }
-        //if(curBoostRemaining>=maxBoostRemaining)//디버그 로깅같은거 필요하면 주석풀고 위에서 지울것
-        //{
-        //	return;
-        //}
-        //타이머에 일정시간더해주고
-        boostRegainTimer += Time.deltaTime;
-        //타이머가 딜레이보다 커졌고 충전중이아닐때, 즉 딜레이만큼시간지났을떄
-        if (!isBoostRegaining && boostRegainTimer >= boostRegainDelay)
-        {
-            isBoostRegaining = true;
-        }
+		// 최적화를 위해 0.1초마다 대기할 캐싱 객체 생성
+		WaitForSeconds tick = new WaitForSeconds(0.1f);
 
-        if (isBoostRegaining)
-        {
-            curBoostRemaining += boostRegainRate * Time.deltaTime;
-            curBoostRemaining = Mathf.Min(curBoostRemaining, maxBoostCapacity);//실드와동일
-        }
-    }
+		//  실드가 꽉 차지 않았고, 유닛이 살아있는 동안 반복해서 회복
+		while (curShieldRemaining < maxShieldCapacity && curState != UNIT_STATE.DIE)
+		{
+			// 초당 회복량(shieldRegainRate)을 0.1초 기준 단위로 계산하여 더함
+			curShieldRemaining += Mathf.RoundToInt(shieldRegainRate * 0.1f);
+			curShieldRemaining = Mathf.Min(curShieldRemaining, maxShieldCapacity);
 
-    //부스트사용
-    public void UseBoost(float amount)
-    {
-        curBoostRemaining = Mathf.Max(0f, curBoostRemaining - amount);
-        boostRegainTimer = 0f;
-        isBoostRegaining = false;
-    }
+			// 다음 0.1초까지 대기
+			yield return tick;
+		}
+
+		// 회복이 완료되었거나 죽었을 경우 상태 초기화
+		isShieldRegaining = false;
+		_shieldRegenCoroutine = null;
+	}
+
+	//0516 실드회복 코루틴으로변겨ㅑㅇ
+	//private void UpdateShieldRegen()
+	//{
+	//    if (curState == UNIT_STATE.DIE || curShieldRemaining >= maxShieldRemaining)
+	//    {
+	//        return;
+	//    }
+	//    //if(curShieldRemaning>=maxShieldRemaning)//디버그 로깅같은거 필요하면 주석풀고 위에서 지울것
+	//    //{
+	//    //	return;
+	//    //}
+	//    //타이머에 일정시간더해주고
+	//    shieldRegainTimer += Time.deltaTime;
+	//    //타이머가 딜레이보다 커졌고 충전중이아닐때, 즉 딜레이만큼시간지났을떄
+	//    if (!isShieldRegaining && shieldRegainTimer >= shieldRegainDelay)
+	//    {
+	//        isShieldRegaining = true;
+	//    }
+
+	//    if (isShieldRegaining)
+	//    {
+	//        //반올림공식
+	//        curShieldRemaining += Mathf.RoundToInt(shieldRegainRate * Time.deltaTime);
+	//        //혹여나 초과시 제한걸도록 둘중 작은값 반환하는 함수(동일시 그값반환)
+	//        curShieldRemaining = Mathf.Min(curShieldRemaining, maxShieldRemaining);
+	//    }
+
+	//}
+	//부스트회복
+	private void UpdateBoostRegen()
+	{
+		if (curState == UNIT_STATE.DIE || curBoostRemaining >= maxBoostCapacity)
+		{
+			return;
+		}
+		if (_isBoosting)
+		{
+			boostRegainTimer = 0f;
+			isBoostRegaining = false;
+			return;
+		}
+		//if(curBoostRemaining>=maxBoostRemaining)//디버그 로깅같은거 필요하면 주석풀고 위에서 지울것
+		//{
+		//	return;
+		//}
+		//타이머에 일정시간더해주고
+		boostRegainTimer += Time.deltaTime;
+		//타이머가 딜레이보다 커졌고 충전중이아닐때, 즉 딜레이만큼시간지났을떄
+		if (!isBoostRegaining && boostRegainTimer >= boostRegainDelay)
+		{
+			isBoostRegaining = true;
+		}
+
+		if (isBoostRegaining)
+		{
+			curBoostRemaining += boostRegainRate * Time.deltaTime;
+			curBoostRemaining = Mathf.Min(curBoostRemaining, maxBoostCapacity);//실드와동일
+		}
+	}
+
+	//부스트사용
+	public void UseBoost(float amount)
+	{
+		curBoostRemaining = Mathf.Max(0f, curBoostRemaining - amount);
+		boostRegainTimer = 0f;
+		isBoostRegaining = false;
+	}
 
 
 
-    //(실드o,아머x)(Damageinfo.damage) * (크리시)criDamageMultiplier;
-    //(실드x,아머o)Damageinfo.damage-defense *(크리시)criDamageMultiplier;
-    //(실드x,아머x)Damageinfo.damage) * (크리시)criDamageMultiplier;
-    //반올림할것. 0.5->1 0.4->0
+	//(실드o,아머x)(Damageinfo.damage) * (크리시)criDamageMultiplier;
+	//(실드x,아머o)Damageinfo.damage-defense *(크리시)criDamageMultiplier;
+	//(실드x,아머x)Damageinfo.damage) * (크리시)criDamageMultiplier;
+	//반올림할것. 0.5->1 0.4->0
 
-    //자식에서 오버라이드
-    public virtual void Shoot(PROJECTILE_TYPE type)
-    {
-        if (weaponSystem != null)
-        {
-            weaponSystem.Shoot(type);
-        }
-    }
+	//자식에서 오버라이드
+	public virtual void Shoot(PROJECTILE_TYPE type)
+	{
+		if (weaponSystem != null)
+		{
+			weaponSystem.Shoot(type);
+		}
+	}
 
-    /// <summary>
-    /// 애니메이션 재생 호출용
-    /// </summary>
-    public void PlayAnim(ANIM_TYPE type)
-    {
-        if (_animCtrl != null)
-        {
-            _animCtrl.Play(type);
-        }
-    }
+	/// <summary>
+	/// 애니메이션 재생 호출용
+	/// </summary>
+	public void PlayAnim(ANIM_TYPE type)
+	{
+		if (_animCtrl != null)
+		{
+			_animCtrl.Play(type);
+		}
+	}
 
-    /// <summary>
-    /// Unit TakeDamage(IDamageable 상속시 필수구현하는 메서드) 
-    /// </summary>
-    /// <param name="info"> 데미지정보구조체 받음</param>
-    public virtual void TakeDamage(DamageInfo info)
-    {
+	/// <summary>
+	/// Unit TakeDamage(IDamageable 상속시 필수구현하는 메서드) 
+	/// </summary>
+	/// <param name="info"> 데미지정보구조체 받음</param>
+	public virtual void TakeDamage(DamageInfo info)
+	{
 
-        if (IsInvincible)
-        {
-            return;
-        }
+		if (IsInvincible)
+		{
+			return;
+		}
 
-        //info.isCritical = Random.Range(0f, 100f) < criChance; //크리판정은 투사체에서 직접담당.
-        int damageAmount = info.isCritical ? Mathf.RoundToInt(info.damageAmount * criDamageMultiplier) : info.damageAmount;
-        //실드회복중지, 타이머 초기화
-        //shieldRegainTimer = 0f; //0516 코루틴으로 변경
-        isShieldRegaining = false;
+		//info.isCritical = Random.Range(0f, 100f) < criChance; //크리판정은 투사체에서 직접담당.
+		int damageAmount = info.isCritical ? Mathf.RoundToInt(info.damageAmount * criDamageMultiplier) : info.damageAmount;
+		//실드회복중지, 타이머 초기화
+		//shieldRegainTimer = 0f; //0516 코루틴으로 변경
+		isShieldRegaining = false;
 
-        if (_shieldRegenCoroutine != null)
-        {
-            StopCoroutine(_shieldRegenCoroutine);
-        }
-        //피격 데미지수치필요(실드있을시, 없을시),실제로 데미지받음
-        calculTakeDamage(damageAmount);
+		if (_shieldRegenCoroutine != null)
+		{
+			StopCoroutine(_shieldRegenCoroutine);
+		}
+		//피격 데미지수치필요(실드있을시, 없을시),실제로 데미지받음
+		calculTakeDamage(damageAmount);
 
-        // 파츠 피격 — FRAME HP는 본체가 담당하므로 FRAME 제외한 파츠만 처리
-        if (_unitParts != null)
-        {
-            if (info.aoeRadius > 0f)
-            {
-                _unitParts.DamagePartsInRange(info.hitPosition, info.aoeRadius, damageAmount);
-            }
-            else
-            {
-                _unitParts.DamageNearestPart(info.hitPosition, damageAmount);
-            }
-        }
+		// 파츠 피격 — FRAME HP는 본체가 담당하므로 FRAME 제외한 파츠만 처리
+		if (_unitParts != null)
+		{
+			if (info.aoeRadius > 0f)
+			{
+				_unitParts.DamagePartsInRange(info.hitPosition, info.aoeRadius, damageAmount);
+			}
+			else
+			{
+				_unitParts.DamageNearestPart(info.hitPosition, damageAmount);
+			}
+		}
 
-        //피격 방향에 따른 리액션(사운드,이펙트,카메라흔들림, 혹은 밀려남등)
-        OnHitReaction(info);
+		//피격 방향에 따른 리액션(사운드,이펙트,카메라흔들림, 혹은 밀려남등)
+		OnHitReaction(info);
 
-        if (curHpRemaining <= 0)
-        {
-            CurState = UNIT_STATE.DIE;
-            Die();
-        }
-        else//실드 배터리?엔진?이 파츠가 말짱할경우 조건추가
-        {
-            // 죽지 않았다면 딜레이 후 다시 실드가 차오르도록 코루틴을 새로 시작함
-            _shieldRegenCoroutine = StartCoroutine(ShieldRegenerationRoutine());
-        }
+		if (curHpRemaining <= 0)
+		{
+			CurState = UNIT_STATE.DIE;
+			Die();
+		}
+		else//실드 배터리?엔진?이 파츠가 말짱할경우 조건추가
+		{
+			// 죽지 않았다면 딜레이 후 다시 실드가 차오르도록 코루틴을 새로 시작함
+			_shieldRegenCoroutine = StartCoroutine(ShieldRegenerationRoutine());
+		}
 
-    }
+	}
 
-    /// <summary>
-    /// 피격 반동(카메라 쉐이크, 넉백등 자식에서 override)
-    /// </summary>
-    /// <param name="info"></param>
-    protected virtual void OnHitReaction(DamageInfo info)
-    {
-        //피격 애니메이션재생 필요
-        //피격 사운드재생 필요 실드있을떄는 실드사운드, 아니면 타입맞춰서
-        if (curShieldRemaining <= 0)
-        {
-            _playSoundType = GetPlaySoundType(info);
-        }
-        else
-        {
-            _playSoundType = GetPlaySoundTypeShield(info);
-        }
-            _sound.PlaySFX3DAtPosition(_playSoundType, info.hitPosition);
-        //피격 카메라무빙필요
+	/// <summary>
+	/// 피격 반동(카메라 쉐이크, 넉백등 자식에서 override)
+	/// </summary>
+	/// <param name="info"></param>
+	protected virtual void OnHitReaction(DamageInfo info)
+	{
+		//피격 애니메이션재생 필요
+		//피격 사운드재생 필요 실드있을떄는 실드사운드, 아니면 타입맞춰서
+		if (curShieldRemaining <= 0)
+		{
+			_playSoundType = GetPlaySoundType(info);
+		}
+		else
+		{
+			_playSoundType = GetPlaySoundTypeShield(info);
+		}
+		_sound.PlaySFX3DAtPosition(_playSoundType, info.hitPosition);
+		//피격 카메라무빙필요
 
-        //크리면 데미지 배율, 아니면 그냥 데미지
-        //데미지인포에서 총알인지 폭발인지 레이저인지에 따라서
-    }
+		//크리면 데미지 배율, 아니면 그냥 데미지
+		//데미지인포에서 총알인지 폭발인지 레이저인지에 따라서
+	}
 
 
 
 
-    /// <summary>
-    /// 사망처리(오브젝트 풀반납, 비활성화등. 플레이어와는 다르게 처리할거기때문에 자식에서 override)
-    /// </summary>
-    protected virtual void Die(){ }
+	/// <summary>
+	/// 사망처리(오브젝트 풀반납, 비활성화등. 플레이어와는 다르게 처리할거기때문에 자식에서 override)
+	/// </summary>
+	protected virtual void Die() { }
 
-    //bool isCritical()
-    //{
-    //	float rand = Random.Range(0f, 100f);//0~100퍼
-    //	return rand < criChance;
-    //}
+	//bool isCritical()
+	//{
+	//	float rand = Random.Range(0f, 100f);//0~100퍼
+	//	return rand < criChance;
+	//}
 
-    protected void calculTakeDamage(int damageAmount)
-    {
+	protected void calculTakeDamage(int damageAmount)
+	{
 
-        if (curShieldRemaining > 0)
-        {
-            int shieldDamage = Mathf.Min(curShieldRemaining, damageAmount);//현지실드량보다 초과해서 -가되면 안됨
-            curShieldRemaining -= shieldDamage;//실드에 가해진 피해량만큼 현재실드량 깎기
-            damageAmount -= shieldDamage;//실드에 가해진피해량만큼 데미지잔량도 깎기
+		if (curShieldRemaining > 0)
+		{
+			int shieldDamage = Mathf.Min(curShieldRemaining, damageAmount);//현지실드량보다 초과해서 -가되면 안됨
+			curShieldRemaining -= shieldDamage;//실드에 가해진 피해량만큼 현재실드량 깎기
+			damageAmount -= shieldDamage;//실드에 가해진피해량만큼 데미지잔량도 깎기
 
-        }
-        if (damageAmount > 0 && curArmorRemaining > 0)//데미지잔량0초과,실드0,아머0초과
-        {
-            int reducedDamage = Mathf.Max(1, damageAmount - defense);//아머가몇이건 최소 1이건 데미지들어감
-            int armorDamage = Mathf.Min(curArmorRemaining, reducedDamage);//아머로 경감한데미지만큼 현재아머량깎기 초과해서 -가되면안되므로
-            curArmorRemaining -= armorDamage;//아머에 가해진피해량만큼깎기
-            damageAmount -= armorDamage;//아머에 가해진 피해량만큼 데미지잔량도깎기
+		}
+		if (damageAmount > 0 && curArmorRemaining > 0)//데미지잔량0초과,실드0,아머0초과
+		{
+			int reducedDamage = Mathf.Max(1, damageAmount - defense);//아머가몇이건 최소 1이건 데미지들어감
+			int armorDamage = Mathf.Min(curArmorRemaining, reducedDamage);//아머로 경감한데미지만큼 현재아머량깎기 초과해서 -가되면안되므로
+			curArmorRemaining -= armorDamage;//아머에 가해진피해량만큼깎기
+			damageAmount -= armorDamage;//아머에 가해진 피해량만큼 데미지잔량도깎기
 
-        }
-        if (damageAmount > 0)
-        {
+		}
+		if (damageAmount > 0)
+		{
 
-            int hpDamage = Mathf.Min(curHpRemaining, damageAmount);
-            curHpRemaining -= hpDamage;
-        }
+			int hpDamage = Mathf.Min(curHpRemaining, damageAmount);
+			curHpRemaining -= hpDamage;
+		}
 
-    }
+	}
 
 
 
-    public virtual void OnCollisionEnter(Collision collision)
-    {
+	public virtual void OnCollisionEnter(Collision collision)
+	{
 
-    }
+	}
 
 
 
@@ -630,61 +623,61 @@ public abstract class Unit : MonoBehaviour, IDamageable
 	/// <param name="info">맞은 투사체 정보</param>
 	/// <returns></returns>
 	protected SOUND_TYPE GetPlaySoundType(DamageInfo info)
-    {
+	{
 
 
-        switch (info.type)
-        {
-            case DAMAGE_TYPE.BULLET:
-                return SOUND_TYPE.SFX_BULLETHIT;
+		switch (info.type)
+		{
+			case DAMAGE_TYPE.BULLET:
+				return SOUND_TYPE.SFX_BULLETHIT;
 
-            case DAMAGE_TYPE.LASER:
-                return SOUND_TYPE.SFX_LASERHIT;
+			case DAMAGE_TYPE.LASER:
+				return SOUND_TYPE.SFX_LASERHIT;
 
-            case DAMAGE_TYPE.EXPLOSION:
-                return SOUND_TYPE.SFX_NONE; // 폭발 소리는 Missile.Explode()가 담당
+			case DAMAGE_TYPE.EXPLOSION:
+				return SOUND_TYPE.SFX_NONE; // 폭발 소리는 Missile.Explode()가 담당
 
-            case DAMAGE_TYPE.CONTACT:
-                if (info.attacker.CompareTag("Enemy"))
-                {
-                    return SOUND_TYPE.SFX_CONTACTSHIP;
-                }
-                if (info.attacker.CompareTag("Ground"))
-                {
-                    return SOUND_TYPE.SFX_CONTACTGROUND;
-                }
-                break;
-        }
-        return SOUND_TYPE.SFX_NONE;
-    }
-    /// <summary>
-    /// 사격시
-    /// </summary>
-    /// <param name="type">발사할 투사체 타입</param>
-    /// <returns></returns>
-    public SOUND_TYPE GetPlaySoundType(PROJECTILE_TYPE type)
-    {
-        switch (type)
-        {
-            case PROJECTILE_TYPE.BULLET:
-                return SOUND_TYPE.SFX_BULLETSHOOT;
-            case PROJECTILE_TYPE.LASER:
-                return SOUND_TYPE.SFX_LASERSHOOT;
+			case DAMAGE_TYPE.CONTACT:
+				if (info.attacker.CompareTag("Enemy"))
+				{
+					return SOUND_TYPE.SFX_CONTACTSHIP;
+				}
+				if (info.attacker.CompareTag("Ground"))
+				{
+					return SOUND_TYPE.SFX_CONTACTGROUND;
+				}
+				break;
+		}
+		return SOUND_TYPE.SFX_NONE;
+	}
+	/// <summary>
+	/// 사격시
+	/// </summary>
+	/// <param name="type">발사할 투사체 타입</param>
+	/// <returns></returns>
+	public SOUND_TYPE GetPlaySoundType(PROJECTILE_TYPE type)
+	{
+		switch (type)
+		{
+			case PROJECTILE_TYPE.BULLET:
+				return SOUND_TYPE.SFX_BULLETSHOOT;
+			case PROJECTILE_TYPE.LASER:
+				return SOUND_TYPE.SFX_LASERSHOOT;
 
-            case PROJECTILE_TYPE.MISSILE:
-                //	case SHOOT_TYPE.MISSILE_RIGHT:
-                //case SHOOT_TYPE.MISSILE_BOTH:
-                return SOUND_TYPE.SFX_MISSILESHOOT;
-                //case SHOOT_TYPE.ALL://전체쏘는키를 구현할지...근데 그러면 소리를어케해야되나?그냥 다 누르면 다 재생되지않나
-                //	break;
-        }
-        return SOUND_TYPE.SFX_NONE;
+			case PROJECTILE_TYPE.MISSILE:
+				//	case SHOOT_TYPE.MISSILE_RIGHT:
+				//case SHOOT_TYPE.MISSILE_BOTH:
+				return SOUND_TYPE.SFX_MISSILESHOOT;
+				//case SHOOT_TYPE.ALL://전체쏘는키를 구현할지...근데 그러면 소리를어케해야되나?그냥 다 누르면 다 재생되지않나
+				//	break;
+		}
+		return SOUND_TYPE.SFX_NONE;
 
-    }
+	}
 
 
-    protected SOUND_TYPE GetPlaySoundTypeShield(DamageInfo info)
-    {
+	protected SOUND_TYPE GetPlaySoundTypeShield(DamageInfo info)
+	{
 		switch (info.type)
 		{
 			case DAMAGE_TYPE.BULLET:
