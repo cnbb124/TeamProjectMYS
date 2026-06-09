@@ -49,8 +49,6 @@ public class FuelGaugeIndicator : MonoBehaviour
         _currentFuel    = maxFuel;
         _expandedHeight = panelRect != null ? panelRect.sizeDelta.y : 0f;
 
-        Debug.Log($"[FuelGaugeIndicator] panelRect={panelRect}, _expandedHeight={_expandedHeight}");
-
         // 경고등 초기 OFF
         SetSignal(engineLowSignal, false, engineLowColor);
         SetSignal(noFuelSignal,    false, noFuelColor);
@@ -62,16 +60,8 @@ public class FuelGaugeIndicator : MonoBehaviour
         UpdateUI();
         UpdateWarningSignals();
 
-        if (InputManager.Instance == null)
-        {
-            Debug.LogWarning("[FuelGaugeIndicator] InputManager.Instance가 null!");
-            return;
-        }
-        if (InputManager.Instance.fuelGaugeToggle)
-        {
-            Debug.Log("[FuelGaugeIndicator] G키 감지 → Toggle()");
+        if (InputManager.Instance != null && InputManager.Instance.fuelGaugeToggle)
             Toggle();
-        }
     }
 
     // ==================== 연료 소모 ====================
