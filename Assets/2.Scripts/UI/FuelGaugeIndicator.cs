@@ -61,7 +61,7 @@ public class FuelGaugeIndicator : MonoBehaviour
         UpdateUI();
         UpdateWarningSignals();
 
-        if (Input.GetKeyDown(toggleKey))
+        if (InputManager.Instance != null && InputManager.Instance.fuelGaugeToggle)
             Toggle();
     }
 
