@@ -7,7 +7,9 @@ public enum ANIM_TYPE
     IDLE,
     MOVING,
     BOOST,
-    DODGE,  // 무적시간 및 롤
+    //DODGE_N,  // 무적시간 및 롤, 좌우키입력없을때는 좌우랜덤으로 재생되게 코드에서 
+    DODGE_L,  // 좌입력
+    DODGE_R,  // 우입력
     HIT,
     DIE
     // 발사 관련 애니는 파츠 프리팹의 LauncherAnim에서 처리

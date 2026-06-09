@@ -293,6 +293,9 @@ public abstract class Unit : MonoBehaviour, IDamageable
 			case UNIT_STATE.MOVING:
 				OnMoving();
 				break;
+			case UNIT_STATE.BOOSTING:
+				OnBoosting();
+				break;
 			case UNIT_STATE.DODGE:
 				OnDodge();
 				break;
@@ -320,7 +323,7 @@ public abstract class Unit : MonoBehaviour, IDamageable
 				break;
 
 			case UNIT_STATE.DODGE:
-				PlayAnim(ANIM_TYPE.DODGE);
+				//PlayAnim(ANIM_TYPE.DODGE_N);키입력따라 좌우 혹은 랜덤방향(키입력없을때)
 				_dodgeTimer = dodgeDuration;
 				IsInvincible = true;
 				break;
@@ -338,17 +341,20 @@ public abstract class Unit : MonoBehaviour, IDamageable
 	}
 	protected virtual void OnIdle()
 	{
-
 		//애니메이션명령, 사운드재생?
 	}
 	protected virtual void OnMoving()
 	{
 		//애니메이션명령, 사운드재생?
 	}
+	protected virtual void OnBoosting()
+	{
+		//부스트 중 매 프레임 처리
+	}
 	protected virtual void OnDodge()
 	{
 		//애니메이션명령, 사운드재생?
-		PlayAnim(ANIM_TYPE.DODGE);
+		//PlayAnim(ANIM_TYPE.DODGE_N);
 		//SoundManager.Instance.PlaySFX3DAtPosition(SOUND_TYPE.) 회피소스넣기
 		_dodgeTimer -= Time.deltaTime;
 		if (IsInvincible && _dodgeTimer <= dodgeDuration - dodgeInvincibleTime)

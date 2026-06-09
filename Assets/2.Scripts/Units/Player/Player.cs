@@ -230,7 +230,7 @@ public class Player : Unit
 				break;
 
 			case UNIT_STATE.DODGE:
-				PlayAnim(ANIM_TYPE.DODGE);
+				//PlayAnim(ANIM_TYPE.DODGE_N);
 				//_sound.PlaySFX3DAtPosition(SOUND_TYPE.)
 				if (_input != null && _input.moveInput.magnitude > 0.1f)
 				{
@@ -280,6 +280,7 @@ public class Player : Unit
 	}
 	protected override void OnIdle() { }
 	protected override void OnMoving() { }
+	protected override void OnBoosting() { }
 	protected override void OnDodge() { base.OnDodge(); }
 	protected override void OnDying() { }
 
@@ -488,7 +489,14 @@ public class Player : Unit
 		}
 		else if (isMoving)
 		{
-			CurState = UNIT_STATE.MOVING;
+			if (canBoost)
+			{
+				CurState = UNIT_STATE.BOOSTING;
+			}
+			else
+			{
+				CurState = UNIT_STATE.MOVING;
+			}
 		}
 		else
 		{
