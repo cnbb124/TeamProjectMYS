@@ -6,7 +6,7 @@ public class LockOnUIManager : MonoBehaviour
     public static LockOnUIManager Instance { get; private set; }
 
     [Header("References")]
-    [SerializeField] private MissileLockOnSystem lockOnSystem;
+    [SerializeField] private LockOnSystem lockOnSystem;
     [SerializeField] private GameObject lockOnUIPrefab;
 
     private Camera _mainCamera;

@@ -9,7 +9,7 @@ using UnityEngine;
 // =====================================================================
 
 
-public class MissileLockOnSystem : MonoBehaviour
+public class LockOnSystem : MonoBehaviour
 {
 	[Space(5)]
 	[Header("<size=18>[락온 시스템 설정]</size>")]

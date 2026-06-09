@@ -42,9 +42,8 @@ public class WeaponSystem : MonoBehaviour
 	private PoolManager _pool;
 	private SoundManager _sound;
 
-	[Header("락온 시스템 (Player 전용)")]
-	[Tooltip("Player 전용. Enemy 는 null 로 둘 것.")]
-	public MissileLockOnSystem lockOnSystem;
+	[Header("락온 시스템")]
+	public LockOnSystem lockOnSystem;
 
 
 	// ================== [총알 설정] ==================
@@ -160,6 +159,7 @@ public class WeaponSystem : MonoBehaviour
 			case PROJECTILE_TYPE.MISSILE:
 				ShootAllMissiles(soundType);
 				break;
+
 		}
 	}
 
@@ -277,7 +277,7 @@ public class WeaponSystem : MonoBehaviour
 			case WEAPON_POS_TYPE.LASER:
 				_laserFirePos = pos;
 				break;
-			
+
 		}
 	}
 
@@ -304,7 +304,7 @@ public class WeaponSystem : MonoBehaviour
 					_laserFirePos = null;
 				}
 				break;
-			
+
 		}
 	}
 
@@ -375,7 +375,7 @@ public class WeaponSystem : MonoBehaviour
 		{
 			return;
 		}
-		missileSlots[slotIndex].type    = type;
+		missileSlots[slotIndex].type = type;
 		missileSlots[slotIndex].maxAmmo = maxAmmo;
 		missileSlots[slotIndex].curAmmo = maxAmmo;
 	}

@@ -308,18 +308,30 @@ public abstract class Unit : MonoBehaviour, IDamageable
         switch (state)
         {
             case UNIT_STATE.IDLE:
-                if (_animCtrl != null) { _animCtrl.Play(ANIM_TYPE.IDLE); }
+                if (_animCtrl != null)
+                {
+                    _animCtrl.Play(ANIM_TYPE.IDLE);
+                }
                 break;
             case UNIT_STATE.MOVING:
-                if (_animCtrl != null) { _animCtrl.Play(ANIM_TYPE.MOVING); }
+                if (_animCtrl != null)
+                {
+                    _animCtrl.Play(ANIM_TYPE.MOVING);
+                }
                 break;
             case UNIT_STATE.DODGE:
-                if (_animCtrl != null) { _animCtrl.Play(ANIM_TYPE.DODGE); }
+                if (_animCtrl != null)
+                {
+                    _animCtrl.Play(ANIM_TYPE.DODGE);
+                }
                 _dodgeTimer = dodgeDuration;
                 IsInvincible = true;
                 break;
             case UNIT_STATE.DIE:
-                if (_animCtrl != null) { _animCtrl.Play(ANIM_TYPE.DIE); }
+                if (_animCtrl != null)
+                {
+                    _animCtrl.Play(ANIM_TYPE.DIE);
+                }
                 break;
         }
     }
@@ -467,7 +479,7 @@ public abstract class Unit : MonoBehaviour, IDamageable
     }
 
     /// <summary>
-    /// WeaponSystem에서 애니메이션 재생 호출용
+    /// 애니메이션 재생 호출용
     /// </summary>
     public void PlayAnim(ANIM_TYPE type)
     {
