@@ -40,6 +40,10 @@ public class KeyboardMouseConfig
 	[Header("다이스 패널 (토글)")]
 	public KeyCode dicePanelToggle = KeyCode.Tab;
 
+    [Header("UI 패널 토글")]
+    public KeyCode fuelGaugeToggle  = KeyCode.G; // 연료 게이지 패널
+    public KeyCode inventoryToggle  = KeyCode.I; // 인벤토리 패널
+
 	[Header("모드 전환")]
     public KeyCode switchFireMode = KeyCode.C;      // 발사 모드 전환 (교차/동시)
 
@@ -205,6 +209,13 @@ public class InputManager : MonoBehaviour
     public bool useConsumable;
     public bool dicePanelToggle;
 
+    [Header("UI 패널 토글")]
+    [Tooltip("연료 게이지 패널 토글 - 누른 순간 한 프레임만 true")]
+    public bool fuelGaugeToggle;
+
+    [Tooltip("인벤토리 패널 토글 - 누른 순간 한 프레임만 true")]
+    public bool inventoryToggle;
+
     // D-패드 이전 프레임값 (게임패드 "누른 순간" 감지용)
     private float _prevDPadX = 0f;
     private float _prevDPadY = 0f;
@@ -290,6 +301,8 @@ public class InputManager : MonoBehaviour
         switchConsumable = Input.GetKeyDown(km.switchConsumable);
         useConsumable    = Input.GetKeyDown(km.useConsumable);
         dicePanelToggle = Input.GetKeyDown(km.dicePanelToggle);
+        fuelGaugeToggle = Input.GetKeyDown(km.fuelGaugeToggle);
+        inventoryToggle = Input.GetKeyDown(km.inventoryToggle);
     }
 
     // =====================================================================
@@ -349,6 +362,8 @@ public class InputManager : MonoBehaviour
         useConsumable     = (dpadY < -0.5f) && (_prevDPadY >= -0.5f);
 
         dicePanelToggle = Input.GetKeyDown(gp.dicePanelToggle);
+        fuelGaugeToggle = false; // 게임패드 미지원 (키 없음)
+        inventoryToggle = false; // 게임패드 미지원 (키 없음)
         _prevDPadX = dpadX;
         _prevDPadY = dpadY;
     }
