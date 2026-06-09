@@ -251,7 +251,33 @@ public class Player : Unit
 				break;
 		}
 	}
-	protected override void OnStateExit(UNIT_STATE state) { }
+
+
+	protected override void OnStateExit(UNIT_STATE state)
+	{
+		switch (state)
+		{
+			case UNIT_STATE.IDLE:
+				_sound.StopSFX3DLoop(this.transform);
+				break;
+
+			case UNIT_STATE.MOVING:
+				_sound.StopSFX3DLoop(this.transform);
+				break;
+
+			case UNIT_STATE.BOOSTING:
+				_sound.StopSFX3DLoop(this.transform);
+				break;
+
+			case UNIT_STATE.DODGE:
+
+				break;
+			case UNIT_STATE.DIE:
+
+
+				break;
+		}
+	}
 	protected override void OnIdle() { }
 	protected override void OnMoving() { }
 	protected override void OnDodge() { base.OnDodge(); }
@@ -380,11 +406,13 @@ public class Player : Unit
 	// maxSpeed: 속도 초과 시 방향 유지하고 크기만 클램프.
 	private void MovingByInput()
 	{
+
+		if (curState == UNIT_STATE.DODGE)
+		{
+			return; // 회피 중 입력 차단, 관성은 유지됨
+		}
 		// 로컬 축 기준 6방향 합산
-		Vector3 dir =
-			transform.forward * _input.moveInput.z +
-			transform.right * _input.moveInput.x +
-			transform.up * _input.moveInput.y;
+		Vector3 dir = transform.forward * _input.moveInput.z + transform.right * _input.moveInput.x + transform.up * _input.moveInput.y;
 
 		// 대각선 이동 시 속도 튀는 것 방지
 		if (dir.magnitude > 1f)

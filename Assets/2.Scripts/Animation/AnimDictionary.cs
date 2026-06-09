@@ -24,8 +24,7 @@ public class AnimTypeClip
 
 public class AnimDictionary
 {
-    private Dictionary<ANIM_TYPE, AnimationClip> dict
-        = new Dictionary<ANIM_TYPE, AnimationClip>();
+    private Dictionary<ANIM_TYPE, AnimationClip> dict = new Dictionary<ANIM_TYPE, AnimationClip>();
 
     // Add(해당하는 애니메이션타입, 클립)
     public void Add(ANIM_TYPE type, AnimationClip clip)
