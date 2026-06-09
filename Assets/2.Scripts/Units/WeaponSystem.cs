@@ -73,6 +73,9 @@ public class WeaponSystem : MonoBehaviour
 	// LAUNCHER_MISSILE 파츠가 RegisterFirePos로 등록.
 	private List<Transform> _missileFirePositions = new List<Transform>();
 
+	// 발사 위치별 LauncherAnim 캐시 (컴포넌트 없는 파츠는 등록 안 됨)
+	private Dictionary<Transform, LauncherAnim> _launcherAnims = new Dictionary<Transform, LauncherAnim>();
+
 	// 현재 선택 슬롯 인덱스
 	private int _curSlotIndex = 0;
 
@@ -145,13 +148,11 @@ public class WeaponSystem : MonoBehaviour
 					return;
 				}
 				_lastFireTime = Time.time;
-				_unit.PlayAnim(ANIM_TYPE.SHOOT_BULLET);
 				_sound.PlaySFX3DAtPosition(soundType, _unit.transform.position, 0.7f, 1.2f);
 				ShootBullet();
 				break;
 
 			case PROJECTILE_TYPE.LASER:
-				_unit.PlayAnim(ANIM_TYPE.SHOOT_LASER);
 				_sound.PlaySFX3DAtPosition(soundType, _unit.transform.position);
 				ShootLaser();
 				break;
@@ -178,6 +179,11 @@ public class WeaponSystem : MonoBehaviour
 
 		Transform curFirePos = _bulletFirePositions[_bulletFireIndex];
 		_bulletFireIndex = (_bulletFireIndex + 1) % _bulletFirePositions.Count;
+
+		if (_launcherAnims.TryGetValue(curFirePos, out LauncherAnim bulletAnim))
+		{
+			bulletAnim.PlayFire();
+		}
 
 		Bullet newBullet = _pool.GetBullet();
 		newBullet.Init(curFirePos.position, curFirePos.forward, _unit);
@@ -210,15 +216,6 @@ public class WeaponSystem : MonoBehaviour
 
 		int actualFire = Mathf.Min(_missileFirePositions.Count, curSlot.curAmmo);
 
-		if (actualFire == 1)
-		{
-			_unit.PlayAnim(ANIM_TYPE.SHOOT_MISSILE_L);
-		}
-		else
-		{
-			_unit.PlayAnim(ANIM_TYPE.SHOOT_MISSILE_BOTH);
-		}
-
 		for (int i = 0; i < actualFire; i++)
 		{
 			_sound.PlaySFX3DAtPosition(soundType, _unit.transform.position);
@@ -232,6 +229,11 @@ public class WeaponSystem : MonoBehaviour
 	/// </summary>
 	private void ShootMissileFrom(Transform firePos)
 	{
+		if (_launcherAnims.TryGetValue(firePos, out LauncherAnim missileAnim))
+		{
+			missileAnim.PlayFire();
+		}
+
 		switch (curMissileType)
 		{
 			case MISSILE_TYPE.HOMING:
@@ -270,9 +272,19 @@ public class WeaponSystem : MonoBehaviour
 		{
 			case WEAPON_POS_TYPE.BULLET:
 				_bulletFirePositions.Add(pos);
+				LauncherAnim bulletAnim = pos.GetComponentInParent<LauncherAnim>();
+				if (bulletAnim != null)
+				{
+					_launcherAnims[pos] = bulletAnim;
+				}
 				break;
 			case WEAPON_POS_TYPE.MISSILE:
 				_missileFirePositions.Add(pos);
+				LauncherAnim missileAnim = pos.GetComponentInParent<LauncherAnim>();
+				if (missileAnim != null)
+				{
+					_launcherAnims[pos] = missileAnim;
+				}
 				break;
 			case WEAPON_POS_TYPE.LASER:
 				_laserFirePos = pos;
@@ -290,6 +302,7 @@ public class WeaponSystem : MonoBehaviour
 		{
 			case WEAPON_POS_TYPE.BULLET:
 				_bulletFirePositions.Remove(pos);
+				_launcherAnims.Remove(pos);
 				if (_bulletFireIndex >= _bulletFirePositions.Count)
 				{
 					_bulletFireIndex = 0;
@@ -297,6 +310,7 @@ public class WeaponSystem : MonoBehaviour
 				break;
 			case WEAPON_POS_TYPE.MISSILE:
 				_missileFirePositions.Remove(pos);
+				_launcherAnims.Remove(pos);
 				break;
 			case WEAPON_POS_TYPE.LASER:
 				if (_laserFirePos == pos)

@@ -4,17 +4,13 @@
 //NONE을 0에넣을까?
 public enum ANIM_TYPE
 {
-	IDLE,
-    BOOST,
-    DODGE,//무적시간및 롤
-    SHOOT_BULLET,//좌우 총구가 앞뒤로 쏠대마다 밀리게
-    SHOOT_MISSILE_L,//미사일베이열리게
-    SHOOT_MISSILE_R,
-    SHOOT_MISSILE_BOTH,
-    SHOOT_LASER,//기모으는 파츠?
+    IDLE,
     MOVING,
+    BOOST,
+    DODGE,  // 무적시간 및 롤
     HIT,
     DIE
+    // 발사 관련 애니는 파츠 프리팹의 LauncherAnim에서 처리
 }
 
 
