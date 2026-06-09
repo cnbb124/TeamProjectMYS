@@ -8,7 +8,6 @@ public class InventoryPanelUI : MonoBehaviour
 {
     [Header("Panel")]
     [SerializeField] private GameObject panelRoot;
-    [SerializeField] private KeyCode    toggleKey = KeyCode.I;
 
     private void Start()
     {

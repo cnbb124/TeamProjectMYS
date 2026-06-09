@@ -34,10 +34,9 @@ public class FuelGaugeIndicator : MonoBehaviour
     [SerializeField] [Range(0f, 1f)] private float mediumThreshold = 0.5f;
     [SerializeField] [Range(0f, 1f)] private float lowThreshold    = 0.25f;
 
-    [Header("Toggle (G Key)")]
+    [Header("Toggle (InputManager - G Key)")]
     [SerializeField] private RectTransform panelRect;
     [SerializeField] private float         animDuration = 0.3f;
-    [SerializeField] private KeyCode       toggleKey    = KeyCode.G;
 
     private float     _currentFuel;
     private float     _expandedHeight;
