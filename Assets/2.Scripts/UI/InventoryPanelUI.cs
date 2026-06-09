@@ -17,16 +17,8 @@ public class InventoryPanelUI : MonoBehaviour
 
     private void Update()
     {
-        if (InputManager.Instance == null)
-        {
-            Debug.LogWarning("[InventoryPanelUI] InputManager.Instance가 null!");
-            return;
-        }
-        if (InputManager.Instance.inventoryToggle)
-        {
-            Debug.Log("[InventoryPanelUI] I키 감지 → Toggle()");
+        if (InputManager.Instance != null && InputManager.Instance.inventoryToggle)
             Toggle();
-        }
     }
 
     public void Toggle()

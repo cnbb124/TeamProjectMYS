@@ -49,6 +49,8 @@ public class FuelGaugeIndicator : MonoBehaviour
         _currentFuel    = maxFuel;
         _expandedHeight = panelRect != null ? panelRect.sizeDelta.y : 0f;
 
+        Debug.Log($"[FuelGaugeIndicator] panelRect={panelRect}, _expandedHeight={_expandedHeight}");
+
         // 경고등 초기 OFF
         SetSignal(engineLowSignal, false, engineLowColor);
         SetSignal(noFuelSignal,    false, noFuelColor);
