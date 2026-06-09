@@ -6,8 +6,7 @@ using TMPro;
 public class FuelGaugeIndicator : MonoBehaviour
 {
     [Header("References")]
-    [SerializeField] private Player    player;
-    [SerializeField] private Rigidbody playerRb;
+    [SerializeField] private Player player;
 
     [Header("Fuel UI")]
     [SerializeField] private Image    fuelFill;
@@ -15,17 +14,12 @@ public class FuelGaugeIndicator : MonoBehaviour
     [SerializeField] private Image    engineIcon;
 
     [Header("Warning Signals")]
-    [SerializeField] private TMP_Text engineLowSignal; // EngineLowSignal Text
-    [SerializeField] private TMP_Text noFuelSignal;    // NoFuelSignal Text
+    [SerializeField] private TMP_Text engineLowSignal;
+    [SerializeField] private TMP_Text noFuelSignal;
     [SerializeField] private Color engineLowColor  = new Color(1f, 0.5f, 0f, 1f); // 주홍
     [SerializeField] private Color noFuelColor     = Color.red;
-    [SerializeField] private float blinkSpeed      = 3f;   // 경고등 깜빡임 속도
+    [SerializeField] private float blinkSpeed      = 3f;
     [SerializeField] [Range(0f, 1f)] private float lowThresholdSignal = 0.2f; // 20%
-
-    [Header("Fuel Settings")]
-    [SerializeField] private float maxFuel          = 100f;
-    [SerializeField] private float consumeRate      = 1.5f;
-    [SerializeField] private float boostMultiplier  = 2f;  // 부스터 시 소모 배율
 
     [Header("Engine Icon Colors")]
     [SerializeField] private Color fullColor   = Color.green;
@@ -38,7 +32,6 @@ public class FuelGaugeIndicator : MonoBehaviour
     [SerializeField] private RectTransform panelRect;
     [SerializeField] private float         animDuration = 0.3f;
 
-    private float     _currentFuel;
     private float     _expandedHeight;
     private bool      _isOpen = true;
     private Coroutine _animCoroutine;
@@ -46,67 +39,31 @@ public class FuelGaugeIndicator : MonoBehaviour
 
     private void Start()
     {
-        _currentFuel    = maxFuel;
         _expandedHeight = panelRect != null ? panelRect.sizeDelta.y : 0f;
 
-        Debug.Log($"[FuelGaugeIndicator] panelRect={panelRect}, _expandedHeight={_expandedHeight}");
-
-        // 경고등 초기 OFF
         SetSignal(engineLowSignal, false, engineLowColor);
         SetSignal(noFuelSignal,    false, noFuelColor);
     }
 
     private void Update()
     {
-        ConsumeFuel();
+        if (player == null) return;
+
         UpdateUI();
         UpdateWarningSignals();
 
-        if (InputManager.Instance == null)
-        {
-            Debug.LogWarning("[FuelGaugeIndicator] InputManager.Instance가 null!");
-            return;
-        }
-        if (InputManager.Instance.fuelGaugeToggle)
-        {
-            Debug.Log("[FuelGaugeIndicator] G키 감지 → Toggle()");
+        if (InputManager.Instance != null && InputManager.Instance.fuelGaugeToggle)
             Toggle();
-        }
     }
-
-    // ==================== 연료 소모 ====================
-
-    private void ConsumeFuel()
-    {
-        if (player == null || playerRb == null || _currentFuel <= 0f) return;
-
-        float speedRatio = player.maxSpeed > 0f
-            ? Mathf.Clamp01(playerRb.velocity.magnitude / player.maxSpeed)
-            : 0f;
-
-        // 부스터 사용 중이면 소모량 배율 적용
-        bool isBoosting = InputManager.Instance != null
-            && InputManager.Instance.isBoosting
-            && player.curBoostRemaining > 0f;
-
-        float multiplier = isBoosting ? boostMultiplier : 1f;
-
-        _currentFuel = Mathf.Clamp(
-            _currentFuel - consumeRate * speedRatio * multiplier * Time.deltaTime,
-            0f, maxFuel);
-    }
-
-    public void Refuel(float amount) =>
-        _currentFuel = Mathf.Clamp(_currentFuel + amount, 0f, maxFuel);
-    public void RefuelFull()         => _currentFuel = maxFuel;
-    public float GetFuelRatio()      => _currentFuel / maxFuel;
 
     // ==================== UI 업데이트 ====================
 
     private void UpdateUI()
     {
-        float ratio   = _currentFuel / maxFuel;
-        int   fuelInt = Mathf.RoundToInt(_currentFuel);
+        float ratio   = player.maxFuelCapacity > 0f
+            ? player.curFuelRemaining / player.maxFuelCapacity
+            : 0f;
+        int fuelInt = Mathf.RoundToInt(ratio * 100f);
 
         if (fuelFill != null)
             fuelFill.fillAmount = ratio;
@@ -138,10 +95,11 @@ public class FuelGaugeIndicator : MonoBehaviour
 
     private void UpdateWarningSignals()
     {
-        float ratio = _currentFuel / maxFuel;
+        float ratio  = player.maxFuelCapacity > 0f
+            ? player.curFuelRemaining / player.maxFuelCapacity
+            : 0f;
+        bool noFuel  = player.curFuelRemaining <= 0f;
 
-        // No Fuel (0%)
-        bool noFuel = _currentFuel <= 0f;
         if (noFuelSignal != null)
         {
             noFuelSignal.gameObject.SetActive(noFuel);
@@ -153,7 +111,6 @@ public class FuelGaugeIndicator : MonoBehaviour
             }
         }
 
-        // Engine Low (20% 이하, No Fuel 아닐 때)
         bool engineLow = !noFuel && ratio <= lowThresholdSignal;
         if (engineLowSignal != null)
         {
@@ -165,7 +122,6 @@ public class FuelGaugeIndicator : MonoBehaviour
                 engineLowSignal.color = c;
             }
         }
-
     }
 
     private void SetSignal(TMP_Text signal, bool active, Color color)
