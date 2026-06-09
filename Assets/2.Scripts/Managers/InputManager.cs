@@ -282,7 +282,7 @@ public class InputManager : MonoBehaviour
         isDodging  = Input.GetKeyDown(km.dodge);
 
         // 사격
-        // fireBullet은 GetKey (연사 - 속도는 Player.fireDelay로 제어)
+        // fireBullet은 GetKey (연사 - 속도는 WeaponSystem.fireBulletDelay로 제어)
         // 나머지는 GetKeyDown (즉발/토글)
         fireBullet  = Input.GetKey(km.fireBullet);
         fireMissile = Input.GetKeyDown(km.fireMissile);

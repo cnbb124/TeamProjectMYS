@@ -51,8 +51,11 @@ public class WeaponSystem : MonoBehaviour
 	[Header("<size=18>[무기 시스템]</size>")]
 	[Header("총알 설정")]
 	[Tooltip("총알 발사 간격 (초)")]
-	public float fireDelay = 0.1f;
-	private float _lastFireTime = 0f;
+	public float fireBulletDelay = 0.1f;
+	private float _lastFireBulletTime = 0f;
+	[Header("미사일 설정")]
+	public float fireMissileDelay = 2f;
+	private float _lastFireMissileTime = 0f;
 
 	// LAUNCHER_BULLET 파츠가 RegisterFirePos로 등록. 순서대로 교대 발사.
 	private List<Transform> _bulletFirePositions = new List<Transform>();
@@ -143,11 +146,11 @@ public class WeaponSystem : MonoBehaviour
 		switch (type)
 		{
 			case PROJECTILE_TYPE.BULLET:
-				if (Time.time < _lastFireTime + fireDelay)
+				if (Time.time < _lastFireBulletTime + fireBulletDelay)
 				{
 					return;
 				}
-				_lastFireTime = Time.time;
+				_lastFireBulletTime = Time.time;
 				_sound.PlaySFX3DAtPosition(soundType, _unit.transform.position, 0.7f, 1.2f);
 				ShootBullet();
 				break;
@@ -158,6 +161,11 @@ public class WeaponSystem : MonoBehaviour
 				break;
 
 			case PROJECTILE_TYPE.MISSILE:
+				if (Time.time < _lastFireMissileTime + fireMissileDelay)
+				{
+					return;
+				}
+				_lastFireMissileTime = Time.time;
 				ShootAllMissiles(soundType);
 				break;
 
