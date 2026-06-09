@@ -2,12 +2,12 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class RadarSystem : MonoBehaviour
+public class TargettingRadarSystem : MonoBehaviour
 {
-    public static RadarSystem Instance { get; private set; }
+    public static TargettingRadarSystem Instance { get; private set; }
 
     [Header("References")]
-    [SerializeField] private MissileLockOnSystem lockOnSystem;
+    [SerializeField] private LockOnSystem lockOnSystem;
     [SerializeField] private Transform player;
     [SerializeField] private RectTransform radarRect;
     [SerializeField] private GameObject dotPrefab;

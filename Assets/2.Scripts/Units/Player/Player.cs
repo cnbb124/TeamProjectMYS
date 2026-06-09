@@ -284,6 +284,7 @@ public class Player : Unit
 		// 총알발사 입력
 		if (_input.fireBullet)
 		{
+			
 			Shoot(PROJECTILE_TYPE.BULLET);
 		}
 		//미사일 발사 입력
