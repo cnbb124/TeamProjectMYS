@@ -97,7 +97,7 @@ public class Player : Unit
 	public float maxFuelCapacity = 0f;
 	[Tooltip("현재 연료 잔량 HUD 연결용")]
 	public float curFuelRemaining;
-	
+
 
 
 
@@ -195,7 +195,10 @@ public class Player : Unit
 
 	protected override void FixedUpdate()
 	{
-		if (ShouldPause) return;
+		if (ShouldPause)
+		{
+			return;
+		}
 
 		//항상 회전이먼저!!!
 		RotateByInput();
@@ -375,15 +378,9 @@ public class Player : Unit
 		//float 오차 패딩값
 		bool isMoving = dir.sqrMagnitude > 0.001f;
 
-		// 부스트 조건: Shift 누름 + 잔량 남아있음 + 전진
-		bool canBoost = _input.isBoosting && curBoostRemaining > minBoostRequired && _input.moveInput.z > 0;
+		// 부스트 조건: Shift 누름 + 잔량 남아있음 + 전진 + 연료있음
+		bool canBoost = _input.isBoosting && curBoostRemaining > minBoostRequired && _input.moveInput.z > 0 && curFuelRemaining > 0;
 		_isBoosting = canBoost;
-
-		if (canBoost)
-		{
-			// Unit.UseBoost(): 잔량 감소 + 회복 타이머 초기화
-			UseBoost(20f * Time.fixedDeltaTime);
-		}
 
 		float speed = canBoost ? boostSpeed : baseMoveSpeed;
 		// speedMultiPlier: 피격/HP에 따른 속도 감소용. 0이면 1배율 적용
@@ -392,7 +389,7 @@ public class Player : Unit
 		// 최종 가해질 힘의 크기 계산
 		float finalForce = speed * multiplier;
 
-		// AddForce를 이용한 물리 기반 가속 및 역분사 제어
+		// AddForce를 이용한 물리 기반 가속 및 역분사
 		if (isMoving)
 		{
 			if (curFuelRemaining > 0f)
@@ -401,6 +398,9 @@ public class Player : Unit
 				float fuelCost = fuelMoveConsumeRate;
 				if (canBoost)
 				{
+					// Unit.UseBoost(): 잔량 감소 + 회복 타이머 초기화
+					UseBoost(boostConsumeAmont * Time.fixedDeltaTime);
+
 					fuelCost += fuelBoostConsumeRate;
 				}
 				curFuelRemaining = Mathf.Max(0f, curFuelRemaining - fuelCost * Time.fixedDeltaTime);
@@ -459,11 +459,17 @@ public class Player : Unit
 
 	private void UpdateBoostEffect()
 	{
-		if (_step1Particles == null) return;
-		bool isMoving = _input.moveInput.z > 0.001f;
+		if (_step1Particles == null)
+		{
+			return;
+		}
+		bool isMoving = _input.moveInput.z > 0.001f && curFuelRemaining > 0f;
 		bool isBoosting = _isBoosting;
 
-		if (isMoving == _wasMoving && isBoosting == _wasBoosting) return;
+		if (isMoving == _wasMoving && isBoosting == _wasBoosting)
+		{
+			return;
+		}
 
 		SetParticles(_step1Particles, true);
 		SetParticles(_step2Particles, isMoving);

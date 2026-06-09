@@ -2,14 +2,20 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+[RequireComponent(typeof(Animator))]
 public class UnitAnimCtrl : MonoBehaviour
 {
 	[Header("애니메이션 타입,해당클립")]
 	public AnimTypeClip[] animTypeClips;
-	[Header("애니메이터")]
-	public Animator animator;
+	
+	private Animator animator;
 
 	private AnimDictionary animDic = new AnimDictionary();
+
+	private void Awake()
+	{
+		animator = GetComponent<Animator>();
+	}
 	// Start is called before the first frame update
 	void Start()
 	{

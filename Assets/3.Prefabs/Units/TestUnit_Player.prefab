@@ -1090,11 +1090,10 @@ GameObject:
   - component: {fileID: 6433512454957104831}
   - component: {fileID: 1295354817333113809}
   - component: {fileID: 1161755328960943635}
-  - component: {fileID: 3934864504421733446}
   - component: {fileID: 7897952812583820154}
   - component: {fileID: 2532570374250757226}
   - component: {fileID: 4252557089049131847}
-  - component: {fileID: 8714862202856907223}
+  - component: {fileID: 3934864504421733446}
   - component: {fileID: 7402764472675028080}
   - component: {fileID: 1329124423494150431}
   m_Layer: 6
@@ -1150,6 +1149,7 @@ MonoBehaviour:
   maxSpeed: 1000
   maxBoostCapacity: 150
   minBoostRequired: 10
+  boostConsumeAmont: 25
   boostRegainDelay: 1
   boostRegainRate: 20
   dodgeDuration: 0.5
@@ -1201,32 +1201,6 @@ MonoBehaviour:
   MultiLockedTargets: []
   LockOnProgress: 0
   IsLocked: 0
---- !u!114 &3934864504421733446
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3107650116710039119}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ae1b975512cde9f49a8b76ca33645c06, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  animTypeClips:
-  - animType: 0
-    animClip: {fileID: 0}
-  - animType: 3
-    animClip: {fileID: 0}
-  - animType: 4
-    animClip: {fileID: 0}
-  - animType: 5
-    animClip: {fileID: 0}
-  - animType: 2
-    animClip: {fileID: 0}
-  - animType: 7
-    animClip: {fileID: 0}
-  animator: {fileID: 7402764472675028080}
 --- !u!114 &7897952812583820154
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1279,7 +1253,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _defaultLoadout: {fileID: 11400000, guid: 7c2bd1293467d554591b2fc6ec5b62fd, type: 2}
   partSlots: []
---- !u!114 &8714862202856907223
+--- !u!114 &3934864504421733446
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -1288,11 +1262,28 @@ MonoBehaviour:
   m_GameObject: {fileID: 3107650116710039119}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 27971c665aad53343a032118e9ebf86a, type: 3}
+  m_Script: {fileID: 11500000, guid: ae1b975512cde9f49a8b76ca33645c06, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  minDistance: 1.04
-  maxDistance: 14.4
+  animTypeClips:
+  - animType: 0
+    animClip: {fileID: 0}
+  - animType: 8
+    animClip: {fileID: 0}
+  - animType: 1
+    animClip: {fileID: 0}
+  - animType: 3
+    animClip: {fileID: 0}
+  - animType: 4
+    animClip: {fileID: 0}
+  - animType: 5
+    animClip: {fileID: 0}
+  - animType: 7
+    animClip: {fileID: 0}
+  - animType: 2
+    animClip: {fileID: 0}
+  - animType: 10
+    animClip: {fileID: 0}
 --- !u!95 &7402764472675028080
 Animator:
   serializedVersion: 5

@@ -120,10 +120,14 @@ public abstract class Unit : MonoBehaviour, IDamageable
 	public float maxBoostCapacity;
     [Tooltip("부스트 사용 최소 요구치")]
     public float minBoostRequired;//최소 부스트사용요구치
-
-
+    [Tooltip("부스트 사용시 게이지 소모량")]
+    public float boostConsumeAmont;
+    [Tooltip("부스트 회복 딜레이 ")]
 	public float boostRegainDelay;//부스트 회복딜레이
+    [Tooltip("부스트 자연회복량")]
     public float boostRegainRate;//초당 부스트 잔량회복수치
+    
+
     private float boostRegainTimer = 0f;//부스트 회복딜레이까지 잴 타이머
     private bool isBoostRegaining = false;//회복유무
     protected bool _isBoosting = false;//부스트 사용 중 여부 (자식에서 설정)
@@ -303,14 +307,20 @@ public abstract class Unit : MonoBehaviour, IDamageable
     {
         switch (state)
         {
-            case UNIT_STATE.IDLE:   _animCtrl.Play(ANIM_TYPE.IDLE);   break;
-            case UNIT_STATE.MOVING: _animCtrl.Play(ANIM_TYPE.MOVING); break;
+            case UNIT_STATE.IDLE:
+                if (_animCtrl != null) { _animCtrl.Play(ANIM_TYPE.IDLE); }
+                break;
+            case UNIT_STATE.MOVING:
+                if (_animCtrl != null) { _animCtrl.Play(ANIM_TYPE.MOVING); }
+                break;
             case UNIT_STATE.DODGE:
-                _animCtrl.Play(ANIM_TYPE.DODGE);
+                if (_animCtrl != null) { _animCtrl.Play(ANIM_TYPE.DODGE); }
                 _dodgeTimer = dodgeDuration;
                 IsInvincible = true;
                 break;
-            case UNIT_STATE.DIE:    _animCtrl.Play(ANIM_TYPE.DIE);    break;
+            case UNIT_STATE.DIE:
+                if (_animCtrl != null) { _animCtrl.Play(ANIM_TYPE.DIE); }
+                break;
         }
     }
     protected virtual void OnStateExit(UNIT_STATE state)
