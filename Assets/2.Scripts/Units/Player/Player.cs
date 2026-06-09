@@ -214,6 +214,12 @@ public class Player : Unit
 		base.OnStateEnter(state);
 		switch (state)
 		{
+			case UNIT_STATE.IDLE:
+				
+				break;
+			case UNIT_STATE.MOVING:
+				
+				break;
 			case UNIT_STATE.DODGE:
 				if (_input != null && _input.moveInput.magnitude > 0.1f)
 				{

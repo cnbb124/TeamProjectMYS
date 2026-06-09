@@ -285,7 +285,7 @@ public abstract class Unit : MonoBehaviour, IDamageable
 
     private void UpdateFSM()
     {
-        switch (curState)
+        switch (CurState)
         {
             case UNIT_STATE.IDLE:
                 OnIdle();
@@ -303,6 +303,10 @@ public abstract class Unit : MonoBehaviour, IDamageable
     }
 
     //===============자식에서 직접 override==================
+    /// <summary>
+    /// 진입시 한번만 할것들(애니재생, 이펙트싲,ㄱ 사운드재생)
+    /// </summary>
+    /// <param name="state"></param>
     protected virtual void OnStateEnter(UNIT_STATE state)
     {
         switch (state)
@@ -341,6 +345,7 @@ public abstract class Unit : MonoBehaviour, IDamageable
     }
     protected virtual void OnIdle()
     {
+        
         //애니메이션명령, 사운드재생?
     }
     protected virtual void OnMoving()
@@ -350,6 +355,8 @@ public abstract class Unit : MonoBehaviour, IDamageable
     protected virtual void OnDodge()
     {
         //애니메이션명령, 사운드재생?
+        PlayAnim(ANIM_TYPE.DODGE);
+        //SoundManager.Instance.PlaySFX3DAtPosition(SOUND_TYPE.) 회피소스넣기
         _dodgeTimer -= Time.deltaTime;
         if (IsInvincible && _dodgeTimer <= dodgeDuration - dodgeInvincibleTime)
         {
