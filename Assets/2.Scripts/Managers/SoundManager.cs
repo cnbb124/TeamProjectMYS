@@ -396,18 +396,24 @@ public class SoundManager : MonoBehaviour
 	/// </summary>
 	/// <param name="type"></param>
 	/// <param name="position"></param>
-    public void PlaySFX3DAtUnit(SOUND_TYPE type, Transform targetTr)
+    // unitTr : 부착(SetParent) 대상. 유닛 루트처럼 파츠보다 오래 사는 안전한 transform을 넘길 것.
+    // playPos : 실제 재생 위치(좌표만 사용). 총구 등 파츠의 자식 transform을 넘기면 그 위치에서 재생됨.
+    //           생략(null) 시 unitTr 위치에서 재생 (기존 Idle/Moving/Boost 루프 사운드 호출 방식과 동일).
+    public void PlaySFX3DAtUnit(SOUND_TYPE type, Transform unitTr, Transform playPos = null)
     {
         SoundTypeClip data = GetSoundData(type);
         if (data != null && data.type != SOUND_TYPE.SFX_NONE)
         {
+            Transform posSource = (playPos != null) ? playPos : unitTr;
 
             // 지정된 위치에 임시 스피커를 만들고, 소리가 끝나면 알아서 삭제됨
             AudioSource source = GetAvailableSFX3DSource();//가능한 소스 풀에서 갖고오기
-            //좌표일치
-            source.transform.position = targetTr.position;
-            //해당 타겟에 이 오디오소스 붙이기(지속재생용)
-            source.transform.SetParent(targetTr);
+            //좌표일치 (재생 위치 = 총구 등 playPos 기준)
+            source.transform.position = posSource.position;
+            //유닛(생명주기 안전한 대상)에 이 오디오소스 붙이기(지속재생용)
+            //주의: playPos(총구 등 파츠 자식)에 직접 붙이면, 재생 도중 파츠가 교체/파괴될 때
+            //같이 파괴되어 풀 손실 + pendingUnparentSources에서 파괴된 참조 접근 문제가 생길 수 있음.
+            source.transform.SetParent(unitTr);
             source.clip = data.clip;//타입으로 갖고온 클립을 출력할 클립으로 지정
 
             source.minDistance = data.minDistance;

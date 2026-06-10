@@ -2,18 +2,20 @@
 // [외부 참조 가이드]
 // ================================================================
 // ▶ 이펙트 호출용
-//   PlayEffect(EFFECT_TYPE, Vector3 pos, Quaternion rot)
-//     → 파티클 이펙트. 재생 종료 시 자동 반납.
-//     → 프리팹 루트에 EffectAutoReturn 컴포넌트 부착만 하면 됨.
+//   PlayEffectAtPosition(EFFECT_TYPE, Vector3 pos, Quaternion rot, float duration = 0f)
+//     → 월드 좌표 고정 이펙트 (피격, 폭발 등). 위치 변경 없이 그 자리에서 재생.
+//     → duration = 0f : 파티클 이펙트, 재생 종료 시 자동 반납 (EffectAutoReturn 필요)
+//     → duration > 0f : 이미지 등 비파티클 이펙트, duration(초) 후 자동 반납
 //
-//   PlayEffect(EFFECT_TYPE, Vector3 pos, Quaternion rot, float duration)
-//     → 이미지 등 비파티클 이펙트. duration(초) 후 자동 반납.
+//   PlayEffectAtUnit(EFFECT_TYPE, Transform unitTr, Vector3 pos, Quaternion rot, float duration = 0f)
+//     → 유닛에 부착되는 이펙트 (머즐플래시 등). unitTr을 부모로 SetParent되어
+//       이후 유닛이 움직이면 같이 따라감. pos/rot은 생성 시점 위치(총구 등) 기준.
 //
 //   예시)
-//   // 미사일 폭발
-//   VFXManager.Instance.PlayEffect(EFFECT_TYPE.EXPLOSION_MISSILE, transform.position, Quaternion.identity);
-//   // 머즐플래시 (0.05초)
-//   VFXManager.Instance.PlayEffect(EFFECT_TYPE.MUZZLE_BULLET, firePos.position, firePos.rotation, 0.05f);
+//   // 미사일 폭발 (위치 고정)
+//   VFXManager.Instance.PlayEffectAtPosition(EFFECT_TYPE.VFX_EXPLOSION_MISSILE, transform.position, Quaternion.identity);
+//   // 머즐플래시 (유닛에 부착, 0.2초 후 반납)
+//   VFXManager.Instance.PlayEffectAtUnit(EFFECT_TYPE.VFX_BULLET_MUZZLE, _unit.transform, firePos.position, firePos.rotation, 0.2f);
 //
 // ▶ 씬 전환팀 참조용
 //   ReturnAll() : 씬 전환·게임오버 시 GameManager.LoadSceneRoutine()에서 호출
@@ -186,7 +188,14 @@ public class VFXManager : MonoBehaviour
     // duration > 0f          : 지정 시간 후 Update 타이머로 자동 반납
     //                          → 머즐플래시 이미지 등 파티클 아닌 이펙트에 사용
     // =====================================================================
-    public void PlayEffect(EFFECT_TYPE type, Vector3 pos, Quaternion rot, float duration = 0f)
+    /// <summary>
+    /// 해당 좌표에서 표시될 이펙트(피격등 단발)
+    /// </summary>
+    /// <param name="type"></param>
+    /// <param name="pos"></param>
+    /// <param name="rot"></param>
+    /// <param name="duration"></param>
+    public void PlayEffectAtPosition(EFFECT_TYPE type, Vector3 pos, Quaternion rot, float duration = 0f)
     {
         GameObject obj = GetFromPool(type);
         if (obj == null)
@@ -214,12 +223,51 @@ public class VFXManager : MonoBehaviour
         }
     }
 
-    // =====================================================================
-    // ReturnEffect — EffectAutoReturn 콜백 또는 Update 타이머에서 호출
-    //
-    // 이중 반납 방지: activeInHierarchy 체크로 이미 비활성화된 경우 무시
-    // =====================================================================
-    public void ReturnEffect(EFFECT_TYPE type, GameObject obj)
+    /// <summary>
+    /// 유닛에 부착하여 사용될 이펙트들(총알발사등)
+    /// </summary>
+    /// <param name="type"></param>
+    /// <param name="unitTr">부착(SetParent) 대상. 유닛 루트처럼 파츠보다 오래 사는 안전한 transform.</param>
+    /// <param name="pos">생성 시 위치(총구 위치 등)</param>
+    /// <param name="rot">생성 시 회전(총구 방향 등)</param>
+    /// <param name="duration"></param>
+	public void PlayEffectAtUnit(EFFECT_TYPE type, Transform unitTr, Vector3 pos, Quaternion rot, float duration = 0f)
+	{
+		GameObject obj = GetFromPool(type);
+		if (obj == null)
+		{
+			return;
+		}
+
+		obj.transform.SetPositionAndRotation(pos, rot);
+		// 유닛(생명주기 안전한 대상)에 부착 → 이후 유닛이 움직이면 같이 따라감
+		// 주의: 총구(파츠 자식)에 직접 붙이면 파츠 교체/파괴 시 같이 파괴되어 풀 손실됨
+		obj.transform.SetParent(unitTr, true);
+
+		// 파티클 콜백 반납용 컴포넌트에 type 주입 (캐시에서 조회)
+		if (_autoReturnCache.TryGetValue(obj, out EffectAutoReturn autoReturn) && autoReturn != null)
+		{
+			autoReturn.effectType = type;
+		}
+
+		obj.SetActive(true);
+
+		if (duration > 0f)
+		{
+			TimedEffect te;
+			te.obj = obj;
+			te.type = type;
+			te.returnAt = Time.time + duration;
+			_timedEffects.Add(te);
+		}
+	}
+
+	// =====================================================================
+	// ReturnEffect — EffectAutoReturn 콜백 또는 Update 타이머에서 호출
+	//
+	// 이중 반납 방지: activeInHierarchy 체크로 이미 비활성화된 경우 무시
+	// =====================================================================
+	public void ReturnEffect(EFFECT_TYPE type, GameObject obj)
     {
         if (!obj.activeInHierarchy)
         {
@@ -227,6 +275,10 @@ public class VFXManager : MonoBehaviour
         }
 
         obj.SetActive(false);
+
+        // PlayEffectAtUnit으로 유닛에 부착됐던 경우 매니저 자식으로 복귀
+        // (부착 대상에 매달린 채로 풀에 남으면, 추후 그 대상이 파괴될 때 같이 파괴될 수 있음)
+        obj.transform.SetParent(this.transform);
 
         if (_pools.TryGetValue(type, out var queue))
         {

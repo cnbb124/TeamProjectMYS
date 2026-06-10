@@ -17,8 +17,9 @@ using UnityEngine;
 //   if (slot != null) hudManager.SetMissileAmmo(slot.curAmmo, slot.maxAmmo);
 //
 // ▶ 이펙트팀 참조용
-//   ShootBullet() 내부 : 머즐플래시 호출 예정 위치
-//   → VFXManager.Instance.PlayEffect(EFFECT_TYPE.MUZZLE_BULLET, pos, rot, 0.05f)
+//   ShootBullet() 내부 : 머즐플래시 호출 위치
+//   → VFXManager.Instance.PlayEffectAtUnit(EFFECT_TYPE.VFX_BULLET_MUZZLE, _unit.transform, curFirePos.position, curFirePos.rotation, 0.2f)
+//   → 유닛(_unit.transform)에 부착되어 유닛과 같이 움직임. 위치/회전은 호출 순간 총구(curFirePos) 기준.
 // ================================================================
 
 // =====================================================================
@@ -156,7 +157,7 @@ public class WeaponSystem : MonoBehaviour
 				break;
 
 			case PROJECTILE_TYPE.LASER:
-				_sound.PlaySFX3DAtUnit(soundType, _laserFirePos);
+				_sound.PlaySFX3DAtUnit(soundType, _unit.transform, _laserFirePos);
 				ShootLaser();
 				break;
 
@@ -192,7 +193,8 @@ public class WeaponSystem : MonoBehaviour
 		{
 			bulletAnim.PlayFire();
 		}
-		_sound.PlaySFX3DAtUnit(soundType, curFirePos);
+		VFXManager.Instance.PlayEffectAtUnit(EFFECT_TYPE.VFX_BULLET_MUZZLE, _unit.transform, curFirePos.position, curFirePos.rotation, 0.2f);
+		_sound.PlaySFX3DAtUnit(soundType, _unit.transform, curFirePos);
 		Bullet newBullet = _pool.GetBullet();
 		newBullet.Init(curFirePos.position, curFirePos.forward, _unit);
 	}
