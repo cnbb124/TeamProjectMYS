@@ -1173,7 +1173,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   weaponSystem: {fileID: 0}
-  maxHpRemaining: 150
+  maxHpRemaining: 99999
   maxShieldCapacity: 150
   shieldRegainDelay: 5
   shieldRegainRate: 15
@@ -1292,6 +1292,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _defaultLoadout: {fileID: 11400000, guid: 7c2bd1293467d554591b2fc6ec5b62fd, type: 2}
+  _visualRoot: {fileID: 0}
   partSlots: []
 --- !u!114 &3934864504421733446
 MonoBehaviour:
@@ -1312,13 +1313,13 @@ MonoBehaviour:
     animClip: {fileID: 7400000, guid: 193e381484e01b248964a4bb9724bdfd, type: 2}
   - animType: 2
     animClip: {fileID: 7400000, guid: affe0ef733b23c54fa61a859af3c472f, type: 2}
+  - animType: 3
+    animClip: {fileID: 7400000, guid: c58b9d20b24111e4b9f15fb507eb7183, type: 2}
   - animType: 4
-    animClip: {fileID: 0}
+    animClip: {fileID: 7400000, guid: 1a33c9b43f05d4347a47558fc3f27faf, type: 2}
   - animType: 5
     animClip: {fileID: 0}
   - animType: 6
-    animClip: {fileID: 0}
-  - animType: 7
     animClip: {fileID: 0}
 --- !u!95 &7402764472675028080
 Animator:
