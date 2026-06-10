@@ -215,12 +215,28 @@ public class Player : Unit
 		switch (state)
 		{
 			case UNIT_STATE.IDLE:
-				PlayAnim(ANIM_TYPE.IDLE);
+				// 부스트 직후 정지는 관성이 빠지는 느낌이 나도록 블렌드를 길게
+				if (previousState == UNIT_STATE.BOOSTING)
+				{
+					PlayAnim(ANIM_TYPE.IDLE, 0.3f);
+				}
+				else
+				{
+					PlayAnim(ANIM_TYPE.IDLE);
+				}
 				_sound.PlaySFX3DLoop(SOUND_TYPE.SFX_IDLE, this.transform);
 				break;
 
 			case UNIT_STATE.MOVING:
-				PlayAnim(ANIM_TYPE.MOVING);
+				// 부스트 → 일반 이동 전환도 동일하게 블렌드를 길게
+				if (previousState == UNIT_STATE.BOOSTING)
+				{
+					PlayAnim(ANIM_TYPE.MOVING, 0.3f);
+				}
+				else
+				{
+					PlayAnim(ANIM_TYPE.MOVING);
+				}
 				_sound.PlaySFX3DLoop(SOUND_TYPE.SFX_MOVING, this.transform);
 				break;
 

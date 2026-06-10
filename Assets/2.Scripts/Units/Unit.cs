@@ -216,6 +216,8 @@ public abstract class Unit : MonoBehaviour, IDamageable
 
 	[Header("===============<size=14>현재 상태(입력x 참고용)</size>================")]
 	public UNIT_STATE curState = UNIT_STATE.IDLE;
+	// 직전 상태. 전환별로 다른 애니메이션 블렌드(CrossFade duration)를 적용할 때 참조
+	protected UNIT_STATE previousState = UNIT_STATE.IDLE;
 	public int curHpRemaining;
 	public int CurHp => curHpRemaining;//인터페이스 프로퍼티용
 	public int curShieldRemaining;
@@ -282,6 +284,7 @@ public abstract class Unit : MonoBehaviour, IDamageable
 			//현재상태에서 나가는 메섣
 			OnStateExit(curState);
 			//넣은값 적용해주고
+			previousState = curState;
 			curState = value;
 			//들어가는 메서드
 			OnStateEnter(curState);
@@ -492,11 +495,11 @@ public abstract class Unit : MonoBehaviour, IDamageable
 	/// <summary>
 	/// 애니메이션 재생 호출용
 	/// </summary>
-	public void PlayAnim(ANIM_TYPE type)
+	public void PlayAnim(ANIM_TYPE type, float duration = 0.1f)
 	{
 		if (_animCtrl != null)
 		{
-			_animCtrl.Play(type);
+			_animCtrl.Play(type, duration);
 		}
 	}
 

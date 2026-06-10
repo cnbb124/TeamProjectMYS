@@ -28,14 +28,14 @@ public class UnitAnimCtrl : MonoBehaviour
 	}
 
 
-	public void Play(ANIM_TYPE type)
+	public void Play(ANIM_TYPE type, float duration = 0.1f)
 	{
 		AnimationClip clip = animDic.Get(type);
 		if (clip == null)
 		{
 			return;
 		}
-		animator.CrossFade(clip.name, 0.1f);
+		animator.CrossFade(clip.name, duration);
 
 
 	}
