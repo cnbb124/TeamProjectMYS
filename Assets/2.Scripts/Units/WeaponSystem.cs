@@ -62,6 +62,9 @@ public class WeaponSystem : MonoBehaviour
 	private List<Transform> _bulletFirePositions = new List<Transform>();
 	private int _bulletFireIndex = 0;
 
+	[Tooltip("UnitParts 없이 테스트용으로 발사 위치를 직접 지정. Awake 시 _bulletFirePositions에 합류됨.")]
+	[SerializeField] private List<Transform> testBulletFirePositions = new List<Transform>();
+
 
 	// ================== [레이저 설정] ==================
 	// LAUNCHER_LASER 파츠가 RegisterFirePos로 등록. 마지막 등록 위치 사용.
@@ -113,6 +116,15 @@ public class WeaponSystem : MonoBehaviour
 	private void Awake()
 	{
 		_unit = GetComponent<Unit>();
+
+		// 테스트용 발사 위치를 정식 발사 위치 목록에 합류
+		foreach (Transform pos in testBulletFirePositions)
+		{
+			if (pos != null)
+			{
+				_bulletFirePositions.Add(pos);
+			}
+		}
 	}
 
 	private void Start()

@@ -106,6 +106,10 @@ public class UnitParts : MonoBehaviour
             ApplyStatBonuses(slot.equippedPart, 1);
             slot.curPartHp = slot.equippedPart.maxPartHp;
         }
+
+        // Unit.Start()와의 실행순서가 보장되지 않아 cur=max 초기화가 위 보너스 적용 전에 끝났을 수 있음.
+        // 파츠 적용이 끝난 지금 시점 기준으로 cur을 다시 max로 동기화.
+        _unit.RefillToMax();
     }
 
     /// <summary>
@@ -138,6 +142,10 @@ public class UnitParts : MonoBehaviour
             }
             EquipFromDefault(part);
         }
+
+        // Unit.Start()와의 실행순서가 보장되지 않아 cur=max 초기화가 위 보너스 적용 전에 끝났을 수 있음.
+        // 파츠 적용이 끝난 지금 시점 기준으로 cur을 다시 max로 동기화.
+        _unit.RefillToMax();
     }
 
     // DefaultLoadout 전용 장착. 빈 슬롯에 순서대로 채움.

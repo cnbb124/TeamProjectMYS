@@ -123,8 +123,7 @@ public class Player : Unit
 	// Start is called before the first frame update
 	protected override void Start()
 	{
-		base.Start(); //유닛 초기화 호출
-		curFuelRemaining = maxFuelCapacity;
+		base.Start(); //유닛 초기화 호출 (RefillToMax 포함, Player override로 연료까지 채워짐)
 		_input = InputManager.Instance;
 		// 게임 시작 시 1번 슬롯 무기로 초기화
 		weaponSystem.Init();
@@ -635,6 +634,13 @@ public class Player : Unit
 
 
 	// ==================연료 충전==================
+
+	// Unit.RefillToMax + 연료까지 채움. UnitParts가 파츠 스탯보너스(FUEL_MAX 등) 적용 후 호출.
+	public override void RefillToMax()
+	{
+		base.RefillToMax();
+		curFuelRemaining = maxFuelCapacity;
+	}
 
 	/// <summary>
 	/// 연료 부분 충전. 맵 상호작용 오브젝트 등에서 호출.

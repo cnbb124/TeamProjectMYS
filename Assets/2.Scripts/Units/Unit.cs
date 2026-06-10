@@ -172,10 +172,14 @@ public abstract class Unit : MonoBehaviour, IDamageable
 		_pool = PoolManager.Instance;
 		//인스펙터에서 입력된 값 현재 스탯으로 설정
 		//저장 기능 생길시 변경필요.
-		curHpRemaining = maxHpRemaining;
-		curShieldRemaining = maxShieldCapacity;
-		curArmorRemaining = maxArmor;
-		curBoostRemaining = maxBoostCapacity;
+
+
+
+
+		//UnitParts.Start()의 파츠 스탯보너스 적용(max값 변경)과 실행순서가 보장되지 않으므로,
+		//파츠 적용 후 UnitParts에서 RefillToMax()를 한번 더 호출해 cur을 최종 max로 동기화함.
+		//유닛파츠에서 해주긴하는데 유닛파츠없을시 임시적용용.
+		RefillToMax();
 
 		//playerLayer = LayerMask.NameToLayer("UNIT_Player");
 		//enemyLayer = LayerMask.NameToLayer("UNIT_Enemy");
@@ -185,6 +189,16 @@ public abstract class Unit : MonoBehaviour, IDamageable
 		//enemyProjectileLayer = LayerMask.NameToLayer("EnemyProjectile");
 
 		CurState = UNIT_STATE.IDLE;
+	}
+
+	// cur을 max로 채움. UnitParts가 파츠 스탯보너스로 max를 바꾼 직후에도 호출해서 동기화.
+	// 새 STAT_TYPE이 max와 별도의 cur 스냅샷을 갖는 스탯이라면 여기에도 추가할 것.
+	public virtual void RefillToMax()
+	{
+		curHpRemaining = maxHpRemaining;
+		curShieldRemaining = maxShieldCapacity;
+		curArmorRemaining = maxArmor;
+		curBoostRemaining = maxBoostCapacity;
 	}
 
 	// Update is called once per frame
