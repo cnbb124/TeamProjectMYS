@@ -30,7 +30,11 @@ public class Missile : Projectile, IExplodable
 	[Space(5)]
 	[Header("<size=18>[미사일 설정]</size>")]
 	[Header("폭발 범위 세팅")]
+	[Tooltip("Missile의 실제 피해 범위. 변경시 이펙트 크기도 같이 변경됨.")]
 	public float explosionRadius = 8f;
+
+	[Tooltip("VFXManager에 연결된 폭발이펙트용 파티클 원본의 범위 입력. 원본값 입력 후 수정X.")]
+	public float vfxBaseRadius = 8f;
 
 	private Collider[] explosionHits = new Collider[30]; //맞은것들 콜라이더 체크할배열 필요하면 스타트나 이닛쪽으로
 	private HashSet<IDamageable> damagedTargets = new HashSet<IDamageable>(); //중복데미지를 방지하기위한 해쉬셋
@@ -240,7 +244,9 @@ public class Missile : Projectile, IExplodable
 	{
 
 		//이펙트 출력 로직 추가(사운드,파티클)
-		VFXManager.Instance.PlayEffectAtPosition(EFFECT_TYPE.VFX_EXPLOSION_MISSILE, transform.position, Quaternion.identity);
+		//폭발 반경(explosionRadius) 비율에 맞춰 VFX 크기 조절
+		float vfxRatio = explosionInfo.explosionRadius / vfxBaseRadius;
+		VFXManager.Instance.PlayEffectAtPosition(EFFECT_TYPE.VFX_EXPLOSION_MISSILE, transform.position, Quaternion.identity, 0f, Vector3.one * vfxRatio);
 		SoundManager.Instance.PlaySFX3DAtPosition(SOUND_TYPE.SFX_EXPLOSION, transform.position);
 		//맞은것들의 충돌박스 갯수 카운트
 		int hitCount = Physics.OverlapSphereNonAlloc(transform.position, explosionInfo.explosionRadius, explosionHits);

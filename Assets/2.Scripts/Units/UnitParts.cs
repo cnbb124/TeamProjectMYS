@@ -49,6 +49,11 @@ public class UnitParts : MonoBehaviour
     [Header("<size=14>기본 로드아웃 (설정 시 인스펙터 파츠 슬롯 무시)</size>")]
     [SerializeField] private DefaultLoadout _defaultLoadout;
 
+    // 스폰된 파츠 프리팹이 부착될 부모. 닷지/부스트 등 연출 애니메이션이 VIsual을 움직이므로,
+    // 파츠(메쉬+발사위치)도 같이 따라가도록 VIsual 자식으로 부착한다.
+    [Tooltip("미지정 시 \"Visual\" 이름의 자식을 자동 탐색. 못 찾으면 자기 자신(루트)에 부착.")]
+    [SerializeField] private Transform _visualRoot;
+
     [Header("<size=14>파츠 슬롯 (출력용)</size>")]
     public List<PartSlotEntry> partSlots = new List<PartSlotEntry>();
 
@@ -57,6 +62,16 @@ public class UnitParts : MonoBehaviour
         _unit = GetComponent<Unit>();
         _weaponSystem = GetComponent<WeaponSystem>();
         EnsureBaseSlots();
+
+        if (_visualRoot == null)
+        {
+            _visualRoot = transform.Find("Visual");
+            if (_visualRoot == null)
+            {
+                Debug.Log("UnitParts: \"Visual\" 자식을 찾지 못함. 파츠 프리팹을 루트에 부착함");
+                _visualRoot = transform;
+            }
+        }
     }
 
     // ENGINE, FRAME 슬롯이 없으면 자동 생성. 나머지는 프레임이 결정.
@@ -339,7 +354,7 @@ public class UnitParts : MonoBehaviour
             return;
         }
 
-        slot.spawnedInstance = Instantiate(slot.equippedPart.partPrefab, transform);
+        slot.spawnedInstance = Instantiate(slot.equippedPart.partPrefab, _visualRoot);
         slot.spawnedInstance.transform.localPosition = slot.equippedPart.mountOffset;
 
         // WeaponFirePos 마커가 붙은 자식을 전부 찾아 WeaponSystem에 등록

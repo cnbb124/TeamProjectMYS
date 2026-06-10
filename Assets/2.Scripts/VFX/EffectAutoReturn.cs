@@ -23,6 +23,19 @@ public class EffectAutoReturn : MonoBehaviour
 
         if (ps == null)
         {
+            // 자식 ParticleSystem 중 가장 긴 Duration 자동 계산
+            // 더미 PS를 추가하기 전에 계산해야 자기 자신(더미)이 섞이지 않음
+            float maxDuration = 0f;
+            ParticleSystem[] childSystems = GetComponentsInChildren<ParticleSystem>();
+            foreach (ParticleSystem child in childSystems)
+            {
+                float dur = child.main.duration + child.main.startLifetime.constantMax;
+                if (dur > maxDuration)
+                {
+                    maxDuration = dur;
+                }
+            }
+
             // 루트에 PS 없음 → 더미 PS 자동 생성
             ps = gameObject.AddComponent<ParticleSystem>();
             ps.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
@@ -40,18 +53,6 @@ public class EffectAutoReturn : MonoBehaviour
             if (psRenderer != null)
             {
                 psRenderer.enabled = false;
-            }
-
-            // 자식 ParticleSystem 중 가장 긴 Duration 자동 계산
-            float maxDuration = 0f;
-            ParticleSystem[] childSystems = GetComponentsInChildren<ParticleSystem>();
-            foreach (ParticleSystem child in childSystems)
-            {
-                float dur = child.main.duration + child.main.startLifetime.constantMax;
-                if (dur > maxDuration)
-                {
-                    maxDuration = dur;
-                }
             }
 
             var main = ps.main;

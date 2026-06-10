@@ -246,7 +246,26 @@ public class Player : Unit
 				break;
 
 			case UNIT_STATE.DODGE:
-				//PlayAnim(ANIM_TYPE.DODGE_N);
+				// 좌우 입력 있으면 해당 방향, 없으면 좌/우 랜덤
+				if (_input != null && _input.moveInput.x < -0.1f)
+				{
+					PlayAnim(ANIM_TYPE.DODGE_L);
+				}
+				else if (_input != null && _input.moveInput.x > 0.1f)
+				{
+					PlayAnim(ANIM_TYPE.DODGE_R);
+				}
+				else
+				{
+					if (Random.Range(0, 2) == 0)
+					{
+						PlayAnim(ANIM_TYPE.DODGE_L);
+					}
+					else
+					{
+						PlayAnim(ANIM_TYPE.DODGE_R);
+					}
+				}
 				//_sound.PlaySFX3DAtPosition(SOUND_TYPE.)
 				if (_input != null && _input.moveInput.magnitude > 0.1f)
 				{

@@ -2,10 +2,11 @@
 // [외부 참조 가이드]
 // ================================================================
 // ▶ 이펙트 호출용
-//   PlayEffectAtPosition(EFFECT_TYPE, Vector3 pos, Quaternion rot, float duration = 0f)
+//   PlayEffectAtPosition(EFFECT_TYPE, Vector3 pos, Quaternion rot, float duration = 0f, Vector3 scale = default)
 //     → 월드 좌표 고정 이펙트 (피격, 폭발 등). 위치 변경 없이 그 자리에서 재생.
 //     → duration = 0f : 파티클 이펙트, 재생 종료 시 자동 반납 (EffectAutoReturn 필요)
 //     → duration > 0f : 이미지 등 비파티클 이펙트, duration(초) 후 자동 반납
+//     → scale 미지정(default) 시 Vector3.one 적용. 폭발 반경 등에 비례해 이펙트 크기 조절 시 사용.
 //
 //   PlayEffectAtUnit(EFFECT_TYPE, Transform unitTr, Vector3 pos, Quaternion rot, float duration = 0f)
 //     → 유닛에 부착되는 이펙트 (머즐플래시 등). unitTr을 부모로 SetParent되어
@@ -195,7 +196,8 @@ public class VFXManager : MonoBehaviour
     /// <param name="pos"></param>
     /// <param name="rot"></param>
     /// <param name="duration"></param>
-    public void PlayEffectAtPosition(EFFECT_TYPE type, Vector3 pos, Quaternion rot, float duration = 0f)
+    /// <param name="scale">이펙트 크기 배율. 미지정(default) 시 Vector3.one 적용. (예: 폭발 반경 비례 크기 조절)</param>
+    public void PlayEffectAtPosition(EFFECT_TYPE type, Vector3 pos, Quaternion rot, float duration = 0f, Vector3 scale = default)
     {
         GameObject obj = GetFromPool(type);
         if (obj == null)
@@ -204,6 +206,7 @@ public class VFXManager : MonoBehaviour
         }
 
         obj.transform.SetPositionAndRotation(pos, rot);
+        obj.transform.localScale = (scale == Vector3.zero) ? Vector3.one : scale;
 
         // 파티클 콜백 반납용 컴포넌트에 type 주입 (캐시에서 조회)
         if (_autoReturnCache.TryGetValue(obj, out EffectAutoReturn autoReturn) && autoReturn != null)
@@ -279,6 +282,9 @@ public class VFXManager : MonoBehaviour
         // PlayEffectAtUnit으로 유닛에 부착됐던 경우 매니저 자식으로 복귀
         // (부착 대상에 매달린 채로 풀에 남으면, 추후 그 대상이 파괴될 때 같이 파괴될 수 있음)
         obj.transform.SetParent(this.transform);
+
+        // PlayEffectAtPosition의 scale 파라미터로 크기가 바뀌었을 수 있으므로 원본 크기로 복원
+        obj.transform.localScale = Vector3.one;
 
         if (_pools.TryGetValue(type, out var queue))
         {
