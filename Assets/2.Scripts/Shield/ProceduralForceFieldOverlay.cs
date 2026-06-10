@@ -103,6 +103,11 @@ namespace ProceduralForceField
         }
 
         #region Methods
+        // [실드팀/연동 진입점]
+        // 실드 피격 비주얼(쉐이더 이펙트) + 사운드 재생.
+        // hitWorldPosition: 피격 월드 좌표 (DamageInfo.hitPosition 그대로 전달하면 됨).
+        // 호출 위치: Unit.OnHitReaction()에서 curShieldRemaining > 0일 때
+        // shield.GetComponent<ProceduralForceFieldOverlay>().Trigger(info.hitPosition) 형태로 호출 예정.
         public void Trigger(Vector3 hitWorldPosition)
         {
             Debug.Log("Trigger 호출됨!");

@@ -109,6 +109,8 @@ public class SoundManager : MonoBehaviour
 	private Dictionary<Transform, AudioSource> activeLoopSounds = new Dictionary<Transform, AudioSource>();
 	// 3D 효과음 재생을 위한 오디오 소스 풀(Pool)
 	private List<AudioSource> sfx3DPool = new List<AudioSource>();
+	// PlaySFX3DAtUnit으로 유닛에 부착된 단발성 소스 추적 (재생 끝나면 매니저로 unparent)
+	private List<AudioSource> pendingUnparentSources = new List<AudioSource>();
 
 	private void Awake()
 	{
@@ -126,6 +128,25 @@ public class SoundManager : MonoBehaviour
 
 			Debug.LogWarning("중복된 SoundManager 발견. 파괴 후 실행");
 			Destroy(gameObject);
+		}
+	}
+
+	private void Update()
+	{
+		// PlaySFX3DAtUnit으로 유닛에 부착됐던 단발성 소스 중 재생이 끝난 것을 매니저로 회수
+		for (int i = pendingUnparentSources.Count - 1; i >= 0; i--)
+		{
+			AudioSource source = pendingUnparentSources[i];
+
+			//재생중이면 아직 처리 안함
+			if (source.isPlaying)
+			{
+				continue;
+			}
+
+			//대상이 파괴/비활성화 됐어도 매니저 자식으로 복귀시켜 풀에서 재사용 가능하게함
+			source.transform.SetParent(this.transform);
+			pendingUnparentSources.RemoveAt(i);
 		}
 	}
 
@@ -396,6 +417,9 @@ public class SoundManager : MonoBehaviour
             source.loop = false;
             source.Play();
 
+            //재생 끝나면 Update에서 매니저로 unparent 처리
+            pendingUnparentSources.Add(source);
+
         }
     }
 
@@ -413,6 +437,7 @@ public class SoundManager : MonoBehaviour
 		{
 			return;
 		}
+
 		//데이타갖고오기
 		SoundTypeClip data = GetSoundData(type);
 		if (data != null && data.type != SOUND_TYPE.SFX_NONE)

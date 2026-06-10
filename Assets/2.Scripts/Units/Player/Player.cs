@@ -498,8 +498,13 @@ public class Player : Unit
 				CurState = UNIT_STATE.MOVING;
 			}
 		}
-		else
+
+		else//입력없을시.
 		{
+			if (CurState == UNIT_STATE.BOOSTING)
+			{
+				CurState = UNIT_STATE.MOVING;
+			}
 			// 입력 없음 — 관성 드리프트 중이면 현재 상태 유지, 거의 정지 시 IDLE
 			if (_rb.velocity.sqrMagnitude <= 0.1f)
 			{

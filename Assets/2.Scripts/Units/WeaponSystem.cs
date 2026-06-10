@@ -151,12 +151,12 @@ public class WeaponSystem : MonoBehaviour
 					return;
 				}
 				_lastFireBulletTime = Time.time;
-				_sound.PlaySFX3DAtPosition(soundType, _unit.transform.position, 0.7f, 1.2f);
-				ShootBullet();
+				
+				ShootBullet(soundType);
 				break;
 
 			case PROJECTILE_TYPE.LASER:
-				_sound.PlaySFX3DAtPosition(soundType, _unit.transform.position);
+				_sound.PlaySFX3DAtUnit(soundType, _laserFirePos);
 				ShootLaser();
 				break;
 
@@ -178,7 +178,7 @@ public class WeaponSystem : MonoBehaviour
 	/// <summary>
 	/// 총알 — 등록된 발사 위치를 순서대로 교대 발사.
 	/// </summary>
-	private void ShootBullet()
+	private void ShootBullet(SOUND_TYPE soundType)
 	{
 		if (_bulletFirePositions.Count == 0)
 		{
@@ -192,7 +192,7 @@ public class WeaponSystem : MonoBehaviour
 		{
 			bulletAnim.PlayFire();
 		}
-
+		_sound.PlaySFX3DAtUnit(soundType, curFirePos);
 		Bullet newBullet = _pool.GetBullet();
 		newBullet.Init(curFirePos.position, curFirePos.forward, _unit);
 	}

@@ -81,7 +81,11 @@ public abstract class Unit : MonoBehaviour, IDamageable
 	public bool isShieldRegaining = false; //회복중인지 여부
 	private Coroutine _shieldRegenCoroutine;//중간 정지등을 위한 코루틴변수 따로
 											//실드연결용
+	// [실드팀 참조] 실드 비주얼 오브젝트(ProceduralForceFieldOverlay 등 부착된 자식) 연결용.
+	// curShieldRemaining > 0 ↔ SetActive(true), <= 0 ↔ SetActive(false) 로 표시 여부 제어 권장.
+	// 피격 이펙트(Trigger) 호출은 OnHitReaction()에서 처리.
 	public GameObject shield;
+	
 
 	[Header("Armor - 자동회복x")]
 	public int maxArmor;//최대,현재아머수치
@@ -157,6 +161,7 @@ public abstract class Unit : MonoBehaviour, IDamageable
 		_animCtrl = GetComponent<UnitAnimCtrl>();
 		weaponSystem = GetComponent<WeaponSystem>();
 		_unitParts = GetComponent<UnitParts>();
+		
 	}
 
 
@@ -564,6 +569,14 @@ public abstract class Unit : MonoBehaviour, IDamageable
 		else
 		{
 			_playSoundType = GetPlaySoundTypeShield(info);
+
+			// [실드팀 참조 - 실드 피격 비주얼 연동 위치]
+			// curShieldRemaining > 0 분기 = 이번 피격을 실드가 막아낸 경우.
+			 //info.hitPosition (Vector3) = 피격 월드 좌표.
+			
+			// shield 오브젝트에서 ProceduralForceFieldOverlay 가져와서
+			// ex) shield.GetComponent<ProceduralForceFieldOverlay>().Trigger(info.hitPosition);
+			// 호출하면 해당 위치에 실드 피격 이펙트(쉐이더 비주얼+사운드) 재생됨.
 		}
 		_sound.PlaySFX3DAtPosition(_playSoundType, info.hitPosition);
 		//피격 카메라무빙필요
