@@ -16,7 +16,7 @@ public class cs_Map_AsteroidSpawner : MonoBehaviour
     [Header("메시 설정")]
     public Mesh[] asteroidMeshes;
 
-    [Header("머티리얼")]
+    [Header("머티리얼(자동연결)")]
     public Material asteroidMaterial;
 
     [Header("스폰 포인트")]
@@ -90,10 +90,13 @@ public class cs_Map_AsteroidSpawner : MonoBehaviour
                 mr.material = asteroidMaterial;
             }
 
+        Destroy(asteroid.GetComponent<SphereCollider>());
         // 콜라이더
         asteroid.AddComponent<MeshCollider>().sharedMesh = mf.mesh;
-
         // 스크립트 연결
         asteroid.AddComponent<cs_Map_Asteroid>();
+        // 이름이랑 레이어 추가
+        asteroid.name = "Asteroid";
+        asteroid.layer = LayerMask.NameToLayer("Asteroid");
     }
 }

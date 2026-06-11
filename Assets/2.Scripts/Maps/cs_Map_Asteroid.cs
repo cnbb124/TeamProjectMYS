@@ -2,6 +2,12 @@ using UnityEngine;
 
 public class cs_Map_Asteroid : MonoBehaviour
 {
+
+    [Header("소행성 설정")]
+    public int hp = 1000;
+    public GameObject[] dropPrefabs;  // 자원 드랍 프리팹
+    public int dropCount = 3;
+
     private Vector3 moveDirection;
     private float moveSpeed;
     private Vector3 rotationAxis;
@@ -26,5 +32,26 @@ public class cs_Map_Asteroid : MonoBehaviour
 
         /// 자전
         transform.Rotate(rotationAxis, rotationSpeed * Time.deltaTime);
+    }
+
+    public void TakeDamage(int dmg)
+    {
+        hp -= dmg;
+        if (hp <= 0) Break();
+    }
+
+    void Break()
+    {
+        // 자원 드랍
+        for (int i = 0; i < dropCount; i++)
+        {
+            if (dropPrefabs == null || dropPrefabs.Length == 0) break;
+            Instantiate(
+                dropPrefabs[Random.Range(0, dropPrefabs.Length)],
+                transform.position + Random.insideUnitSphere * 5f,
+                Quaternion.identity
+            );
+        }
+        Destroy(gameObject);
     }
 }
