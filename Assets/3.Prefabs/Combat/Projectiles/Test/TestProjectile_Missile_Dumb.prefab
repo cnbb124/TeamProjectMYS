@@ -73,7 +73,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 8267010498333130919}
-  - component: {fileID: 5952914819822619202}
+  - component: {fileID: 7644135080520742239}
   - component: {fileID: 4691003704483487009}
   - component: {fileID: -6605589610897234118}
   - component: {fileID: 66523062952057644}
@@ -101,7 +101,7 @@ Transform:
   - {fileID: 2565471662482564813}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &5952914819822619202
+--- !u!114 &7644135080520742239
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -110,10 +110,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 9090766346527012241}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1ef640c8eb26cf4469218bda8eacd35c, type: 3}
+  m_Script: {fileID: 11500000, guid: 4d6b69b45cff5d447a72f0c34ab2d9e1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxRange: 4000
+  maxRange: 2000
   friendlyFire: 0
   dmgType: 2
   baseDamage: 500
@@ -122,14 +122,14 @@ MonoBehaviour:
   projectileType: 0
   explosionRadius: 300
   vfxBaseRadius: 20
-  turnRate: 90
+  turnRate: 120
   armDistance: 5
   navGain: 3
   targetTr: {fileID: 0}
-  launchSpeed: 30
-  maxSpeed: 725
+  launchSpeed: 10
+  maxSpeed: 900
   curSpeed: 0
-  accelerateTime: 2.25
+  accelerateTime: 1.5
 --- !u!114 &4691003704483487009
 MonoBehaviour:
   m_ObjectHideFlags: 0

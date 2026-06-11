@@ -266,6 +266,7 @@ public class PoolManager : MonoBehaviour
 	{
 		return GetCachedProjectile(POOL_TYPE.LASER) as Laser;
 	}
+
 	/// <summary>
 	/// 클러스터 미사일. 꺼낸 후 반드시 Init() 호출.
 	/// </summary>

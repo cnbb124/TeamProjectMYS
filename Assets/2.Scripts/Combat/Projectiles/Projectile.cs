@@ -72,10 +72,16 @@ public abstract class Projectile : MonoBehaviour
 
         if (traveledDistance >= maxRange)
         {
-            ReturnToPool();
+            OnMaxRange();
         }
 
-      
+
+    }
+
+    //최대사거리 도달시 호출. 기본은 풀반납. 자식에서 폭발등 추가동작 필요시 오버라이드.
+    protected virtual void OnMaxRange()
+    {
+        ReturnToPool();
     }
 
     //활성화시 넣을 정보. 플레이어에서 호출
@@ -184,6 +190,7 @@ public abstract class Projectile : MonoBehaviour
     //온트리거 재정의할 함수들
     protected virtual void OnHit(Collider other)
     {
+		//디버그용
 		IDamageable target = other.GetComponentInParent<IDamageable>();
 		string targetName = (target as MonoBehaviour)?.gameObject.name ?? other.gameObject.name;
 		string hp = target != null ? target.CurHp.ToString() : "N/A";

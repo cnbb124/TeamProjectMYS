@@ -87,8 +87,9 @@ public class WeaponSystem : MonoBehaviour
 	// 현재 선택 슬롯 인덱스
 	private int _curSlotIndex = 0;
 
-	// 외부 참조용 (HUD / AmmoUI). 슬롯 전환 시 자동 갱신.
-	[HideInInspector]
+	// 외부 참조용 (HUD / AmmoUI). 슬롯 전환 시 자동 갱신, 확인용.
+	//[HideInInspector]
+	[Header("현재 장착된 미사일, 외부참조 및 확인용")]
 	public MISSILE_TYPE curMissileType = MISSILE_TYPE.HOMING;
 
 	/// <summary>
@@ -277,8 +278,9 @@ public class WeaponSystem : MonoBehaviour
 				break;
 
 			case MISSILE_TYPE.DUMB:
-				DumbMissile dm = _pool.GetDumbMissile();
-				// dm.Init(firePos.position, firePos.forward, _unit);
+				DumbMissile newDm = _pool.GetDumbMissile();
+				newDm.Init(firePos.position, firePos.forward, _unit);
+			
 				break;
 		}
 	}

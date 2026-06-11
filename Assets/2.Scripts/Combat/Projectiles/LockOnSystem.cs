@@ -94,31 +94,41 @@ public class LockOnSystem : MonoBehaviour
 			case LOCK_ON_MODE.MULTI:
 				UpdateMultiLockMode();
 				break;
-
-			case LOCK_ON_MODE.NONE:
-				UpdateNoneLockMode();
-				break;
 		}
 	}
 
 	/// <summary>
-	/// 락온 모드 변경 업데이트 로직
+	/// 락온 모드 변경 업데이트 로직. 모드가 실제로 바뀐 시점에만 처리.
 	/// </summary>
 	void UpdateLockMode()
 	{
+		LOCK_ON_MODE newMode = currentLockMode;
+
 		switch(weaponSystem.curMissileType)
 		{
 			case MISSILE_TYPE.HOMING:
-				currentLockMode =LOCK_ON_MODE.SINGLE;
+				newMode = LOCK_ON_MODE.SINGLE;
 				break;
 
 			case MISSILE_TYPE.CLUSTER:
-				currentLockMode = LOCK_ON_MODE.MULTI;
+				newMode = LOCK_ON_MODE.MULTI;
 				break;
 
 			case MISSILE_TYPE.DUMB:
-				currentLockMode = LOCK_ON_MODE.NONE;
+				newMode = LOCK_ON_MODE.NONE;
 				break;
+		}
+
+		if (newMode == currentLockMode)
+		{
+			return;
+		}
+
+		currentLockMode = newMode;
+
+		if (currentLockMode == LOCK_ON_MODE.NONE)
+		{
+			ClearLock();
 		}
 	}
 	/// <summary>
@@ -181,13 +191,6 @@ public class LockOnSystem : MonoBehaviour
 		}
 	}
 
-	/// <summary>
-	/// 락온x모드 업데이트 로직
-	/// </summary>
-	void UpdateNoneLockMode()
-	{
-		ClearLock();
-	}
 	private void FindAllTargets()
 	{
 		//현재 유닛에서 락온사거리까지, 락온목표레이어를 저장
