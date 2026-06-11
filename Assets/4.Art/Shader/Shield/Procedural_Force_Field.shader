@@ -31,6 +31,7 @@ Shader "FX/Procedural Force Field"
         _RevealEdgeColor("Reveal Edge Color", Color) = (0.85, 1.00, 1.00, 1)
         _RevealEdgeIntensity("Reveal Edge Intensity", Range(0, 20)) = 6.0
         _RevealEdgeAlpha("Reveal Edge Alpha", Range(0, 1)) = 0.25
+        _RevealMaxDistance("Reveal Max Distance", Float) = 0.5
 
         [Header(Visibility)]
         _DefaultVisible("Default Visible", Range(0, 1)) = 1.0
@@ -99,6 +100,7 @@ Shader "FX/Procedural Force Field"
             float _RevealDuration;
             float _RevealStart;
             float _RevealSoftness;
+            float _RevealMaxDistance;
             fixed4 _RevealEdgeColor;
             float _RevealEdgeIntensity;
             float _RevealEdgeAlpha;
@@ -207,20 +209,17 @@ Shader "FX/Procedural Force Field"
 
                 float dur = max(_RevealDuration, 0.0001);
                 float p = saturate(hitAge / dur);
+                float fade = 1.0 - smoothstep(0.7, 1.0, p);
 
-                float maxR = max(_BoundsRadiusWS, 0.0001);
-                float dist01 = saturate(distance(worldPos, hitPos) / maxR);
+                // 충돌 지점에서의 거리
+                float dist = distance(worldPos, hitPos);
+                float maxR = max(_RevealMaxDistance, 0.0001);
 
-                float start01 = saturate(_RevealStart);
-                float cur01 = lerp(start01, 1.0, p);
+                // 반경 안에만 보이고 퍼지지 않음
+                float reveal = step(dist, maxR) * fade;
 
-                float soft01 = max(_RevealSoftness, 0.0001);
-
-                float reveal = 1.0 - smoothstep(cur01, cur01 + soft01, dist01);
-
-                float edge = 1.0 - smoothstep(0.0, soft01, abs(dist01 - cur01));
-                float edgeFade = 1.0 - smoothstep(0.85, 1.0, p);
-                edgeWave = edge * edgeFade * hasHit;
+                float edge = smoothstep(maxR * 0.8, maxR, dist) * (1.0 - step(dist, maxR * 0.8));
+                edgeWave = edge * fade * hasHit;
 
                 return saturate(reveal * hasHit);
             }
@@ -343,7 +342,7 @@ Shader "FX/Procedural Force Field"
                 float3 baseCol = _BaseColor.rgb * (0.55 + 0.45 * n);
                 float3 fieldCol = baseCol + bandCol + rim + hitCol + edgeCol;
 
-                float totalMask = reveal * fadeMask;
+                float totalMask = reveal;  // fadeMask 제거 - reveal만으로 충돌 지점 표시
 
                 float3 dissolveEdgeCol = _DissolveEdgeColor.rgb * edge * _DissolveEdgeIntensity;
                 float3 col = fieldCol * totalMask + dissolveEdgeCol * reveal;

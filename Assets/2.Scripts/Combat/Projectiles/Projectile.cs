@@ -144,7 +144,7 @@ public abstract class Projectile : MonoBehaviour
 
     protected virtual void OnTriggerEnter(Collider other)
     {
-       
+
         //Debug.Log($"OnTrigger발생, 레이어: {LayerMask.LayerToName(other.gameObject.layer)}");
 
         //다른 시야감지용 트리거와 충돌방지.차후 수정필요할수도.
@@ -181,12 +181,12 @@ public abstract class Projectile : MonoBehaviour
     //온트리거 재정의할 함수들
     protected virtual void OnHit(Collider other)
     {
-		//디버그용
-		IDamageable target = other.GetComponentInParent<IDamageable>();
-		string targetName = (target as MonoBehaviour)?.gameObject.name ?? other.gameObject.name;
-		string hp = target != null ? target.CurHp.ToString() : "N/A";
-		Debug.Log($"[OnHit] 피격 대상: {targetName} | 레이어: {LayerMask.LayerToName(other.gameObject.layer)} | HP: {hp}");
-	}
+        //디버그용
+        IDamageable target = other.GetComponentInParent<IDamageable>();
+        string targetName = (target as MonoBehaviour)?.gameObject.name ?? other.gameObject.name;
+        string hp = target != null ? target.CurHp.ToString() : "N/A";
+        Debug.Log($"[OnHit] 피격 대상: {targetName} | 레이어: {LayerMask.LayerToName(other.gameObject.layer)} | HP: {hp}");
+    }
 
 
 
@@ -222,8 +222,8 @@ public abstract class Projectile : MonoBehaviour
             type = currentDmgType,
             damageAmount = damage,
             isCritical = critical,
-            hitPosition = targetCollider.transform.position,
-            hitDiriection = (targetCollider.transform.position - transform.position).normalized,
+            hitPosition = targetCollider.ClosestPoint(transform.position),
+            hitDiriection = (targetCollider.ClosestPoint(transform.position) - transform.position).normalized,
             attacker = this.attacker != null ? this.attacker.gameObject : null
         };
 
@@ -258,8 +258,8 @@ public abstract class Projectile : MonoBehaviour
             type = currentDmgType,
             damageAmount = damage,
             isCritical = critical,
-            hitPosition = targetCollider.transform.position,
-            hitDiriection = (targetCollider.transform.position - transform.position).normalized,
+            hitPosition = targetCollider.ClosestPoint(transform.position),
+            hitDiriection = (targetCollider.ClosestPoint(transform.position) - transform.position).normalized,
             attacker = this.attacker != null ? this.attacker.gameObject : null
         };
         target.TakeDamage(damageInfo);
@@ -283,8 +283,8 @@ public abstract class Projectile : MonoBehaviour
             type = currentDmgType,
             damageAmount = damage,
             isCritical = critical,
-            hitPosition = explosionCenter,
-            hitDiriection = (targetCollider.transform.position - explosionCenter).normalized,
+            hitPosition = targetCollider.ClosestPoint(explosionCenter),  // 변경 260611
+            hitDiriection = (targetCollider.ClosestPoint(explosionCenter) - explosionCenter).normalized,  // 변경 260611
             attacker = this.attacker != null ? this.attacker.gameObject : null,
             aoeRadius = aoeRadius
         };

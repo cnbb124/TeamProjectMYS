@@ -339,6 +339,7 @@ public class Player : Unit
 	// 피격 반동 - 카메라 쉐이크, 넉백 등
 	protected override void OnHitReaction(DamageInfo info)
 	{
+		 base.OnHitReaction(info);
 		// 크리티컬이면 강한 쉐이크
 		// ex. if (info.isCritical) CameraShake.Strong(); else CameraShake.Light();
 	}
