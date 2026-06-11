@@ -135,7 +135,7 @@ GameObject:
   - component: {fileID: 24786937}
   m_Layer: 7
   m_Name: TestUnit_Enemy2
-  m_TagString: Untagged
+  m_TagString: Enemy
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -319,7 +319,7 @@ GameObject:
   - component: {fileID: 127867189}
   - component: {fileID: 127867190}
   - component: {fileID: 127867191}
-  m_Layer: 14
+  m_Layer: 13
   m_Name: HitBox_Enemy1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -439,6 +439,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1788722382}
     m_Modifications:
+    - target: {fileID: 1161755328960943635, guid: a7897ad853ae9d6458830c653646215c, type: 3}
+      propertyPath: targetLayerMask.m_Bits
+      value: 8192
+      objectReference: {fileID: 0}
     - target: {fileID: 3107650116710039119, guid: a7897ad853ae9d6458830c653646215c, type: 3}
       propertyPath: m_Name
       value: TestUnit_Player
@@ -682,7 +686,7 @@ GameObject:
   - component: {fileID: 480654193}
   - component: {fileID: 480654194}
   - component: {fileID: 480654195}
-  m_Layer: 14
+  m_Layer: 13
   m_Name: HitBox_Enemy2
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1182,7 +1186,7 @@ GameObject:
   - component: {fileID: 901203466}
   m_Layer: 7
   m_Name: TestUnit_Enemy1Gun
-  m_TagString: Untagged
+  m_TagString: Enemy
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -2662,7 +2666,7 @@ GameObject:
   - component: {fileID: 1870226035}
   m_Layer: 7
   m_Name: TestUnit_MovingEnemy
-  m_TagString: Untagged
+  m_TagString: Enemy
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -3017,7 +3021,7 @@ GameObject:
   - component: {fileID: 2083584578}
   - component: {fileID: 2083584579}
   - component: {fileID: 2083584580}
-  m_Layer: 14
+  m_Layer: 13
   m_Name: HitBox_MovingEnemy
   m_TagString: Untagged
   m_Icon: {fileID: 0}

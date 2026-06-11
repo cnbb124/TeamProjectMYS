@@ -224,6 +224,11 @@ public class LockOnSystem : MonoBehaviour
 			{
 				continue;
 			}
+			//같은팀인지 아닌지(태그로)
+			if (ownerUnit != null && parentUnit.gameObject.tag == ownerUnit.gameObject.tag)
+			{
+				continue;
+			}
 
 			// 검증이 완료되면 HitBox의 좌표를 락온 대상으로 등록
 			if (!TargetsInLockonRange.Contains(hitbox.transform))

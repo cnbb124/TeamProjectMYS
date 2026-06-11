@@ -32,8 +32,7 @@ public enum LAYER_TYPE
     //임시
     Trigger_DetectionRange = 11,
     Trigger_LockonRange = 12,
-    HitBox_Player = 13,
-    HitBox_Enemy = 14,
+    HitBox = 13,
 }
 
 

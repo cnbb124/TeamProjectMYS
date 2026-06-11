@@ -125,24 +125,15 @@ public abstract class Projectile : MonoBehaviour
     }
 
 
-    //같은팀인지 체크
+    //같은팀인지 체크 (공격자와 피격대상 루트의 태그 비교, Player/Enemy/Neutral)
     protected bool IsSameTeam(Collider other)
     {
-
-        //이 투사체가 플레이어 투사체고,부딪힌놈이 플레이어면 무ㅡ시
-        if (gameObject.layer == (int)LAYER_TYPE.Projectile_Player &&
-            other.gameObject.layer == (int)LAYER_TYPE.Unit_Player)
+        if (attacker == null)
         {
-            return true;
-        }
-        //이투사체가 적의 투사체고 맞은놈이 적이면
-        if (gameObject.layer == (int)LAYER_TYPE.Projectile_Enemy &&
-            other.gameObject.layer == (int)LAYER_TYPE.Unit_Enemy)
-        {
-            return true;
+            return false;
         }
 
-        return false;
+        return attacker.gameObject.tag == other.transform.root.tag;
     }
 
 
@@ -170,16 +161,16 @@ public abstract class Projectile : MonoBehaviour
         //}
 
         //맞은게 히트박스가 아니면 죄다 취소
-        if (other.gameObject.layer != (int)LAYER_TYPE.HitBox_Player && other.gameObject.layer != (int)LAYER_TYPE.HitBox_Enemy)
+        if (other.gameObject.layer != (int)LAYER_TYPE.HitBox)
         {
             return;
         }
 
-        // 맞은 대상의 최상위 Unit 컴포넌트
-        Unit hitUnit = other.GetComponentInParent<Unit>();
+        // 맞은 대상이 데미지를 받을 수 있는지 (Unit 한정 아님 - IDamageable 전부)
+        IDamageable target = other.GetComponentInParent<IDamageable>();
 
-        //대상 Unit이 존재시, 발사자 본인 아닐 경우에만 OnHit 발생
-        if (hitUnit != null && hitUnit != attacker)
+        //대상이 존재하고, 발사자 본인이 아닐 경우에만 OnHit 발생
+        if (target != null && (target as MonoBehaviour)?.gameObject != attacker?.gameObject)
         {
             OnHit(other);
         }
