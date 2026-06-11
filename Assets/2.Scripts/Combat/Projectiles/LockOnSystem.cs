@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 
 // =====================================================================
@@ -17,6 +18,7 @@ public class LockOnSystem : MonoBehaviour
 	[Header("현재 락온 모드 (미사일 종류에 따라 변경)")]
 	//플레이어에서 장비되는 미사일따라 스위칭해서 입력할것.
 	public LOCK_ON_MODE currentLockMode = LOCK_ON_MODE.SINGLE;
+	private WeaponSystem weaponSystem;
 
 	[Header("멀티 락온 시 최대 동시 락온 개수")]
 	public int maxMultiLockCount = 4;
@@ -67,6 +69,7 @@ public class LockOnSystem : MonoBehaviour
 	private void Awake()
 	{
 		ownerUnit = GetComponent<Unit>();
+		weaponSystem = GetComponent<WeaponSystem>();
 	}
 
 	private void Update()
@@ -79,6 +82,7 @@ public class LockOnSystem : MonoBehaviour
 			ClearLock();
 			return;
 		}
+		UpdateLockMode();
 
 		// 선택된 모드에 따라 처리 로직 분리
 		switch (currentLockMode)
@@ -90,9 +94,33 @@ public class LockOnSystem : MonoBehaviour
 			case LOCK_ON_MODE.MULTI:
 				UpdateMultiLockMode();
 				break;
+
+			case LOCK_ON_MODE.NONE:
+				UpdateNoneLockMode();
+				break;
 		}
 	}
 
+	/// <summary>
+	/// 락온 모드 변경 업데이트 로직
+	/// </summary>
+	void UpdateLockMode()
+	{
+		switch(weaponSystem.curMissileType)
+		{
+			case MISSILE_TYPE.HOMING:
+				currentLockMode =LOCK_ON_MODE.SINGLE;
+				break;
+
+			case MISSILE_TYPE.CLUSTER:
+				currentLockMode = LOCK_ON_MODE.MULTI;
+				break;
+
+			case MISSILE_TYPE.DUMB:
+				currentLockMode = LOCK_ON_MODE.NONE;
+				break;
+		}
+	}
 	/// <summary>
 	/// 단일 락온 모드 업데이트 로직
 	/// </summary>
@@ -153,6 +181,13 @@ public class LockOnSystem : MonoBehaviour
 		}
 	}
 
+	/// <summary>
+	/// 락온x모드 업데이트 로직
+	/// </summary>
+	void UpdateNoneLockMode()
+	{
+		ClearLock();
+	}
 	private void FindAllTargets()
 	{
 		//현재 유닛에서 락온사거리까지, 락온목표레이어를 저장

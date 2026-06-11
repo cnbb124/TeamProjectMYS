@@ -277,7 +277,7 @@ public class WeaponSystem : MonoBehaviour
 				break;
 
 			case MISSILE_TYPE.DUMB:
-				// DumbMissile dm = _pool.GetDumbMissile();
+				DumbMissile dm = _pool.GetDumbMissile();
 				// dm.Init(firePos.position, firePos.forward, _unit);
 				break;
 		}

@@ -445,7 +445,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 1295354817333113809, guid: a7897ad853ae9d6458830c653646215c, type: 3}
       propertyPath: maxHpRemaining
-      value: 200
+      value: 5000
       objectReference: {fileID: 0}
     - target: {fileID: 3107650116710039119, guid: a7897ad853ae9d6458830c653646215c, type: 3}
       propertyPath: m_Name
@@ -494,6 +494,26 @@ PrefabInstance:
     - target: {fileID: 7897952812583820154, guid: a7897ad853ae9d6458830c653646215c, type: 3}
       propertyPath: fireMissileDelay
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7897952812583820154, guid: a7897ad853ae9d6458830c653646215c, type: 3}
+      propertyPath: missileSlots.Array.size
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 7897952812583820154, guid: a7897ad853ae9d6458830c653646215c, type: 3}
+      propertyPath: missileSlots.Array.data[1].type
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 7897952812583820154, guid: a7897ad853ae9d6458830c653646215c, type: 3}
+      propertyPath: missileSlots.Array.data[2].type
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7897952812583820154, guid: a7897ad853ae9d6458830c653646215c, type: 3}
+      propertyPath: missileSlots.Array.data[2].curAmmo
+      value: 555
+      objectReference: {fileID: 0}
+    - target: {fileID: 7897952812583820154, guid: a7897ad853ae9d6458830c653646215c, type: 3}
+      propertyPath: missileSlots.Array.data[2].maxAmmo
+      value: 555
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -1172,30 +1192,6 @@ PrefabInstance:
     - target: {fileID: 7958776009055819432, guid: b6e739d74b36d7e4b991318bcb2d7f2d, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 8014826492725034353, guid: b6e739d74b36d7e4b991318bcb2d7f2d, type: 3}
-      propertyPath: soundList.Array.size
-      value: 8
-      objectReference: {fileID: 0}
-    - target: {fileID: 8014826492725034353, guid: b6e739d74b36d7e4b991318bcb2d7f2d, type: 3}
-      propertyPath: soundList.Array.data[7].clip
-      value: 
-      objectReference: {fileID: 8300000, guid: 55f51ee6743d6a14fb9850cd88f7bf5f, type: 3}
-    - target: {fileID: 8014826492725034353, guid: b6e739d74b36d7e4b991318bcb2d7f2d, type: 3}
-      propertyPath: soundList.Array.data[7].type
-      value: 24
-      objectReference: {fileID: 0}
-    - target: {fileID: 8014826492725034353, guid: b6e739d74b36d7e4b991318bcb2d7f2d, type: 3}
-      propertyPath: soundList.Array.data[7].maxDistance
-      value: 200
-      objectReference: {fileID: 0}
-    - target: {fileID: 8014826492725034353, guid: b6e739d74b36d7e4b991318bcb2d7f2d, type: 3}
-      propertyPath: soundList.Array.data[7].minDistance
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 8014826492725034353, guid: b6e739d74b36d7e4b991318bcb2d7f2d, type: 3}
-      propertyPath: soundList.Array.data[7].volumeScale
-      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

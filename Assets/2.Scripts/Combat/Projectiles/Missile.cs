@@ -169,7 +169,7 @@ public class Missile : Projectile, IExplodable
 		}
 		else
 		{
-			// 계산된 정상 속도를 유도 로직에 전달합니다.
+			// 계산된 정상 속도를 유도 로직에 전달
 			Steer(targetVelocity);
 		}
 
@@ -183,8 +183,8 @@ public class Missile : Projectile, IExplodable
 		Vector3 toTarget = targetTr.position - transform.position;
 		float dist = toTarget.magnitude;
 
-		// 타겟과 일정 거리 이내로 좁혀지면 미사일이 맴도는 현상(Orbiting) 방지
-		// 거리가 가까울 때는 복잡한 예측을 버리고 타겟을 향해 즉시 내리꽂도록 강제합니다.
+		//타겟과 일정 거리 이내로 좁혀지면 미사일이 맴도는 현상(Orbiting) 방지
+		//거리가 가까울 때는 복잡한 예측을 버리고 타겟을 향해 즉시 내리꽂도록 강제
 		if (dist < 4.0f)
 		{
 			Vector3 finalDir = Vector3.RotateTowards(transform.forward, toTarget.normalized, turnRate * 2f * Mathf.Deg2Rad * Time.deltaTime, 0f);
