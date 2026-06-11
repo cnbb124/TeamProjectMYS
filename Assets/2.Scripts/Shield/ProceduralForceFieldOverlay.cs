@@ -23,9 +23,9 @@ namespace ProceduralForceField
         [SerializeField, Min(0.01f)] private float _localRevealRadius = 0.5f;
         
 
-        [Header("Sound Settings")]
-        [SerializeField] private AudioSource _audioSource;
-        [SerializeField] private AudioClip _impactClip;
+        // [Header("Sound Settings")]
+        // [SerializeField] private AudioSource _audioSource;
+        // [SerializeField] private AudioClip _impactClip;
 
         private MaterialPropertyBlock _propertyBlock;
 
@@ -115,9 +115,9 @@ namespace ProceduralForceField
 
             if (_forceFieldHit == null || _overlayRenderer == null) return;
 
-            // 사운드
-            if (_audioSource != null && _impactClip != null)
-                _audioSource.PlayOneShot(_impactClip);
+            // // 기존 사운드 
+            // if (_audioSource != null && _impactClip != null)
+            //     _audioSource.PlayOneShot(_impactClip);
 
             if (!_overlayRenderer.enabled)
                 _overlayRenderer.enabled = true;
