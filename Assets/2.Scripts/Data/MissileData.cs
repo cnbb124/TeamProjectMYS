@@ -1,31 +1,6 @@
-// 공통 베이스
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
-
-public abstract class ProjectileData : ItemData
-{
-	[Header("공통 전투 수치")]
-	[Tooltip("기본 데미지")]
-	public int damage;
-	[Tooltip("최대 사거리")]
-	public float maxRange;
-	[Tooltip("관통탄 여부")]
-	public bool ignoreArmor;
-	[Tooltip("실드 추가뎀 비율")]
-	public float shieldDamageMultiplier = 1f;
-	[Tooltip("피격시 데미지의 종류")]
-	public DAMAGE_TYPE damageType;
-	[Tooltip("피격시 VFX매니저에서 실행할 이펙트 종류")]
-	public EFFECT_TYPE hitEffect;     // VFX_BULLETHIT 등
-	
-}
-
-// 총알 전용
-[CreateAssetMenu(fileName = "New Bullet Data", menuName = "Create Data/Item/Projectile Data/Bullet")]
-public class BulletData : ProjectileData
-{
-	[Tooltip("총알 날아가는 속도")]
-	public float speed;
-}
 
 // 미사일 전용
 [CreateAssetMenu(fileName = "New Missile Data", menuName = "Create Data/Item/Projectile Data/Missile")]
@@ -40,7 +15,7 @@ public class MissileData : ProjectileData
 	[Tooltip("발사 시작 속도. accelerateTime 동안 maxSpeed로 가속.")]
 	public float launchSpeed = 10f;
 	[Tooltip("최대 도달 속도")]
-	public float maxSpeed;
+	public float maxSpeed = 500f;
 	[Tooltip("최고 속도 도달까지 걸리는 시간 (초).")]
 	public float accelerateTime = 0.8f;
 	[Tooltip("Missile의 실제 피해 범위. 변경시 이펙트 크기도 같이 변경됨.")]
