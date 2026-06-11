@@ -41,6 +41,7 @@ public class cs_Map_AsteroidSpawner : MonoBehaviour
 
         /// 머티리얼 자동 넣기
         asteroidMaterial = Resources.Load<Material>("Materials/Mat_AsteroidMaterial");
+
     }
 
     private void Start()
@@ -53,50 +54,41 @@ public class cs_Map_AsteroidSpawner : MonoBehaviour
 
     void SpawnAsteroid()
     {
-        // 스폰 포인트 중 랜덤 선택
-        Vector3 center = transform.position;
-        if (spawnPoints != null && spawnPoints.Length > 0)
-            center = spawnPoints[Random.Range(0, spawnPoints.Length)].position;
+            Vector3 center = transform.position;
+            if (spawnPoints != null && spawnPoints.Length > 0)
+                center = spawnPoints[Random.Range(0, spawnPoints.Length)].position;
+            Vector3 pos = center + Random.insideUnitSphere * spawnRadius;
 
-        Vector3 pos = center + Random.insideUnitSphere * spawnRadius;
+            GameObject asteroid = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            asteroid.transform.position = pos;
+            float size = Random.Range(minSize, maxSize);
+            asteroid.transform.localScale = Vector3.one * size;
+            asteroid.transform.rotation = Random.rotation;
+            asteroid.transform.parent = this.transform;
 
-        /// 소행성 생성
-        GameObject asteroid = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-        asteroid.transform.position = pos;
-
-
-        // 랜덤 크기
-        float size = Random.Range(minSize, maxSize);
-        asteroid.transform.localScale = Vector3.one * size;
-
-
-        // 랜덤 회전
-        asteroid.transform.rotation = Random.rotation;
-
-        /// 부모 설정
-        asteroid.transform.parent = this.transform;
-
-        // 메시 붙이기
-        MeshFilter mf = asteroid.GetComponent<MeshFilter>();
-        MeshRenderer mr = asteroid.GetComponent<MeshRenderer>();
-
-        if (asteroidMeshes != null && asteroidMeshes.Length > 0)
-            {
+            MeshFilter mf = asteroid.GetComponent<MeshFilter>();
+            MeshRenderer mr = asteroid.GetComponent<MeshRenderer>();
+            if (asteroidMeshes != null && asteroidMeshes.Length > 0)
                 mf.mesh = asteroidMeshes[Random.Range(0, asteroidMeshes.Length)];
-            }
-
-        if (asteroidMaterial != null)
-            {
+            if (asteroidMaterial != null)
                 mr.material = asteroidMaterial;
-            }
 
-        Destroy(asteroid.GetComponent<SphereCollider>());
-        // 콜라이더
-        asteroid.AddComponent<MeshCollider>().sharedMesh = mf.mesh;
-        // 스크립트 연결
-        asteroid.AddComponent<cs_Map_Asteroid>();
-        // 이름이랑 레이어 추가
-        asteroid.name = "Asteroid";
-        asteroid.layer = LayerMask.NameToLayer("Asteroid");
-    }
+            Destroy(asteroid.GetComponent<SphereCollider>());
+            asteroid.AddComponent<MeshCollider>().sharedMesh = mf.mesh;
+            cs_Map_Asteroid asteroidScript = asteroid.AddComponent<cs_Map_Asteroid>();
+
+            asteroid.name = "Asteroid";
+            asteroid.tag = "Asteroid";
+
+            // HitBox 자식 오브젝트
+            GameObject hitboxObj = new GameObject("HitBox");
+            hitboxObj.transform.parent = asteroid.transform;
+            hitboxObj.transform.localPosition = Vector3.zero;
+            hitboxObj.transform.localScale = Vector3.one;
+            hitboxObj.layer = LayerMask.NameToLayer("HitBox");
+            SphereCollider sc = hitboxObj.AddComponent<SphereCollider>();
+            sc.isTrigger = true;
+            sc.radius = 0.5f;
+            hitboxObj.AddComponent<HitBox>();
+        }
 }

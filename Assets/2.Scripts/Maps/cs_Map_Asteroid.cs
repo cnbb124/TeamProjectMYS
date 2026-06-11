@@ -4,8 +4,7 @@ public class cs_Map_Asteroid : MonoBehaviour
 {
 
     [Header("소행성 설정")]
-    public int hp = 1000;
-    public GameObject[] dropPrefabs;  // 자원 드랍 프리팹
+    public float hp = 1000;
     public int dropCount = 3;
 
     private Vector3 moveDirection;
@@ -34,7 +33,7 @@ public class cs_Map_Asteroid : MonoBehaviour
         transform.Rotate(rotationAxis, rotationSpeed * Time.deltaTime);
     }
 
-    public void TakeDamage(int dmg)
+    public void TakeDamage(float dmg)
     {
         hp -= dmg;
         if (hp <= 0) Break();
@@ -42,15 +41,15 @@ public class cs_Map_Asteroid : MonoBehaviour
 
     void Break()
     {
-        // 자원 드랍
+        Debug.Log("소행성 파괴!");
         for (int i = 0; i < dropCount; i++)
         {
-            if (dropPrefabs == null || dropPrefabs.Length == 0) break;
-            Instantiate(
-                dropPrefabs[Random.Range(0, dropPrefabs.Length)],
-                transform.position + Random.insideUnitSphere * 5f,
-                Quaternion.identity
-            );
+            GameObject item = PoolManager.Instance.Get(POOL_TYPE.ITEM_ASTEROID);
+            Debug.Log($"아이템 가져옴: {item}");
+
+            if (item == null) break;
+            item.transform.position = transform.position + Random.insideUnitSphere * 50f;
+            Debug.Log($"아이템 위치: {item.transform.position}");
         }
         Destroy(gameObject);
     }

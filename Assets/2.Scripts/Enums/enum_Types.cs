@@ -175,6 +175,7 @@ public enum POOL_TYPE
 
     // 아이템 / 이펙트 (추후 세분화)
     ITEM,
+    ITEM_ASTEROID,
     VFX,
 }
 /// <summary>

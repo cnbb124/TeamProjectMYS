@@ -491,6 +491,22 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 75285212269006569, guid: 6c496b1493a584e4db5940e2753f9917, type: 3}
+      propertyPath: poolConfigs.Array.size
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 75285212269006569, guid: 6c496b1493a584e4db5940e2753f9917, type: 3}
+      propertyPath: poolConfigs.Array.data[4].prefab
+      value: 
+      objectReference: {fileID: 7353412572152468573, guid: 662014c1d60d37649a14e53e1c967c5a, type: 3}
+    - target: {fileID: 75285212269006569, guid: 6c496b1493a584e4db5940e2753f9917, type: 3}
+      propertyPath: poolConfigs.Array.data[4].poolType
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 75285212269006569, guid: 6c496b1493a584e4db5940e2753f9917, type: 3}
+      propertyPath: poolConfigs.Array.data[4].initialSize
+      value: 20
+      objectReference: {fileID: 0}
     - target: {fileID: 4353218582667052855, guid: 6c496b1493a584e4db5940e2753f9917, type: 3}
       propertyPath: m_Name
       value: PoolManager
@@ -921,10 +937,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8489344cb859b9946b7b2b00ec4fb3df, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  asteroidCount: 50
-  spawnRadius: 500
-  minSize: 10
-  maxSize: 40
+  asteroidCount: 1000
+  spawnRadius: 4000
+  minSize: 20
+  maxSize: 60
   minSpeed: 0.1
   maxSpeed: 0.5
   asteroidMeshes:
@@ -943,7 +959,7 @@ Transform:
   m_GameObject: {fileID: 876777015}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -38.1, y: 23.97, z: 52.2}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -1278,6 +1294,10 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.y
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 4407257845662977612, guid: f45f3c5144b7ed64d9c1338fc3bdf571, type: 3}
+      propertyPath: player
+      value: 
+      objectReference: {fileID: 6433512455000640539}
     - target: {fileID: 4434897746485737040, guid: f45f3c5144b7ed64d9c1338fc3bdf571, type: 3}
       propertyPath: m_AnchorMax.y
       value: 0
@@ -2128,6 +2148,63 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a547208e588a6c04ebc7cf397cd9034d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!1001 &7860711731681225773
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 2561589673221747684, guid: 9a8d2f15c17f17a40ae545f547848322, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 203.8
+      objectReference: {fileID: 0}
+    - target: {fileID: 2561589673221747684, guid: 9a8d2f15c17f17a40ae545f547848322, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2561589673221747684, guid: 9a8d2f15c17f17a40ae545f547848322, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 166.1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2561589673221747684, guid: 9a8d2f15c17f17a40ae545f547848322, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2561589673221747684, guid: 9a8d2f15c17f17a40ae545f547848322, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2561589673221747684, guid: 9a8d2f15c17f17a40ae545f547848322, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2561589673221747684, guid: 9a8d2f15c17f17a40ae545f547848322, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2561589673221747684, guid: 9a8d2f15c17f17a40ae545f547848322, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2561589673221747684, guid: 9a8d2f15c17f17a40ae545f547848322, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2561589673221747684, guid: 9a8d2f15c17f17a40ae545f547848322, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6443261429966239528, guid: 9a8d2f15c17f17a40ae545f547848322, type: 3}
+      propertyPath: m_Name
+      value: EnemyWorker
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 9a8d2f15c17f17a40ae545f547848322, type: 3}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -2147,3 +2224,4 @@ SceneRoots:
   - {fileID: 1741412547}
   - {fileID: 322948643}
   - {fileID: 876777017}
+  - {fileID: 7860711731681225773}
