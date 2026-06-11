@@ -70,7 +70,7 @@ public class EnemyWorker : MonoBehaviour
         
         // 소행성 반지름 기준으로 도착 판정
         float asteroidRadius = targetAsteroid.localScale.x * 0.5f;
-        float arrivalDist = asteroidRadius + 12f; // 소행성과 여유 거리
+        float arrivalDist = asteroidRadius + 20f; // 소행성과 여유 거리
 
         float dist = Vector3.Distance(transform.position, targetAsteroid.position);
         if (dist <= arrivalDist)

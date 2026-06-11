@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 6258669860080028036}
   - component: {fileID: 2131478454067463769}
   - component: {fileID: 7590837182277577013}
+  - component: {fileID: 7279656869056874599}
   m_Layer: 0
   m_Name: Sphere
   m_TagString: Untagged
@@ -105,6 +106,20 @@ SphereCollider:
   serializedVersion: 3
   m_Radius: 0.5
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &7279656869056874599
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6239302082395745906}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6fa1ef560b1ad354ea14915c19eeda8c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  resourceData: {fileID: 11400000, guid: 7630377da80d40a4fa37eebdc2c10bd6, type: 2}
+  amount: 1
 --- !u!1 &7353412572152468573
 GameObject:
   m_ObjectHideFlags: 0
@@ -114,7 +129,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 3062905513243090649}
-  - component: {fileID: 1977289766155254111}
   m_Layer: 0
   m_Name: Temp_Item_Asteroid
   m_TagString: Untagged
@@ -138,17 +152,3 @@ Transform:
   - {fileID: 6131384457372462673}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1977289766155254111
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7353412572152468573}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 584d7e5a018f5d34e95bed28914b3e88, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  resourceData: {fileID: 11400000, guid: 7630377da80d40a4fa37eebdc2c10bd6, type: 2}
-  amount: 1
