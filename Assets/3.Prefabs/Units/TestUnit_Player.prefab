@@ -1173,7 +1173,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   weaponSystem: {fileID: 0}
-  maxHpRemaining: 99999
+  maxHpRemaining: 5000
   maxShieldCapacity: 150
   shieldRegainDelay: 5
   shieldRegainRate: 15
@@ -1254,14 +1254,18 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   lockOnSystem: {fileID: 1161755328960943635}
   fireBulletDelay: 0.1
-  fireMissileDelay: 2
+  fireMissileDelay: 1
+  testBulletFirePositions: []
   missileSlots:
   - type: 0
     curAmmo: 999
     maxAmmo: 999
-  - type: 0
+  - type: 2
     curAmmo: 100
     maxAmmo: 100
+  - type: 0
+    curAmmo: 555
+    maxAmmo: 555
   curMissileType: 0
 --- !u!114 &2532570374250757226
 MonoBehaviour:
