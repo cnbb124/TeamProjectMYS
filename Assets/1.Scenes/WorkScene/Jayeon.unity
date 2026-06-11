@@ -491,6 +491,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 7897952812583820154, guid: a7897ad853ae9d6458830c653646215c, type: 3}
+      propertyPath: fireMissileDelay
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -1278,7 +1282,8 @@ MonoBehaviour:
   lockOnSystem: {fileID: 901203465}
   fireBulletDelay: 0.5
   fireMissileDelay: 2
-  testBulletFirePositions: []
+  testBulletFirePositions:
+  - {fileID: 0}
   missileSlots: []
   curMissileType: 0
 --- !u!114 &901203464

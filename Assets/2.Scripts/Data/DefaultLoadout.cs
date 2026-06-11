@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-[CreateAssetMenu(fileName = "DefaultLoadout", menuName = "Game/Default Loadout")]
+[CreateAssetMenu(fileName = "New DefaultLoadout", menuName = "Create Data/Default Loadout")]
 public class DefaultLoadout : ScriptableObject
 {
     // 순서 무관. 코드에서 FRAME을 항상 먼저 처리함.

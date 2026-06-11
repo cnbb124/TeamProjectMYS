@@ -24,6 +24,24 @@ using UnityEngine;
 // ▶ 저장/로드 시스템 참조용
 //   GameManager.CollectSaveData()에서 직접 읽어감 (별도 호출 불필요)
 //   GameManager.Instance.playerRef 로 접근
+//
+// ▶ 파티클팀 참조용 (추진/RCS 파티클 — 이름 기반 자동 탐색)
+//   파티클은 THRUSTER 파츠 프리팹(Thruster_Main.prefab) 내부에 배치할 것.
+//   Player가 Start 1프레임 뒤 자식 전체에서 아래 "이름"의 오브젝트를 찾아
+//   그 아래 모든 ParticleSystem을 수집/제어함 (개수 자유, Play On Awake 전부 OFF).
+//
+//   [현재 사용 중 — 이름 변경 금지]
+//   Step1_Slow       : 상시 약한 분사
+//   Step2_Normal     : 전진 입력 중 루프 재생
+//   Step3_Boost      : 부스트 중 루프 재생 (자식 중 fire_3-3 제외)
+//   fire_3-3         : 부스트 진입 순간 1회 버스트
+//
+//   [RCS/후진/닷지용 예약 이름 — 컨테이너만 만들면 됨, 제어 코드는 추후 연결]
+//   RCS_Roll_L       : Q(좌측 롤) 입력 중 루프 재생            → Looping ON
+//   RCS_Roll_R       : E(우측 롤) 입력 중 루프 재생            → Looping ON
+//   Thruster_Reverse : 후진(S) 입력 중 루프 재생               → Looping ON
+//   RCS_Burst_L      : 좌측 닷지 순간 1회 (RCS_Roll_L과 같은 위치, 더 강한 이펙트) → Looping OFF
+//   RCS_Burst_R      : 우측 닷지 순간 1회 (RCS_Roll_R과 같은 위치, 더 강한 이펙트) → Looping OFF
 // ================================================================
 
 //

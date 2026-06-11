@@ -40,7 +40,7 @@ public class Missile : Projectile, IExplodable
 	private HashSet<IDamageable> damagedTargets = new HashSet<IDamageable>(); //중복데미지를 방지하기위한 해쉬셋
 
 	[Space(5)]
-	[Header("--유도 설정--")]
+	[Header("<size=14>=====유도 설정=====</size>")]
 	[Tooltip("초당 최대 선회 각도 (도/초). 클수록 날카롭게 꺾음.")]
 	public float turnRate = 120f;
 
@@ -58,14 +58,15 @@ public class Missile : Projectile, IExplodable
 
 
 	[Space(5)]
-	[Header("--속도설정--")]
+	[Header("<size=14>=====속도 설정=====</size>")]
 
+	
 	//자연스러운 미사일 연출을 위한 속도 미세조정. 시작속도, 최고속도, 가속시간
 	[Tooltip("발사 시작 속도. accelerateTime 동안 maxSpeed로 가속.")]
 	public float launchSpeed = 10f;
 
 	//스피드설정
-	[Header("최대 도달 속도 설정")]
+	[Tooltip("최대 도달 속도")]
 	public float maxSpeed;
 
 	[Header("현재 미사일 속도(입력x 참고용)")]

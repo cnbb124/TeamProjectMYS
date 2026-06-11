@@ -118,6 +118,7 @@ public enum SOUND_TYPE
     SFX_IDLE,
     SFX_MOVING,
     SFX_BOOST,
+    SFX_DODGE,
 
 
 

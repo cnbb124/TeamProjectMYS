@@ -8,7 +8,7 @@ public class PartStatBonus
     public float value;
 }
 
-[CreateAssetMenu(fileName = "New Part Data", menuName = "Create Item Data/Part Data")]
+[CreateAssetMenu(fileName = "New Part Data", menuName = "Create Data/Item/Part Data")]
 public class PartData : ItemData
 {
     [Header("Part")]

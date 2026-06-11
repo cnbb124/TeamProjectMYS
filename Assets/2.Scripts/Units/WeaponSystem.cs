@@ -62,6 +62,7 @@ public class WeaponSystem : MonoBehaviour
 	private List<Transform> _bulletFirePositions = new List<Transform>();
 	private int _bulletFireIndex = 0;
 
+	[Header("테스트용 파츠없이 사용할 총구좌표")]
 	[Tooltip("UnitParts 없이 테스트용으로 발사 위치를 직접 지정. Awake 시 _bulletFirePositions에 합류됨.")]
 	[SerializeField] private List<Transform> testBulletFirePositions = new List<Transform>();
 
