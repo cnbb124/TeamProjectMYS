@@ -1,31 +1,50 @@
+// 공통 베이스
 using UnityEngine;
 
-[CreateAssetMenu(fileName = "New Projectile Data", menuName ="Create Data/Projectile Data")]
-public class ProjectileData : ItemData
+public abstract class ProjectileData : ItemData
 {
-	[Header("공통 수치")]
+	[Header("공통 전투 수치")]
 	[Tooltip("기본 데미지")]
-	public int damage = 10;
-	[Tooltip("비행 속도")]
-	public float speed = 100f;
-
-	[Tooltip("발사 속도")]
-	public float launchSpeed = 10f;
-
-	[Tooltip("최대 속도")]
-	public float maxSpeed = 700f;
-
-	[Header("변형탄 옵션")]
-	[Tooltip("true면 아머 경감/차감 무시 (아머무시탄)")]
-	public bool ignoreArmor = false;
-	[Tooltip("실드에 주는 데미지 배율. 1 = 보통, 그 이상 = 실드 추가뎀배율")]
+	public int damage;
+	[Tooltip("최대 사거리")]
+	public float maxRange;
+	[Tooltip("관통탄 여부")]
+	public bool ignoreArmor;
+	[Tooltip("실드 추가뎀 비율")]
 	public float shieldDamageMultiplier = 1f;
+	[Tooltip("피격시 데미지의 종류")]
+	public DAMAGE_TYPE damageType;
+	[Tooltip("피격시 VFX매니저에서 실행할 이펙트 종류")]
+	public EFFECT_TYPE hitEffect;     // VFX_BULLETHIT 등
+	
+}
 
-	[Header("미사일 전용 (총알이면 무시)")]
-	public MISSILE_TYPE missileType;
-	[Tooltip("폭발 피해 반경. 0이면 단발 판정")]
+// 총알 전용
+[CreateAssetMenu(fileName = "New Bullet Data", menuName = "Create Data/Item/Projectile Data/Bullet")]
+public class BulletData : ProjectileData
+{
+	[Tooltip("총알 날아가는 속도")]
+	public float speed;
+}
+
+// 미사일 전용
+[CreateAssetMenu(fileName = "New Missile Data", menuName = "Create Data/Item/Projectile Data/Missile")]
+public class MissileData : ProjectileData
+{
+	[Tooltip("초당 최대 선회 각도 (도/초). 클수록 날카롭게 꺾음.")]
+	public float turnRate = 120f;
+	[Tooltip("발사 직후 직진 유지 거리. 근거리 자폭 방지.")]
+	public float armDistance = 5.0f;
+	[Tooltip("비례항법 계수 (1~5). 클수록 예측 추적 강화. 3 권장.")]
+	public float navGain = 3f;
+	[Tooltip("발사 시작 속도. accelerateTime 동안 maxSpeed로 가속.")]
+	public float launchSpeed = 10f;
+	[Tooltip("최대 도달 속도")]
+	public float maxSpeed;
+	[Tooltip("최고 속도 도달까지 걸리는 시간 (초).")]
+	public float accelerateTime = 0.8f;
+	[Tooltip("Missile의 실제 피해 범위. 변경시 이펙트 크기도 같이 변경됨.")]
 	public float explosionRadius = 8f;
-
-	[Header("이펙트/사운드 종류")]
-	public EFFECT_TYPE hitEffect;
+	[Tooltip("VFXManager에 연결된 폭발이펙트용 파티클 원본의 범위 입력. 원본값 입력 후 수정X.")]
+	public float vfxBaseRadius = 8f;
 }

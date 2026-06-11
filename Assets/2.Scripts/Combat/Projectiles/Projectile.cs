@@ -12,35 +12,40 @@ public abstract class Projectile : MonoBehaviour
 
     [Header("<size=18>[투사체 공통 스탯 기본 설정]</size>")]
 
-    //최대사거리
-    [Header("최대 사거리 설정")]
-    public float maxRange;
+
+	//============자식 클래스 Data(SO)에서 자동입력==========
+	[HideInInspector]
+    public float maxRange;//최대사거리
+
+	//데미지타입
+	[HideInInspector]
+	public DAMAGE_TYPE dmgType;
+
+    //=======================================================
 
 
-    //발사좌표(사거리계산용.)
-    protected Vector3 startPos;
+	//발사좌표(사거리계산용.)
+	protected Vector3 startPos;
     //이동거리 구하기위한 이전좌표
     protected Vector3 prevPos;
     //실제 투사체가 이동한거리
     protected float traveledDistance = 0f;
 
+	
+	//데미지수치
+	//인스펙터에서 설정하는 투사체 고유의 기본 데미지
+	[Header("투사체 기본 데미지(출력용)")]
+	public int baseDamage;
+	//스탯과 버프가 적용된 실제 적용 데미지 (변동 값)
+	[Header("투사체 현재 실제 데미지(출력용)")]
+	public int curDamage;
+	//공격자
+	[Header("공격한 유닛(참조, 확인용)")]
+	public Unit attacker;
 
-    [Header("팀킬 가능 여부")]
+	[Header("팀킬 가능 여부")]
     public bool friendlyFire = false;
-    //데미지타입
-    //자식 클래스 Awake에서 지정Bullet=BULLET, Missile=EXPLOSION, Laser=LASER
-    [Header("데미지 타입")]
-    public DAMAGE_TYPE dmgType;
-    //데미지수치
-    //인스펙터에서 설정하는 투사체 고유의 기본 데미지
-    [Header("투사체 기본 데미지")]
-    public int baseDamage;
-    //스탯과 버프가 적용된 실제 적용 데미지 (변동 값)
-    [Header("투사체 현재 실제 데미지")]
-    public int curDamage;
-    //공격자
-    [Header("공격한 유닛(발사)")]
-    public Unit attacker;
+    
 
     //풀매니저에서 식별할 투사체 타입
     [HideInInspector]
@@ -78,51 +83,53 @@ public abstract class Projectile : MonoBehaviour
 
     }
 
-    //최대사거리 도달시 호출. 기본은 풀반납. 자식에서 폭발등 추가동작 필요시 오버라이드.
-    protected virtual void OnMaxRange()
+
+	/// <summary>
+	/// 활성화시 넣을 정보. 플레이어에서 호출
+	/// 꺼낼 때 호출. 매 발사마다 재초기화.
+	/// 자식에서 오버라이드 시 base.Init() 반드시 호출.
+	/// </summary>
+	/// <param name="startPos">출발좌표(firePos)</param>
+	/// <param name="dir">향할 방향(보통 forward)</param>
+	/// <param name="attacker">발사하는 유닛(공격자, 쏜사람)</param>
+	public virtual void Init(Vector3 startPos, Vector3 dir, Unit attacker)
+	{
+		//출발한 좌표 저장
+		this.startPos = startPos;
+		//공격자 저장
+		this.attacker = attacker;
+		traveledDistance = 0f;
+		prevPos = startPos;
+		//출발할좌표로 현재좌표 초기화
+		transform.position = startPos;
+		//향할 방향초기화
+		transform.forward = dir;
+
+		//투사체 데미지 최신화 (풀링오염방지)
+
+		curDamage = baseDamage;//차후 로직 추가 필요.(배율증가있을시)
+
+		critical = Random.Range(0f, 100f) < attacker.criChance;//크리여부
+
+
+		//물리처리를 위한 레이어 입력
+		if (attacker.gameObject.layer == (int)LAYER_TYPE.Unit_Player)
+
+		{
+			gameObject.layer = (int)LAYER_TYPE.Projectile_Player;
+		}
+		else
+		{
+			gameObject.layer = (int)LAYER_TYPE.Projectile_Enemy;
+		}
+	}
+
+	//최대사거리 도달시 호출. 기본은 풀반납. 자식에서 폭발등 추가동작 필요시 오버라이드.
+	protected virtual void OnMaxRange()
     {
         ReturnToPool();
     }
 
-    //활성화시 넣을 정보. 플레이어에서 호출
-    //꺼낼 때 호출. 매 발사마다 재초기화.
-    //자식에서 오버라이드 시 base.Init() 반드시 호출.
-    //출발좌표(firePos),향할방향, 공격자(쏜사람)
-    public virtual void Init(Vector3 startPos, Vector3 dir, Unit attacker)
-    {
-        //출발한 좌표 저장
-        this.startPos = startPos;
-        //공격자 저장
-        this.attacker = attacker;
-        traveledDistance = 0f;
-        prevPos = startPos;
-        //출발할좌표로 현재좌표 초기화
-        transform.position = startPos;
-        //향할 방향초기화
-        transform.forward = dir;
-
-
-        //투사체 데미지 최신화 (풀링오염방지)
-
-        curDamage = baseDamage;//차후 로직 추가 필요.
-
-        critical = Random.Range(0f, 100f) < attacker.criChance;//크리여부
-
-
-        //물리처리를 위한 레이어 입력
-        if (attacker.gameObject.layer == (int)LAYER_TYPE.Unit_Player)
-
-        {
-            gameObject.layer = (int)LAYER_TYPE.Projectile_Player;
-        }
-        else
-        {
-            gameObject.layer = (int)LAYER_TYPE.Projectile_Enemy;
-        }
-
-
-
-    }
 
 
     //같은팀인지 체크 (공격자와 피격대상 루트의 태그 비교, Player/Enemy/Neutral)
@@ -160,7 +167,7 @@ public abstract class Projectile : MonoBehaviour
         //    return;
         //}
 
-        //맞은게 히트박스가 아니면 죄다 취소
+        //맞은게 히트박스가 아니면 죄다 무시
         if (other.gameObject.layer != (int)LAYER_TYPE.HitBox)
         {
             return;

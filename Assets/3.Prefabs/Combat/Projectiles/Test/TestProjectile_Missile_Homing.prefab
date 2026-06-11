@@ -73,12 +73,12 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 8267010498333130919}
-  - component: {fileID: 5952914819822619202}
+  - component: {fileID: -8496014020006163305}
   - component: {fileID: 4691003704483487009}
   - component: {fileID: -6605589610897234118}
   - component: {fileID: 66523062952057644}
   m_Layer: 0
-  m_Name: TestProjectile_Missile
+  m_Name: TestProjectile_Missile_Homing
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -101,7 +101,7 @@ Transform:
   - {fileID: 2565471662482564813}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &5952914819822619202
+--- !u!114 &-8496014020006163305
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -113,23 +113,24 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1ef640c8eb26cf4469218bda8eacd35c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxRange: 3000
-  friendlyFire: 0
-  dmgType: 2
-  baseDamage: 200
+  maxRange: 0
+  dmgType: 0
+  baseDamage: 0
   curDamage: 0
   attacker: {fileID: 0}
+  friendlyFire: 0
   projectileType: 0
-  explosionRadius: 20
-  vfxBaseRadius: 20
-  turnRate: 90
+  missileData: {fileID: 11400000, guid: 2164ad7ced114114491229bb6d9f483f, type: 2}
+  explosionRadius: 8
+  vfxBaseRadius: 8
+  turnRate: 120
   armDistance: 5
   navGain: 3
   targetTr: {fileID: 0}
-  launchSpeed: 30
-  maxSpeed: 725
+  launchSpeed: 10
+  maxSpeed: 0
   curSpeed: 0
-  accelerateTime: 2.25
+  accelerateTime: 0.8
 --- !u!114 &4691003704483487009
 MonoBehaviour:
   m_ObjectHideFlags: 0

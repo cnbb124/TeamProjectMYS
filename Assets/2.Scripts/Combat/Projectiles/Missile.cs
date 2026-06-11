@@ -22,16 +22,36 @@ using UnityEngine;
 //   Missile m = PoolManager.Instance.GetMissile();
 //   m.Init(firePos.position, firePos.forward, this, lockOnSystem.LockedTarget);
 // =====================================================================
+
+// 앞으로 확장방향
+//"변형탄"은 어떻게 만드나
+//같은 프리팹 + 다른 SO 에셋 = 변형탄. 예: Missile_Homing.prefab에 data 필드만 MissileData_Homing_Default.asset
+//대신 MissileData_Homing_ShieldBreaker.asset(shieldDamageMultiplier 높음)로 바꾼 **프리팹 변형(Prefab Variant)**을 만들면 끝.
+//핵미사일도 동일: DumbMissile.prefab 변형 + MissileData_Nuke.asset(explosionRadius 매우 큼) 연결, 클래스 추가 불필요 
+//PoolManager / WeaponSystem 연동
+//풀에서 꺼낸 인스턴스의 data 필드는 프리팹에 미리 박혀있는 값 (풀링해도 유지됨, Init에서 매번 복사하므로 풀 오염 걱정 없음)
+//발사 시점에 WeaponSystem이 데이터를 넘길 필요 없음 — 프리팹 자체가 자기 데이터를 알고 있음. WeaponSystem은 그냥 Init(pos, dir, attacker)만 호출
+//작업 순서 (세션25 합의 기준 그대로)
+//DamageInfo에 ignoreArmor, shieldDamageMultiplier 추가 + calculTakeDamage 반영 (A안: 배율은 실드 차감량에만 적용)
+//ProjectileData/BulletData/MissileData SO 클래스 작성 + Create Data/Item/Projectile Data/... 메뉴 등록
+//Missile.Init()에 데이터 복사 로직 연동 (유도미사일부터)
+//ClusterMissile 분리유도 작업 시 MissileData 그대로 재사용 (자탄용 별도 에셋만 추가)
+//핵미사일 = DumbMissile 변형 프리팹 + MissileData_Nuke.asset
+//Bullet.Init()에 BulletData 연동, 기존 인스펙터 speed/baseDamage 값은 SO로 이전
+
 public class Missile : Projectile, IExplodable
 {
 	//[SerializeField]
 	//private int hitsArraySize = 30;
 	[Space(5)]
 	[Header("<size=18>[미사일 설정]</size>")]
-	[Header("폭발 범위 세팅")]
+	[Header("투사체 데이터(SO)")]
+	public MissileData missileData;
+	//[Header("폭발 범위 세팅")]
+	[HideInInspector]
 	[Tooltip("Missile의 실제 피해 범위. 변경시 이펙트 크기도 같이 변경됨.")]
 	public float explosionRadius = 8f;
-
+	[HideInInspector]
 	[Tooltip("VFXManager에 연결된 폭발이펙트용 파티클 원본의 범위 입력. 원본값 입력 후 수정X.")]
 	public float vfxBaseRadius = 8f;
 
@@ -39,19 +59,21 @@ public class Missile : Projectile, IExplodable
 	private HashSet<IDamageable> damagedTargets = new HashSet<IDamageable>(); //중복데미지를 방지하기위한 해쉬셋
 
 	[Space(5)]
-	[Header("<size=14>=====유도 설정=====</size>")]
+	[HideInInspector]
+	//[Header("<size=14>=====유도 설정=====</size>")]
 	[Tooltip("초당 최대 선회 각도 (도/초). 클수록 날카롭게 꺾음.")]
 	public float turnRate = 120f;
 
+	[HideInInspector]
 	[Tooltip("발사 직후 직진 유지 거리. 근거리 자폭 방지.")]
 	public float armDistance = 5.0f;
 
-
-	[Tooltip("비례항법 계수 (1~5). 클수록 예측 추적 강화. 3 권장.")]
+	[HideInInspector]
+	//[Tooltip("비례항법 계수 (1~5). 클수록 예측 추적 강화. 3 권장.")]
 	[Range(1f, 5f)]
 	public float navGain = 3f;
 
-
+	
 	[Header("락온되는 목표(확인용)")]
 	public Transform targetTr;
 
@@ -59,22 +81,22 @@ public class Missile : Projectile, IExplodable
 	[Space(5)]
 	[Header("<size=14>=====속도 설정=====</size>")]
 
-	
+	[HideInInspector]
 	//자연스러운 미사일 연출을 위한 속도 미세조정. 시작속도, 최고속도, 가속시간
 	[Tooltip("발사 시작 속도. accelerateTime 동안 maxSpeed로 가속.")]
 	public float launchSpeed = 10f;
-
+	[HideInInspector]
 	//스피드설정
 	[Tooltip("최대 도달 속도")]
 	public float maxSpeed;
-
-	[Header("현재 미사일 속도(입력x 참고용)")]
+	[HideInInspector]
+	//[Header("현재 미사일 속도(입력x 참고용)")]
 	//현재속도
 	public float curSpeed;
-
+	[HideInInspector]
 	[Tooltip("최고 속도 도달까지 걸리는 시간 (초).")]
 	public float accelerateTime = 0.8f;
-
+	[HideInInspector]
 	public ExplosionInfo explosionInfo;
 
 	//발사후 경과시간
@@ -105,6 +127,22 @@ public class Missile : Projectile, IExplodable
 	public override void Init(Vector3 startPos, Vector3 dir, Unit attacker)
 	{
 		base.Init(startPos, dir, attacker);
+
+
+		if (missileData != null)
+		{
+			launchSpeed = missileData.launchSpeed;
+			maxSpeed = missileData.maxSpeed;
+			accelerateTime = missileData.accelerateTime;
+			turnRate = missileData.turnRate;
+			armDistance = missileData.armDistance;
+			navGain = missileData.navGain;
+			explosionRadius = missileData.explosionRadius;
+			vfxBaseRadius = missileData.vfxBaseRadius;
+			baseDamage = missileData.damage;
+			maxRange = missileData.maxRange;
+		}
+
 
 		// 풀에서 꺼낼 때마다 인스펙터의 최신 damage 값으로 갱신
 		explosionInfo.explosionDamage = this.curDamage;

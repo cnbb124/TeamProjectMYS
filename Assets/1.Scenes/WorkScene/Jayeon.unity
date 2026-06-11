@@ -749,6 +749,22 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 75285212269006569, guid: 6c496b1493a584e4db5940e2753f9917, type: 3}
+      propertyPath: poolConfigs.Array.size
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 75285212269006569, guid: 6c496b1493a584e4db5940e2753f9917, type: 3}
+      propertyPath: poolConfigs.Array.data[4].prefab
+      value: 
+      objectReference: {fileID: 9090766346527012241, guid: f6301c3a1bdb2f045b44813bda0f4c59, type: 3}
+    - target: {fileID: 75285212269006569, guid: 6c496b1493a584e4db5940e2753f9917, type: 3}
+      propertyPath: poolConfigs.Array.data[4].poolType
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 75285212269006569, guid: 6c496b1493a584e4db5940e2753f9917, type: 3}
+      propertyPath: poolConfigs.Array.data[4].initialSize
+      value: 20
+      objectReference: {fileID: 0}
     - target: {fileID: 4353218582667052855, guid: 6c496b1493a584e4db5940e2753f9917, type: 3}
       propertyPath: m_Name
       value: PoolManager
@@ -3207,6 +3223,22 @@ PrefabInstance:
     - target: {fileID: 990715723914463223, guid: 5af7eb19ac78b8749a740ca971f9dfbf, type: 3}
       propertyPath: m_Name
       value: VFXManager
+      objectReference: {fileID: 0}
+    - target: {fileID: 2970848493800687448, guid: 5af7eb19ac78b8749a740ca971f9dfbf, type: 3}
+      propertyPath: vfxConfigs.Array.size
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 2970848493800687448, guid: 5af7eb19ac78b8749a740ca971f9dfbf, type: 3}
+      propertyPath: vfxConfigs.Array.data[4].prefab
+      value: 
+      objectReference: {fileID: 4716400053651597454, guid: ded319bd08d0e92438de97a0c9003f4c, type: 3}
+    - target: {fileID: 2970848493800687448, guid: 5af7eb19ac78b8749a740ca971f9dfbf, type: 3}
+      propertyPath: vfxConfigs.Array.data[4].effectType
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2970848493800687448, guid: 5af7eb19ac78b8749a740ca971f9dfbf, type: 3}
+      propertyPath: vfxConfigs.Array.data[4].initialSize
+      value: 20
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
