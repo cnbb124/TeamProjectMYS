@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using UnityEditor;
 using UnityEngine;
 
 
@@ -8,9 +9,15 @@ using UnityEngine;
 
 public class Bullet : Projectile
 {
-	//스피드설정
-	[Header("총알 속도 설정")]
-	public float speed;
+	/// <summary>
+	/// 총알 속도.
+	/// </summary>
+	private float speed;
+	[Header("<size=18>총알 설정</size>")]
+	[Header("투사체 데이터(SO)")]
+	public BulletData bulletData;
+
+
 
 
 	protected override void Awake()
@@ -20,10 +27,10 @@ public class Bullet : Projectile
 		dmgType = DAMAGE_TYPE.BULLET;
 		projectileType = PROJECTILE_TYPE.BULLET;
 	}
-	// Start is called before the first frame update
+	
 	
 
-	// Update is called once per frame
+	
 	protected override void Update()
 	{
 		//이동 로직
@@ -31,6 +38,18 @@ public class Bullet : Projectile
 		//기본 업데이트 실행(사거리 업뎃)
 		base.Update();
 		
+	}
+
+	public override void Init(Vector3 startPos, Vector3 dir, Unit attacker)
+	{
+		base.Init(startPos, dir, attacker);
+		if(bulletData!=null)
+		{
+			speed = bulletData.speed;
+			baseDamage = bulletData.damage;
+			maxRange = bulletData.maxRange;
+			// ignoreArmor, shieldDamageMultiplier는 DamageInfo 생성 시 사용 (ApplyDamage 쪽)
+		}
 	}
 
 

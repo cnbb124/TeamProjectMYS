@@ -30,8 +30,7 @@ public enum LAYER_TYPE
     Projectile_Enemy = 9,
     Environment = 10,
     //임시
-    Trigger_DetectionRange = 11,
-    Trigger_LockonRange = 12,
+ 
     HitBox = 13,
 }
 
