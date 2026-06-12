@@ -1,19 +1,23 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
 /// <summary>
-/// 인벤토리 상단 탭 (WEAPON / SKILLS / MONEYS / INSPECTOR) 전환 관리.
+/// 인벤토리 상단 탭 (PARTS / CONSUMABLE / MATERIAL) 전환 + 그리드 갱신.
 /// InventoryPanel에 부착.
+/// 탭 전환 시 InventoryManager.GetAllOfCategory()로 해당 탭 아이템을 슬롯에 그림.
 /// </summary>
 public class InventoryTabGroup : MonoBehaviour
 {
     [System.Serializable]
     public class Tab
     {
-        public Button     button;     // 탭 버튼
-        public GameObject panel;      // 해당 콘텐츠 패널
-        public TMP_Text   label;      // 버튼 텍스트 (색상 변경용)
+        public Button        button;     // 탭 버튼
+        public GameObject    panel;      // 해당 콘텐츠 패널
+        public TMP_Text      label;      // 버튼 텍스트 (색상 변경용)
+        public ITEM_CATEGORY category;   // 이 탭이 보여줄 카테고리
+        public InvSlot[]     slots;      // 패널 안 슬롯들 (그리드 순서대로)
     }
 
     [Header("Tabs")]
@@ -21,11 +25,11 @@ public class InventoryTabGroup : MonoBehaviour
     [SerializeField] private int   defaultTab = 0;
 
     [Header("Colors")]
-    [SerializeField] private Color activeColor   = new Color(0f, 1f, 0.8f, 1f);   // 청록
-    [SerializeField] private Color inactiveColor = new Color(1f, 1f, 1f, 0.45f);  // 흐린 흰색
+    [SerializeField] private Color activeColor   = new Color(0f, 1f, 0.8f, 1f);
+    [SerializeField] private Color inactiveColor = new Color(1f, 1f, 1f, 0.45f);
 
     [Header("Underline (선택)")]
-    [SerializeField] private RectTransform underline;      // 빛나는 라인
+    [SerializeField] private RectTransform underline;
     [SerializeField] private float underlineMoveSpeed = 12f;
 
     private int _currentIndex;
@@ -35,16 +39,21 @@ public class InventoryTabGroup : MonoBehaviour
     {
         for (int i = 0; i < tabs.Length; i++)
         {
-            int index = i; // 클로저 캡처용 복사
+            int index = i;
             if (tabs[i].button != null)
                 tabs[i].button.onClick.AddListener(() => SelectTab(index));
         }
         SelectTab(defaultTab);
     }
 
+    private void OnEnable()
+    {
+        // 패널 열 때마다 현재 탭 갱신 (아이템 획득/소모 반영)
+        RefreshGrid(_currentIndex);
+    }
+
     private void Update()
     {
-        // 언더라인 부드럽게 이동
         if (underline != null)
             underline.anchoredPosition = Vector2.Lerp(
                 underline.anchoredPosition, _underlineTarget,
@@ -67,7 +76,8 @@ public class InventoryTabGroup : MonoBehaviour
                 tabs[i].label.color = isActive ? activeColor : inactiveColor;
         }
 
-        // 언더라인을 선택된 탭 버튼 아래로
+        RefreshGrid(index);
+
         if (underline != null && tabs[index].button != null)
         {
             RectTransform btnRect = tabs[index].button.GetComponent<RectTransform>();
@@ -77,4 +87,33 @@ public class InventoryTabGroup : MonoBehaviour
             underline.sizeDelta = new Vector2(btnRect.sizeDelta.x, underline.sizeDelta.y);
         }
     }
+
+    /// <summary>
+    /// InventoryManager에서 해당 탭 카테고리 아이템을 받아 슬롯에 채움.
+    /// 아이템 추가/제거 후 외부에서 호출해도 됨.
+    /// </summary>
+    public void RefreshGrid(int index)
+    {
+        if (index < 0 || index >= tabs.Length) return;
+
+        Tab tab = tabs[index];
+        if (tab.slots == null || tab.slots.Length == 0) return;
+        if (InventoryManager.Instance == null) return;
+
+        List<ItemStack> list =
+            InventoryManager.Instance.GetAllOfCategory(tab.category);
+
+        for (int i = 0; i < tab.slots.Length; i++)
+        {
+            if (tab.slots[i] == null) continue;
+
+            if (i < list.Count)
+                tab.slots[i].SetItem(list[i].data, list[i].count);
+            else
+                tab.slots[i].ClearSlot();
+        }
+    }
+
+    /// <summary>현재 보고 있는 탭 갱신 (아이템 사용/획득 직후 호출용)</summary>
+    public void RefreshCurrent() => RefreshGrid(_currentIndex);
 }
