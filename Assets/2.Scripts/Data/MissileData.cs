@@ -2,24 +2,24 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-// ¹Ì»çÀÏ Àü¿ë
+// ë¯¸ì‚¬ì¼ ì „ìš©
 [CreateAssetMenu(fileName = "New Missile Data", menuName = "Create Data/Item/Projectile Data/Missile")]
 public class MissileData : ProjectileData
 {
-	[Tooltip("ÃÊ´ç ÃÖ´ë ¼±È¸ °¢µµ (µµ/ÃÊ). Å¬¼ö·Ï ³¯Ä«·Ó°Ô ²ªÀ½.")]
+	[Tooltip("ì´ˆë‹¹ ìµœëŒ€ ì„ íšŒ ê°ë„ (ë„/ì´ˆ). í´ìˆ˜ë¡ ë‚ ì¹´ë¡­ê²Œ êº¾ìŒ.")]
 	public float turnRate = 120f;
-	[Tooltip("¹ß»ç Á÷ÈÄ Á÷Áø À¯Áö °Å¸®. ±Ù°Å¸® ÀÚÆø ¹æÁö.")]
+	[Tooltip("ë°œì‚¬ ì§í›„ ì§ì§„ ìœ ì§€ ê±°ë¦¬. ê·¼ê±°ë¦¬ ìí­ ë°©ì§€.")]
 	public float armDistance = 5.0f;
-	[Tooltip("ºñ·ÊÇ×¹ı °è¼ö (1~5). Å¬¼ö·Ï ¿¹Ãø ÃßÀû °­È­. 3 ±ÇÀå.")]
+	[Tooltip("ë¹„ë¡€í•­ë²• ê³„ìˆ˜ (1~5). í´ìˆ˜ë¡ ì˜ˆì¸¡ ì¶”ì  ê°•í™”. 3 ê¶Œì¥.")]
 	public float navGain = 3f;
-	[Tooltip("¹ß»ç ½ÃÀÛ ¼Óµµ. accelerateTime µ¿¾È maxSpeed·Î °¡¼Ó.")]
+	[Tooltip("ë°œì‚¬ ì‹œì‘ ì†ë„. accelerateTime ë™ì•ˆ maxSpeedë¡œ ê°€ì†.")]
 	public float launchSpeed = 10f;
-	[Tooltip("ÃÖ´ë µµ´Ş ¼Óµµ")]
+	[Tooltip("ìµœëŒ€ ë„ë‹¬ ì†ë„")]
 	public float maxSpeed = 500f;
-	[Tooltip("ÃÖ°í ¼Óµµ µµ´Ş±îÁö °É¸®´Â ½Ã°£ (ÃÊ).")]
+	[Tooltip("ìµœê³  ì†ë„ ë„ë‹¬ê¹Œì§€ ê±¸ë¦¬ëŠ” ì‹œê°„ (ì´ˆ).")]
 	public float accelerateTime = 0.8f;
-	[Tooltip("MissileÀÇ ½ÇÁ¦ ÇÇÇØ ¹üÀ§. º¯°æ½Ã ÀÌÆåÆ® Å©±âµµ °°ÀÌ º¯°æµÊ.")]
+	[Tooltip("Missileì˜ ì‹¤ì œ í”¼í•´ ë²”ìœ„. ë³€ê²½ì‹œ ì´í™íŠ¸ í¬ê¸°ë„ ê°™ì´ ë³€ê²½ë¨.")]
 	public float explosionRadius = 8f;
-	[Tooltip("VFXManager¿¡ ¿¬°áµÈ Æø¹ßÀÌÆåÆ®¿ë ÆÄÆ¼Å¬ ¿øº»ÀÇ ¹üÀ§ ÀÔ·Â. ¿øº»°ª ÀÔ·Â ÈÄ ¼öÁ¤X.")]
+	[Tooltip("VFXManagerì— ì—°ê²°ëœ í­ë°œì´í™íŠ¸ìš© íŒŒí‹°í´ ì›ë³¸ì˜ ë²”ìœ„ ì…ë ¥. ì›ë³¸ê°’ ì…ë ¥ í›„ ìˆ˜ì •X.")]
 	public float vfxBaseRadius = 8f;
 }

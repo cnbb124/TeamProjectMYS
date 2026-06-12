@@ -150,6 +150,9 @@ public abstract class Unit : MonoBehaviour, IDamageable
 	[Tooltip("무적 지속시간")]
 	public float dodgeInvincibleTime = 0.4f;
 	private float _dodgeTimer = 0f;
+	[Tooltip("회피 쿨타임")]
+	public float dodgeCoolTime;
+	protected float _lastDodgeTime = 0f;
 	public bool IsInvincible { get; private set; }
 	[Tooltip("피격부위 혹은 HP잔량에 따른이동속도 변경용")]
 	public float speedMultiPlier;//HP 혹은 피격부위에따른 속도조절용.

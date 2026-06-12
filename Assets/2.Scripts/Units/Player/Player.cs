@@ -55,9 +55,7 @@ public class Player : Unit
 {
 
 
-	// 총알 교대 발사용 인덱스 (0=왼쪽, 1=오른쪽 → 0→1→0 순환)
-	// bulletFirePos는 Unit에 있는 배열 그대로 사용
-	// missileFirePos, laserFirePos도 Unit 그대로 사용
+
 	// =================================================
 
 	// 추진기 파티클
@@ -118,7 +116,6 @@ public class Player : Unit
 
 
 
-
 	// ==================락온 시스템==================
 
 
@@ -153,23 +150,6 @@ public class Player : Unit
 		StartCoroutine(InitParticlesNextFrame());
 	}
 
-	private IEnumerator InitParticlesNextFrame()
-	{
-		yield return null;
-		_step1Particles = FindParticlesByName("Step1_Slow");
-		_step2Particles = FindParticlesByName("Step2_Normal");
-		_step3Particles = FindParticlesByNameExclude("Step3_Boost", "fire_3-3");
-
-		Transform[] allChildren = GetComponentsInChildren<Transform>();
-		foreach (Transform child in allChildren)
-		{
-			if (child.name == "fire_3-3")
-			{
-				_boostBurstParticle = child.GetComponent<ParticleSystem>();
-				break;
-			}
-		}
-	}
 
 	// Update is called once per frame
 	protected override void Update()
@@ -206,7 +186,13 @@ public class Player : Unit
 		// 회피 입력 — GetKeyDown은 Update에서만 안정적으로 감지됨 (FixedUpdate에서 씹힘)
 		if (curState != UNIT_STATE.DODGE && _input.isDodging)
 		{
+			if (Time.time < _lastDodgeTime + dodgeCoolTime)
+			{
+				return;
+			}
+			_lastDodgeTime = Time.time;
 			CurState = UNIT_STATE.DODGE;
+			
 		}
 	}
 
@@ -223,6 +209,11 @@ public class Player : Unit
 		UpdateBoostEffect();
 
 	}
+
+
+
+
+
 
 
 	//===============override 메서드 FSM==================
@@ -339,7 +330,7 @@ public class Player : Unit
 	// 피격 반동 - 카메라 쉐이크, 넉백 등
 	protected override void OnHitReaction(DamageInfo info)
 	{
-		 base.OnHitReaction(info);
+		base.OnHitReaction(info);
 		// 크리티컬이면 강한 쉐이크
 		// ex. if (info.isCritical) CameraShake.Strong(); else CameraShake.Light();
 	}
@@ -568,7 +559,23 @@ public class Player : Unit
 	}
 
 	//==============부스트이펙트====================(이동에서같이)
+	private IEnumerator InitParticlesNextFrame()
+	{
+		yield return null;
+		_step1Particles = FindParticlesByName("Step1_Slow");
+		_step2Particles = FindParticlesByName("Step2_Normal");
+		_step3Particles = FindParticlesByNameExclude("Step3_Boost", "fire_3-3");
 
+		Transform[] allChildren = GetComponentsInChildren<Transform>();
+		foreach (Transform child in allChildren)
+		{
+			if (child.name == "fire_3-3")
+			{
+				_boostBurstParticle = child.GetComponent<ParticleSystem>();
+				break;
+			}
+		}
+	}
 	private void UpdateBoostEffect()
 	{
 		if (_step1Particles == null)
@@ -645,9 +652,7 @@ public class Player : Unit
 
 
 
-	// 
-	// 총알 - 좌우 교대 발사
-	// bulletFirePos[0]=왼쪽, bulletFirePos[1]=오른쪽
+
 
 
 

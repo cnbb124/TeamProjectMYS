@@ -2,10 +2,10 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-// ÃÑ¾Ë Àü¿ë
+// ì´ì•Œ ì „ìš©
 [CreateAssetMenu(fileName = "New Bullet Data", menuName = "Create Data/Item/Projectile Data/Bullet")]
 public class BulletData : ProjectileData
 {
-	[Tooltip("ÃÑ¾Ë ³¯¾Æ°¡´Â ¼Óµµ")]
+	[Tooltip("ì´ì•Œ ë‚ ì•„ê°€ëŠ” ì†ë„")]
 	public float speed;
 }

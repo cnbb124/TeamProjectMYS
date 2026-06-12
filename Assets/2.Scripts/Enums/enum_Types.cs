@@ -230,6 +230,7 @@ public enum ITEM_CATEGORY
     PARTS,  // 파츠(장비)
     CONSUMABLE, // 소모품
     MATERIAL,   // 재료
+    AMMO,
 }
 
 /// <summary>
