@@ -38,6 +38,8 @@ public class MissileSlot // 미사일 슬롯 — 타입+잔탄 통합 관리. eq
 	public MISSILE_TYPE type;
 	public int curAmmo;
 	public int maxAmmo;
+	[Tooltip("장착된 미사일의 데이터(SO). CLUSTER면 ClusterMisslleData로 캐스팅해 splitCount 등 사용.")]
+	public MissileData missileData;
 
 	// maxAmmo > 0 이면 장착된 슬롯 (타입과 최대치가 설정됨)
 	public bool IsEquipped { get { return maxAmmo > 0; } }

@@ -90,6 +90,9 @@ public class WeaponSystem : MonoBehaviour
 	// 현재 선택 슬롯 인덱스
 	private int _curSlotIndex = 0;
 
+	// lockOnSystem.maxMultiLockCount의 인스펙터 기본값. CLUSTER 슬롯 해제 시 복원용 (Awake에서 캡처)
+	private int _defaultMaxMultiLockCount;
+
 	// 외부 참조용 (HUD / AmmoUI). 슬롯 전환 시 자동 갱신, 확인용.
 	//[HideInInspector]
 	[Header("현재 장착된 미사일, 외부참조 및 확인용")]
@@ -138,6 +141,11 @@ public class WeaponSystem : MonoBehaviour
 				_missileFirePositions.Add(pos);
 			}
 		}
+
+		if (lockOnSystem != null)
+		{
+			_defaultMaxMultiLockCount = lockOnSystem.maxMultiLockCount;
+		}
 	}
 
 	private void Start()
@@ -156,7 +164,31 @@ public class WeaponSystem : MonoBehaviour
 			return;
 		}
 		_curSlotIndex = 0;
-		curMissileType = missileSlots[0].type;
+		SetCurMissileType(missileSlots[0].type);
+	}
+
+	/// <summary>
+	/// 슬롯 전환 시 호출. curMissileType 갱신 + CLUSTER 슬롯이면 락온 최대 동시 락온 개수를
+	/// missileData(ClusterMisslleData).splitCount로 동기화, 아니면 인스펙터 기본값으로 복원.
+	/// </summary>
+	private void SetCurMissileType(MISSILE_TYPE type)
+	{
+		curMissileType = type;
+
+		if (lockOnSystem == null)
+		{
+			return;
+		}
+
+		MissileSlot curSlot = CurMissileSlot;
+		if (curSlot != null && curSlot.missileData is ClusterMisslleData clusterData)
+		{
+			lockOnSystem.maxMultiLockCount = clusterData.splitCount;
+		}
+		else
+		{
+			lockOnSystem.maxMultiLockCount = _defaultMaxMultiLockCount;
+		}
 	}
 
 
@@ -376,7 +408,7 @@ public class WeaponSystem : MonoBehaviour
 			return;
 		}
 		_curSlotIndex = (_curSlotIndex + 1) % missileSlots.Count;
-		curMissileType = missileSlots[_curSlotIndex].type;
+		SetCurMissileType(missileSlots[_curSlotIndex].type);
 		Debug.Log("[WeaponSystem] Missile slot -> " + _curSlotIndex + " : " + curMissileType);
 	}
 
@@ -387,7 +419,7 @@ public class WeaponSystem : MonoBehaviour
 			return;
 		}
 		_curSlotIndex = (_curSlotIndex - 1 + missileSlots.Count) % missileSlots.Count;
-		curMissileType = missileSlots[_curSlotIndex].type;
+		SetCurMissileType(missileSlots[_curSlotIndex].type);
 		Debug.Log("[WeaponSystem] Missile slot <- " + _curSlotIndex + " : " + curMissileType);
 	}
 
@@ -398,7 +430,7 @@ public class WeaponSystem : MonoBehaviour
 			return;
 		}
 		_curSlotIndex = slotIndex;
-		curMissileType = missileSlots[_curSlotIndex].type;
+		SetCurMissileType(missileSlots[_curSlotIndex].type);
 		Debug.Log("[WeaponSystem] Missile slot direct -> " + _curSlotIndex + " : " + curMissileType);
 	}
 
@@ -423,7 +455,7 @@ public class WeaponSystem : MonoBehaviour
 		}
 		if (missileSlots.Count > 0)
 		{
-			curMissileType = missileSlots[_curSlotIndex].type;
+			SetCurMissileType(missileSlots[_curSlotIndex].type);
 		}
 	}
 
