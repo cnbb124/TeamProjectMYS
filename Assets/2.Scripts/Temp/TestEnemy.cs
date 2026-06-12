@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class TestEnemy : Unit
+public class TestEnemy: Unit
 {
     
 	protected override void Awake()
@@ -20,5 +20,6 @@ public class TestEnemy : Unit
     {
         base.Update();
         Shoot(PROJECTILE_TYPE.BULLET);
+        Shoot(PROJECTILE_TYPE.MISSILE);
     }
 }
