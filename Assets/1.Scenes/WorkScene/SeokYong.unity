@@ -20256,7 +20256,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6433512454957104831, guid: a7897ad853ae9d6458830c653646215c, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0
+      value: -12.75
       objectReference: {fileID: 0}
     - target: {fileID: 6433512454957104831, guid: a7897ad853ae9d6458830c653646215c, type: 3}
       propertyPath: m_LocalPosition.y
@@ -20296,10 +20296,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
-    m_AddedGameObjects:
-    - targetCorrespondingSourceObject: {fileID: 6663038568232317003, guid: a7897ad853ae9d6458830c653646215c, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1347872332}
+    m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: a7897ad853ae9d6458830c653646215c, type: 3}
 --- !u!4 &453021989 stripped
@@ -20622,6 +20619,7 @@ MonoBehaviour:
   shieldRegainRate: 0
   isShieldRegaining: 0
   shield: {fileID: 0}
+  bodyHitboxColliders: []
   maxArmor: 0
   defense: 0
   criChance: 0
@@ -20636,6 +20634,7 @@ MonoBehaviour:
   boostRegainRate: 0
   dodgeDuration: 0.5
   dodgeInvincibleTime: 0.4
+  dodgeCoolTime: 0
   speedMultiPlier: 0
   curState: 0
   curHpRemaining: 0
@@ -20671,63 +20670,6 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
---- !u!1001 &631546718
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    serializedVersion: 3
-    m_TransformParent: {fileID: 847176066}
-    m_Modifications:
-    - target: {fileID: 5776847615673391110, guid: 7ae37ae0e309f5544904bfc066e06c4e, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5776847615673391110, guid: 7ae37ae0e309f5544904bfc066e06c4e, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5776847615673391110, guid: 7ae37ae0e309f5544904bfc066e06c4e, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 1.12
-      objectReference: {fileID: 0}
-    - target: {fileID: 5776847615673391110, guid: 7ae37ae0e309f5544904bfc066e06c4e, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5776847615673391110, guid: 7ae37ae0e309f5544904bfc066e06c4e, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: -0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5776847615673391110, guid: 7ae37ae0e309f5544904bfc066e06c4e, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: -0.7071068
-      objectReference: {fileID: 0}
-    - target: {fileID: 5776847615673391110, guid: 7ae37ae0e309f5544904bfc066e06c4e, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: 0.7071068
-      objectReference: {fileID: 0}
-    - target: {fileID: 5776847615673391110, guid: 7ae37ae0e309f5544904bfc066e06c4e, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5776847615673391110, guid: 7ae37ae0e309f5544904bfc066e06c4e, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5776847615673391110, guid: 7ae37ae0e309f5544904bfc066e06c4e, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7989039363316996127, guid: 7ae37ae0e309f5544904bfc066e06c4e, type: 3}
-      propertyPath: m_Name
-      value: Force Field
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-    m_RemovedGameObjects: []
-    m_AddedGameObjects: []
-    m_AddedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: 7ae37ae0e309f5544904bfc066e06c4e, type: 3}
 --- !u!1 &652881492
 GameObject:
   m_ObjectHideFlags: 0
@@ -21163,11 +21105,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 41.078, y: -72.994, z: -31.492}
---- !u!4 &847176066 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 6663038568232317003, guid: a7897ad853ae9d6458830c653646215c, type: 3}
-  m_PrefabInstance: {fileID: 453021988}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &867913345
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -36649,11 +36586,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!4 &1347872332 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 5776847615673391110, guid: 7ae37ae0e309f5544904bfc066e06c4e, type: 3}
-  m_PrefabInstance: {fileID: 631546718}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1362593533
 GameObject:
   m_ObjectHideFlags: 0
@@ -51701,6 +51633,7 @@ MonoBehaviour:
   fireBulletDelay: 0.5
   fireMissileDelay: 2
   testBulletFirePositions: []
+  testMissileFirePositions: []
   missileSlots: []
   curMissileType: 0
 --- !u!114 &1532716149
@@ -51722,6 +51655,7 @@ MonoBehaviour:
   shieldRegainRate: 0
   isShieldRegaining: 0
   shield: {fileID: 0}
+  bodyHitboxColliders: []
   maxArmor: 0
   defense: 0
   criChance: 0
@@ -51736,6 +51670,7 @@ MonoBehaviour:
   boostRegainRate: 0
   dodgeDuration: 0.5
   dodgeInvincibleTime: 0.4
+  dodgeCoolTime: 0
   speedMultiPlier: 0
   curState: 0
   curHpRemaining: 0
@@ -67059,6 +66994,7 @@ MonoBehaviour:
   shieldRegainRate: 0
   isShieldRegaining: 0
   shield: {fileID: 0}
+  bodyHitboxColliders: []
   maxArmor: 0
   defense: 0
   criChance: 0
@@ -67073,6 +67009,7 @@ MonoBehaviour:
   boostRegainRate: 0
   dodgeDuration: 0.5
   dodgeInvincibleTime: 0.4
+  dodgeCoolTime: 0
   speedMultiPlier: 0
   curState: 0
   curHpRemaining: 0
