@@ -93,26 +93,32 @@ public class InventoryTabGroup : MonoBehaviour
     /// 아이템 추가/제거 후 외부에서 호출해도 됨.
     /// </summary>
     public void RefreshGrid(int index)
+{
+    if (index < 0 || index >= tabs.Length) return;
+
+    Tab tab = tabs[index];
+    if (tab.slots == null || tab.slots.Length == 0) return;
+    if (InventoryManager.Instance == null) return;
+
+    // null 데이터 항목 걸러내며 직접 필터링 (팀장님이 테스트용으로
+    // 비워둔 ItemStack이 있어도 죽지 않도록 GetAllOfCategory 대신 사용)
+    List<ItemStack> list = new List<ItemStack>();
+    foreach (ItemStack stack in InventoryManager.Instance.items)
     {
-        if (index < 0 || index >= tabs.Length) return;
-
-        Tab tab = tabs[index];
-        if (tab.slots == null || tab.slots.Length == 0) return;
-        if (InventoryManager.Instance == null) return;
-
-        List<ItemStack> list =
-            InventoryManager.Instance.GetAllOfCategory(tab.category);
-
-        for (int i = 0; i < tab.slots.Length; i++)
-        {
-            if (tab.slots[i] == null) continue;
-
-            if (i < list.Count)
-                tab.slots[i].SetItem(list[i].data, list[i].count);
-            else
-                tab.slots[i].ClearSlot();
-        }
+        if (stack != null && stack.data != null && stack.data.category == tab.category)
+            list.Add(stack);
     }
+
+    for (int i = 0; i < tab.slots.Length; i++)
+    {
+        if (tab.slots[i] == null) continue;
+
+        if (i < list.Count)
+            tab.slots[i].SetItem(list[i].data, list[i].count);
+        else
+            tab.slots[i].ClearSlot();
+    }
+}
 
     /// <summary>현재 보고 있는 탭 갱신 (아이템 사용/획득 직후 호출용)</summary>
     public void RefreshCurrent() => RefreshGrid(_currentIndex);
