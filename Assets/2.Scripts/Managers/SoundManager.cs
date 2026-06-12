@@ -234,7 +234,7 @@ public class SoundManager : MonoBehaviour
 		{
 			return data;
 		}
-		Debug.LogError($"[SoundManager] {type} 데이터 누락됨");
+		Debug.LogWarning($"[SoundManager] {type} 데이터 누락됨");
 		return null;
 	}
 

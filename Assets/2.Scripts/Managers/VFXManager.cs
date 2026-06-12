@@ -136,7 +136,7 @@ public class VFXManager : MonoBehaviour
         {
             if (config.prefab == null)
             {
-                Debug.LogError($"[VFXManager] {config.effectType} prefab 미연결! 인스펙터 확인 필요");
+                Debug.LogWarning($"[VFXManager] {config.effectType} prefab 미연결! 인스펙터 확인 필요");
                 continue;
             }
 
