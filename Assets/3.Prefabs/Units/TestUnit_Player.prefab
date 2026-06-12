@@ -1263,12 +1263,15 @@ MonoBehaviour:
   - type: 0
     curAmmo: 999
     maxAmmo: 999
+    missileData: {fileID: 0}
   - type: 2
     curAmmo: 100
     maxAmmo: 100
+    missileData: {fileID: 0}
   - type: 1
     curAmmo: 555
     maxAmmo: 555
+    missileData: {fileID: 0}
   curMissileType: 0
 --- !u!114 &2532570374250757226
 MonoBehaviour:
@@ -3186,6 +3189,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 6433512454957104831}
     m_Modifications:
+    - target: {fileID: 1220959983750552006, guid: 7ae37ae0e309f5544904bfc066e06c4e, type: 3}
+      propertyPath: _localRevealRadius
+      value: 5
+      objectReference: {fileID: 0}
     - target: {fileID: 5776847615673391110, guid: 7ae37ae0e309f5544904bfc066e06c4e, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
