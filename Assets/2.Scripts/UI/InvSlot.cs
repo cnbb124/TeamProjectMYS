@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using TMPro;
+using System.Threading;
 
 /// <summary>
 /// 인벤토리 슬롯 1칸.
@@ -22,11 +23,13 @@ public class InvSlot : MonoBehaviour,
     [Header("UI References")]
     [SerializeField] private Image    iconImage;
     [SerializeField] private TMP_Text nameText;
+    [SerializeField] private TMP_Text countText;
     [SerializeField] private Sprite   emptySprite;
     [SerializeField] private Color    emptyColor = new Color(1f, 1f, 1f, 0.2f);
 
     // 현재 슬롯 아이템
     public ItemData Item { get; private set; }
+    public int Count { get; private set; }
 
     // 드래그 전역 상태
     private static InvSlot _dragSource;
@@ -47,15 +50,17 @@ public class InvSlot : MonoBehaviour,
 
     // ── 아이템 세팅 ───────────────────────────────────────────
 
-    public void SetItem(ItemData newItem)
+    public void SetItem(ItemData newItem, int count = 1)
     {
-        Item = newItem;
+        Item  = newItem;
+     Count = newItem != null ? count : 0;
         Refresh();
     }
 
     public void ClearSlot()
     {
         Item = null;
+        Count = 0;
         Refresh();
     }
 
@@ -71,6 +76,9 @@ public class InvSlot : MonoBehaviour,
 
         if (nameText != null)
             nameText.text = has ? Item.itemName : string.Empty;
+
+        if (countText != null)
+            countText.text = (has && Count > 1) ? Count.ToString() : string.Empty;
     }
 
     // ── 드래그 시작 ───────────────────────────────────────────
