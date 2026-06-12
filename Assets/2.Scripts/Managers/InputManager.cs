@@ -115,8 +115,13 @@ public class GamepadConfig
 // fireLaser          : bool     누른 순간 한 프레임
 // fireAll            : bool     누른 순간 한 프레임
 // switchLockOnTarget : float    양수=다음  음수=이전  0=없음
-// switchMissile1~3   : bool     누른 순간 한 프레임
-// switchMissileShootMode : bool 누른 순간 한 프레임
+// switchMissilePrev/Next : bool 누른 순간 한 프레임 (미사일 슬롯 전환)
+// switchMissileShootMode : bool 누른 순간 한 프레임 (발사모드 전환)
+// switchConsumable   : bool     누른 순간 한 프레임 (소모품 슬롯 전환)
+// useConsumable      : bool     누른 순간 한 프레임 (소모품 사용)
+// dicePanelToggle    : bool     누른 순간 한 프레임 (다이스 패널 토글)
+// fuelGaugeToggle    : bool     누른 순간 한 프레임 (연료 게이지 패널 토글)
+// inventoryToggle    : bool     누른 순간 한 프레임 (인벤토리 패널 토글)
 // =====================================================================
 public class InputManager : MonoBehaviour
 {

@@ -221,6 +221,18 @@ public enum CONSUMABLE_TYPE
 }
 
 /// <summary>
+/// 인벤토리 UI 탭 분류용 카테고리.
+/// ItemData.category에 설정. InventoryManager.GetAllOfCategory()로 필터링.
+/// 탭 추가 시 이 enum에 값만 추가하면 됨 (새 ItemData 자식 클래스 불필요).
+/// </summary>
+public enum ITEM_CATEGORY
+{
+    PARTS,  // 파츠(장비)
+    CONSUMABLE, // 소모품
+    MATERIAL,   // 재료
+}
+
+/// <summary>
 /// 레벨업 보너스 종류.
 /// STAT_TYPE(파츠/장비용)과 분리 — 인벤토리 슬롯 등 비전투 보너스 포함.
 /// LevelStatData에서 사용.

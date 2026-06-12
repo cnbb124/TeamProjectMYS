@@ -9,6 +9,58 @@ public class ItemStack
     public int count;
 }
 
+// ================================================================
+// [외부 참조 가이드] - InventoryPanelUI 연동용
+// ================================================================
+// ▶ 탭 전환 (장비 / 소모품 / 재료 등, ITEM_CATEGORY 기준)
+//   GetAllOfCategory(ITEM_CATEGORY category) : 해당 카테고리 아이템만 필터링해서 반환
+//   예시) List<ItemStack> list = InventoryManager.Instance.GetAllOfCategory(ITEM_CATEGORY.PARTS);
+//
+//   탭 버튼 클릭 -> RefreshItemGrid(category) 호출 흐름 예시:
+//     void RefreshItemGrid(ITEM_CATEGORY category)
+//     {
+//         // 1. 기존 ITEM 그리드 슬롯 전부 제거
+//         // 2. GetAllOfCategory(category)로 현재 탭 목록 가져오기
+//         List<ItemStack> list = InventoryManager.Instance.GetAllOfCategory(category);
+//         // 3. 리스트 순회하며 슬롯 prefab 생성, stack.data.icon / itemName / stack.count 표시
+//         foreach (ItemStack stack in list) { /* 슬롯 생성 */ }
+//     }
+//
+// ▶ 타입 기준 필터링 (카테고리 대신 C# 타입으로 구분할 때)
+//   GetAllOfType<PartData>() / GetAllOfType<ConsumableData>() 등도 사용 가능
+//
+// ▶ 골드 표시
+//   gold : 보유 골드
+//   예시) goldText.text = InventoryManager.Instance.gold.ToString();
+//
+// ▶ 보유 수량 확인
+//   GetCount(ItemData data) : 없으면 0 반환
+//   예시) int count = InventoryManager.Instance.GetCount(someItemData);
+//
+// ▶ 추가 / 제거 (탭 구분 없이 동일 items 리스트에 직접 반영됨)
+//   AddItem(ItemData data, int amount = 1)
+//   RemoveItem(ItemData data, int amount = 1) : 수량 0되면 items에서 자동 제거
+//   예시) InventoryManager.Instance.RemoveItem(someItemData, 1);
+//   주의) 추가/제거 후에는 현재 탭의 GetAllOfCategory()를 다시 호출해 그리드 갱신 필요
+//
+// ▶ 퀵슬롯 등록 (드래그앤드롭 등)
+//   AssignToQuickSlot(ItemData data, int slotIndex) : 소모품만 가능 (파츠 넘기면 경고 후 무시)
+//   예시) InventoryManager.Instance.AssignToQuickSlot(consumableData, 0);
+// ================================================================
+
+// =====================================================================
+// InventoryManager
+//
+// 역할:
+//   1. 골드 보유량 관리 (AddGold / SpendGold)
+//   2. 아이템(파츠, 소모품 등) 보유 목록 관리 (추가/제거/수량조회)
+//   3. QuickSlot 연동 (소모품 등록)
+//
+// 연관 스크립트:
+//   ItemPickup.cs : 월드 드랍 아이템/골드 획득 시 AddItem/AddGold 호출
+//   QuickSlot.cs  : AssignToQuickSlot(등록) / ConsumeOne(사용) 호출
+//   SaveData.cs   : 저장 데이터 (위치: 2.Scripts/Data)
+// =====================================================================
 public class InventoryManager : MonoBehaviour
 {
     private static InventoryManager instance;
@@ -127,6 +179,20 @@ public class InventoryManager : MonoBehaviour
         foreach (ItemStack stack in items)
         {
             if (stack.data is T)
+            {
+                result.Add(stack);
+            }
+        }
+        return result;
+    }
+
+    /// <summary>ITEM_CATEGORY 기준으로 필터링해서 반환. 인벤토리 UI 탭 전환에서 사용.</summary>
+    public List<ItemStack> GetAllOfCategory(ITEM_CATEGORY category)
+    {
+        List<ItemStack> result = new List<ItemStack>();
+        foreach (ItemStack stack in items)
+        {
+            if (stack.data.category == category)
             {
                 result.Add(stack);
             }

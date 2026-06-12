@@ -176,6 +176,7 @@ MonoBehaviour:
   shieldRegainRate: 0
   isShieldRegaining: 0
   shield: {fileID: 0}
+  bodyHitboxColliders: []
   maxArmor: 0
   defense: 0
   criChance: 0
@@ -1269,6 +1270,7 @@ MonoBehaviour:
   shieldRegainRate: 0
   isShieldRegaining: 0
   shield: {fileID: 0}
+  bodyHitboxColliders: []
   maxArmor: 0
   defense: 0
   criChance: 0
@@ -2018,6 +2020,10 @@ PrefabInstance:
     - target: {fileID: 5067349883791501756, guid: f45f3c5144b7ed64d9c1338fc3bdf571, type: 3}
       propertyPath: m_AnchoredPosition.y
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5068011738417280731, guid: f45f3c5144b7ed64d9c1338fc3bdf571, type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 5107434663078218900, guid: f45f3c5144b7ed64d9c1338fc3bdf571, type: 3}
       propertyPath: m_AnchorMax.y
@@ -2795,6 +2801,7 @@ MonoBehaviour:
   shieldRegainRate: 0
   isShieldRegaining: 0
   shield: {fileID: 0}
+  bodyHitboxColliders: []
   maxArmor: 0
   defense: 0
   criChance: 0
@@ -3315,6 +3322,6 @@ SceneRoots:
   - {fileID: 446897307}
   - {fileID: 528098322}
   - {fileID: 810794449}
-  - {fileID: 149112815}
   - {fileID: 1609792645103474221}
   - {fileID: 1362288461}
+  - {fileID: 149112815}

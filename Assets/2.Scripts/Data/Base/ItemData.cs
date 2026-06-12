@@ -10,4 +10,8 @@ public abstract class ItemData : ScriptableObject
     [TextArea]
     public string description;
     public int price;
+
+    [Header("Category")]
+    [Tooltip("인벤토리 UI 탭 분류. InventoryManager.GetAllOfCategory()로 필터링.")]
+    public ITEM_CATEGORY category;
 }

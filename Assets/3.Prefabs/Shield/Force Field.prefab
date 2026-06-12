@@ -13,7 +13,6 @@ GameObject:
   - component: {fileID: 8062297125120273174}
   - component: {fileID: 8655910452525436208}
   - component: {fileID: 7317787368190115243}
-  - component: {fileID: 653671383406179767}
   - component: {fileID: 1220959983750552006}
   m_Layer: 13
   m_Name: Force Field
@@ -124,19 +123,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _targetRenderer: {fileID: 8062297125120273174}
   _hitStrength: 1
---- !u!114 &653671383406179767
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7989039363316996127}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 87bafb3c5eb592f44b77f5ced97a4749, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _forceField: {fileID: 1220959983750552006}
 --- !u!114 &1220959983750552006
 MonoBehaviour:
   m_ObjectHideFlags: 0

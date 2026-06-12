@@ -71,7 +71,8 @@ public class SoundManager : MonoBehaviour
 	[Space(10)]
 	[Header("<size=14>사운드 데이터 등록</size>")]
 	[Tooltip("사운드 타입과 오디오 클립을 짝지어 등록하는 리스트")]
-	[SerializeField] private SoundTypeClip[] soundList;
+	[SerializeField]
+	private SoundTypeClip[] soundList;
 
 	[Space(10)]
 	[Header("<size=14>오디오 소스 연결 BGM&UI(2D)</size>")]

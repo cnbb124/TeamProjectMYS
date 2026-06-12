@@ -86,6 +86,12 @@ public abstract class Unit : MonoBehaviour, IDamageable
 											// 피격 이펙트(Trigger) 호출은 OnHitReaction()에서 처리.
 	public GameObject shield;
 
+	[Tooltip("실드가 있을때 OFF, 없을때 ON 되는 본체 HitBox 콜라이더(들). 실드 콜라이더와 상호토글됨.")]
+	public Collider[] bodyHitboxColliders;
+
+	// 실드 오브젝트에 붙어있는 콜라이더 캐싱용 (Awake에서 자동 탐색)
+	private Collider _shieldCollider;
+
 
 	[Header("Armor - 자동회복x")]
 	public int maxArmor;//최대,현재아머수치
@@ -162,6 +168,10 @@ public abstract class Unit : MonoBehaviour, IDamageable
 		weaponSystem = GetComponent<WeaponSystem>();
 		_unitParts = GetComponent<UnitParts>();
 
+		if (shield != null)
+		{
+			_shieldCollider = shield.GetComponent<Collider>();
+		}
 	}
 
 
@@ -199,6 +209,26 @@ public abstract class Unit : MonoBehaviour, IDamageable
 		curShieldRemaining = maxShieldCapacity;
 		curArmorRemaining = maxArmor;
 		curBoostRemaining = maxBoostCapacity;
+
+		UpdateShieldHitboxState();
+	}
+
+	// 실드 유무에 따라 실드 콜라이더 / 본체 HitBox 콜라이더를 상호토글.
+	// 실드 있음 -> 실드 콜라이더만 ON, 본체 HitBox는 OFF
+	// 실드 없음 -> 실드 콜라이더 OFF, 본체 HitBox만 ON
+	private void UpdateShieldHitboxState()
+	{
+		bool shieldUp = curShieldRemaining > 0;
+
+		if (_shieldCollider != null)
+		{
+			_shieldCollider.enabled = shieldUp;
+		}
+
+		foreach (Collider hitbox in bodyHitboxColliders)
+		{
+			hitbox.enabled = !shieldUp;
+		}
 	}
 
 	// Update is called once per frame
@@ -413,6 +443,9 @@ public abstract class Unit : MonoBehaviour, IDamageable
 			curShieldRemaining += Mathf.RoundToInt(shieldRegainRate * 0.1f);
 			curShieldRemaining = Mathf.Min(curShieldRemaining, maxShieldCapacity);
 
+			// 0 -> 양수로 회복된 시점에 콜라이더 상태 갱신
+			UpdateShieldHitboxState();
+
 			// 다음 0.1초까지 대기
 			yield return tick;
 		}
@@ -541,6 +574,9 @@ public abstract class Unit : MonoBehaviour, IDamageable
 		}
 		//피격 데미지수치필요(실드있을시, 없을시),실제로 데미지받음
 		calculTakeDamage(damageAmount);
+
+		// 피격으로 실드가 0이 됐을수있으니 콜라이더 상태 갱신
+		UpdateShieldHitboxState();
 
 		// 파츠 피격 — FRAME HP는 본체가 담당하므로 FRAME 제외한 파츠만 처리
 		if (_unitParts != null)
