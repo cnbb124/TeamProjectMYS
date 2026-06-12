@@ -16,7 +16,7 @@ public abstract class ProjectileData : ItemData
 	public DAMAGE_TYPE damageType;
 	[Tooltip("피격시 VFX매니저에서 실행할 이펙트 종류")]
 	public EFFECT_TYPE hitEffect;     // VFX_BULLETHIT 등
-	
+
 }
 
 

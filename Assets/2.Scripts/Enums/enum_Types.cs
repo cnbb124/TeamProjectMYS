@@ -164,7 +164,8 @@ public enum POOL_TYPE
     BULLET,
     MISSILE,
     LASER,
-    CLUSTER_MISSILE,
+    CLUSTER_MISSILE_BASE,
+    CLUSTER_MISSILE_CHILDREN,
     DUMB_MISSILE,
 
     // 적
@@ -230,7 +231,7 @@ public enum ITEM_CATEGORY
     PARTS,  // 파츠(장비)
     CONSUMABLE, // 소모품
     MATERIAL,   // 재료
-    AMMO,
+    MISSILE,
 }
 
 /// <summary>

@@ -86,10 +86,13 @@ public abstract class Unit : MonoBehaviour, IDamageable
 											// 피격 이펙트(Trigger) 호출은 OnHitReaction()에서 처리.
 	public GameObject shield;
 
-	[Tooltip("실드가 있을때 OFF, 없을때 ON 되는 본체 HitBox 콜라이더(들). 실드 콜라이더와 상호토글됨.")]
-	public Collider[] bodyHitboxColliders;
+	[Tooltip("실드가 있을때 OFF, 없을때 ON 되는 본체 HitBox 연결. 실드 콜라이더와 상호토글됨.")]
+	public Transform bodyHitboxRoot;
 
-	// 실드 오브젝트에 붙어있는 콜라이더 캐싱용 (Awake에서 자동 탐색)
+	// bodyHitboxRoot 하위 콜라이더 캐싱용 
+	private Collider[] _bodyHitboxColliders;
+
+	// 실드 오브젝트에 붙어있는 콜라이더 캐싱용
 	private Collider _shieldCollider;
 
 
@@ -152,7 +155,7 @@ public abstract class Unit : MonoBehaviour, IDamageable
 	private float _dodgeTimer = 0f;
 	[Tooltip("회피 쿨타임")]
 	public float dodgeCoolTime;
-	protected float _lastDodgeTime = 0f;
+	protected float _dodgeCooldownTimer = 0f;
 	public bool IsInvincible { get; private set; }
 	[Tooltip("피격부위 혹은 HP잔량에 따른이동속도 변경용")]
 	public float speedMultiPlier;//HP 혹은 피격부위에따른 속도조절용.
@@ -174,6 +177,11 @@ public abstract class Unit : MonoBehaviour, IDamageable
 		if (shield != null)
 		{
 			_shieldCollider = shield.GetComponent<Collider>();
+		}
+
+		if (bodyHitboxRoot != null)
+		{
+			_bodyHitboxColliders = bodyHitboxRoot.GetComponentsInChildren<Collider>();
 		}
 	}
 
@@ -228,7 +236,12 @@ public abstract class Unit : MonoBehaviour, IDamageable
 			_shieldCollider.enabled = shieldUp;
 		}
 
-		foreach (Collider hitbox in bodyHitboxColliders)
+		if (_bodyHitboxColliders == null)
+		{
+			return;
+		}
+
+		foreach (Collider hitbox in _bodyHitboxColliders)
 		{
 			hitbox.enabled = !shieldUp;
 		}
@@ -241,6 +254,11 @@ public abstract class Unit : MonoBehaviour, IDamageable
 		UpdateFSM();
 		//UpdateShieldRegen(); >>0516 코루틴으로변경
 		UpdateBoostRegen();
+
+		if (_dodgeCooldownTimer > 0f)
+		{
+			_dodgeCooldownTimer -= Time.deltaTime;
+		}
 
 		updateTimer += Time.deltaTime;
 		if (updateTimer > 0.5f)
@@ -381,6 +399,7 @@ public abstract class Unit : MonoBehaviour, IDamageable
 				//PlayAnim(ANIM_TYPE.DODGE_N);키입력따라 좌우 혹은 랜덤방향(키입력없을때)
 				_dodgeTimer = dodgeDuration;
 				IsInvincible = true;
+				_dodgeCooldownTimer = dodgeCoolTime;
 				break;
 
 			case UNIT_STATE.DIE:

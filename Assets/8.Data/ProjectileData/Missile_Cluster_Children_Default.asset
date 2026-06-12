@@ -9,18 +9,25 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 07497ca0f0c50794a93a6e3e723922c8, type: 3}
-  m_Name: Bullet_Default
+  m_Script: {fileID: 11500000, guid: 6dee536450bf5aa4ea1c9a16fa20cd84, type: 3}
+  m_Name: Missile_Cluster_Children_Default
   m_EditorClassIdentifier: 
   itemName: 
   icon: {fileID: 0}
   description: 
   price: 0
   category: 3
-  damage: 25
-  maxRange: 2000
+  damage: 50
+  maxRange: 1500
   ignoreArmor: 0
   shieldDamageMultiplier: 1
-  damageType: 0
-  hitEffect: 1
-  speed: 500
+  damageType: 2
+  hitEffect: 0
+  turnRate: 180
+  armDistance: 10
+  navGain: 3
+  launchSpeed: 15
+  maxSpeed: 500
+  accelerateTime: 1.5
+  explosionRadius: 10
+  vfxBaseRadius: 20

@@ -184,15 +184,9 @@ public class Player : Unit
 		ShootByInput();
 
 		// 회피 입력 — GetKeyDown은 Update에서만 안정적으로 감지됨 (FixedUpdate에서 씹힘)
-		if (curState != UNIT_STATE.DODGE && _input.isDodging)
+		if (curState != UNIT_STATE.DODGE && _input.isDodging && _dodgeCooldownTimer <= 0f)
 		{
-			if (Time.time < _lastDodgeTime + dodgeCoolTime)
-			{
-				return;
-			}
-			_lastDodgeTime = Time.time;
 			CurState = UNIT_STATE.DODGE;
-			
 		}
 	}
 

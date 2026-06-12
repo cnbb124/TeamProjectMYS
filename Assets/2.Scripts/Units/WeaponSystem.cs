@@ -284,8 +284,16 @@ public class WeaponSystem : MonoBehaviour
 				break;
 
 			case MISSILE_TYPE.CLUSTER:
-				// ClusterMissile cm = _pool.GetClusterMissile();
-				// cm.Init(firePos.position, firePos.forward, _unit);
+				ClusterMissile cm = _pool.GetClusterMissile();
+				if (lockOnSystem != null && lockOnSystem.MultiLockedTargets.Count > 0)
+				{
+					// 락온이 풀려도 자탄이 원래 타겟을 추적하도록 복사본 전달
+					cm.Init(firePos.position, firePos.forward, _unit, new List<Transform>(lockOnSystem.MultiLockedTargets));
+				}
+				else
+				{
+					cm.Init(firePos.position, firePos.forward, _unit);
+				}
 				break;
 
 			case MISSILE_TYPE.DUMB:

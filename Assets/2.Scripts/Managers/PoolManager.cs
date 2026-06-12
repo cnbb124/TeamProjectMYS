@@ -100,7 +100,8 @@ public class PoolManager : MonoBehaviour
         POOL_TYPE.BULLET,
         POOL_TYPE.MISSILE,
         POOL_TYPE.LASER,
-        POOL_TYPE.CLUSTER_MISSILE,
+        POOL_TYPE.CLUSTER_MISSILE_BASE,
+        POOL_TYPE.CLUSTER_MISSILE_CHILDREN,
         POOL_TYPE.DUMB_MISSILE,
     };
 
@@ -272,7 +273,7 @@ public class PoolManager : MonoBehaviour
 	/// </summary>
 	public ClusterMissile GetClusterMissile()
 	{
-		return GetCachedProjectile(POOL_TYPE.CLUSTER_MISSILE) as ClusterMissile;
+		return GetCachedProjectile(POOL_TYPE.CLUSTER_MISSILE_BASE) as ClusterMissile;
 	}
 	/// <summary>
 	/// 유도없는 미사일. 꺼낸 후 반드시 Init() 호출.
