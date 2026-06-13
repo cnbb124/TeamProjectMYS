@@ -232,6 +232,7 @@ public enum ITEM_CATEGORY
     CONSUMABLE, // 소모품
     MATERIAL,   // 재료
     MISSILE,
+    BULLET,
 }
 
 /// <summary>

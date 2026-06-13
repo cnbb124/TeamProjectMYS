@@ -54,6 +54,9 @@ public class WeaponSystem : MonoBehaviour
 	[Tooltip("총알 발사 간격 (초)")]
 	public float fireBulletDelay = 0.1f;
 	private float _lastFireBulletTime = 0f;
+
+	[Tooltip("장착된 총알의 데이터(SO). curBulletPoolType으로 풀 종류 지정 (변형탄 대응).")]
+	public BulletData curBulletData;
 	[Header("미사일 설정")]
 	public float fireMissileDelay = 2f;
 	private float _lastFireMissileTime = 0f;
@@ -252,8 +255,22 @@ public class WeaponSystem : MonoBehaviour
 		}
 		VFXManager.Instance.PlayEffectAtUnit(EFFECT_TYPE.VFX_BULLET_MUZZLE, _unit.transform, curFirePos.position, curFirePos.rotation, 0.2f);
 		_sound.PlaySFX3DAtUnit(soundType, _unit.transform, curFirePos);
-		Bullet newBullet = _pool.GetBullet();
+		Bullet newBullet = _pool.GetProjectile(GetBulletPoolType()) as Bullet;
 		newBullet.Init(curFirePos.position, curFirePos.forward, _unit);
+	}
+
+	/// <summary>
+	/// 발사할 총알 풀 종류 결정. curBulletData.curBulletPoolType이 설정돼있으면 그 값,
+	/// curBulletData가 null이면(에디터 미설정) 기존 기본 풀(POOL_TYPE.BULLET)로 폴백.
+	/// </summary>
+	private POOL_TYPE GetBulletPoolType()
+	{
+		if (curBulletData != null)
+		{
+			return curBulletData.curBulletPoolType;
+		}
+
+		return POOL_TYPE.BULLET;
 	}
 
 	/// <summary>
@@ -291,20 +308,24 @@ public class WeaponSystem : MonoBehaviour
 		}
 	}
 
-	/// <summary>
-	/// 지정 위치에서 미사일 1발 발사.
-	/// </summary>
-	private void ShootMissileFrom(Transform firePos)
+    /// <summary>
+    /// 지정 위치에서 미사일 1발 발사.
+    /// 풀에서 꺼낼 프리팹은 missileData.curMissilePoolType으로 결정(변형탄 대응).
+    /// missileData가 비어있으면(에디터 미설정) curMissileType 기준 기본 풀로 폴백.
+    /// </summary>
+    private void ShootMissileFrom(Transform firePos)
 	{
 		if (_launcherAnims.TryGetValue(firePos, out LauncherAnim missileAnim))
 		{
 			missileAnim.PlayFire();
 		}
 
+		Projectile proj = _pool.GetProjectile(GetMissilePoolType(CurMissileSlot));
+
 		switch (curMissileType)
 		{
 			case MISSILE_TYPE.HOMING:
-				Missile newMissile = _pool.GetMissile();
+				Missile newMissile = proj as Missile;
 				if (lockOnSystem != null && lockOnSystem.IsLocked)
 				{
 					newMissile.Init(firePos.position, firePos.forward, _unit, lockOnSystem.LockedTarget);
@@ -316,7 +337,7 @@ public class WeaponSystem : MonoBehaviour
 				break;
 
 			case MISSILE_TYPE.CLUSTER:
-				ClusterMissile cm = _pool.GetClusterMissile();
+				ClusterMissile cm = proj as ClusterMissile;
 				if (lockOnSystem != null && lockOnSystem.MultiLockedTargets.Count > 0)
 				{
 					// 락온이 풀려도 자탄이 원래 타겟을 추적하도록 복사본 전달
@@ -329,10 +350,32 @@ public class WeaponSystem : MonoBehaviour
 				break;
 
 			case MISSILE_TYPE.DUMB:
-				DumbMissile newDm = _pool.GetDumbMissile();
+				DumbMissile newDm = proj as DumbMissile;
 				newDm.Init(firePos.position, firePos.forward, _unit);
-			
+
 				break;
+		}
+	}
+
+    /// <summary>
+    /// 발사할 풀 종류 결정. missileData.curMissilePoolType 설정돼있으면 그 값 사용,
+    /// missileData가 null이면(에디터 작업 전 임시 상태) curMissileType 기준 기존 기본 풀로 폴백.
+    /// </summary>
+    private POOL_TYPE GetMissilePoolType(MissileSlot curSlot)
+	{
+		if (curSlot != null && curSlot.missileData != null)
+		{
+			return curSlot.missileData.curMissilePoolType;
+		}
+
+		switch (curMissileType)
+		{
+			case MISSILE_TYPE.CLUSTER:
+				return POOL_TYPE.CLUSTER_MISSILE_BASE;
+			case MISSILE_TYPE.DUMB:
+				return POOL_TYPE.DUMB_MISSILE;
+			default:
+				return POOL_TYPE.MISSILE;
 		}
 	}
 
@@ -459,7 +502,7 @@ public class WeaponSystem : MonoBehaviour
 		}
 	}
 
-	public void EquipMissile(int slotIndex, MISSILE_TYPE type, int maxAmmo)
+	public void EquipMissile(int slotIndex, MISSILE_TYPE type, int maxAmmo, MissileData data)
 	{
 		if (missileSlots == null || slotIndex < 0 || slotIndex >= missileSlots.Count)
 		{
@@ -468,6 +511,12 @@ public class WeaponSystem : MonoBehaviour
 		missileSlots[slotIndex].type = type;
 		missileSlots[slotIndex].maxAmmo = maxAmmo;
 		missileSlots[slotIndex].curAmmo = maxAmmo;
+		missileSlots[slotIndex].missileData = data;
+
+		if (slotIndex == _curSlotIndex)
+		{
+			SetCurMissileType(type);
+		}
 	}
 
 

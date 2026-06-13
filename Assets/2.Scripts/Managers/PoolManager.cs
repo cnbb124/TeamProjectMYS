@@ -276,6 +276,13 @@ public class PoolManager : MonoBehaviour
 		return GetCachedProjectile(POOL_TYPE.CLUSTER_MISSILE_BASE) as ClusterMissile;
 	}
 	/// <summary>
+	/// 클러스터 미사일 분열 자탄. 꺼낸 후 반드시 Init() 호출.
+	/// </summary>
+	public Missile GetClusterMissileChild()
+	{
+		return GetCachedProjectile(POOL_TYPE.CLUSTER_MISSILE_CHILDREN) as Missile;
+	}
+	/// <summary>
 	/// 유도없는 미사일. 꺼낸 후 반드시 Init() 호출.
 	/// </summary>
 	public DumbMissile GetDumbMissile()
@@ -283,6 +290,12 @@ public class PoolManager : MonoBehaviour
 		return GetCachedProjectile(POOL_TYPE.DUMB_MISSILE) as DumbMissile;
 	}
 
+
+    /// <summary>POOL_TYPE으로 투사체 꺼내기. 변형탄(MissileData.curMissilePoolType) 등 직접 풀 지정용.</summary>
+    public Projectile GetProjectile(POOL_TYPE poolType)
+	{
+		return GetCachedProjectile(poolType);
+	}
 
 	/// <summary>PROJECTILE_TYPE으로 투사체 꺼내기. Player/Enemy 공용.</summary>
 	public Projectile GetProjectile(PROJECTILE_TYPE shootType)

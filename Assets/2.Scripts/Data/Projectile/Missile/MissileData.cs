@@ -22,4 +22,7 @@ public class MissileData : ProjectileData
 	public float explosionRadius = 8f;
 	[Tooltip("VFXManager에 연결된 폭발이펙트용 파티클 원본의 범위 입력. 원본값 입력 후 수정X.")]
 	public float vfxBaseRadius = 8f;
+
+	[Tooltip("실제 발사될 미사일 프리팹이 등록된 풀 종류. WeaponSystem이 이 값으로 PoolManager.GetProjectile(POOL_TYPE) 호출.")]
+	public POOL_TYPE curMissilePoolType;
 }

@@ -60,13 +60,13 @@ public class ClusterMissile : Missile
 
 		for (int i = 0; i < splitCount; i++)
 		{
-			Missile child = PoolManager.Instance.GetMissile();
+			Missile child = PoolManager.Instance.GetClusterMissileChild();
 
 			// 부채꼴로 퍼지는 발사 방향 (가운데 기준 좌우대칭)
 			float angle = startAngle + angleStep * i;
 			Vector3 spreadDir = Quaternion.AngleAxis(angle, transform.up) * transform.forward;
 
-			// 타겟 라운드로빈 배정, 없으면 null(직진)
+			// 타겟 배정, 없으면 null(직진). 탄수 > 락온대상일시 같은대상에게 중복.
 			Transform target = null;
 			if (splitTargets != null && splitTargets.Count > 0)
 			{
@@ -76,7 +76,7 @@ public class ClusterMissile : Missile
 			child.Init(transform.position, spreadDir, attacker, target);
 		}
 
-		// 분열 지점에서 폭발 (ClusterMisslleData의 damage/explosionRadius 기준)
+		// 분열 지점에서 폭발 (explosionRadius범위)
 		Explode(explosionInfo);
 		ReturnToPool();
 	}
