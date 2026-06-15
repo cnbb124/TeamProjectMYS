@@ -37,11 +37,19 @@ public class InventoryTabGroup : MonoBehaviour
 
     private void Awake()
     {
+        Debug.Log($"[Tab] Awake 호출 / tabs.Length={tabs.Length}");
         for (int i = 0; i < tabs.Length; i++)
         {
             int index = i;
             if (tabs[i].button != null)
+            {
                 tabs[i].button.onClick.AddListener(() => SelectTab(index));
+                Debug.Log($"[Tab] 버튼 {i} 리스너 등록 완료");
+            }
+            else
+            {
+                Debug.LogWarning($"[Tab] 버튼 {i} 가 null!");
+            }
         }
     }
 
@@ -66,6 +74,7 @@ public class InventoryTabGroup : MonoBehaviour
 
     public void SelectTab(int index)
     {
+        Debug.Log($"[Tab] SelectTab({index}) 호출");
         if (index < 0 || index >= tabs.Length) return;
         _currentIndex = index;
 
