@@ -37,34 +37,39 @@ public class TargettingRadarSystem : MonoBehaviour
     }
 
     void Update()
+{
+    if (lockOnSystem == null || player == null) return;
+
+    if (playerArrow != null)
+        playerArrow.anchoredPosition = Vector2.zero;
+
+    _activeDotCount = 0;
+
+    // ★ TargetsInRadarRange = 360도 전방향 (각도 필터 없음)
+    foreach (Collider col in lockOnSystem.TargetsInRadarRange)
     {
-        if (lockOnSystem == null || player == null) return;
+        if (col == null) return;
 
-        // 플레이어 화살표: 항상 레이더 중앙 고정 (Heading-Up)
-        if (playerArrow != null)
-            playerArrow.anchoredPosition = Vector2.zero;
+        Transform target = col.transform;
 
-        _activeDotCount = 0;
+        // 플레이어 자신 제외
+        if (target == player) continue;
 
-        foreach (Transform target in lockOnSystem.TargetsInLockonRange)
-        {
-            if (target == null) continue;
+        Vector3 localPos = player.InverseTransformPoint(target.position);
+        Vector2 radarPos = new Vector2(localPos.x, localPos.z);
+        radarPos = Vector2.ClampMagnitude(radarPos, lockOnSystem.lockOnRange);
+        radarPos *= radarDisplayRadius / lockOnSystem.lockOnRange;
 
-            Vector3 localPos = player.InverseTransformPoint(target.position);
-            Vector2 radarPos = new Vector2(localPos.x, localPos.z);
-            radarPos = Vector2.ClampMagnitude(radarPos, lockOnSystem.lockOnRange);
-            radarPos *= radarDisplayRadius / lockOnSystem.lockOnRange;
+        Image dot = GetDot(_activeDotCount);
+        dot.rectTransform.anchoredPosition = radarPos;
+        dot.color = GetDotColor(target);
 
-            Image dot = GetDot(_activeDotCount);
-            dot.rectTransform.anchoredPosition = radarPos;
-            dot.color = GetDotColor(target);
-
-            _activeDotCount++;
-        }
-
-        for (int i = _activeDotCount; i < _dotPool.Count; i++)
-            _dotPool[i].gameObject.SetActive(false);
+        _activeDotCount++;
     }
+
+    for (int i = _activeDotCount; i < _dotPool.Count; i++)
+        _dotPool[i].gameObject.SetActive(false);
+}
 
     private Color GetDotColor(Transform target)
     {
