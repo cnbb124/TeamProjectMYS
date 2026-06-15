@@ -47,6 +47,9 @@ public class KeyboardMouseConfig
 	[Header("모드 전환")]
     public KeyCode switchFireMode = KeyCode.C;      // 발사 모드 전환 (교차/동시)
 
+    [Header("락온 모드 전환")]
+    public KeyCode toggleClusterLockMode = KeyCode.C; // 클러스터 미사일 단일/다중 락온 전환
+
     [Header("Unity Input Settings 축 이름")]
     [Tooltip("Edit > Project Settings > Input Manager 에 등록된 이름과 일치해야 함")]
     public string axisHorizontal  = "Horizontal";      // A/D
@@ -92,6 +95,9 @@ public class GamepadConfig
     [Header("모드 전환")]
     public KeyCode switchFireMode  = KeyCode.JoystickButton10;
 
+    [Header("락온 모드 전환")]
+    public KeyCode toggleClusterLockMode = KeyCode.JoystickButton0;
+
     [Header("Unity Input Settings 축 이름")]
     public string axisRightStickX  = "RightStickX";
     public string axisRightStickY  = "RightStickY";
@@ -117,6 +123,7 @@ public class GamepadConfig
 // switchLockOnTarget : float    양수=다음  음수=이전  0=없음
 // switchMissilePrev/Next : bool 누른 순간 한 프레임 (미사일 슬롯 전환)
 // switchMissileShootMode : bool 누른 순간 한 프레임 (발사모드 전환)
+// toggleClusterLockMode  : bool 누른 순간 한 프레임 (클러스터 단일/다중 락온 전환)
 // switchConsumable   : bool     누른 순간 한 프레임 (소모품 슬롯 전환)
 // useConsumable      : bool     누른 순간 한 프레임 (소모품 사용)
 // dicePanelToggle    : bool     누른 순간 한 프레임 (다이스 패널 토글)
@@ -205,6 +212,9 @@ public class InputManager : MonoBehaviour
 
     [Tooltip("발사 모드 전환(교차/동시) - 누른 순간 한 프레임만 true")]
     public bool switchMissileShootMode;
+
+    [Tooltip("클러스터 단일/다중 락온 전환 - 누른 순간 한 프레임만 true")]
+    public bool toggleClusterLockMode;
 
     [Header("소모품")]
     [Tooltip("소모품 슬롯 전환 - 누른 순간 한 프레임만 true")]
@@ -301,6 +311,7 @@ public class InputManager : MonoBehaviour
         switchMissilePrev      = Input.GetKeyDown(km.missilePrev);
         switchMissileNext      = Input.GetKeyDown(km.missileNext);
         switchMissileShootMode = Input.GetKeyDown(km.switchFireMode);
+        toggleClusterLockMode  = Input.GetKeyDown(km.toggleClusterLockMode);
 
         // 소모품
         switchConsumable = Input.GetKeyDown(km.switchConsumable);
@@ -352,6 +363,7 @@ public class InputManager : MonoBehaviour
 
         // 모드 전환
         switchMissileShootMode = Input.GetKeyDown(gp.switchFireMode);
+        toggleClusterLockMode  = Input.GetKeyDown(gp.toggleClusterLockMode);
 
         // D-패드: 이전 프레임 비교로 "누른 순간" 감지
         //   좌 → 미사일 이전 슬롯

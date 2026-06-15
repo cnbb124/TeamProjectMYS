@@ -1,11 +1,11 @@
-using System.Collections;
+ï»¿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class DumbMissile : Missile
 {
 	/// <summary>
-	/// ÃÖ´ë»ç°Å¸® µµ´Ş½Ã Æø¹ß¿ë
+	/// ìµœëŒ€ì‚¬ê±°ë¦¬ ë„ë‹¬ì‹œ í­ë°œìš©
 	/// </summary>
 	protected override void OnMaxRange()
 	{

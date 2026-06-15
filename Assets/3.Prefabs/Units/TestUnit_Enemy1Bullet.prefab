@@ -35,6 +35,7 @@ Transform:
   m_Children:
   - {fileID: 5584093710071733594}
   - {fileID: 254416084326508949}
+  - {fileID: 1152688981955200687}
   - {fileID: 3946845775362763088}
   - {fileID: 3738196860082287672}
   - {fileID: 1957426800696394916}
@@ -90,7 +91,7 @@ MonoBehaviour:
   shieldRegainRate: 0
   isShieldRegaining: 0
   shield: {fileID: 0}
-  bodyHitboxColliders: []
+  bodyHitboxRoot: {fileID: 0}
   maxArmor: 0
   defense: 0
   criChance: 0
@@ -105,6 +106,7 @@ MonoBehaviour:
   boostRegainRate: 0
   dodgeDuration: 0.5
   dodgeInvincibleTime: 0.4
+  dodgeCoolTime: 0
   speedMultiPlier: 0
   curState: 0
   curHpRemaining: 0
@@ -127,6 +129,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   lockOnSystem: {fileID: 8724719605768936485}
   fireBulletDelay: 0.2
+  curBulletData: {fileID: 0}
   fireMissileDelay: 2
   testBulletFirePositions:
   - {fileID: 3946845775362763088}
@@ -208,7 +211,6 @@ GameObject:
   m_Component:
   - component: {fileID: 254416084326508949}
   - component: {fileID: 584068322480663161}
-  - component: {fileID: 5426465725121250542}
   m_Layer: 13
   m_Name: HitBox_Enemy1
   m_TagString: Untagged
@@ -252,18 +254,6 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 25.5, y: 25.5, z: 25.5}
   m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &5426465725121250542
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4423597914703019308}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 08e38ccf711ac944e8cc64805f9ec270, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &5724032924803493783
 GameObject:
   m_ObjectHideFlags: 0
@@ -378,6 +368,72 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!1 &6068666649997154012
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1152688981955200687}
+  - component: {fileID: 918418590365578858}
+  - component: {fileID: 9202957200257683127}
+  m_Layer: 12
+  m_Name: LockOnBox
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1152688981955200687
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6068666649997154012}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 8448151559582959334}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &918418590365578858
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6068666649997154012}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 780c56f43ada82443b3b09a9a5251a39, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!65 &9202957200257683127
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6068666649997154012}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 1, y: 1, z: 1}
+  m_Center: {x: 0, y: 0, z: 0}
 --- !u!1 &6135473437214411789
 GameObject:
   m_ObjectHideFlags: 0

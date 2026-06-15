@@ -1,17 +1,17 @@
-using System.Collections;
+ï»¿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 [CreateAssetMenu(fileName = "New Cluster Missile Data", menuName = "Create Data/Item/Projectile Data/Cluster Missile")]
 public class ClusterMisslleData : MissileData
 {
-	[Header("ºĞ¿­ Åº °¹¼ö(¶ô¿Â ½Ã½ºÅÛ¿¡ ´ÙÁß Å¸°ÙµÉ °¹¼ö)")]
+	[Header("ë¶„ì—´ íƒ„ ê°¯ìˆ˜(ë½ì˜¨ ì‹œìŠ¤í…œì—ë„ ìë™ ë“±ë¡ë¨. ë‹¤ì¤‘ íƒ€ê²Ÿë  ê°¯ìˆ˜)")]
 	public int splitCount = 4;
 
-	[Header("ºĞ¿­ÀÌ ½ÃÀÛµÉ ºñÇà°Å¸®")]
+	[Header("ë¶„ì—´ì´ ì‹œì‘ë  ë¹„í–‰ê±°ë¦¬")]
 	public float splitDistance = 750f;
 
-	[Header("ºĞ¿­ °¢µµ(µµ´ÜÀ§, °¡¿îµ¥ ±âÁØ ÁÂ¿ì´ëÄª")]
+	[Header("ë¶„ì—´ ê°ë„(ë„ë‹¨ìœ„, ê°€ìš´ë° ê¸°ì¤€ ì¢Œìš°ëŒ€ì¹­")]
 	[Range(10f, 180f)]
 	public float splitSpreadAngle = 120f;
 

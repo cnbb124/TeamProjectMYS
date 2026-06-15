@@ -66,6 +66,9 @@ public class LockOnSystem : MonoBehaviour
 	private int _currentTargetIndex = 0;
 	private Unit ownerUnit;
 
+	// 클러스터 미사일 락온 모드 (true = 단일타겟에 전탄 집중, false = 다중타겟 분산)
+	private bool clusterSingleLockMode = false;
+
 	private void Awake()
 	{
 		ownerUnit = GetComponent<Unit>();
@@ -74,6 +77,12 @@ public class LockOnSystem : MonoBehaviour
 
 	private void Update()
 	{
+		// 클러스터 단일/다중 락온 모드 전환 (플레이어 입력만 반영)
+		if (ownerUnit is Player && InputManager.Instance != null && InputManager.Instance.toggleClusterLockMode)
+		{
+			clusterSingleLockMode = !clusterSingleLockMode;
+		}
+
 		FindAllTargets();
 
 		// 타겟 없으면 전부 초기화
@@ -111,7 +120,7 @@ public class LockOnSystem : MonoBehaviour
 				break;
 
 			case MISSILE_TYPE.CLUSTER:
-				newMode = LOCK_ON_MODE.MULTI;
+				newMode = clusterSingleLockMode ? LOCK_ON_MODE.SINGLE : LOCK_ON_MODE.MULTI;
 				break;
 
 			case MISSILE_TYPE.DUMB:
@@ -125,11 +134,7 @@ public class LockOnSystem : MonoBehaviour
 		}
 
 		currentLockMode = newMode;
-
-		if (currentLockMode == LOCK_ON_MODE.NONE)
-		{
-			ClearLock();
-		}
+		ClearLock();
 	}
 	/// <summary>
 	/// 단일 락온 모드 업데이트 로직
@@ -212,8 +217,8 @@ public class LockOnSystem : MonoBehaviour
 			}
 
 			// 해당 객체가 HitBox 컴포넌트를 가지고 있는지 우선 확인
-			HitBox hitbox = hit.GetComponent<HitBox>();
-			if (hitbox == null)
+			LockOnBox lockOnBox = hit.GetComponent<LockOnBox>();
+			if (lockOnBox == null)
 			{
 				continue;
 			}
@@ -231,9 +236,9 @@ public class LockOnSystem : MonoBehaviour
 			}
 
 			// 검증이 완료되면 HitBox의 좌표를 락온 대상으로 등록
-			if (!TargetsInLockonRange.Contains(hitbox.transform))
+			if (!TargetsInLockonRange.Contains(lockOnBox.transform))
 			{
-				TargetsInLockonRange.Add(hitbox.transform);
+				TargetsInLockonRange.Add(lockOnBox.transform);
 			}
 			//Transform unitTr = hit.GetComponentInParent<Unit>()?.transform;
 			//if (unitTr == null)

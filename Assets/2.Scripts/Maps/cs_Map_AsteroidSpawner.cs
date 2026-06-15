@@ -89,6 +89,6 @@ public class cs_Map_AsteroidSpawner : MonoBehaviour
             SphereCollider sc = hitboxObj.AddComponent<SphereCollider>();
             sc.isTrigger = true;
             sc.radius = 0.5f;
-            hitboxObj.AddComponent<HitBox>();
+            //hitboxObj.AddComponent<HitBox>();
         }
 }

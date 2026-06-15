@@ -94,8 +94,8 @@ public abstract class Unit : MonoBehaviour, IDamageable
 	// bodyHitboxRoot 하위 콜라이더 캐싱용 
 	private Collider[] _bodyHitboxColliders;
 
-	// 실드 오브젝트에 붙어있는 콜라이더 캐싱용
-	private Collider _shieldCollider;
+	// 실드 오브젝트(자식 포함) 콜라이더 캐싱용
+	private Collider[] _shieldColliders;
 
 
 	[Header("Armor - 자동회복x")]
@@ -178,7 +178,7 @@ public abstract class Unit : MonoBehaviour, IDamageable
 
 		if (shield != null)
 		{
-			_shieldCollider = shield.GetComponent<Collider>();
+			_shieldColliders = shield.GetComponentsInChildren<Collider>();
 		}
 
 		if (bodyHitboxRoot != null)
@@ -232,10 +232,14 @@ public abstract class Unit : MonoBehaviour, IDamageable
 	private void UpdateShieldHitboxState()
 	{
 		bool shieldUp = curShieldRemaining > 0;
+		bool bodyHitboxEnabled = !shieldUp && !IsInvincible;
 
-		if (_shieldCollider != null)
+		if (_shieldColliders != null)
 		{
-			_shieldCollider.enabled = shieldUp;
+			foreach (Collider shieldCollider in _shieldColliders)
+			{
+				shieldCollider.enabled = shieldUp && !IsInvincible;
+			}
 		}
 
 		if (_bodyHitboxColliders == null)
@@ -245,7 +249,7 @@ public abstract class Unit : MonoBehaviour, IDamageable
 
 		foreach (Collider hitbox in _bodyHitboxColliders)
 		{
-			hitbox.enabled = !shieldUp;
+			hitbox.enabled = bodyHitboxEnabled;
 		}
 	}
 
@@ -402,6 +406,7 @@ public abstract class Unit : MonoBehaviour, IDamageable
 				_dodgeTimer = dodgeDuration;
 				IsInvincible = true;
 				_dodgeCooldownTimer = dodgeCoolTime;
+				UpdateShieldHitboxState();
 				break;
 
 			case UNIT_STATE.DIE:
@@ -436,6 +441,7 @@ public abstract class Unit : MonoBehaviour, IDamageable
 		if (IsInvincible && _dodgeTimer <= dodgeDuration - dodgeInvincibleTime)
 		{
 			IsInvincible = false;
+			UpdateShieldHitboxState();
 		}
 		if (_dodgeTimer <= 0f)
 		{

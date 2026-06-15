@@ -338,7 +338,12 @@ public class WeaponSystem : MonoBehaviour
 
 			case MISSILE_TYPE.CLUSTER:
 				ClusterMissile cm = proj as ClusterMissile;
-				if (lockOnSystem != null && lockOnSystem.MultiLockedTargets.Count > 0)
+				if (lockOnSystem != null && lockOnSystem.currentLockMode == LOCK_ON_MODE.SINGLE && lockOnSystem.IsLocked)
+				{
+					// 단일 락온 모드 - 자탄 전부 한 타겟에 집중 (Split()의 라운드로빈이 자동으로 처리)
+					cm.Init(firePos.position, firePos.forward, _unit, new List<Transform> { lockOnSystem.LockedTarget });
+				}
+				else if (lockOnSystem != null && lockOnSystem.MultiLockedTargets.Count > 0)
 				{
 					// 락온이 풀려도 자탄이 원래 타겟을 추적하도록 복사본 전달
 					cm.Init(firePos.position, firePos.forward, _unit, new List<Transform>(lockOnSystem.MultiLockedTargets));
