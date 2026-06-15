@@ -1,37 +1,68 @@
 using UnityEngine;
 
-public class EnemyWorker : MonoBehaviour
+public class EnemyWorker : Enemy
 {
     public enum State { Moving, Mining, Alert, Attack }
 
-    [Header("±âº»¼³Á¤")]
-    public float moveSpeed = 5f;
-    [Header("Ã¤Ãë ¼³Á¤")]
+    [Header("ì±„êµ´ ì„¤ì •")]
     public float miningDamage = 100f;
-    [Header("ÀÚ¿ø ¼³Á¤")]
-    public float maxResource = 100f;      // ÃÖ´ë º¸À¯·®
-    public float currentResource = 0f;   // ÇöÀç º¸À¯·®
-    public float resourcePerDamage = 1f; // µ¥¹ÌÁö 1´ç ÀÚ¿ø È¹µæ·®
-    public GameObject dropPrefab;        // °İÃß½Ã µå¶ø ÇÁ¸®ÆÕ
+    [Header("ìì› ì„¤ì •")]
+    public float maxResource = 100f;      // ìµœëŒ€ ìì›ëŸ‰
+    public float currentResource = 0f;   // í˜„ì¬ ìì›ëŸ‰
+    public float resourcePerDamage = 1f; // ë°ë¯¸ì§€ 1ë‹¹ ìì› íšë“ëŸ‰
+    public GameObject dropPrefab;        // íŒŒê´´ì‹œ ë“œë í”„ë¦¬íŒ¹
 
-    [Header("ÇÃ·¹ÀÌ¾î °¨Áö")]
-    public float detectRange = 100f;    // ÇÃ·¹ÀÌ¾î °¨Áö ¹üÀ§
-    public float rotateSpeed = 3f;
-
-    [Header("»óÅÂ (µğ¹ö±×¿ë)")]
+    [Header("AIìƒíƒœ (ë””ë²„ê·¸ìš©)")]
     public State currentState = State.Moving;
 
     private Transform targetAsteroid;
     private Transform player;
 
-    private void Start()
+    // EnemyWorkerëŠ” Enemyì˜ ë²”ìš© ì „íˆ¬/ìˆœì°° AIë¥¼ ì“°ì§€ ì•Šê³  ìì²´ ì±„êµ´ AIë¥¼ ì‚¬ìš©
+    protected override bool UseGenericAI => false;
+
+    protected override void Start()
     {
+        base.Start();
+
         player = GameObject.FindWithTag("Player").transform;
         FindNearestAsteroid();
     }
 
-    private void Update()
+    // í”¼ê²© ë°ë¯¸ì§€ë§Œí¼ ìì› ëˆ„ì . ë°ë¯¸ì§€ ê³„ì‚°/ì‚¬ë§íŒì •ì€ Unit.TakeDamage()ê°€ ê·¸ëŒ€ë¡œ ì²˜ë¦¬.
+    public override void TakeDamage(DamageInfo info)
     {
+        base.TakeDamage(info);
+        //ì´ ë¡œì§ì€ ì¢…ì°¬ë‹˜ì´ ë³´ì‹œê³  ë” ìˆ˜ì •
+        currentResource = Mathf.Min(maxResource, currentResource + info.damageAmount * resourcePerDamage);
+    }
+
+    // ì‚¬ë§ ì‹œ ìì› ë“œë + í‚¬ì¹´ìš´íŠ¸ ëˆ„ì 
+    protected override void Die()
+    {
+        if (dropPrefab != null)
+        {
+            GameObject drop = Instantiate(dropPrefab, transform.position, Quaternion.identity);
+            ItemPickup pickup = drop.GetComponent<ItemPickup>();
+            if (pickup != null)
+            {
+                pickup.Init(Mathf.RoundToInt(currentResource));
+            }
+        }
+
+        GameManager.Instance.OnEnemyKilled();
+        Destroy(gameObject);
+    }
+
+    protected override void Update()
+    {
+        base.Update();
+
+        if (ShouldPause || CurState == UNIT_STATE.DIE)
+        {
+            return;
+        }
+
         switch (currentState)
         {
             case State.Moving: UpdateMoving(); break;
@@ -42,7 +73,7 @@ public class EnemyWorker : MonoBehaviour
 
     void UpdateMoving()
     {
-        // ÇÃ·¹ÀÌ¾î °¨Áö (¸ÕÀú Ã¼Å©)
+        // í”Œë ˆì´ì–´ ê°ì§€ (ë¨¼ì € ì²´í¬)
         if (IsPlayerInRange())
         {
             currentState = State.Alert;
@@ -55,40 +86,40 @@ public class EnemyWorker : MonoBehaviour
             return;
         }
 
-        // ¼ÒÇà¼ºÀ¸·Î ÀÌµ¿
+        // ì†Œí–‰ì„±ìœ¼ë¡œ ì´ë™
         transform.position = Vector3.MoveTowards(
             transform.position,
             targetAsteroid.position,
-            moveSpeed * Time.deltaTime
+            baseMoveSpeed * Time.deltaTime
         );
 
-        // ÀÌµ¿ ¹æÇâ ¹Ù¶óº¸±â
+        // ì´ë™ ë°©í–¥ ë°”ë¼ë³´ê¸°
         Vector3 dir = (targetAsteroid.position - transform.position).normalized;
         if (dir != Vector3.zero)
             transform.rotation = Quaternion.Slerp(transform.rotation,
                 Quaternion.LookRotation(dir), rotateSpeed * Time.deltaTime);
-        
-        // ¼ÒÇà¼º ¹İÁö¸§ ±âÁØÀ¸·Î µµÂø ÆÇÁ¤
+
+        // ì†Œí–‰ì„± ë°˜ì§€ë¦„ ê¸°ì¤€ìœ¼ë¡œ ë„ì°© íŒì •
         float asteroidRadius = targetAsteroid.localScale.x * 0.5f;
-        float arrivalDist = asteroidRadius + 20f; // ¼ÒÇà¼º°ú ¿©À¯ °Å¸®
+        float arrivalDist = asteroidRadius + 20f; // ì†Œí–‰ì„±ê³¼ ë„ì°© ê±°ë¦¬
 
         float dist = Vector3.Distance(transform.position, targetAsteroid.position);
         if (dist <= arrivalDist)
             currentState = State.Mining;
 
-        
+
     }
 
     void UpdateMining()
     {
-        // ÇÃ·¹ÀÌ¾î °¨Áö
+        // í”Œë ˆì´ì–´ ê°ì§€
         if (IsPlayerInRange())
         {
             currentState = State.Alert;
             return;
         }
 
-        // ¼ÒÇà¼º ÆÄ±«µÆÀ¸¸é ´ÙÀ½ ¼ÒÇà¼º Ã£±â
+        // ì†Œí–‰ì„± íŒŒê´´ëìœ¼ë©´ ìƒˆ ì†Œí–‰ì„± ì°¾ê¸°
         if (targetAsteroid == null)
         {
             FindNearestAsteroid();
@@ -98,26 +129,26 @@ public class EnemyWorker : MonoBehaviour
 
         targetAsteroid.GetComponent<cs_Map_Asteroid>()?.TakeDamage(miningDamage * Time.deltaTime);
 
-        // TODO: Ã¤Ãë ¾Ö´Ï¸ŞÀÌ¼Ç or ÀÌÆåÆ®
+        // TODO: ì±„êµ´ ì• ë‹ˆë©”ì´ì…˜ or ì´í™íŠ¸
     }
 
     void UpdateAlert()
     {
         if (!IsPlayerInRange())
         {
-            // ÇÃ·¹ÀÌ¾î ¹üÀ§ ¹ş¾î³ª¸é ´Ù½Ã Ã¤Ãë
+            // í”Œë ˆì´ì–´ ê°ì§€ ì•ˆë˜ë©´ ë‹¤ì‹œ ì±„êµ´
             FindNearestAsteroid();
             currentState = State.Moving;
             return;
         }
 
-        // ÇÃ·¹ÀÌ¾î ¹Ù¶óº¸±â
+        // í”Œë ˆì´ì–´ ë°”ë¼ë³´ê¸°
         Vector3 dir = (player.position - transform.position).normalized;
         if (dir != Vector3.zero)
             transform.rotation = Quaternion.Slerp(transform.rotation,
                 Quaternion.LookRotation(dir), rotateSpeed * Time.deltaTime);
 
-        // TODO: °ø°İ ·ÎÁ÷
+        // TODO: ê³µê²© ë¡œì§
     }
 
     void FindNearestAsteroid()
@@ -132,7 +163,7 @@ public class EnemyWorker : MonoBehaviour
             if (dist < minDist)
             {
                 minDist = dist;
-                targetAsteroid = a.transform; // ·çÆ® ¿ÀºêÁ§Æ®
+                targetAsteroid = a.transform; // ë£¨íŠ¸ ì˜¤ë¸Œì íŠ¸
             }
         }
     }

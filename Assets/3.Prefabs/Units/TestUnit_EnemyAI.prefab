@@ -1,5 +1,36 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!1 &147326341103643830
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1797312549135825355}
+  m_Layer: 7
+  m_Name: TestMissilePos (2)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1797312549135825355
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 147326341103643830}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -5.2, y: 6, z: 14}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 673522139347252847}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &176307030659579714
 GameObject:
   m_ObjectHideFlags: 0
@@ -282,6 +313,37 @@ Light:
   m_UseViewFrustumForShadowCasterCull: 1
   m_ShadowRadius: 0
   m_ShadowAngle: 0
+--- !u!1 &958756249314482461
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1009696163447187148}
+  m_Layer: 7
+  m_Name: TestBulletPos
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1009696163447187148
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 958756249314482461}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 14.6}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 673522139347252847}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2253267072905822167
 GameObject:
   m_ObjectHideFlags: 0
@@ -408,6 +470,37 @@ Light:
   m_UseViewFrustumForShadowCasterCull: 1
   m_ShadowRadius: 0
   m_ShadowAngle: 0
+--- !u!1 &5822701364081694502
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 8663010223620771107}
+  m_Layer: 7
+  m_Name: TestMissilePos (3)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &8663010223620771107
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5822701364081694502}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 4.4, z: 15}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 673522139347252847}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &5860119985032653899
 GameObject:
   m_ObjectHideFlags: 0
@@ -512,11 +605,12 @@ GameObject:
   m_Component:
   - component: {fileID: 673522139347252847}
   - component: {fileID: 5403785105017938777}
-  - component: {fileID: 6703984311709567013}
-  - component: {fileID: 9022436194960756039}
-  - component: {fileID: 3495547372867975599}
+  - component: {fileID: 7247845068499980867}
+  - component: {fileID: 1803401708122000012}
+  - component: {fileID: 3033844199734762928}
+  - component: {fileID: 9040832180925748757}
   m_Layer: 7
-  m_Name: TestUnit_MovingEnemy
+  m_Name: TestUnit_EnemyAI
   m_TagString: Enemy
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -543,6 +637,10 @@ Transform:
   - {fileID: 5700623187757526737}
   - {fileID: 4319029643472550611}
   - {fileID: 338116215591026873}
+  - {fileID: 1009696163447187148}
+  - {fileID: 6182860956872268411}
+  - {fileID: 1797312549135825355}
+  - {fileID: 8663010223620771107}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!54 &5403785105017938777
@@ -572,7 +670,7 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
---- !u!114 &6703984311709567013
+--- !u!114 &7247845068499980867
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -581,26 +679,11 @@ MonoBehaviour:
   m_GameObject: {fileID: 6428153736698038514}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 28ec7653010dfea4d9fd1de241e38972, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  baseSpeed: 350
-  maxSpeed: 800
-  curSpeed: 0
---- !u!114 &9022436194960756039
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6428153736698038514}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 92069ed6545a48e409c220b0c9c815ba, type: 3}
+  m_Script: {fileID: 11500000, guid: 48672769f4d2501448f438691a36dbcb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   weaponSystem: {fileID: 0}
-  maxHpRemaining: 99999
+  maxHpRemaining: 9999999
   maxShieldCapacity: 0
   shieldRegainDelay: 0
   shieldRegainRate: 0
@@ -611,14 +694,14 @@ MonoBehaviour:
   defense: 0
   criChance: 0
   criDamageMultiplier: 0
-  baseMoveSpeed: 0
-  boostSpeed: 0
-  maxSpeed: 0
-  maxBoostCapacity: 0
-  minBoostRequired: 0
-  boostConsumeAmont: 0
-  boostRegainDelay: 0
-  boostRegainRate: 0
+  baseMoveSpeed: 350
+  boostSpeed: 550
+  maxSpeed: 1000
+  maxBoostCapacity: 100
+  minBoostRequired: 10
+  boostConsumeAmont: 25
+  boostRegainDelay: 1
+  boostRegainRate: 15
   dodgeDuration: 0.5
   dodgeInvincibleTime: 0.4
   dodgeCoolTime: 0
@@ -630,7 +713,68 @@ MonoBehaviour:
   curSpeed: 0
   curBoostRemaining: 0
   _playSoundType: 0
---- !u!65 &3495547372867975599
+  detectRange: 500
+  rotateSpeed: 3
+  patrolRadius: 500
+  patrolArriveDist: 5
+  aiState: 1
+--- !u!114 &1803401708122000012
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6428153736698038514}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aa66153ac3873e44589a1d73fc8a0257, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  lockOnSystem: {fileID: 3033844199734762928}
+  fireBulletDelay: 0.1
+  curBulletData: {fileID: 0}
+  fireMissileDelay: 2
+  testBulletFirePositions:
+  - {fileID: 1009696163447187148}
+  - {fileID: 6182860956872268411}
+  testMissileFirePositions:
+  - {fileID: 1797312549135825355}
+  - {fileID: 8663010223620771107}
+  missileSlots:
+  - type: 0
+    curAmmo: 9999
+    maxAmmo: 9999
+    missileData: {fileID: 11400000, guid: 2652fd978459f5a44aad1cc7fa6033a7, type: 2}
+  curMissileType: 0
+--- !u!114 &3033844199734762928
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6428153736698038514}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a547208e588a6c04ebc7cf397cd9034d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  currentLockMode: 0
+  maxMultiLockCount: 4
+  lockOnRange: 1000
+  lockOnRequiredTime: 1.2
+  targetLayerMask:
+    serializedVersion: 2
+    m_Bits: 4096
+  lockOnAngle: 60
+  TargetsInLockonRange: []
+  TargetsInRadarRange: []
+  LockOnCandidate: {fileID: 0}
+  LockedTarget: {fileID: 0}
+  MultiLockCandidates: []
+  MultiLockedTargets: []
+  LockOnProgress: 0
+  IsLocked: 0
+--- !u!65 &9040832180925748757
 BoxCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -704,6 +848,37 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 25.5, y: 25.5, z: 25.5}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!1 &8195507717261121455
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6182860956872268411}
+  m_Layer: 7
+  m_Name: TestBulletPos (1)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &6182860956872268411
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8195507717261121455}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 6.7, y: 0, z: 14.9}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 673522139347252847}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &8253487461538923167
 GameObject:
   m_ObjectHideFlags: 0

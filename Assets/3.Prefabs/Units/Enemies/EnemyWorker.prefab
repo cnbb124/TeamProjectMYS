@@ -217,6 +217,72 @@ Transform:
   m_Children: []
   m_Father: {fileID: 2561589673221747684}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &3049106198103145863
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4137971152489108233}
+  - component: {fileID: 3053073450751201276}
+  - component: {fileID: 3666154586736160201}
+  m_Layer: 7
+  m_Name: LockOnBox
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4137971152489108233
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3049106198103145863}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 2561589673221747684}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &3053073450751201276
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3049106198103145863}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 780c56f43ada82443b3b09a9a5251a39, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!65 &3666154586736160201
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3049106198103145863}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 1, y: 1, z: 1}
+  m_Center: {x: 0, y: 0, z: 0}
 --- !u!1 &3664960714620582551
 GameObject:
   m_ObjectHideFlags: 0
@@ -475,6 +541,7 @@ GameObject:
   - component: {fileID: 2561589673221747684}
   - component: {fileID: 7303445838546670463}
   - component: {fileID: 4425676582768067325}
+  - component: {fileID: 1126471100447482996}
   m_Layer: 7
   m_Name: EnemyWorker
   m_TagString: Enemy
@@ -496,6 +563,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 8495763156603738111}
+  - {fileID: 4137971152489108233}
   - {fileID: 5582031459028135454}
   - {fileID: 4790281814537987105}
   - {fileID: 2318533778291442663}
@@ -541,11 +609,72 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2a758127c24419549a80bb27e6819f8a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moveSpeed: 5
+  weaponSystem: {fileID: 0}
+  maxHpRemaining: 40
+  maxShieldCapacity: 60
+  shieldRegainDelay: 5
+  shieldRegainRate: 5
+  isShieldRegaining: 0
+  shield: {fileID: 0}
+  bodyHitboxRoot: {fileID: 0}
+  maxArmor: 20
+  defense: 1
+  criChance: 0
+  criDamageMultiplier: 0
+  baseMoveSpeed: 50
+  boostSpeed: 0
+  maxSpeed: 100
+  maxBoostCapacity: 0
+  minBoostRequired: 0
+  boostConsumeAmont: 0
+  boostRegainDelay: 0
+  boostRegainRate: 0
+  dodgeDuration: 0.5
+  dodgeInvincibleTime: 0.4
+  dodgeCoolTime: 0
+  speedMultiPlier: 0
+  curState: 0
+  curHpRemaining: 0
+  curShieldRemaining: 0
+  curArmorRemaining: 0
+  curSpeed: 0
+  curBoostRemaining: 0
+  _playSoundType: 0
   miningDamage: 100
+  maxResource: 100
+  currentResource: 0
+  resourcePerDamage: 1
+  dropPrefab: {fileID: 0}
   detectRange: 100
   rotateSpeed: 3
   currentState: 0
+--- !u!54 &1126471100447482996
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6443261429966239528}
+  serializedVersion: 4
+  m_Mass: 1
+  m_Drag: 0
+  m_AngularDrag: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 0
+  m_IsKinematic: 1
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
 --- !u!1 &6482849843375923464
 GameObject:
   m_ObjectHideFlags: 0
@@ -587,7 +716,6 @@ GameObject:
   m_Component:
   - component: {fileID: 8495763156603738111}
   - component: {fileID: 3155829798033875668}
-  - component: {fileID: 7985091664071972037}
   m_Layer: 13
   m_Name: HitBox_Enemy
   m_TagString: Untagged
@@ -631,18 +759,6 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 10, y: 7, z: 18}
   m_Center: {x: 0, y: 0, z: 1}
---- !u!114 &7985091664071972037
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7145995687923228870}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 08e38ccf711ac944e8cc64805f9ec270, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &7547963883231753373
 GameObject:
   m_ObjectHideFlags: 0
