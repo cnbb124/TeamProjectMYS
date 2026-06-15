@@ -35,7 +35,7 @@ public class InventoryTabGroup : MonoBehaviour
     private int _currentIndex;
     private Vector2 _underlineTarget;
 
-    private void Start()
+    private void Awake()
     {
         for (int i = 0; i < tabs.Length; i++)
         {
@@ -43,6 +43,10 @@ public class InventoryTabGroup : MonoBehaviour
             if (tabs[i].button != null)
                 tabs[i].button.onClick.AddListener(() => SelectTab(index));
         }
+    }
+
+    private void Start()
+    {
         SelectTab(defaultTab);
     }
 
