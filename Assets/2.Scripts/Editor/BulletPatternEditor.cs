@@ -35,18 +35,16 @@ public class BulletPatternEditor : EditorWindow
     private void OnGUI()
     {
         DrawToolbar();
-        
+
         if (_target == null)
         {
             EditorGUILayout.HelpBox("상단에서 BulletPatternData를 선택하세요.", MessageType.Info);
             return;
         }
 
-        EditorGUILayout.BeginHorizontal();
-        DrawWaveList();      // 왼쪽: 웨이브 목록
-        DrawCanvas();        // 가운데: 탄막 캔버스
-        DrawPointList();     // 오른쪽: 현재 웨이브 포인트 목록
-        EditorGUILayout.EndHorizontal();
+        DrawWaveList();
+        DrawCanvas();
+        DrawPointList();
     }
 
     // ── 상단 툴바 ─────────────────────────────────────────
@@ -73,8 +71,9 @@ public class BulletPatternEditor : EditorWindow
 
     private void DrawWaveList()
     {
-        EditorGUILayout.BeginVertical(GUILayout.Width(150));
-        EditorGUILayout.LabelField("Waves", EditorStyles.boldLabel);
+        GUI.BeginGroup(new Rect(5, 30, 150, position.height - 30));
+
+        GUILayout.Label("Waves", EditorStyles.boldLabel);
 
         if (_target.waves == null)
             _target.waves = new List<PatternWave>();
@@ -84,15 +83,14 @@ public class BulletPatternEditor : EditorWindow
             bool isSelected = (i == _selectedWaveIndex);
             GUI.backgroundColor = isSelected ? Color.cyan : Color.white;
 
-            if (GUILayout.Button($"[{i}] {_target.waves[i].waveName}"))
+            if (GUILayout.Button($"[{i}] {_target.waves[i].waveName}", GUILayout.Width(140)))
                 _selectedWaveIndex = i;
         }
 
         GUI.backgroundColor = Color.white;
+        GUILayout.Space(5);
 
-        EditorGUILayout.Space(5);
-
-        if (GUILayout.Button("+ Add Wave"))
+        if (GUILayout.Button("+ Add Wave", GUILayout.Width(140)))
         {
             Undo.RecordObject(_target, "Add Wave");
             _target.waves.Add(new PatternWave { waveName = $"Wave {_target.waves.Count}" });
@@ -100,7 +98,7 @@ public class BulletPatternEditor : EditorWindow
             EditorUtility.SetDirty(_target);
         }
 
-        if (_target.waves.Count > 0 && GUILayout.Button("- Remove Wave"))
+        if (_target.waves.Count > 0 && GUILayout.Button("- Remove Wave", GUILayout.Width(140)))
         {
             Undo.RecordObject(_target, "Remove Wave");
             _target.waves.RemoveAt(_selectedWaveIndex);
@@ -108,28 +106,38 @@ public class BulletPatternEditor : EditorWindow
             EditorUtility.SetDirty(_target);
         }
 
-        // 선택된 웨이브 설정
         if (_target.waves.Count > 0)
         {
-            EditorGUILayout.Space(10);
-            EditorGUILayout.LabelField("Wave 설정", EditorStyles.boldLabel);
+            GUILayout.Space(10);
+            GUILayout.Label("Wave 설정", EditorStyles.boldLabel);
             PatternWave wave = _target.waves[_selectedWaveIndex];
 
-            wave.waveName = EditorGUILayout.TextField("이름", wave.waveName);
-            wave.delay    = EditorGUILayout.FloatField("Delay(초)", wave.delay);
-            wave.bulletPrefab = (GameObject)EditorGUILayout.ObjectField(
-                "탄 프리팹", wave.bulletPrefab, typeof(GameObject), false);
+            GUILayout.Label("이름");
+            wave.waveName = GUILayout.TextField(wave.waveName, GUILayout.Width(140));
+
+            GUILayout.Label("Delay(초)");
+            float.TryParse(GUILayout.TextField(wave.delay.ToString("F2"), GUILayout.Width(140)), out wave.delay);
+
+            GUILayout.Label("탄 프리팹");
+            wave.bulletPrefab = (GameObject)EditorGUI.ObjectField(
+                GUILayoutUtility.GetRect(140, 16), wave.bulletPrefab, typeof(GameObject), false);
         }
 
-        EditorGUILayout.EndVertical();
+        GUI.EndGroup();
     }
 
     // ── 가운데: 탄막 캔버스 ──────────────────────────────
 
     private void DrawCanvas()
     {
-        // 캔버스 영역 계산
-        Rect canvasRect = GUILayoutUtility.GetRect(300, 300, GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
+        // 캔버스 고정 위치 (왼쪽 패널 160px, 오른쪽 패널 165px 제외)
+        float canvasSize = Mathf.Min(position.width - 325f, position.height - 40f);
+        canvasSize = Mathf.Max(canvasSize, 200f);
+        float startX = 160f;
+        float startY = 35f;
+        Rect canvasRect = new Rect(startX, startY, canvasSize, canvasSize);
+        _canvasRadius = canvasSize * 0.45f;
+
         _canvasCenter = new Vector2(canvasRect.x + canvasRect.width * 0.5f,
                                     canvasRect.y + canvasRect.height * 0.5f);
 
@@ -236,25 +244,32 @@ public class BulletPatternEditor : EditorWindow
 
     // ── 오른쪽: 포인트 목록 ──────────────────────────────
 
+    private Vector2 _pointListScroll;
+
     private void DrawPointList()
     {
-        EditorGUILayout.BeginVertical(GUILayout.Width(160));
-        EditorGUILayout.LabelField("Points", EditorStyles.boldLabel);
+        float panelWidth = 160f;
+        float startX = position.width - panelWidth - 5f;
+        GUI.BeginGroup(new Rect(startX, 30, panelWidth, position.height - 30));
+
+        GUILayout.Label("Points", EditorStyles.boldLabel);
 
         if (_target.waves == null || _target.waves.Count == 0)
         {
-            EditorGUILayout.EndVertical();
+            GUI.EndGroup();
             return;
         }
 
         PatternWave wave = _target.waves[_selectedWaveIndex];
         if (wave.points == null) wave.points = new List<PatternPoint>();
 
+        _pointListScroll = GUILayout.BeginScrollView(_pointListScroll, GUILayout.Width(panelWidth));
+
         for (int i = 0; i < wave.points.Count; i++)
         {
             PatternPoint p = wave.points[i];
             EditorGUILayout.BeginVertical("box");
-            EditorGUILayout.LabelField($"Point {i}", EditorStyles.miniLabel);
+            GUILayout.Label($"Point {i}", EditorStyles.miniLabel);
             p.localDir    = EditorGUILayout.Vector2Field("Dir", p.localDir);
             p.speed       = EditorGUILayout.FloatField("Speed", p.speed);
             p.aimAtPlayer = EditorGUILayout.Toggle("Aim Player", p.aimAtPlayer);
@@ -267,17 +282,19 @@ public class BulletPatternEditor : EditorWindow
                 break;
             }
             EditorGUILayout.EndVertical();
-            EditorGUILayout.Space(2);
+            GUILayout.Space(2);
         }
 
-        if (GUILayout.Button("전체 삭제"))
+        GUILayout.EndScrollView();
+
+        if (GUILayout.Button("전체 삭제", GUILayout.Width(panelWidth)))
         {
             Undo.RecordObject(_target, "Clear Points");
             wave.points.Clear();
             EditorUtility.SetDirty(_target);
         }
 
-        EditorGUILayout.EndVertical();
+        GUI.EndGroup();
     }
 
     // ── 헬퍼 ─────────────────────────────────────────────
