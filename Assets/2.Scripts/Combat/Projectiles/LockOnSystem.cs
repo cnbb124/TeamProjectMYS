@@ -32,8 +32,8 @@ public class LockOnSystem : MonoBehaviour
 	[Header("락온 대상이될 레이어 마스크")]
 	public LayerMask targetLayerMask;
 
-	[Header("락온 전방 각도 제한")]
-	[Range(10f, 180f)]
+	[Header("락온 각도 제한(전방위터렛이면 360도)")]
+	[Range(10f, 360f)]
 	public float lockOnAngle = 60f;
 
 	// =============현재 상태 (UI팀 외부 참조용)==================

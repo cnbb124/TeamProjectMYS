@@ -6,7 +6,7 @@ public class EnemyDualTurret : Enemy
 	[Header("회전할 파츠")]
 	[Tooltip("*SOCKET_SWIVEL 연결 — 수평(Y축) 좌우 회전")]
 	public Transform swivelTransform;
-	[Tooltip("*SOCKET_HEAD 연결 — 수직(X축) 상하 회전. 총구가 달린 파츠.")]
+	[Tooltip("*SOCKET_MOUNT 연결 — 수직(X축) 상하 회전. 총구가 달린 파츠.")]
 	public Transform mountTransform;
 
 	protected override void Start()

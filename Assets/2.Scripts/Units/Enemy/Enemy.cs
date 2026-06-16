@@ -9,13 +9,13 @@ public class Enemy : Unit
 
 	[Header("<size=18>Enemy AI 설정</size>")]
 	[Tooltip("이 범위 안에 타겟이 들어오면 추격 시작. 공격 가능 범위는 WeaponSystem.lockOnSystem.lockOnRange 사용.")]
-	public float detectRange = 50f;
+	public float detectRange = 500f;
 	[Tooltip("타겟을 향한 회전 속도")]
 	public float rotateSpeed = 3f;
 
 	[Header("순찰 설정")]
 	[Tooltip("스폰 위치 기준 순찰 반경")]
-	public float patrolRadius = 20f;
+	public float patrolRadius = 500f;
 	[Tooltip("순찰 지점 도착 판정 거리")]
 	public float patrolArriveDist = 2f;
 
