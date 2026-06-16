@@ -179,7 +179,6 @@ GameObject:
   - component: {fileID: 8655910452525436208}
   - component: {fileID: 7317787368190115243}
   - component: {fileID: 1220959983750552006}
-  - component: {fileID: 9196044372120797739}
   m_Layer: 13
   m_Name: Force Field
   m_TagString: Untagged
@@ -270,7 +269,7 @@ CapsuleCollider:
     serializedVersion: 2
     m_Bits: 0
   m_LayerOverridePriority: 0
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 2
@@ -312,15 +311,3 @@ MonoBehaviour:
   _visibleSeconds: 0.1
   _fadeOutSeconds: 0.05
   _localRevealRadius: 3
---- !u!114 &9196044372120797739
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7989039363316996127}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 08e38ccf711ac944e8cc64805f9ec270, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 

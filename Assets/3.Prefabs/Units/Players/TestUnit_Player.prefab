@@ -1326,7 +1326,9 @@ MonoBehaviour:
   fireBulletDelay: 0.1
   curBulletData: {fileID: 0}
   useBulletMuzzle: 1
+  useBulletSound: 1
   useMissileMuzzle: 0
+  useMissileSound: 0
   bulletMuzzleFlashVFXPlayTime: 0.05
   missileMuzzleFlashVFXPlayTime: 0.2
   fireMissileDelay: 1
@@ -3566,6 +3568,10 @@ PrefabInstance:
     - target: {fileID: 7989039363316996127, guid: 7ae37ae0e309f5544904bfc066e06c4e, type: 3}
       propertyPath: m_Name
       value: Force Field
+      objectReference: {fileID: 0}
+    - target: {fileID: 8655910452525436208, guid: 7ae37ae0e309f5544904bfc066e06c4e, type: 3}
+      propertyPath: m_IsTrigger
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 9196044372120797739, guid: 7ae37ae0e309f5544904bfc066e06c4e, type: 3}
