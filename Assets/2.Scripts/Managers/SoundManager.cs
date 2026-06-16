@@ -30,8 +30,18 @@ public class SoundTypeClip
 	public float minDistance = 1.0f;
 	[Tooltip("3D 효과음 전용.이 거리 밖에서는 소리 X")]
 	public float maxDistance = 50.0f;
-	
 
+	[Header("폴리포니(다중재생) / 피치 설정")]
+	[Tooltip("동시 재생 허용 개수. 0 = 무제한")]
+	public int maxConcurrent = 0;
+	[Tooltip("한도 초과 시 true이면 가장 오래된 소리를 끊고 새 소리 재생, false이면 새 소리 무시")]
+	public bool dropOldest = false;
+	[Range(0.1f, 1.5f)]
+	[Tooltip("재생 피치 최솟값. pitchMax와 같으면 고정 피치")]
+	public float pitchMin = 1.0f;
+	[Range(0.1f, 1.5f)]
+	[Tooltip("재생 피치 최댓값. pitchMin과 같으면 고정 피치")]
+	public float pitchMax = 1.0f;
 }
 
 public class SoundManager : MonoBehaviour
@@ -53,7 +63,7 @@ public class SoundManager : MonoBehaviour
 			return instance;
 		}
 	}
-
+	
 
 	[Header("<size=18>사용시 SoundManager.Instance.메서드명</size>\n\n" +
 		"사운드 데이터 등록시 필요한만큼 리스트 우측 숫자변경\n" +
@@ -112,6 +122,8 @@ public class SoundManager : MonoBehaviour
 	private List<AudioSource> sfx3DPool = new List<AudioSource>();
 	// PlaySFX3DAtUnit으로 유닛에 부착된 단발성 소스 추적 (재생 끝나면 매니저로 unparent)
 	private List<AudioSource> pendingUnparentSources = new List<AudioSource>();
+	// 타입별 현재 재생 중인 3D SFX 소스 추적 (폴리포니 제한 용도)
+	private Dictionary<SOUND_TYPE, List<AudioSource>> activeTypeSourceMap = new Dictionary<SOUND_TYPE, List<AudioSource>>();
 
 	private void Awake()
 	{
@@ -258,6 +270,53 @@ public class SoundManager : MonoBehaviour
 
 
 
+	// 폴리포니 체크 후 재생 가능한 소스 반환. maxConcurrent 초과 + dropOldest=false이면 null 반환(재생 스킵).
+	private AudioSource AcquireSFX3DSource(SOUND_TYPE type, SoundTypeClip data)
+	{
+		if (!activeTypeSourceMap.ContainsKey(type))
+		{
+			activeTypeSourceMap[type] = new List<AudioSource>();
+		}
+		List<AudioSource> active = activeTypeSourceMap[type];
+
+		// 재생 완료된 소스 정리
+		for (int i = active.Count - 1; i >= 0; i--)
+		{
+			if (active[i] == null || !active[i].isPlaying)
+			{
+				active.RemoveAt(i);
+			}
+		}
+
+		if (data.maxConcurrent > 0 && active.Count >= data.maxConcurrent)
+		{
+			if (data.dropOldest)
+			{
+				// 가장 오래된 것(리스트 맨 앞) 중단
+				active[0].Stop();
+				active.RemoveAt(0);
+			}
+			else
+			{
+				return null;
+			}
+		}
+
+		AudioSource source = GetAvailableSFX3DSource();
+		active.Add(source);
+		return source;
+	}
+
+	// SoundTypeClip 피치 설정 적용. pitchMin == pitchMax이면 고정값 그대로 반환.
+	private float GetPitch(SoundTypeClip data)
+	{
+		if (data.pitchMin != data.pitchMax)
+		{
+			return Random.Range(data.pitchMin, data.pitchMax);
+		}
+		return data.pitchMin;
+	}
+
 	#region 외부 호출용
 	// ================== [실제 사용되는 재생 함수들] ==================
 
@@ -347,14 +406,15 @@ public class SoundManager : MonoBehaviour
 		{
 
 			// 지정된 위치에 임시 스피커를 만들고, 소리가 끝나면 알아서 삭제됨
-			AudioSource source = GetAvailableSFX3DSource();//가능한 소스 풀에서 갖고오기
-			source.transform.position = position;// 입력한좌표로 출력할 좌표지정
-			source.clip = data.clip;//타입으로 갖고온 클립을 출력할 클립으로 지정
+			AudioSource source = AcquireSFX3DSource(type, data);
+			if (source == null) { return; }
+			source.transform.position = position;
+			source.clip = data.clip;
 
 			source.minDistance = data.minDistance;
 			source.maxDistance = data.maxDistance;
-			source.volume = sfx3DVolume * data.volumeScale;//볼ㄹ뮤지정
-			source.pitch = 1.0f;//랜덤 아니므로 기본설정
+			source.volume = sfx3DVolume * data.volumeScale;
+			source.pitch = GetPitch(data);
 			source.loop = false;
 			source.Play();
 
@@ -378,14 +438,15 @@ public class SoundManager : MonoBehaviour
 		{
 
 			// 지정된 위치에 임시 스피커를 만들고, 소리가 끝나면 알아서 삭제됨
-			AudioSource source = GetAvailableSFX3DSource();//가능한 소스갖고오기
-			source.transform.position = position;// 입력한좌표로 출력할 좌표지정
-			source.clip = data.clip;//타입으로 갖고온 클립을 출력할 클립으로 지정
+			AudioSource source = AcquireSFX3DSource(type, data);
+			if (source == null) { return; }
+			source.transform.position = position;
+			source.clip = data.clip;
 			source.minDistance = data.minDistance;
 			source.maxDistance = data.maxDistance;
-			source.volume = sfx3DVolume * data.volumeScale;//볼륨 개별지정.
+			source.volume = sfx3DVolume * data.volumeScale;
 
-			source.pitch = Random.Range(pitchMin, pitchMax);//랜덤
+			source.pitch = Random.Range(pitchMin, pitchMax);
 			source.loop = false;
 			source.Play();
 
@@ -408,19 +469,20 @@ public class SoundManager : MonoBehaviour
             Transform posSource = (playPos != null) ? playPos : unitTr;
 
             // 지정된 위치에 임시 스피커를 만들고, 소리가 끝나면 알아서 삭제됨
-            AudioSource source = GetAvailableSFX3DSource();//가능한 소스 풀에서 갖고오기
+            AudioSource source = AcquireSFX3DSource(type, data);
+            if (source == null) { return; }
             //좌표일치 (재생 위치 = 총구 등 playPos 기준)
             source.transform.position = posSource.position;
             //유닛(생명주기 안전한 대상)에 이 오디오소스 붙이기(지속재생용)
             //주의: playPos(총구 등 파츠 자식)에 직접 붙이면, 재생 도중 파츠가 교체/파괴될 때
             //같이 파괴되어 풀 손실 + pendingUnparentSources에서 파괴된 참조 접근 문제가 생길 수 있음.
             source.transform.SetParent(unitTr);
-            source.clip = data.clip;//타입으로 갖고온 클립을 출력할 클립으로 지정
+            source.clip = data.clip;
 
             source.minDistance = data.minDistance;
             source.maxDistance = data.maxDistance;
-            source.volume = sfx3DVolume * data.volumeScale;//볼ㄹ뮤지정
-            source.pitch = 1.0f;//랜덤 아니므로 기본설정
+            source.volume = sfx3DVolume * data.volumeScale;
+            source.pitch = GetPitch(data);
             source.loop = false;
             source.Play();
 

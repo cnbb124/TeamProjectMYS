@@ -47,6 +47,16 @@ public class EnemyMissileTurret : Enemy
 		}
 	}
 
+	// 터렛은 고정. MOVING 상태로 들어가지 않도록 ATTACK 중에도 IDLE 유지.
+	protected override void UpdateAI()
+	{
+		base.UpdateAI();
+		if (CurState != UNIT_STATE.DIE)
+		{
+			CurState = UNIT_STATE.IDLE;
+		}
+	}
+
 	protected override void OnAIAttack()
 	{
 		base.OnAIAttack();

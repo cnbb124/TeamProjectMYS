@@ -286,6 +286,7 @@ public abstract class Unit : MonoBehaviour, IDamageable
 	//필요없음.
 
 	[Header("===============<size=14>현재 상태(입력x 참고용)</size>================")]
+	[Tooltip("UNIT_STATE — \"지금 어떤 상태인가\" (표현/물리 레이어)")]
 	public UNIT_STATE curState = UNIT_STATE.IDLE;
 	// 직전 상태. 전환별로 다른 애니메이션 블렌드(CrossFade duration)를 적용할 때 참조
 	protected UNIT_STATE previousState = UNIT_STATE.IDLE;
@@ -337,8 +338,25 @@ public abstract class Unit : MonoBehaviour, IDamageable
 
 
 
-	//===================FSM======================d
-
+	// =====================================================================
+	// [FSM 구조 안내]
+	//
+	// ▶ UNIT_STATE (이 파일) — "지금 어떤 상태인가" (표현/물리 레이어)
+	//     - 애니메이션, 이펙트, 무적, Rigidbody 처리가 이 값에 의존
+	//     - OnStateEnter/OnStateExit : 전환 시 1회 실행
+	//     - UpdateFSM()              : 매 프레임 OnIdle/OnMoving 등 실행
+	//     - Player : 입력이 CurState를 직접 설정
+	//     - Enemy  : AI_STATE(행동 의도)가 UpdateAI() 끝에 단방향 동기화
+	//
+	// ▶ AI_STATE (Enemy.cs) — "무엇을 하려는가" (행동 의도 레이어, Enemy 전용)
+	//     - STANDBY/PATROL/CHASE/ATTACK 중 하나
+	//     - UpdateAI()에서 조건 체크 → 다음 AI_STATE 전환
+	//     - 전환 후 UNIT_STATE에 동기화: STANDBY→IDLE / 나머지→MOVING
+	//     - 단, DODGE/DIE 중에는 동기화 스킵 — Unit FSM이 우선권 가짐
+	//
+	//   AI_STATE(의도) ──단방향──→ UNIT_STATE(표현) ──→ 애니/이펙트/물리
+	//   Player는 AI_STATE 없이 입력으로 UNIT_STATE 직접 제어
+	// =====================================================================
 
 	public UNIT_STATE CurState
 	{

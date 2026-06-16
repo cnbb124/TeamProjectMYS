@@ -5,7 +5,7 @@ using UnityEngine;
 /// 보스 클래스. Enemy 상속.
 /// BulletPatternData를 읽어 웨이브 순서대로 탄막 발사.
 /// </summary>
-public class Boss : Enemy
+public class TestBoss : Enemy
 {
     [Header("보스 패턴")]
     [SerializeField] private BulletPatternData[] patterns;  // 페이즈별 패턴 배열
