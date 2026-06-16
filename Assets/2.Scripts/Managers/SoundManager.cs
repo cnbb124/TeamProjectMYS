@@ -215,6 +215,8 @@ public class SoundManager : MonoBehaviour
 		{
 			if (!sfx3DPool[i].isPlaying)
 			{
+				// dropOldest로 강제 Stop된 소스가 유닛 자식에 남아있을 수 있으므로 복귀 보장
+				sfx3DPool[i].transform.SetParent(this.transform);
 				return sfx3DPool[i];
 			}
 		}
@@ -373,7 +375,7 @@ public class SoundManager : MonoBehaviour
 
 
 	/// <summary>
-	/// 단조로움을 방지하기 위해 랜덤한 피치(음높이)로 2D 효과음 재생
+	/// 단조로움을 방지하기 위해 랜덤한 피치(직접 입력)로 2D 효과음 재생
 	/// </summary>
 	/// <param name="type"></param>
 	/// <param name="pitchMin"></param>
@@ -393,7 +395,7 @@ public class SoundManager : MonoBehaviour
 
 
 	/// <summary>
-	/// 피격음등 특정 위치에서 나야 하는 단발성 3D 효과음을 재생(랜덤x)
+	/// 피격음등 특정 위치에서 나야 하는 단발성 3D 효과음을 재생
 	///  타입과 좌표받기
 	/// </summary>
 	/// <param name="type"></param>
@@ -424,7 +426,7 @@ public class SoundManager : MonoBehaviour
     //Soundmanager.Instance.PlaySFXAtPosition(SOUND_TYPE.SFX_SHOOT, transform.position);
 
     /// <summary>
-    /// 피격음등 특정 위치에서 나야 하는 단발성 3D 효과음을 재생(피치랜덤)
+    /// 피격음등 특정 위치에서 나야 하는 단발성 3D 효과음을 재생(피치랜덤 직접설정)
     /// </summary>
     /// <param name="type"></param>
     /// <param name="position"></param>
@@ -521,7 +523,7 @@ public class SoundManager : MonoBehaviour
 			source.volume = sfx3DVolume * data.volumeScale;
 			source.minDistance = data.minDistance;
 			source.maxDistance = data.maxDistance;
-			source.pitch = 1.0f;
+			source.pitch = GetPitch(data);
 
 			source.loop = true;
 			source.Play();

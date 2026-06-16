@@ -60,13 +60,19 @@ public class WeaponSystem : MonoBehaviour
 	[Tooltip("장착된 총알의 데이터(SO). curBulletPoolType으로 풀 종류 지정 (변형탄 대응).")]
 	public BulletData curBulletData;
 
-	[Header("머즐 이펙트")]
+	[Header("SFX/VFX 관련 설정")]
 	[Tooltip("총알 발사 시 머즐플래시 재생 여부. 플레이어 ON, 적은 유닛 유형에 따라 설정.")]
 	[SerializeField]
 	private bool useBulletMuzzle = true;
+	[Tooltip("총알 발사 시 사운드 재생 여부.")]
+	[SerializeField]
+	private bool useBulletSound = true;
 	[Tooltip("미사일 발사 시 머즐플래시 재생 여부. 플레이어 OFF (베이 발사), 터렛/사일로형 적 ON.")]
 	[SerializeField]
-	private bool useMissileMuzzle = false;
+	private bool useMissileMuzzle = true;
+	[Tooltip("미사일 발사 시 사운드 재생 여부. 플레이어 OFF, 터렛/사일로형 적 ON.")]
+	[SerializeField]
+	private bool useMissileSound = true;
 
 	[Tooltip("총알 발사 머즐플래시 재생 시간 설정")]
 	[SerializeField]
@@ -280,7 +286,10 @@ public class WeaponSystem : MonoBehaviour
 		{
 			_vfx.PlayEffectAtUnit(EFFECT_TYPE.VFX_BULLET_MUZZLE, _unit.transform, curFirePos.position, curFirePos.rotation, bulletMuzzleFlashVFXPlayTime);
 		}
-		_sound.PlaySFX3DAtUnit(soundType, _unit.transform, curFirePos);
+		if (useBulletSound)
+		{
+			_sound.PlaySFX3DAtUnit(soundType, _unit.transform, curFirePos);
+		}
 		Bullet newBullet = _pool.GetProjectile(GetBulletPoolType()) as Bullet;
 		newBullet.Init(curFirePos.position, curFirePos.forward, _unit);
 	}
@@ -328,7 +337,10 @@ public class WeaponSystem : MonoBehaviour
 
 		for (int i = 0; i < actualFire; i++)
 		{
-			_sound.PlaySFX3DAtPosition(soundType, _unit.transform.position);
+			if (useMissileSound)
+			{
+				_sound.PlaySFX3DAtPosition(soundType, _unit.transform.position);
+			}
 			ShootMissileFrom(_missileFirePositions[i]);
 			curSlot.curAmmo--;
 		}
