@@ -233,7 +233,7 @@ public class VFXManager : MonoBehaviour
     /// <param name="unitTr">부착(SetParent) 대상. 유닛 루트처럼 파츠보다 오래 사는 안전한 transform.</param>
     /// <param name="pos">생성 시 위치(총구 위치 등)</param>
     /// <param name="rot">생성 시 회전(총구 방향 등)</param>
-    /// <param name="duration"></param>
+    /// <param name="duration">지속시간</param>
 	public void PlayEffectAtUnit(EFFECT_TYPE type, Transform unitTr, Vector3 pos, Quaternion rot, float duration = 0f)
 	{
 		GameObject obj = GetFromPool(type);

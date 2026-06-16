@@ -1272,7 +1272,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6706981218406096366}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: 0.9343045, z: -0, w: 0.35647598}
+  m_LocalRotation: {x: 0, y: 0.934304, z: 0, w: 0.3564772}
   m_LocalPosition: {x: -0.65, y: 0, z: 11.24}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -1281,7 +1281,7 @@ Transform:
   - {fileID: 7108436658103652942}
   - {fileID: 8568410838902004592}
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 138.232, z: 0}
 --- !u!114 &3205087385195567410
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1297,6 +1297,10 @@ MonoBehaviour:
   lockOnSystem: {fileID: 5346114771317425202}
   fireBulletDelay: 0.1
   curBulletData: {fileID: 0}
+  useBulletMuzzle: 1
+  useMissileMuzzle: 1
+  bulletMuzzleFlashVFXPlayTime: 0.2
+  missileMuzzleFlashVFXPlayTime: 0.2
   fireMissileDelay: 2
   fixedBulletFirePositions:
   - {fileID: 5223868083962179837}

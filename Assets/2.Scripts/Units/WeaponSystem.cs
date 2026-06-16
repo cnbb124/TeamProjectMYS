@@ -17,9 +17,11 @@ using UnityEngine;
 //   if (slot != null) hudManager.SetMissileAmmo(slot.curAmmo, slot.maxAmmo);
 //
 // ▶ 이펙트팀 참조용
-//   ShootBullet() 내부 : 머즐플래시 호출 위치
+//   ShootBullet()    내부 : 총알 머즐플래시 호출 위치 (useBulletMuzzle=true 일 때만 재생)
 //   → VFXManager.Instance.PlayEffectAtUnit(EFFECT_TYPE.VFX_BULLET_MUZZLE, _unit.transform, curFirePos.position, curFirePos.rotation, 0.2f)
-//   → 유닛(_unit.transform)에 부착되어 유닛과 같이 움직임. 위치/회전은 호출 순간 총구(curFirePos) 기준.
+//   ShootMissileFrom() 내부 : 미사일 머즐플래시 호출 위치 (useMissileMuzzle=true 일 때만 재생)
+//   → VFXManager.Instance.PlayEffectAtUnit(EFFECT_TYPE.VFX_MISSILE_MUZZLE, _unit.transform, firePos.position, firePos.rotation, 0.3f)
+//   → 유닛(_unit.transform)에 부착되어 유닛과 같이 움직임. 위치/회전은 호출 순간 총구 기준.
 // ================================================================
 
 // =====================================================================
@@ -42,7 +44,7 @@ public class WeaponSystem : MonoBehaviour
 	private Unit _unit;
 	private PoolManager _pool;
 	private SoundManager _sound;
-
+	private VFXManager _vfx;
 	[Header("락온 시스템")]
 	public LockOnSystem lockOnSystem;
 
@@ -57,6 +59,22 @@ public class WeaponSystem : MonoBehaviour
 
 	[Tooltip("장착된 총알의 데이터(SO). curBulletPoolType으로 풀 종류 지정 (변형탄 대응).")]
 	public BulletData curBulletData;
+
+	[Header("머즐 이펙트")]
+	[Tooltip("총알 발사 시 머즐플래시 재생 여부. 플레이어 ON, 적은 유닛 유형에 따라 설정.")]
+	[SerializeField]
+	private bool useBulletMuzzle = true;
+	[Tooltip("미사일 발사 시 머즐플래시 재생 여부. 플레이어 OFF (베이 발사), 터렛/사일로형 적 ON.")]
+	[SerializeField]
+	private bool useMissileMuzzle = false;
+
+	[Tooltip("총알 발사 머즐플래시 재생 시간 설정")]
+	[SerializeField]
+	private float bulletMuzzleFlashVFXPlayTime = 0.2f;
+	[Tooltip("미사일 발사 머즐플래시 재생 시간 설정")]
+	[SerializeField]
+	private float missileMuzzleFlashVFXPlayTime = 0.2f;
+
 	[Header("미사일 설정")]
 	public float fireMissileDelay = 2f;
 	private float _lastFireMissileTime = 0f;
@@ -159,6 +177,7 @@ public class WeaponSystem : MonoBehaviour
 	{
 		_pool = PoolManager.Instance;
 		_sound = SoundManager.Instance;
+		_vfx = VFXManager.Instance;
 	}
 
 	/// <summary>
@@ -216,7 +235,7 @@ public class WeaponSystem : MonoBehaviour
 					return;
 				}
 				_lastFireBulletTime = Time.time;
-				
+
 				ShootBullet(soundType);
 				break;
 
@@ -257,7 +276,10 @@ public class WeaponSystem : MonoBehaviour
 		{
 			bulletAnim.PlayFire();
 		}
-		VFXManager.Instance.PlayEffectAtUnit(EFFECT_TYPE.VFX_BULLET_MUZZLE, _unit.transform, curFirePos.position, curFirePos.rotation, 0.2f);
+		if (useBulletMuzzle)
+		{
+			_vfx.PlayEffectAtUnit(EFFECT_TYPE.VFX_BULLET_MUZZLE, _unit.transform, curFirePos.position, curFirePos.rotation, bulletMuzzleFlashVFXPlayTime);
+		}
 		_sound.PlaySFX3DAtUnit(soundType, _unit.transform, curFirePos);
 		Bullet newBullet = _pool.GetProjectile(GetBulletPoolType()) as Bullet;
 		newBullet.Init(curFirePos.position, curFirePos.forward, _unit);
@@ -312,16 +334,21 @@ public class WeaponSystem : MonoBehaviour
 		}
 	}
 
-    /// <summary>
-    /// 지정 위치에서 미사일 1발 발사.
-    /// 풀에서 꺼낼 프리팹은 missileData.curMissilePoolType으로 결정(변형탄 대응).
-    /// missileData가 비어있으면(에디터 미설정) curMissileType 기준 기본 풀로 폴백.
-    /// </summary>
-    private void ShootMissileFrom(Transform firePos)
+	/// <summary>
+	/// 지정 위치에서 미사일 1발 발사.
+	/// 풀에서 꺼낼 프리팹은 missileData.curMissilePoolType으로 결정(변형탄 대응).
+	/// missileData가 비어있으면(에디터 미설정) curMissileType 기준 기본 풀로 폴백.
+	/// </summary>
+	private void ShootMissileFrom(Transform firePos)
 	{
 		if (_launcherAnims.TryGetValue(firePos, out LauncherAnim missileAnim))
 		{
 			missileAnim.PlayFire();
+		}
+
+		if (useMissileMuzzle)
+		{
+			_vfx.PlayEffectAtUnit(EFFECT_TYPE.VFX_MISSILE_MUZZLE, _unit.transform, firePos.position, firePos.rotation, missileMuzzleFlashVFXPlayTime);
 		}
 
 		Projectile proj = _pool.GetProjectile(GetMissilePoolType(CurMissileSlot));
@@ -366,11 +393,11 @@ public class WeaponSystem : MonoBehaviour
 		}
 	}
 
-    /// <summary>
-    /// 발사할 풀 종류 결정. missileData.curMissilePoolType 설정돼있으면 그 값 사용,
-    /// missileData가 null이면(에디터 작업 전 임시 상태) curMissileType 기준 기존 기본 풀로 폴백.
-    /// </summary>
-    private POOL_TYPE GetMissilePoolType(MissileSlot curSlot)
+	/// <summary>
+	/// 발사할 풀 종류 결정. missileData.curMissilePoolType 설정돼있으면 그 값 사용,
+	/// missileData가 null이면(에디터 작업 전 임시 상태) curMissileType 기준 기존 기본 풀로 폴백.
+	/// </summary>
+	private POOL_TYPE GetMissilePoolType(MissileSlot curSlot)
 	{
 		if (curSlot != null && curSlot.missileData != null)
 		{
