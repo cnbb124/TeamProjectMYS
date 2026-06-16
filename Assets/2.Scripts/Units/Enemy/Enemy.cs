@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 
@@ -9,7 +7,7 @@ public class Enemy : Unit
 	// STANDBY(정지) 외에는 전부 이동하므로, UpdateAI()에서 CurState(UNIT_STATE)로 자동 매핑됨: STANDBY->IDLE, 나머지->MOVING.
 	public enum AI_STATE { STANDBY, PATROL, CHASE, ATTACK }
 
-	[Header("AI 설정")]
+	[Header("<size=18>Enemy AI 설정</size>")]
 	[Tooltip("이 범위 안에 타겟이 들어오면 추격 시작. 공격 가능 범위는 WeaponSystem.lockOnSystem.lockOnRange 사용.")]
 	public float detectRange = 50f;
 	[Tooltip("타겟을 향한 회전 속도")]
@@ -163,9 +161,7 @@ public class Enemy : Unit
 			return;
 		}
 
-		//차후에 Gunship MissileShipe등에 다 나눠서 할것 지금은 테스트
-		weaponSystem.Shoot(PROJECTILE_TYPE.BULLET);
-		weaponSystem.Shoot(PROJECTILE_TYPE.MISSILE);
+		
 	}
 
 	//===============공통 헬퍼==================

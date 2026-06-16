@@ -66,11 +66,15 @@ public class WeaponSystem : MonoBehaviour
 	private int _bulletFireIndex = 0;
 
 	[Header("테스트용 파츠없이 사용할 총구좌표")]
-	[Tooltip("UnitParts 없이 테스트용으로 발사 위치를 직접 지정. Awake 시 _bulletFirePositions에 합류됨.")]
-	[SerializeField] private List<Transform> testBulletFirePositions = new List<Transform>();
+	[Tooltip("UnitParts 없이 발사 위치를 직접 지정.")]
+	[SerializeField]
+	// Awake 시 _bulletFirePositions에 합류됨
+	private List<Transform> fixedBulletFirePositions = new List<Transform>();
 
-	[Tooltip("UnitParts 없이 테스트용으로 미사일 발사 위치를 직접 지정. Awake 시 _missileFirePositions에 합류됨.")]
-	[SerializeField] private List<Transform> testMissileFirePositions = new List<Transform>();
+	[Tooltip("UnitParts 없이 미사일 발사 위치를 직접 지정.")]
+	[SerializeField]
+	// Awake 시 _missileFirePositions에 합류됨.
+	private List<Transform> fixedMissileFirePositions = new List<Transform>();
 
 
 	// ================== [레이저 설정] ==================
@@ -129,7 +133,7 @@ public class WeaponSystem : MonoBehaviour
 		_unit = GetComponent<Unit>();
 
 		// 테스트용 발사 위치를 정식 발사 위치 목록에 합류
-		foreach (Transform pos in testBulletFirePositions)
+		foreach (Transform pos in fixedBulletFirePositions)
 		{
 			if (pos != null)
 			{
@@ -137,7 +141,7 @@ public class WeaponSystem : MonoBehaviour
 			}
 		}
 
-		foreach (Transform pos in testMissileFirePositions)
+		foreach (Transform pos in fixedMissileFirePositions)
 		{
 			if (pos != null)
 			{

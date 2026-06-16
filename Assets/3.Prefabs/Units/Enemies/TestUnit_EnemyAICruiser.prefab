@@ -604,13 +604,13 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 673522139347252847}
-  - component: {fileID: 5403785105017938777}
-  - component: {fileID: 7247845068499980867}
+  - component: {fileID: -1324600693008482999}
   - component: {fileID: 1803401708122000012}
   - component: {fileID: 3033844199734762928}
+  - component: {fileID: 5403785105017938777}
   - component: {fileID: 9040832180925748757}
   m_Layer: 7
-  m_Name: TestUnit_EnemyAI
+  m_Name: TestUnit_EnemyAICruiser
   m_TagString: Enemy
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -643,34 +643,7 @@ Transform:
   - {fileID: 8663010223620771107}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!54 &5403785105017938777
-Rigidbody:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6428153736698038514}
-  serializedVersion: 4
-  m_Mass: 10
-  m_Drag: 4
-  m_AngularDrag: 0.05
-  m_CenterOfMass: {x: 0, y: 0, z: 0}
-  m_InertiaTensor: {x: 1, y: 1, z: 1}
-  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ImplicitCom: 1
-  m_ImplicitTensor: 1
-  m_UseGravity: 0
-  m_IsKinematic: 0
-  m_Interpolate: 0
-  m_Constraints: 0
-  m_CollisionDetection: 0
---- !u!114 &7247845068499980867
+--- !u!114 &-1324600693008482999
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -679,11 +652,11 @@ MonoBehaviour:
   m_GameObject: {fileID: 6428153736698038514}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 48672769f4d2501448f438691a36dbcb, type: 3}
+  m_Script: {fileID: 11500000, guid: fc5b2645dc27d2649a95ec668bee21c7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   weaponSystem: {fileID: 0}
-  maxHpRemaining: 9999999
+  maxHpRemaining: 500
   maxShieldCapacity: 0
   shieldRegainDelay: 0
   shieldRegainRate: 0
@@ -697,11 +670,11 @@ MonoBehaviour:
   baseMoveSpeed: 350
   boostSpeed: 550
   maxSpeed: 1000
-  maxBoostCapacity: 100
+  maxBoostCapacity: 150
   minBoostRequired: 10
   boostConsumeAmont: 25
   boostRegainDelay: 1
-  boostRegainRate: 15
+  boostRegainRate: 20
   dodgeDuration: 0.5
   dodgeInvincibleTime: 0.4
   dodgeCoolTime: 0
@@ -713,10 +686,10 @@ MonoBehaviour:
   curSpeed: 0
   curBoostRemaining: 0
   _playSoundType: 0
-  detectRange: 500
-  rotateSpeed: 3
-  patrolRadius: 500
-  patrolArriveDist: 5
+  detectRange: 450
+  rotateSpeed: 3.5
+  patrolRadius: 1000
+  patrolArriveDist: 25
   aiState: 1
 --- !u!114 &1803401708122000012
 MonoBehaviour:
@@ -734,10 +707,10 @@ MonoBehaviour:
   fireBulletDelay: 0.1
   curBulletData: {fileID: 0}
   fireMissileDelay: 2
-  testBulletFirePositions:
+  fixedBulletFirePositions:
   - {fileID: 1009696163447187148}
   - {fileID: 6182860956872268411}
-  testMissileFirePositions:
+  fixedMissileFirePositions:
   - {fileID: 1797312549135825355}
   - {fileID: 8663010223620771107}
   missileSlots:
@@ -774,6 +747,33 @@ MonoBehaviour:
   MultiLockedTargets: []
   LockOnProgress: 0
   IsLocked: 0
+--- !u!54 &5403785105017938777
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6428153736698038514}
+  serializedVersion: 4
+  m_Mass: 10
+  m_Drag: 4
+  m_AngularDrag: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 0
+  m_IsKinematic: 0
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
 --- !u!65 &9040832180925748757
 BoxCollider:
   m_ObjectHideFlags: 0
