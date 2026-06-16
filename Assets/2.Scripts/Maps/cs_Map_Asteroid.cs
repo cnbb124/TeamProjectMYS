@@ -1,16 +1,20 @@
 using UnityEngine;
 
-public class cs_Map_Asteroid : MonoBehaviour
+public class cs_Map_Asteroid : MonoBehaviour, IDamageable
 {
+    public ResourceData resourceData;
 
     [Header("소행성 설정")]
     public float hp = 1000;
+    public int CurHp => (int)hp;  /// 인터페이스용
     public int dropCount = 3;
 
     private Vector3 moveDirection;
     private float moveSpeed;
     private Vector3 rotationAxis;
     private float rotationSpeed;
+
+    private bool isDead = false;
 
     private void Start()
     {
@@ -33,10 +37,19 @@ public class cs_Map_Asteroid : MonoBehaviour
         transform.Rotate(rotationAxis, rotationSpeed * Time.deltaTime);
     }
 
+    public void TakeDamage(DamageInfo info)
+    {
+        TakeDamage(info.damageAmount);
+    }
     public void TakeDamage(float dmg)
     {
+        if (isDead) return;
         hp -= dmg;
-        if (hp <= 0) Break();
+        if (hp <= 0)
+        {
+            isDead = true;
+            Break();
+        }
     }
 
     void Break()
@@ -45,11 +58,12 @@ public class cs_Map_Asteroid : MonoBehaviour
         for (int i = 0; i < dropCount; i++)
         {
             GameObject item = PoolManager.Instance.Get(POOL_TYPE.ITEM_ASTEROID);
-            Debug.Log($"아이템 가져옴: {item}");
 
             if (item == null) break;
             item.transform.position = transform.position + Random.insideUnitSphere * 50f;
-            Debug.Log($"아이템 위치: {item.transform.position}");
+
+            ItemPickup pickup = item.GetComponentInChildren<ItemPickup>();
+            pickup.Init(resourceData, 1); // resourceData 필요
         }
         Destroy(gameObject);
     }
