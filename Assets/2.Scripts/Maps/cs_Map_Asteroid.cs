@@ -60,6 +60,8 @@ public class cs_Map_Asteroid : MonoBehaviour, IDamageable
             GameObject item = PoolManager.Instance.Get(POOL_TYPE.ITEM_ASTEROID);
 
             if (item == null) break;
+
+            item.tag = "Item";
             item.transform.position = transform.position + Random.insideUnitSphere * 50f;
 
             ItemPickup pickup = item.GetComponentInChildren<ItemPickup>();
