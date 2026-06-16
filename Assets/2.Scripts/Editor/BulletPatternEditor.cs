@@ -112,10 +112,15 @@ public class BulletPatternEditor : EditorWindow
             GUILayout.Label("Wave 설정", EditorStyles.boldLabel);
             PatternWave wave = _target.waves[_selectedWaveIndex];
 
-            wave.waveName     = EditorGUILayout.TextField("이름", wave.waveName, GUILayout.Width(140));
-            wave.delay        = EditorGUILayout.FloatField("Delay(초)", wave.delay, GUILayout.Width(140));
-            wave.bulletPrefab = (GameObject)EditorGUILayout.ObjectField(
-                "탄 프리팹", wave.bulletPrefab, typeof(GameObject), false, GUILayout.Width(140));
+            GUILayout.Label("이름");
+            wave.waveName = GUILayout.TextField(wave.waveName, GUILayout.Width(140));
+
+            GUILayout.Label("Delay(초)");
+            float.TryParse(GUILayout.TextField(wave.delay.ToString("F2"), GUILayout.Width(140)), out wave.delay);
+
+            GUILayout.Label("탄 프리팹");
+            wave.bulletPrefab = (GameObject)EditorGUI.ObjectField(
+                GUILayoutUtility.GetRect(140, 16), wave.bulletPrefab, typeof(GameObject), false);
         }
 
         GUI.EndGroup();
