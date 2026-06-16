@@ -196,7 +196,7 @@ public class Enemy : Unit
 	}
 
 	// 타겟 방향으로 부드럽게 회전
-	protected void RotateTowardTarget()
+	protected virtual void RotateTowardTarget()
 	{
 		if (target == null)
 		{
