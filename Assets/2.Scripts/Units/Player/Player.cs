@@ -66,6 +66,19 @@ public class Player : Unit
 	private bool _wasMoving = false;
 	private ParticleSystem _boostBurstParticle;
 
+	// RCS 방향 인덱스
+	private enum RCS { RTop = 0, RBot = 1, LTop = 2, LBot = 3 }
+
+	// Dodge / Roll RCS — [방향][파티클 인덱스]
+	private ParticleSystem[][] _rcsDodge = new ParticleSystem[4][];
+	private ParticleSystem[][] _rcsRoll  = new ParticleSystem[4][];
+
+	// 역추진 파티클
+	private ParticleSystem[] _reverseMainL;   // Rev-Booster_L 하위 (1회 버스트)
+	private ParticleSystem[] _reverseMainR;   // Rev-Booster_R 하위 (1회 버스트)
+	private ParticleSystem[] _reverseSubs;    // Rev-Sub-Booster_1~8 (루프)
+	private bool _wasCondition1 = false;      // 조건① 이전 프레임 상태 (버스트 중복 방지)
+
 	//매니저 할당용 레퍼런스
 	private InputManager _input;
 
@@ -120,6 +133,11 @@ public class Player : Unit
 
 
 
+
+	[Header("역추진")]
+	[Range(0f, 1f)]
+	[Tooltip("최대속도의 몇 % 도달 시 역추진 메인 발동 (0.95 = 95%)")]
+	public float reverseEffectSpeedThreshold = 0.95f;
 
 	[Header("회피")]
 	[Tooltip("회피 시 가해지는 순간 힘")]
@@ -201,6 +219,8 @@ public class Player : Unit
 		RotateByInput();
 		MovingByInput();
 		UpdateBoostEffect();
+		UpdateRcsEffect();
+		UpdateReverseEffect();
 
 	}
 
@@ -248,27 +268,24 @@ public class Player : Unit
 				break;
 
 			case UNIT_STATE.DODGE:
-				// 좌우 입력 있으면 해당 방향, 없으면 좌/우 랜덤
+				// 좌우 입력 있으면 해당 방향, 없으면 좌/우 랜덤 — 방향을 변수에 저장해 RCS와 동기화
+				bool dodgeLeft;
 				if (_input != null && _input.moveInput.x < -0.1f)
 				{
+					dodgeLeft = true;
 					PlayAnim(ANIM_TYPE.DODGE_L);
 				}
 				else if (_input != null && _input.moveInput.x > 0.1f)
 				{
+					dodgeLeft = false;
 					PlayAnim(ANIM_TYPE.DODGE_R);
 				}
 				else
 				{
-					if (Random.Range(0, 2) == 0)
-					{
-						PlayAnim(ANIM_TYPE.DODGE_L);
-					}
-					else
-					{
-						PlayAnim(ANIM_TYPE.DODGE_R);
-					}
+					dodgeLeft = Random.Range(0, 2) == 0;
+					PlayAnim(dodgeLeft ? ANIM_TYPE.DODGE_L : ANIM_TYPE.DODGE_R);
 				}
-				//_sound.PlaySFX3DAtPosition(SOUND_TYPE.)
+
 				if (_input != null && _input.moveInput.magnitude > 0.1f)
 				{
 					_dodgeDir = transform.forward * _input.moveInput.z
@@ -278,9 +295,21 @@ public class Player : Unit
 				}
 				else
 				{
-					_dodgeDir = transform.forward;
+					_dodgeDir = dodgeLeft ? -transform.right : transform.right;
 				}
 				_rb.AddForce(_dodgeDir * dodgeForce, ForceMode.Impulse);
+
+				// 닷지 방향에 맞는 RCS 버스트 1회 재생 (애니메이션 방향과 동기화)
+				if (dodgeLeft)
+				{
+					PlayAll(_rcsDodge[(int)RCS.RBot]); PlayAll(_rcsDodge[(int)RCS.LTop]);
+					PlayAll(_rcsRoll[(int)RCS.RBot]);  PlayAll(_rcsRoll[(int)RCS.LTop]);
+				}
+				else
+				{
+					PlayAll(_rcsDodge[(int)RCS.RTop]); PlayAll(_rcsDodge[(int)RCS.LBot]);
+					PlayAll(_rcsRoll[(int)RCS.RTop]);  PlayAll(_rcsRoll[(int)RCS.LBot]);
+				}
 				break;
 			case UNIT_STATE.DIE:
 				Debug.Log("[Player] 사망");
@@ -307,7 +336,7 @@ public class Player : Unit
 				break;
 
 			case UNIT_STATE.DODGE:
-
+				foreach (var arr in _rcsRoll) StopAll(arr);
 				break;
 			case UNIT_STATE.DIE:
 
@@ -497,19 +526,17 @@ public class Player : Unit
 		}
 		else
 		{
-			// 방향키 입력이 없지만, 우주선의 물리적 속도가 남아있어 미끄러지는 중일 때
-			if (_rb.velocity.sqrMagnitude > 0.1f)
-			{
-				// 역분사 이펙트 활성화 및 애니메이션 트리거 로직을 작성
-				//ex PlayReverseThrusterEffect();
-				// ex anim.SetBool("isReverseThrusting", true);
-			}
-			else
-			{
-				//우주선이 완전히 정지했을 때 역분사 이펙트 끄기
-				// ex StopReverseThrusterEffect();
-				// ex anim.SetBool("isReverseThrusting", false);
-			}
+			// 방향키 입력 없음 — 관성 감속 중. 역추진 이펙트는 UpdateReverseEffect()에서 처리
+			// if (_rb.velocity.sqrMagnitude > 0.1f)
+			// {
+			// 	//ex PlayReverseThrusterEffect();
+			// 	// ex anim.SetBool("isReverseThrusting", true);
+			// }
+			// else
+			// {
+			// 	// ex StopReverseThrusterEffect();
+			// 	// ex anim.SetBool("isReverseThrusting", false);
+			// }
 		}
 
 		// maxSpeed 클램프 (초과 시 방향 유지하고 크기만 제한)
@@ -569,6 +596,45 @@ public class Player : Unit
 				break;
 			}
 		}
+
+		// Dodge RCS 캐싱
+		_rcsDodge[(int)RCS.RTop] = FindParticlesByName("RCS_Wing_R_Top");
+		_rcsDodge[(int)RCS.RBot] = FindParticlesByName("RCS_Wing_R_Bot");
+		_rcsDodge[(int)RCS.LTop] = FindParticlesByName("RCS_Wing_L_Top");
+		_rcsDodge[(int)RCS.LBot] = FindParticlesByName("RCS_Wing_L_Bot");
+
+		// Roll RCS 캐싱
+		_rcsRoll[(int)RCS.RTop] = FindParticlesByName("RCS_Roll_R_Top");
+		_rcsRoll[(int)RCS.RBot] = FindParticlesByName("RCS_Roll_R_Bot");
+		_rcsRoll[(int)RCS.LTop] = FindParticlesByName("RCS_Roll_L_Top");
+		_rcsRoll[(int)RCS.LBot] = FindParticlesByName("RCS_Roll_L_Bot");
+
+		// 역추진 파티클 캐싱
+		_reverseMainL = FindParticlesByName("Rev-Booster_L");
+		_reverseMainR = FindParticlesByName("Rev-Booster_R");
+
+		_reverseSubs = new ParticleSystem[8];
+		for (int i = 0; i < 8; i++)
+		{
+			_reverseSubs[i] = FindParticleSingle($"Rev-Sub-Booster_{i + 1}");
+		}
+	}
+
+	// 이름이 일치하는 첫 번째 ParticleSystem 1개만 반환. 없으면 null + 경고 로그.
+	private ParticleSystem FindParticleSingle(string targetName)
+	{
+		foreach (Transform child in GetComponentsInChildren<Transform>(true))
+		{
+			if (child.name == targetName)
+			{
+				ParticleSystem ps = child.GetComponentInChildren<ParticleSystem>();
+				if (ps == null)
+					Debug.LogWarning($"[Player] RCS 파티클 \"{targetName}\" 오브젝트는 있지만 ParticleSystem 컴포넌트 없음");
+				return ps;
+			}
+		}
+		Debug.LogWarning($"[Player] RCS 파티클 \"{targetName}\" 을(를) 찾지 못함 — 프리팹 이름 확인 필요");
+		return null;
 	}
 	private void UpdateBoostEffect()
 	{
@@ -631,6 +697,93 @@ public class Player : Unit
 			}
 		}
 		return list.ToArray();
+	}
+
+	// 롤 입력(Q/E)에 따라 대각 RCS 루프 재생·정지
+	// E(우롤): 우측 날개 위 + 좌측 날개 아래 → 기체 우측으로 기울어짐
+	// Q(좌롤): 우측 날개 아래 + 좌측 날개 위 → 기체 좌측으로 기울어짐
+	private void UpdateRcsEffect()
+	{
+		if (curState == UNIT_STATE.DODGE) return; // 닷지 중 Roll RCS는 OnStateEnter 버스트로 처리
+
+		float roll = _input.rollInput;
+
+		if (roll > 0.01f)       // E키 → 우측 롤
+		{
+			PlayAllIfStopped(_rcsRoll[(int)RCS.RTop]); PlayAllIfStopped(_rcsRoll[(int)RCS.LBot]);
+			StopAll(_rcsRoll[(int)RCS.RBot]);          StopAll(_rcsRoll[(int)RCS.LTop]);
+		}
+		else if (roll < -0.01f) // Q키 → 좌측 롤
+		{
+			PlayAllIfStopped(_rcsRoll[(int)RCS.RBot]); PlayAllIfStopped(_rcsRoll[(int)RCS.LTop]);
+			StopAll(_rcsRoll[(int)RCS.RTop]);          StopAll(_rcsRoll[(int)RCS.LBot]);
+		}
+		else
+		{
+			foreach (var arr in _rcsRoll) StopAll(arr);
+		}
+	}
+
+	// 역추진 파티클 업데이트 (FixedUpdate에서 호출)
+	//
+	// 조건①: 부스트 에너지 완전 소진 + 최대속도 도달
+	//   → 메인(Rev-Booster_L/R) 1회 버스트 + 소형 8개 루프 ON
+	// 조건②: W 안 누르고 관성 감속 중 (속도 > 임계값)
+	//   → 소형 8개 루프 ON
+	// 조건③: S키 후진 중
+	//   → 소형 8개 루프 ON
+	private void UpdateReverseEffect()
+	{
+		bool condition1 = curBoostRemaining <= minBoostRequired && _rb.velocity.magnitude >= maxSpeed * reverseEffectSpeedThreshold;
+		bool condition2 = _input.moveInput.z <= 0.01f && _rb.velocity.magnitude > 1f && !condition1;
+		bool condition3 = _input.moveInput.z < -0.01f;
+
+		// 메인 버스트 — 조건① 진입 순간 1회만
+		if (condition1 && !_wasCondition1)
+		{
+			if (_reverseMainL != null) foreach (var ps in _reverseMainL) ps?.Play();
+			if (_reverseMainR != null) foreach (var ps in _reverseMainR) ps?.Play();
+		}
+		_wasCondition1 = condition1;
+
+		// 소형 8개 — 조건 중 하나라도 해당되면 루프 ON
+		bool subOn = condition1 || condition2 || condition3;
+		if (_reverseSubs != null)
+		{
+			foreach (var ps in _reverseSubs)
+			{
+				if (subOn) PlayIfStopped(ps);
+				else StopIfPlaying(ps);
+			}
+		}
+	}
+
+	private void PlayIfStopped(ParticleSystem ps)
+	{
+		if (ps != null && !ps.isPlaying) ps.Play();
+	}
+
+	private void StopIfPlaying(ParticleSystem ps)
+	{
+		if (ps != null && ps.isPlaying) ps.Stop(true, ParticleSystemStopBehavior.StopEmitting);
+	}
+
+	private void PlayAll(ParticleSystem[] arr)
+	{
+		if (arr == null) return;
+		foreach (var ps in arr) ps?.Play();
+	}
+
+	private void PlayAllIfStopped(ParticleSystem[] arr)
+	{
+		if (arr == null) return;
+		foreach (var ps in arr) PlayIfStopped(ps);
+	}
+
+	private void StopAll(ParticleSystem[] arr)
+	{
+		if (arr == null) return;
+		foreach (var ps in arr) StopIfPlaying(ps);
 	}
 
 	private void SetParticles(ParticleSystem[] particles, bool shouldPlay)
