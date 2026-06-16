@@ -2,6 +2,7 @@ using UnityEngine;
 
 public class cs_Map_AsteroidSpawner : MonoBehaviour
 {
+    public ResourceData resourceData;
 
     [Header("소행성 설정")]
     public int asteroidCount = 50;
@@ -42,6 +43,8 @@ public class cs_Map_AsteroidSpawner : MonoBehaviour
         /// 머티리얼 자동 넣기
         asteroidMaterial = Resources.Load<Material>("Materials/Mat_AsteroidMaterial");
 
+
+
     }
 
     private void Start()
@@ -54,6 +57,7 @@ public class cs_Map_AsteroidSpawner : MonoBehaviour
 
     void SpawnAsteroid()
     {
+
             Vector3 center = transform.position;
             if (spawnPoints != null && spawnPoints.Length > 0)
                 center = spawnPoints[Random.Range(0, spawnPoints.Length)].position;
@@ -76,6 +80,7 @@ public class cs_Map_AsteroidSpawner : MonoBehaviour
             Destroy(asteroid.GetComponent<SphereCollider>());
             asteroid.AddComponent<MeshCollider>().sharedMesh = mf.mesh;
             cs_Map_Asteroid asteroidScript = asteroid.AddComponent<cs_Map_Asteroid>();
+            asteroidScript.resourceData = resourceData;
 
             asteroid.name = "Asteroid";
             asteroid.tag = "Asteroid";
@@ -90,5 +95,5 @@ public class cs_Map_AsteroidSpawner : MonoBehaviour
             sc.isTrigger = true;
             sc.radius = 0.5f;
             //hitboxObj.AddComponent<HitBox>();
-        }
+    }
 }
