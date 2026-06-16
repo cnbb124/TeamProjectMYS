@@ -64,7 +64,10 @@ public class cs_Map_Asteroid : MonoBehaviour, IDamageable
             item.tag = "Item";
             item.transform.position = transform.position + Random.insideUnitSphere * 50f;
 
-            ItemPickup pickup = item.GetComponentInChildren<ItemPickup>();
+            ItemPickup pickup = item.GetComponent<ItemPickup>();
+
+            if (pickup == null) { Debug.LogWarning("ItemPickup 없음: " + item.name); continue; }
+
             pickup.Init(resourceData, 1); // resourceData 필요
         }
         Destroy(gameObject);
