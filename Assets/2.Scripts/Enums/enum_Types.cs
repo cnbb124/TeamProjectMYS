@@ -189,7 +189,9 @@ public enum PART_TYPE
 	LAUNCHER_MISSILE,//동시 사출 증가관련
 	LAUNCHER_BULLET,//탄속, 연사속도증가
 	LAUNCHER_LASER,
-	THRUSTER,//추진기, 부스트속도
+	THRUSTER,        // 정방향 추진기
+	THRUSTER_REVERSE, // 역추진기
+	THRUSTER_SIDE,    // 측면 추진기 (닷지/롤)
 }
 
 /// <summary>
