@@ -75,8 +75,8 @@ public class SoundTypeClip
 	public float maxDistance = 50.0f;
 
 	[Header("폴리포니(다중재생) / 피치 설정")]
-	[Tooltip("동시 재생 허용 개수. 0 = 무제한")]
-	public int maxConcurrent = 0;
+	[Tooltip("동시 재생 허용 개수. 0 = 무제한 (권장: 발사음 3~4, 폭발음 3, 이동루프 1)")]
+	public int maxConcurrent = 4;
 	[Tooltip("한도 초과 시 true이면 가장 오래된 소리를 끊고 새 소리 재생, false이면 새 소리 무시")]
 	public bool dropOldest = false;
 	[Range(0.1f, 1.5f)]

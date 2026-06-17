@@ -61,8 +61,8 @@ MonoBehaviour:
     volumeScale: 1
     minDistance: 20
     maxDistance: 200
-    maxConcurrent: 20
-    dropOldest: 0
+    maxConcurrent: 5
+    dropOldest: 1
     pitchMin: 0.85
     pitchMax: 1.1
   - type: 14
@@ -70,8 +70,8 @@ MonoBehaviour:
     volumeScale: 1
     minDistance: 10
     maxDistance: 200
-    maxConcurrent: 0
-    dropOldest: 0
+    maxConcurrent: 5
+    dropOldest: 1
     pitchMin: 0.85
     pitchMax: 1.1
   - type: 12
@@ -80,7 +80,7 @@ MonoBehaviour:
     minDistance: 10
     maxDistance: 200
     maxConcurrent: 5
-    dropOldest: 0
+    dropOldest: 1
     pitchMin: 0.85
     pitchMax: 1.1
   - type: 15
@@ -88,8 +88,8 @@ MonoBehaviour:
     volumeScale: 1
     minDistance: 20
     maxDistance: 200
-    maxConcurrent: 12
-    dropOldest: 0
+    maxConcurrent: 5
+    dropOldest: 1
     pitchMin: 0.9
     pitchMax: 1.1
   - type: 28
@@ -107,7 +107,7 @@ MonoBehaviour:
   bgmVolume: 1
   sfxUIVolume: 1
   sfx3DVolume: 1
-  initialPoolSize: 15
+  initialPoolSize: 50
 --- !u!1 &3598903722720944340
 GameObject:
   m_ObjectHideFlags: 0
