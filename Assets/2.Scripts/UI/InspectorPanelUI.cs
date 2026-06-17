@@ -6,10 +6,14 @@ using TMPro;
 /// 인벤토리 인스펙터 패널.
 ///
 /// [HitPanel]
-///   - ShipImage  : HP 비율에 따라 색상 단계 변경 (초록→노랑→주황→빨강)
-///   - Name       : 플레이어 기체 이름 표시 (고정 텍스트 or 추후 연동)
-///   - Level      : 플레이어 레벨 표시
-///   - Gauge      : HP 수치 (cur / max)
+///   - PlanePanel/PanelImage 하위 4개 파트 이미지 색상으로 파손 상태 표시
+///     · Cockpit  → Armor 비율
+///     · Body     → Armor 비율
+///     · EngineCore → HP 비율
+///     · Thruster → HP 비율
+///   - Name  : 플레이어 기체 이름 표시
+///   - Level : 플레이어 레벨 표시
+///   - Gauge : HP 수치 (cur / max)
 ///
 /// [StatPanel]
 ///   - HPView     : HP 바 + 텍스트
@@ -21,8 +25,13 @@ public class InspectorPanelUI : MonoBehaviour
     [Header("References")]
     [SerializeField] private Player player;
 
-    [Header("HitPanel")]
-    [SerializeField] private Image    shipImage;
+    [Header("HitPanel — 파트 이미지 (PlanePanel > PanelImage 하위)")]
+    [SerializeField] private Image cockpitImage;    // Armor 비율
+    [SerializeField] private Image bodyImage;       // Armor 비율
+    [SerializeField] private Image engineCoreImage; // HP 비율
+    [SerializeField] private Image thrusterImage;   // HP 비율
+
+    [Header("HitPanel — 텍스트")]
     [SerializeField] private TMP_Text nameText;
     [SerializeField] private TMP_Text levelText;
     [SerializeField] private TMP_Text gaugeText;   // HP 수치 (cur / max)
@@ -45,8 +54,6 @@ public class InspectorPanelUI : MonoBehaviour
     [SerializeField] private Color colorWarning  = new Color(1.0f, 0.5f, 0.0f); // 주황   50~25%
     [SerializeField] private Color colorCritical = new Color(1.0f, 0.1f, 0.1f); // 빨강   25~ 0%
 
-    private int _lastStage = -1;
-
     private void Start()
     {
         Refresh();
@@ -61,45 +68,38 @@ public class InspectorPanelUI : MonoBehaviour
     {
         if (player == null) return;
 
-        UpdateShipImage();
+        UpdatePartImages();
         UpdateHitPanel();
         UpdateStatPanel();
     }
 
-    // ── 기체 이미지 색상 ──────────────────────────────────────
+    // ── 파트별 이미지 색상 ────────────────────────────────────
 
-    private void UpdateShipImage()
+    private void UpdatePartImages()
     {
-        if (shipImage == null) return;
+        float hpRatio    = player.maxHpRemaining > 0
+            ? (float)player.curHpRemaining / player.maxHpRemaining : 0f;
+        float armorRatio = player.maxArmor > 0
+            ? (float)player.curArmorRemaining / player.maxArmor : 0f;
 
-        float ratio = player.maxHpRemaining > 0
-            ? (float)player.curHpRemaining / player.maxHpRemaining
-            : 0f;
-
-        int stage = GetStage(ratio);
-        if (stage == _lastStage) return;
-
-        _lastStage      = stage;
-        shipImage.color = StageToColor(stage);
+        SetPartColor(cockpitImage,    armorRatio);
+        SetPartColor(bodyImage,       armorRatio);
+        SetPartColor(engineCoreImage, hpRatio);
+        SetPartColor(thrusterImage,   hpRatio);
     }
 
-    private int GetStage(float ratio)
+    private void SetPartColor(Image img, float ratio)
     {
-        if (ratio > 0.75f) return 1;
-        if (ratio > 0.50f) return 2;
-        if (ratio > 0.25f) return 3;
-        return 4;
+        if (img == null) return;
+        img.color = RatioToColor(ratio);
     }
 
-    private Color StageToColor(int stage)
+    private Color RatioToColor(float ratio)
     {
-        switch (stage)
-        {
-            case 1:  return colorHealthy;
-            case 2:  return colorCaution;
-            case 3:  return colorWarning;
-            default: return colorCritical;
-        }
+        if (ratio > 0.75f) return colorHealthy;
+        if (ratio > 0.50f) return colorCaution;
+        if (ratio > 0.25f) return colorWarning;
+        return colorCritical;
     }
 
     // ── HitPanel 텍스트 ───────────────────────────────────────
