@@ -1242,9 +1242,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   weaponSystem: {fileID: 0}
   maxHpRemaining: 999
-  maxShieldCapacity: 999
-  shieldRegainDelay: 5
-  shieldRegainRate: 10
+  maxShieldCapacity: 9999
+  shieldRegainDelay: 2
+  shieldRegainRate: 50
   isShieldRegaining: 0
   shield: {fileID: 252685907142231170}
   bodyHitboxRoot: {fileID: 1588211745308341998}
@@ -1262,7 +1262,7 @@ MonoBehaviour:
   boostRegainRate: 20
   dodgeDuration: 0.5
   dodgeInvincibleTime: 0.4
-  dodgeCoolTime: 0
+  dodgeCoolTime: 5
   dodgeForce: 800
   speedMultiPlier: 0
   curState: 0
@@ -1282,7 +1282,7 @@ MonoBehaviour:
   fuelBoostConsumeRate: 10
   maxFuelCapacity: 0
   curFuelRemaining: 0
-  reverseEffectSpeedThreshold: 0.95
+  reverseEffectSpeedThreshold: 0.86
 --- !u!114 &1161755328960943635
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1324,7 +1324,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   lockOnSystem: {fileID: 1161755328960943635}
-  fireBulletDelay: 0.1
+  fireBulletDelay: 0.25
   curBulletData: {fileID: 0}
   useBulletMuzzle: 1
   useBulletSound: 1

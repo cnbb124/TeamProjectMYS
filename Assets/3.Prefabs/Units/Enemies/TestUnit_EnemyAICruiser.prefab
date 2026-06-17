@@ -280,8 +280,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   weaponSystem: {fileID: 0}
-  maxHpRemaining: 500
-  maxShieldCapacity: 500
+  maxHpRemaining: 999
+  maxShieldCapacity: 999
   shieldRegainDelay: 5
   shieldRegainRate: 15
   isShieldRegaining: 0
@@ -291,17 +291,18 @@ MonoBehaviour:
   defense: 0
   criChance: 0
   criDamageMultiplier: 0
-  baseMoveSpeed: 250
-  boostSpeed: 450
+  baseMoveSpeed: 325
+  boostSpeed: 500
   maxSpeed: 800
-  maxBoostCapacity: 150
+  maxBoostCapacity: 120
   minBoostRequired: 10
   boostConsumeAmont: 25
   boostRegainDelay: 1
   boostRegainRate: 20
   dodgeDuration: 0.5
   dodgeInvincibleTime: 0.4
-  dodgeCoolTime: 0
+  dodgeCoolTime: 15
+  dodgeForce: 800
   speedMultiPlier: 0
   curState: 0
   curHpRemaining: 0
@@ -311,9 +312,19 @@ MonoBehaviour:
   curBoostRemaining: 0
   _playSoundType: 0
   detectRange: 450
-  rotateSpeed: 3.5
+  rotateSpeed: 2.5
   patrolRadius: 1000
   patrolArriveDist: 25
+  attackPassWeight: 1
+  attackWeight: 1
+  evadeWeight: 0.05
+  attackPassDuration: 3
+  repositionDuration: 4
+  evadeDuration: 2
+  repositionDistance: 50
+  evadeChance: 0.1
+  evadeCoolTime: 5
+  dodgeProbability: 0.1
   aiState: 1
 --- !u!114 &1803401708122000012
 MonoBehaviour:

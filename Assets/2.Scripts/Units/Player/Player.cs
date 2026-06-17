@@ -121,7 +121,7 @@ public class Player : Unit
 	public float fuelMoveConsumeRate = 5f;
 	[Tooltip("부스트 사용 시 추가 초당 연료 소모량")]
 	public float fuelBoostConsumeRate = 10f;
-	[Header("연료 최대량&잔량(입력x 참고용)")]
+	[Header("연료 최대량&잔량(참고용 입력x)")]
 	[Tooltip("최대 연료량.HUD연결용. ENGINE 파츠 FUEL_MAX 스탯으로 결정.")]
 	public float maxFuelCapacity = 0f;
 	[Tooltip("현재 연료 잔량 HUD 연결용")]

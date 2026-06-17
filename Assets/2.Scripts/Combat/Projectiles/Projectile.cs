@@ -221,9 +221,11 @@ public abstract class Projectile : MonoBehaviour
     {
         //디버그용
         IDamageable target = other.GetComponentInParent<IDamageable>();
+        Unit unit = target as Unit;
         string targetName = (target as MonoBehaviour)?.gameObject.name ?? other.gameObject.name;
-        string hp = target != null ? target.CurHp.ToString() : "N/A";
-        Debug.Log($"[OnHit] 피격 대상: {targetName} | 레이어: {LayerMask.LayerToName(other.gameObject.layer)} | HP: {hp}");
+		string hp = unit != null ? unit.curHpRemaining.ToString() : "N/A";
+		string shield = unit != null ? unit.curShieldRemaining.ToString() : "N/A";
+		Debug.Log($"[OnHit] 피격 대상: {targetName} | 레이어: {LayerMask.LayerToName(other.gameObject.layer)} | HP: {hp} | SHIELD : {shield}");
     }
 
 

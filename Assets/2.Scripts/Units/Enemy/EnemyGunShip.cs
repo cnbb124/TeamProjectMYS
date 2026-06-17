@@ -1,11 +1,10 @@
 using UnityEngine;
 
-// 총알만 사격하는 경전투기. OnAIAttack에서 BULLET만 발사.
+// 총알만 사격하는 경전투기.
 public class EnemyGunShip : Enemy
 {
-	protected override void OnAIAttack()
+	protected override void ShootWeapons()
 	{
-		base.OnAIAttack();
 		weaponSystem.Shoot(PROJECTILE_TYPE.BULLET);
 	}
 }

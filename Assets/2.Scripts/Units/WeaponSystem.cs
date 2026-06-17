@@ -65,7 +65,7 @@ public class WeaponSystem : MonoBehaviour
 	// ================== [총알 설정] ==================
 	[Space(5)]
 	[Header("<size=18>[무기 시스템]</size>")]
-	[Header("총알 설정")]
+	[Header("<size=14>총알 설정<size>")]
 	[Tooltip("총알 발사 간격 (초)")]
 	public float fireBulletDelay = 0.1f;
 	private float _lastFireBulletTime = 0f;
@@ -73,7 +73,7 @@ public class WeaponSystem : MonoBehaviour
 	[Tooltip("장착된 총알의 데이터(SO). curBulletPoolType으로 풀 종류 지정 (변형탄 대응).")]
 	public BulletData curBulletData;
 
-	[Header("SFX/VFX 관련 설정")]
+	[Header("<size=14>SFX/VFX 관련 설정</size>")]
 	[Tooltip("총알 발사 시 머즐플래시 재생 여부. 플레이어 ON, 적은 유닛 유형에 따라 설정.")]
 	[SerializeField]
 	private bool useBulletMuzzle = true;

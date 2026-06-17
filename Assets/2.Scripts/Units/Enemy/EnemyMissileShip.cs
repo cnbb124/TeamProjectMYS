@@ -1,11 +1,10 @@
 using UnityEngine;
 
-// 미사일만 사격하는 전투기. OnAIAttack에서 MISSILE만 발사.
+// 미사일만 사격하는 전투기.
 public class EnemyMissileShip : Enemy
 {
-	protected override void OnAIAttack()
+	protected override void ShootWeapons()
 	{
-		base.OnAIAttack();
 		weaponSystem.Shoot(PROJECTILE_TYPE.MISSILE);
 	}
 }

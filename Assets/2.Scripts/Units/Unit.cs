@@ -156,7 +156,7 @@ public abstract class Unit : MonoBehaviour, IDamageable
 	public float dodgeInvincibleTime = 0.4f;
 	private float _dodgeTimer = 0f;
 	[Tooltip("회피 쿨타임")]
-	public float dodgeCoolTime;
+	public float dodgeCoolTime = 5f;
 	protected float _dodgeCooldownTimer = 0f;
 	[Tooltip("회피 시 가해지는 순간 힘")]
 	public float dodgeForce = 800f;
@@ -287,13 +287,14 @@ public abstract class Unit : MonoBehaviour, IDamageable
 	//public Transform curFirePos;//밑에서 총구스위칭용 
 	//필요없음.
 
-	[Header("===============<size=14>현재 상태(입력x 참고용)</size>================")]
+	[Header("===============<size=14>현재 상태(참고용 입력x )</size>================")]
 	[Tooltip("UNIT_STATE — \"지금 어떤 상태인가\" (표현/물리 레이어)")]
 	public UNIT_STATE curState = UNIT_STATE.IDLE;
 	// 직전 상태. 전환별로 다른 애니메이션 블렌드(CrossFade duration)를 적용할 때 참조
 	protected UNIT_STATE previousState = UNIT_STATE.IDLE;
 	public int curHpRemaining;
 	public int CurHp => curHpRemaining;//인터페이스 프로퍼티용
+	//public int CurShiled => curShieldRemaining;//인터페이스 프로퍼티용
 	public int curShieldRemaining;
 	public int curArmorRemaining;
 	public float curSpeed;

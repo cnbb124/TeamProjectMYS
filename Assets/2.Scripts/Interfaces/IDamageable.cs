@@ -19,6 +19,9 @@ public interface IDamageable
     void TakeDamage(DamageInfo info);
 	//체력 참고용
 	int CurHp { get; }
+	
+	//사용 x
+	//int CurShiled { get; }
 }
 
 

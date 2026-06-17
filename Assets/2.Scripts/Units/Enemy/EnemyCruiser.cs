@@ -1,11 +1,10 @@
 using UnityEngine;
 
-// 총알+미사일 동시 사격하는 순양함급. OnAIAttack에서 BULLET+MISSILE 발사.
+// 총알+미사일 동시 사격하는 순양함급.
 public class EnemyCruiser : Enemy
 {
-	protected override void OnAIAttack()
+	protected override void ShootWeapons()
 	{
-		base.OnAIAttack();
 		weaponSystem.Shoot(PROJECTILE_TYPE.BULLET);
 		weaponSystem.Shoot(PROJECTILE_TYPE.MISSILE);
 	}
