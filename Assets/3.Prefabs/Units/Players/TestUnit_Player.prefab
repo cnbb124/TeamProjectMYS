@@ -1241,8 +1241,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   weaponSystem: {fileID: 0}
-  maxHpRemaining: 500
-  maxShieldCapacity: 500
+  maxHpRemaining: 999
+  maxShieldCapacity: 999
   shieldRegainDelay: 5
   shieldRegainRate: 10
   isShieldRegaining: 0
@@ -1263,6 +1263,7 @@ MonoBehaviour:
   dodgeDuration: 0.5
   dodgeInvincibleTime: 0.4
   dodgeCoolTime: 0
+  dodgeForce: 800
   speedMultiPlier: 0
   curState: 0
   curHpRemaining: 0
@@ -1281,7 +1282,7 @@ MonoBehaviour:
   fuelBoostConsumeRate: 10
   maxFuelCapacity: 0
   curFuelRemaining: 0
-  dodgeForce: 800
+  reverseEffectSpeedThreshold: 0.95
 --- !u!114 &1161755328960943635
 MonoBehaviour:
   m_ObjectHideFlags: 0

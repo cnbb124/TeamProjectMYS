@@ -158,6 +158,8 @@ public abstract class Unit : MonoBehaviour, IDamageable
 	[Tooltip("회피 쿨타임")]
 	public float dodgeCoolTime;
 	protected float _dodgeCooldownTimer = 0f;
+	[Tooltip("회피 시 가해지는 순간 힘")]
+	public float dodgeForce = 800f;
 	public bool IsInvincible { get; private set; }
 	[Tooltip("피격부위 혹은 HP잔량에 따른이동속도 변경용")]
 	public float speedMultiPlier;//HP 혹은 피격부위에따른 속도조절용.

@@ -139,9 +139,7 @@ public class Player : Unit
 	[Tooltip("최대속도의 몇 % 도달 시 역추진 메인 발동 (0.95 = 95%)")]
 	public float reverseEffectSpeedThreshold = 0.95f;
 
-	[Header("회피")]
-	[Tooltip("회피 시 가해지는 순간 힘")]
-	public float dodgeForce = 800f;
+	
 	private Vector3 _dodgeDir;
 
 
@@ -195,7 +193,8 @@ public class Player : Unit
 
 		if (_input.switchLockOnTarget != 0f && weaponSystem.lockOnSystem != null)
 		{
-			weaponSystem.lockOnSystem.SwitchTarget(_input.switchLockOnTarget > 0 ? 1 : -1);
+			//휠 올릴때 좌측, 내릴떄 우측
+			weaponSystem.lockOnSystem.SwitchTarget(_input.switchLockOnTarget > 0 ? -1 : 1);
 		}
 
 		// 발사 모드 토글 제거 — 발사 수는 firePositions.Count와 curAmmo로 자동 결정
@@ -270,22 +269,26 @@ public class Player : Unit
 			case UNIT_STATE.DODGE:
 				// 좌우 입력 있으면 해당 방향, 없으면 좌/우 랜덤 — 방향을 변수에 저장해 RCS와 동기화
 				bool dodgeLeft;
+				// 좌입력
 				if (_input != null && _input.moveInput.x < -0.1f)
 				{
 					dodgeLeft = true;
 					PlayAnim(ANIM_TYPE.DODGE_L);
 				}
+				// 우입력
 				else if (_input != null && _input.moveInput.x > 0.1f)
 				{
 					dodgeLeft = false;
 					PlayAnim(ANIM_TYPE.DODGE_R);
 				}
+				// 좌우입력없을시 랜덤모션
 				else
 				{
-					dodgeLeft = Random.Range(0, 2) == 0;
+					dodgeLeft = Random.Range(0, 2) == 0;//0이면 true, 1이면 false 즉 50퍼
 					PlayAnim(dodgeLeft ? ANIM_TYPE.DODGE_L : ANIM_TYPE.DODGE_R);
 				}
 
+				// 이동입력
 				if (_input != null && _input.moveInput.magnitude > 0.1f)
 				{
 					_dodgeDir = transform.forward * _input.moveInput.z
@@ -293,9 +296,11 @@ public class Player : Unit
 							  + transform.up * _input.moveInput.y;
 					_dodgeDir.Normalize();
 				}
+				// 이동입력없을시
 				else
 				{
-					_dodgeDir = dodgeLeft ? -transform.right : transform.right;
+					_dodgeDir = Vector3.zero;
+					//_dodgeDir = dodgeLeft ? -transform.right : transform.right;
 				}
 				_rb.AddForce(_dodgeDir * dodgeForce, ForceMode.Impulse);
 

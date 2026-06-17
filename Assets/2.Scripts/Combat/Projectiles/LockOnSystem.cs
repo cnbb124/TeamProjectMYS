@@ -55,7 +55,7 @@ public class LockOnSystem : MonoBehaviour
 	//락온된 타겟들
 	public List<Transform> MultiLockedTargets = new List<Transform>();
 
-	
+
 	//락온 진행률(UI표현에 참조)
 	public float LockOnProgress;
 	//락온 여부
@@ -113,7 +113,7 @@ public class LockOnSystem : MonoBehaviour
 	{
 		LOCK_ON_MODE newMode = currentLockMode;
 
-		switch(weaponSystem.curMissileType)
+		switch (weaponSystem.curMissileType)
 		{
 			case MISSILE_TYPE.HOMING:
 				newMode = LOCK_ON_MODE.SINGLE;
@@ -240,16 +240,6 @@ public class LockOnSystem : MonoBehaviour
 			{
 				TargetsInLockonRange.Add(lockOnBox.transform);
 			}
-			//Transform unitTr = hit.GetComponentInParent<Unit>()?.transform;
-			//if (unitTr == null)
-			//{
-			//	continue;
-			//}
-
-			//if (!TargetsInRange.Contains(unitTr))
-			//{
-			//	TargetsInRange.Add(unitTr);
-			//}
 		}
 
 		// 범위 벗어나거나 비활성화된 타겟 제거
@@ -276,6 +266,24 @@ public class LockOnSystem : MonoBehaviour
 				}
 			}
 		}
+
+		// 정렬 전 현재 타겟 기억 — 정렬 후 인덱스 복원용
+		Transform currentCandidate = (_currentTargetIndex >= 0 && _currentTargetIndex < TargetsInLockonRange.Count)
+			? TargetsInLockonRange[_currentTargetIndex]
+			: null;
+
+		TargetsInLockonRange.Sort(
+			(a, b) => Vector3.Distance(transform.position, a.position).CompareTo(Vector3.Distance(transform.position, b.position))
+		);
+
+		if (currentCandidate != null)
+		{
+			int newIndex = TargetsInLockonRange.IndexOf(currentCandidate);
+			if (newIndex >= 0)
+			{
+				_currentTargetIndex = newIndex;
+			}
+		}
 	}
 
 	/// <summary>
@@ -293,7 +301,39 @@ public class LockOnSystem : MonoBehaviour
 		{
 			return;
 		}
-		_currentTargetIndex = (_currentTargetIndex + direction + TargetsInLockonRange.Count) % TargetsInLockonRange.Count;
+
+		if (Camera.main == null)
+		{
+			return;
+		}
+
+		float currentScreenX = Camera.main.WorldToScreenPoint(TargetsInLockonRange[_currentTargetIndex].position).x;
+
+		// 현재 타겟 기준으로 direction 방향에서 가장 가까운 스크린X 타겟 탐색
+		int bestIndex = -1;
+		float bestDiff = float.MaxValue;
+
+		for (int i = 0; i < TargetsInLockonRange.Count; i++)
+		{
+			if (i == _currentTargetIndex)
+			{
+				continue;
+			}
+
+			float screenX = Camera.main.WorldToScreenPoint(TargetsInLockonRange[i].position).x;
+			float diff = (screenX - currentScreenX) * direction;
+
+			if (diff > 0 && diff < bestDiff)
+			{
+				bestDiff = diff;
+				bestIndex = i;
+			}
+		}
+
+		if (bestIndex != -1)
+		{
+			_currentTargetIndex = bestIndex;
+		}
 	}
 
 	/// <summary>
