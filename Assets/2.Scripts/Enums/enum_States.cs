@@ -29,6 +29,20 @@ public enum UNIT_STATE
 }
 
 
+// AI 행동 상태. Unit.CurState(UNIT_STATE)와 별개로, "무엇을 할지"를 결정하는 상태.
+// STANDBY(정지) 외에는 전부 이동하므로, UpdateAI()에서 CurState(UNIT_STATE)로 자동 매핑됨: STANDBY->IDLE, 나머지->MOVING혹은 그외 상황맞춰.
+// 차후 주석추가
+public enum AI_STATE
+{
+	STANDBY,
+	PATROL,
+	CHASE,
+	ATTACK,
+	ATTACK_PASS,
+	REPOSITION,
+	EVADE,
+	DODGE
+}
 public enum GAME_STATE
 {
 	MAIN_MENU,

@@ -32,9 +32,7 @@ using UnityEngine;
 
 public class Enemy : Unit
 {
-	// AI 행동 상태. Unit.CurState(UNIT_STATE)와 별개로, "무엇을 할지"를 결정하는 상태.
-	// STANDBY(정지) 외에는 전부 이동하므로, UpdateAI()에서 CurState(UNIT_STATE)로 자동 매핑됨: STANDBY->IDLE, 나머지->MOVING.
-	public enum AI_STATE { STANDBY, PATROL, CHASE, ATTACK }
+
 
 	[Header("<size=18>Enemy AI 설정</size>")]
 	[Tooltip("이 범위 안에 타겟이 들어오면 추격 시작. 공격 가능 범위는 WeaponSystem.lockOnSystem.lockOnRange 사용.")]
