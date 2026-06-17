@@ -9,7 +9,7 @@ using UnityEngine;
 // 발사 주체(Player, Enemy)에 붙이는 컴포넌트.
 // 범위 내 적 자동 감지 → 락온 모드(SINGLE/MULTI)에 따라 락온 수행.
 // 미사일 종류가 바뀌면 UpdateLockMode()가 자동으로 모드 전환.
-//
+// 락온레이어는 항상 LockOnBox설정해줄것. 필요시 다른것도 중복체크.
 // ================================================================
 // [HUD / UI팀 외부 참조용 (읽기 전용)]
 // ================================================================
@@ -48,7 +48,8 @@ public class LockOnSystem : MonoBehaviour
 	public LOCK_ON_MODE currentLockMode = LOCK_ON_MODE.SINGLE;
 	private WeaponSystem weaponSystem;
 
-	[Header("멀티 락온 시 최대 동시 락온 개수")]
+	//[Header("멀티 락온 시 최대 동시 락온 개수")]
+	[HideInInspector]//현재 Missile So에서 받아옴(Cluster)
 	public int maxMultiLockCount = 4;
 
 	[Header("락온 탐지 범위")]
@@ -58,29 +59,35 @@ public class LockOnSystem : MonoBehaviour
 	public float lockOnRequiredTime = 1.2f;
 
 	[Header("락온 대상이될 레이어 마스크")]
+	//[HideInInspector] //Awake에서 할시
 	public LayerMask targetLayerMask;
 
 	[Header("락온 각도 제한(전방위터렛이면 360도)")]
 	[Range(10f, 360f)]
 	public float lockOnAngle = 60f;
 
-	// =============현재 상태 (UI팀 외부 참조용)==================
+
+
+	[Header("<size=14>==========현재 상태 (UI팀 외부 참조용, 입력x)</size>==========")] 
 	//락온범위내의 락온가능상대
 	public List<Transform> TargetsInLockonRange = new List<Transform>();
 	//레이더범위내의 상대
 	public Collider[] TargetsInRadarRange;
 
 
-	// Single (단일타겟락온)모드 전용 변수
-	// 현재 목표로 삼은락온되고있는 후보
+	[Header("Single (단일타겟락온)모드 전용 변수")]
+	[Tooltip("현재 목표로 삼은락온되고있는 후보")]// 현재 목표로 삼은락온되고있는 후보
 	public Transform LockOnCandidate;
 	// 락온된 타겟
+	[Tooltip("락온된 타겟")]
 	public Transform LockedTarget;
 
-	// Multi (다중타겟락온)모드 전용 변수
+	[Header("Multi (다중타겟락온)모드 전용 변수")]
 	//현재 목표로 삼은 락온되고있는 후보들
+	[Tooltip("현재 목표로 삼은 락온되고있는 후보들")]
 	public List<Transform> MultiLockCandidates = new List<Transform>();
 	//락온된 타겟들
+	[Tooltip("락온된 타겟들")]
 	public List<Transform> MultiLockedTargets = new List<Transform>();
 
 
@@ -101,6 +108,8 @@ public class LockOnSystem : MonoBehaviour
 	{
 		ownerUnit = GetComponent<Unit>();
 		weaponSystem = GetComponent<WeaponSystem>();
+		//락온박스만 쓸거면 이걸로
+		//targetLayerMask = 1 << LayerMask.NameToLayer("LockOnBox");
 	}
 
 	private void Update()
