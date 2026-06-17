@@ -18,7 +18,7 @@ public class EnemyMissileTurret : Enemy
 		patrolRadius = 0f;
 	}
 
-	// 루트 전체 대신 swivel(좌우)/mount(상하)만 회전. FORGE3D F3DTurret smoothControlling 방식 참고.
+	// 루트 전체 대신 swivel(좌우)/mount(상하)만 회전. FORGE3D F3DTurret smoothControlling
 	protected override void RotateTowardTarget()
 	{
 		if (target == null)

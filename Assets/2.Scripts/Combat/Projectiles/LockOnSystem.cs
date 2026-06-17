@@ -3,11 +3,39 @@ using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEngine;
 
-// =====================================================================
-// MissileLockOnSystem
-// 발사 주체(Player, Enemy 유닛)에 붙이는 컴포넌트.
-// 범위 내 적 자동 감지 → 락온 모드(Single/Multi)에 따라 락온 수행.
-// =====================================================================
+// ================================================================
+// [LockOnSystem — 외부 참조 / 사용 가이드]
+// ================================================================
+// 발사 주체(Player, Enemy)에 붙이는 컴포넌트.
+// 범위 내 적 자동 감지 → 락온 모드(SINGLE/MULTI)에 따라 락온 수행.
+// 미사일 종류가 바뀌면 UpdateLockMode()가 자동으로 모드 전환.
+//
+// ================================================================
+// [HUD / UI팀 외부 참조용 (읽기 전용)]
+// ================================================================
+// IsLocked              : 락온 확정 여부
+// LockOnProgress        : 락온 진행률 0~1 (게이지 표시용)
+// LockOnCandidate       : 현재 락온 중인 단일 후보 (SINGLE 모드)
+// LockedTarget          : 락온 확정된 단일 타겟   (SINGLE 모드)
+// MultiLockCandidates   : 락온 중인 다중 후보 목록 (MULTI 모드)
+// MultiLockedTargets    : 락온 확정된 다중 타겟 목록 (MULTI 모드)
+// TargetsInLockonRange  : 범위+각도 안의 전체 감지 타겟 (거리 오름차순 정렬)
+//
+// ================================================================
+// [작동 흐름]
+// ================================================================
+// Update()
+//   └── FindAllTargets()          OverlapSphere로 범위 내 LockOnBox 탐색 → 거리순 정렬
+//         UpdateLockMode()        미사일 종류에 따라 SINGLE/MULTI/NONE 자동 전환
+//         UpdateSingleLockMode()  타이머 → lockOnRequiredTime 초과 시 IsLocked=true
+//         UpdateMultiLockMode()   최대 maxMultiLockCount 개 후보 등록 → 타이머 확정
+//
+// ================================================================
+// [외부 호출용 메서드]
+// ================================================================
+// SwitchTarget(int direction)   타겟 전환. +1=오른쪽  -1=왼쪽 (스크린 X 기준)
+// ClearLock()                   락온 전체 초기화
+// ================================================================
 
 
 public class LockOnSystem : MonoBehaviour

@@ -3,41 +3,54 @@ using UnityEngine;
 
 
 // ================================================================
-// [외부 참조 가이드]
+// [WeaponSystem — 외부 참조 / 사용 가이드]
 // ================================================================
-// ▶ HUD팀 참조용 (읽기 전용으로 사용할 것)
-//   missileSlots        : 전체 미사일 슬롯 목록 (List<MissileSlot>)
-//   CurMissileSlot      : 현재 선택된 슬롯 (MissileSlot). 없으면 null.
-//   curMissileType      : 현재 선택된 미사일 종류 (MISSILE_TYPE)
-//   SimultaneousFire    : 동시 발사 수 (등록된 발사 위치 수)
-//   lockOnSystem        : 락온 시스템 참조 (IsLocked, LockedTarget 등)
+// Unit 공통 컴포넌트. Player / Enemy 모두 사용.
+// 총알/미사일 발사 로직 전담. 입력 감지는 Player/AI에서 Shoot()으로 위임.
+// 발사 위치는 파츠 프리팹의 WeaponFirePos 컴포넌트로 동적 관리.
+//
+// ================================================================
+// [HUD / UI팀 외부 참조용 (읽기 전용)]
+// ================================================================
+// missileSlots     : 전체 미사일 슬롯 목록 (List<MissileSlot>)
+// CurMissileSlot   : 현재 선택된 슬롯 (MissileSlot). 없으면 null.
+// curMissileType   : 현재 선택된 미사일 종류 (MISSILE_TYPE)
+// SimultaneousFire : 동시 발사 수 (등록된 발사 위치 수)
+// lockOnSystem     : 락온 시스템 참조 (IsLocked, LockedTarget 등)
 //
 //   예시)
 //   MissileSlot slot = unit.weaponSystem.CurMissileSlot;
 //   if (slot != null) hudManager.SetMissileAmmo(slot.curAmmo, slot.maxAmmo);
 //
-// ▶ 이펙트팀 참조용
-//   ShootBullet()    내부 : 총알 머즐플래시 호출 위치 (useBulletMuzzle=true 일 때만 재생)
-//   → VFXManager.Instance.PlayEffectAtUnit(EFFECT_TYPE.VFX_BULLET_MUZZLE, _unit.transform, curFirePos.position, curFirePos.rotation, 0.2f)
-//   ShootMissileFrom() 내부 : 미사일 머즐플래시 호출 위치 (useMissileMuzzle=true 일 때만 재생)
-//   → VFXManager.Instance.PlayEffectAtUnit(EFFECT_TYPE.VFX_MISSILE_MUZZLE, _unit.transform, firePos.position, firePos.rotation, 0.3f)
-//   → 유닛(_unit.transform)에 부착되어 유닛과 같이 움직임. 위치/회전은 호출 순간 총구 기준.
 // ================================================================
-
-// =====================================================================
-// WeaponSystem : MonoBehaviour
-// Unit 공통 컴포넌트. Player / Enemy 모두 사용.
-// - 총알/레이저/미사일 발사 로직 전담.
-// - 발사 위치는 파츠 프리팹의 WeaponFirePos 컴포넌트로 동적 관리.
-//   UnitParts가 파츠 장착/해제 시 RegisterFirePos/UnregisterFirePos 호출.
-// - 입력 감지는 Player에서. Shoot() 호출로 위임.
-// - Enemy 는 AI 에서 Shoot() 직접 호출.
+// [이펙트팀 참조 — 머즐플래시 호출 위치]
+// ================================================================
+// 총알  : ShootBullet()    내부 (useBulletMuzzle=true 일 때만 재생)
+//   → VFXManager.PlayEffectAtUnit(VFX_BULLET_MUZZLE, _unit.transform, firePos, rot, 0.2f)
+// 미사일: ShootMissileFrom() 내부 (useMissileMuzzle=true 일 때만 재생)
+//   → VFXManager.PlayEffectAtUnit(VFX_MISSILE_MUZZLE, _unit.transform, firePos, rot, 0.3f)
+//   유닛에 부착되어 유닛과 같이 움직임. 위치/회전은 호출 순간 총구 기준.
 //
+// ================================================================
 // [발사 위치 등록 경로]
-// 파츠 프리팹 장착 → UnitParts.SpawnPartPrefab()
+// ================================================================
+// 파츠 장착 → UnitParts.SpawnPartPrefab()
 //   → GetComponentsInChildren<WeaponFirePos>()
 //   → WeaponSystem.RegisterFirePos(posType, transform)
-// =====================================================================
+//
+// ================================================================
+// [외부 호출용 주요 메서드]
+// ================================================================
+// Init()                                     초기화. Player.Start()에서 호출.
+// Shoot(PROJECTILE_TYPE type)                발사. Player/AI에서 호출.
+// RegisterFirePos(WEAPON_POS_TYPE, Transform)    파츠 장착 시 UnitParts가 호출
+// UnregisterFirePos(WEAPON_POS_TYPE, Transform)  파츠 해제 시 UnitParts가 호출
+// SwitchMissileNext() / SwitchMissilePrev()  슬롯 전환
+// SwitchToSlot(int slotIndex)                슬롯 직접 지정
+// EquipMissile(int, MISSILE_TYPE, int, MissileData)  슬롯에 미사일 장착
+// HasMissileAmmo(MISSILE_TYPE)               잔탄 여부 확인
+// AddMissileAmmo(MISSILE_TYPE, int)          잔탄 추가
+// ================================================================
 public class WeaponSystem : MonoBehaviour
 {
 	// ================== [레퍼런스] ==================

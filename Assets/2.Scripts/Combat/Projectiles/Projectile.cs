@@ -1,10 +1,43 @@
 using UnityEngine;
 
-
-
+// ================================================================
+// [Projectile — 외부 참조 / 자식 구현 가이드]
+// ================================================================
 // 모든 투사체의 베이스 클래스.
 // Unit처럼 공통 로직은 여기서, 세부 동작은 자식에서 override.
 // PoolManager에서 꺼낼 때 Init()으로 초기화, 반납 시 OnDisable()로 처리.
+//
+// ================================================================
+// [발사 ~ 소멸 흐름]
+// ================================================================
+// WeaponSystem.Shoot()
+//   └── Init(startPos, dir, attacker)      발사 시 초기화 (자식 override 시 base.Init() 필수)
+//         Update()                          매 프레임 이동거리 누적 → maxRange 도달 시 OnMaxRange()
+//         OnTriggerEnter(Collider other)    HitBox 레이어 충돌 감지 → OnHit() 호출
+//           └── OnHit(Collider other)       피격 처리 (자식에서 override)
+//                 └── ApplyDamage(...)      DamageInfo 생성 → target.TakeDamage()
+//                       └── ReturnToPool() 투사체 풀 반납 (소멸은 항상 이걸로)
+//
+// ================================================================
+// [자식 구현 시 override 포인트]
+// ================================================================
+// Init(startPos, dir, attacker)            초기화 추가 시 — base.Init() 반드시 첫 줄 호출
+// OnHit(Collider other)                    피격 시 동작 — ApplyDamage + 이펙트/사운드 + ReturnToPool
+// OnMaxRange()                             사거리 초과 시 동작 — 기본은 ReturnToPool (폭발형은 Explode 추가)
+// OnDisable()                              풀 반납 시 정리 — base.OnDisable() 호출
+//
+// ================================================================
+// [ApplyDamage 3종류 오버로딩]
+// ================================================================
+// ApplyDamage(Collider, int, DAMAGE_TYPE)
+//   기본 단일 피격. OnTriggerEnter의 collider를 그대로 전달.
+//
+// ApplyDamage(IDamageable, Collider, int, DAMAGE_TYPE)
+//   스플래시 target을 직접 지정할 때 사용. 레거시. 현재사용안함
+//
+// ApplyDamage(IDamageable, Collider, int, DAMAGE_TYPE, Vector3 explosionCenter, float aoeRadius)
+//   범위피해 폭발 전용. 폭발 중심 좌표와 반경을 함께 전달해 파츠 범위 피격 처리.
+// ================================================================
 public abstract class Projectile : MonoBehaviour
 {
 
@@ -237,7 +270,7 @@ public abstract class Projectile : MonoBehaviour
 
 
     /// <summary>
-    /// 스플뎀용 오버라이드
+    /// 스플뎀용 오버라이드>>레거시 현재 사용안함
     /// </summary>
     /// <param name="target"> 피격자</param>
     /// <param name="targetCollider"> 피격대상의 collider정보</param>

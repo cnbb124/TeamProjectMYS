@@ -4,9 +4,52 @@ using UnityEngine;
 using UnityEngine.UI;
 
 
-// ####실제 사용 함수는 맨 밑에~~#####
-
-
+// ================================================================
+// [SoundManager — 외부 참조 / 사용 가이드]
+// ================================================================
+// 싱글톤. 씬에 하나만 존재.
+// BGM / UI 효과음 / 3D 공간 효과음 / 3D 루프음 재생 담당.
+//
+// ================================================================
+// [사운드 종류별 호출 함수]
+// ================================================================
+// PlayBGM(SOUND_TYPE)                               BGM 재생 (2D, 전체 공간)
+// StopBGM()                                         BGM 정지
+//
+// PlaySFXUI(SOUND_TYPE)                             UI 효과음 재생 (2D)
+// PlaySFXUI(SOUND_TYPE, float pitchMin, float pitchMax)   피치 범위 지정 버전
+//
+// PlaySFX3DAtPosition(SOUND_TYPE, Vector3)          월드 고정 위치에서 3D 효과음 재생
+// PlaySFX3DAtPosition(SOUND_TYPE, Vector3, float pitchMin, float pitchMax)
+//
+// PlaySFX3DAtUnit(SOUND_TYPE, Transform unitTr, Transform playPos = null)
+//   유닛에 부착된 3D 효과음 재생. unitTr = 소스 부모(유닛 루트), playPos = 실제 재생 위치(총구 등).
+//   playPos 생략 시 unitTr 위치에서 재생.
+//
+// PlaySFX3DLoop(SOUND_TYPE, Transform targetTr)     루프 사운드 시작 (유닛에 부착)
+// StopSFX3DLoop(Transform targetTr)                 루프 사운드 정지
+// StopSFXAll()                                      모든 효과음 정지
+//
+// ================================================================
+// [볼륨 제어]
+// ================================================================
+// SetBGMVolume(float)    BGM 전체 볼륨 (0~1)
+// SetSFXUIVolume(float)  UI 효과음 전체 볼륨
+// SetSFX3DVolume(float)  3D 효과음 전체 볼륨
+//
+// ================================================================
+// [SoundTypeClip 인스펙터 설정 항목]
+// ================================================================
+// type          : SOUND_TYPE 매핑
+// clip          : 오디오 클립
+// volumeScale   : 개별 볼륨 배율 (0~1)
+// minDistance   : 3D 전용 — 최대 볼륨 유지 거리
+// maxDistance   : 3D 전용 — 소리 소멸 거리
+// maxConcurrent : 동시 재생 한도 (0=무제한)
+// dropOldest    : 한도 초과 시 오래된 소리 끊기(true) / 새 소리 무시(false)
+// pitchMin/Max  : 피치 랜덤 범위 (같으면 고정)
+// ================================================================
+//
 // 게임 내 모든 사운드 종류를 정의
 // 차후 STATE 등등 맞춰서 더추가
 

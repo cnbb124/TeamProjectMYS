@@ -1,6 +1,35 @@
 using UnityEngine;
 
 
+// ================================================================
+// [Enemy 작동 구조]
+// ================================================================
+// Update()
+//   └── UpdateAI()                              AI_STATE 전환 판단 + UNIT_STATE 동기화
+//         ├── OnAIStandby()                     빈 상태 (자식 override용)
+//         ├── OnAIPatrol()                      detectRange 체크 → CHASE 전환 / 순찰지점 갱신
+//         ├── OnAIChase()                       detectRange/공격범위 체크 → PATROL/ATTACK 전환
+//         └── OnAIAttack()                      detectRange/공격범위 체크 → PATROL/CHASE 전환
+//
+// FixedUpdate()
+//   └── switch(aiState)
+//         ├── PATROL  : RotateTowardPosition(patrolTarget) + MoveTowardPosition(patrolTarget)
+//         ├── CHASE   : RotateTowardTarget()               + MoveTowardTarget()
+//         └── ATTACK  : RotateTowardTarget()               + MoveTowardTarget()
+//
+// ================================================================
+
+// 사용함수
+// ================================================================
+// IsTargetInRange(float range)              단순 거리 비교
+// HasTargetInAttackRange()                  LockOnSystem.TargetsInLockonRange 수 체크
+// PickNewPatrolPoint()                      spawnPosition 기준 랜덤 순찰 지점 선정
+// RotateTowardTarget()                      target.position → RotateTowardPosition 위임
+// RotateTowardPosition(Vector3 worldPos)    Slerp 회전
+// MoveTowardTarget()                        target.position → MoveTowardPosition 위임
+// MoveTowardPosition(Vector3 worldPos)      AddForce + 최대속도 클램프
+// ================================================================
+
 public class Enemy : Unit
 {
 	// AI 행동 상태. Unit.CurState(UNIT_STATE)와 별개로, "무엇을 할지"를 결정하는 상태.
@@ -61,7 +90,7 @@ public class Enemy : Unit
 		{
 			return;
 		}
-
+		_rb.angularVelocity = Vector3.zero;
 		switch (aiState)
 		{
 			case AI_STATE.STANDBY:
