@@ -58,7 +58,8 @@ public class WeaponSystem : MonoBehaviour
 	private PoolManager _pool;
 	private SoundManager _sound;
 	private VFXManager _vfx;
-	[Header("락온 시스템")]
+	[HideInInspector]
+	//[Header("락온 시스템")]
 	public LockOnSystem lockOnSystem;
 
 
@@ -168,7 +169,7 @@ public class WeaponSystem : MonoBehaviour
 	private void Awake()
 	{
 		_unit = GetComponent<Unit>();
-
+		lockOnSystem = GetComponent<LockOnSystem>();
 		// 테스트용 발사 위치를 정식 발사 위치 목록에 합류
 		foreach (Transform pos in fixedBulletFirePositions)
 		{

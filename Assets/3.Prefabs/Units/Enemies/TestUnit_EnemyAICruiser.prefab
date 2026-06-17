@@ -294,7 +294,7 @@ MonoBehaviour:
   baseMoveSpeed: 325
   boostSpeed: 500
   maxSpeed: 800
-  maxBoostCapacity: 120
+  maxBoostCapacity: 150
   minBoostRequired: 10
   boostConsumeAmont: 25
   boostRegainDelay: 1
@@ -311,21 +311,29 @@ MonoBehaviour:
   curSpeed: 0
   curBoostRemaining: 0
   _playSoundType: 0
-  detectRange: 450
-  rotateSpeed: 2.5
+  detectRange: 750
+  rotateSpeed: 180
+  aiState: 1
   patrolRadius: 1000
   patrolArriveDist: 25
-  attackPassWeight: 1
-  attackWeight: 1
-  evadeWeight: 0.05
+  patrolHeightRange: 100
+  attackPassWeight: 0.6
+  attackWeight: 0.2
+  attackHoldWeight: 0.2
+  attackDuration: 1
+  attackHoldDuration: 3
   attackPassDuration: 3
-  repositionDuration: 4
-  evadeDuration: 2
-  repositionDistance: 50
-  evadeChance: 0.1
+  repositionDuration: 1.5
+  evadeDuration: 1.5
+  repositionDistance: 200
+  minAttackDistance: 250
+  passOffsetDir: 0
+  passOffsetStartDist: 200
+  passOrbitDistance: 60
+  passVerticalRange: 40
+  evadeChance: 0.35
   evadeCoolTime: 5
   dodgeProbability: 0.1
-  aiState: 1
 --- !u!114 &1803401708122000012
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -343,7 +351,7 @@ MonoBehaviour:
   curBulletData: {fileID: 0}
   useBulletMuzzle: 1
   useBulletSound: 1
-  useMissileMuzzle: 0
+  useMissileMuzzle: 1
   useMissileSound: 1
   bulletMuzzleFlashVFXPlayTime: 0.2
   missileMuzzleFlashVFXPlayTime: 0.2
@@ -374,12 +382,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   currentLockMode: 0
   maxMultiLockCount: 4
-  lockOnRange: 400
-  lockOnRequiredTime: 1.2
+  lockOnRange: 550
+  lockOnRequiredTime: 1
   targetLayerMask:
     serializedVersion: 2
     m_Bits: 4096
-  lockOnAngle: 100
+  lockOnAngle: 120
   TargetsInLockonRange: []
   TargetsInRadarRange: []
   LockOnCandidate: {fileID: 0}
@@ -397,7 +405,7 @@ Rigidbody:
   m_GameObject: {fileID: 6428153736698038514}
   serializedVersion: 4
   m_Mass: 10
-  m_Drag: 4
+  m_Drag: 2.5
   m_AngularDrag: 0.05
   m_CenterOfMass: {x: 0, y: 0, z: 0}
   m_InertiaTensor: {x: 1, y: 1, z: 1}

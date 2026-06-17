@@ -155,6 +155,7 @@ public class Player : Unit
 	protected override void Start()
 	{
 		base.Start(); //유닛 초기화 호출 (RefillToMax 포함, Player override로 연료까지 채워짐)
+		UnitManager.Instance.RegisterPlayer(this);
 		_input = InputManager.Instance;
 		// 게임 시작 시 1번 슬롯 무기로 초기화
 		weaponSystem.Init();
@@ -366,6 +367,7 @@ public class Player : Unit
 	// 사망처리
 	protected override void Die()
 	{
+		UnitManager.Instance.UnregisterPlayer(this);
 		GameManager.Instance.GameOver();
 		//기타 필요한거 반납??여기서해야하나
 	}

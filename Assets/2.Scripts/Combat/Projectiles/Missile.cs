@@ -90,7 +90,7 @@ public class Missile : Projectile, IExplodable
 	[Tooltip("최대 도달 속도")]
 	public float maxSpeed;
 	[HideInInspector]
-	//[Header("현재 미사일 속도(입력x 참고용)")]
+	//[Header("현재 미사일 속도(참고용 입력x)")]
 	//현재속도
 	public float curSpeed;
 	[HideInInspector]

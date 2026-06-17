@@ -206,6 +206,7 @@ public abstract class Unit : MonoBehaviour, IDamageable
 		//유닛파츠에서 해주긴하는데 유닛파츠없을시 임시적용용.
 		RefillToMax();
 
+		//===========레거시=========
 		//playerLayer = LayerMask.NameToLayer("UNIT_Player");
 		//enemyLayer = LayerMask.NameToLayer("UNIT_Enemy");
 		//groundLayer = LayerMask.NameToLayer("Environment");

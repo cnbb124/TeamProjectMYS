@@ -25,7 +25,7 @@ public class EnemyWorker : Enemy
     protected override void Start()
     {
         base.Start();
-        player = GameObject.FindWithTag("Player").transform;
+        player = UnitManager.Instance?.GetNearestPlayer(transform.position);
         midBoss = FindObjectOfType<MidBoss>();
         FindNearestAsteroid();
     }
@@ -91,7 +91,7 @@ public class EnemyWorker : Enemy
 
         Vector3 dir = (targetAsteroid.position - transform.position).normalized;
         if (dir != Vector3.zero)
-            transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(dir), rotateSpeed * Time.deltaTime);
+            transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.LookRotation(dir), rotateSpeed * Time.deltaTime);
 
         float asteroidRadius = targetAsteroid.localScale.x * 0.5f;
         float dist = Vector3.Distance(transform.position, targetAsteroid.position);
@@ -127,7 +127,7 @@ public class EnemyWorker : Enemy
 
         Vector3 dir = (targetItem.position - transform.position).normalized;
         if (dir != Vector3.zero)
-            transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(dir), rotateSpeed * Time.deltaTime);
+            transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.LookRotation(dir), rotateSpeed * Time.deltaTime);
 
         transform.position = Vector3.MoveTowards(transform.position, targetItem.position, baseMoveSpeed * Time.deltaTime);
 
@@ -152,7 +152,7 @@ public class EnemyWorker : Enemy
 
         Vector3 dir = (midBoss.transform.position - transform.position).normalized;
         if (dir != Vector3.zero)
-            transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(dir), rotateSpeed * Time.deltaTime);
+            transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.LookRotation(dir), rotateSpeed * Time.deltaTime);
 
         transform.position = Vector3.MoveTowards(transform.position, midBoss.transform.position, baseMoveSpeed * Time.deltaTime);
 
@@ -172,7 +172,7 @@ public class EnemyWorker : Enemy
 
         Vector3 dir = (player.position - transform.position).normalized;
         if (dir != Vector3.zero)
-            transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(dir), rotateSpeed * Time.deltaTime);
+            transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.LookRotation(dir), rotateSpeed * Time.deltaTime);
     }
 
     void FindNearestAsteroid()

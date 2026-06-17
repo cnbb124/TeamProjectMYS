@@ -1,18 +1,85 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+// ================================================================
+// [외부 참조 가이드]
+// ================================================================
+// RegisterPlayer(Unit)           플레이어 등록 — Player.Start()에서 호출
+// UnregisterPlayer(Unit)         플레이어 해제 — Player.Die()에서 호출
+// GetNearestPlayer(Vector3 from) 가장 가까운 플레이어 Transform 반환 (없으면 null)
+//                                 → Enemy에서 target 갱신 시 사용
+// ================================================================
+
 public class UnitManager : MonoBehaviour
 {
-    // Start is called before the first frame update
-    void Start()
+    private static UnitManager instance;
+    public static UnitManager Instance
     {
-        
+        get
+        {
+            if (instance == null)
+            {
+                instance = FindObjectOfType<UnitManager>();
+                if (instance == null)
+                {
+                    Debug.Log("씬에 UnitManager 누락! 하이어라키에 추가 필요");
+                }
+            }
+            return instance;
+        }
     }
 
-    // Update is called once per frame
-    void Update()
+    private void Awake()
     {
-        
+        if (instance == null)
+        {
+            instance = this;
+            DontDestroyOnLoad(gameObject);
+        }
+        else if (instance != this)
+        {
+            Debug.LogWarning("중복된 UnitManager 발견. 파괴 후 실행");
+            Destroy(gameObject);
+        }
+    }
+
+    private readonly List<Unit> _players = new List<Unit>();
+
+    public void RegisterPlayer(Unit player)
+    {
+        if (!_players.Contains(player))
+        {
+            _players.Add(player);
+        }
+    }
+
+    public void UnregisterPlayer(Unit player)
+    {
+        _players.Remove(player);
+    }
+
+    // 가장 가까운 살아있는 플레이어 Transform 반환. 리스트를 뒤에서부터 순회해 null(파괴된 오브젝트)은 자동 정리.
+    public Transform GetNearestPlayer(Vector3 from)
+    {
+        Transform nearest = null;
+        float minDist = float.MaxValue;
+
+        for (int i = _players.Count - 1; i >= 0; i--)
+        {
+            if (_players[i] == null)
+            {
+                _players.RemoveAt(i);
+                continue;
+            }
+
+            float dist = Vector3.Distance(from, _players[i].transform.position);
+            if (dist < minDist)
+            {
+                minDist = dist;
+                nearest = _players[i].transform;
+            }
+        }
+
+        return nearest;
     }
 }
