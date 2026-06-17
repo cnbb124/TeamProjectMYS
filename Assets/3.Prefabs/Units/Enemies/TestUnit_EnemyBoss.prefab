@@ -141,6 +141,8 @@ GameObject:
   - component: {fileID: 5567211373409881338}
   - component: {fileID: 8823472510879492053}
   - component: {fileID: 2366323481049738711}
+  - component: {fileID: 3166126961382493439}
+  - component: {fileID: 4500251880083101797}
   m_Layer: 7
   m_Name: TestUnit_EnemyBoss
   m_TagString: Enemy
@@ -298,3 +300,57 @@ MonoBehaviour:
   patternCooldown: 3
   phase2Threshold: 0.6
   phase3Threshold: 0.3
+--- !u!114 &3166126961382493439
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9127277378237319991}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aa66153ac3873e44589a1d73fc8a0257, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  lockOnSystem: {fileID: 4500251880083101797}
+  fireBulletDelay: 0.1
+  curBulletData: {fileID: 0}
+  useBulletMuzzle: 1
+  useBulletSound: 1
+  useMissileMuzzle: 1
+  useMissileSound: 1
+  bulletMuzzleFlashVFXPlayTime: 0.2
+  missileMuzzleFlashVFXPlayTime: 0.2
+  fireMissileDelay: 2
+  fixedBulletFirePositions: []
+  fixedMissileFirePositions: []
+  missileSlots: []
+  curMissileType: 0
+--- !u!114 &4500251880083101797
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9127277378237319991}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a547208e588a6c04ebc7cf397cd9034d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  currentLockMode: 0
+  maxMultiLockCount: 4
+  lockOnRange: 80
+  lockOnRequiredTime: 1.2
+  targetLayerMask:
+    serializedVersion: 2
+    m_Bits: 0
+  lockOnAngle: 60
+  TargetsInLockonRange: []
+  TargetsInRadarRange: []
+  LockOnCandidate: {fileID: 0}
+  LockedTarget: {fileID: 0}
+  MultiLockCandidates: []
+  MultiLockedTargets: []
+  LockOnProgress: 0
+  IsLocked: 0
