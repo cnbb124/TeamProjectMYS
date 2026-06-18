@@ -1,5 +1,19 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+
+// 미사일 발사 위치 + 딜레이 쌍.
+// delay: 직전 항목 발사 후 대기 시간(초). 0이면 직전 항목과 동시 발사.
+[System.Serializable]
+public class MissileFireEntry
+{
+    public Transform firePos;
+    [Tooltip("직전 항목 발사 후 대기 시간(초). 0이면 동시 발사.")]
+    public float delay = 0f;
+}
+
+// Sequential: 배열 순서대로 발사. Random: 매 살보마다 순서를 셔플 후 발사.
+public enum MissileFireMode { Sequential, Random }
 
 
 // ================================================================
@@ -51,6 +65,7 @@ using UnityEngine;
 // HasMissileAmmo(MISSILE_TYPE)               잔탄 여부 확인
 // AddMissileAmmo(MISSILE_TYPE, int)          잔탄 추가
 // ================================================================
+[RequireComponent(typeof(LockOnSystem))]
 public class WeaponSystem : MonoBehaviour
 {
 	// ================== [레퍼런스] ==================
@@ -109,10 +124,14 @@ public class WeaponSystem : MonoBehaviour
 	// Awake 시 _bulletFirePositions에 합류됨
 	private List<Transform> fixedBulletFirePositions = new List<Transform>();
 
-	[Tooltip("UnitParts 없이 미사일 발사 위치를 직접 지정.")]
+	[Tooltip("UnitParts 없이 미사일 발사 위치 + 딜레이 직접 지정.\n" +
+             "delay=0: 직전 항목과 동시 발사 / delay>0: 직전 발사 후 N초 대기 후 발사.")]
 	[SerializeField]
-	// Awake 시 _missileFirePositions에 합류됨.
-	private List<Transform> fixedMissileFirePositions = new List<Transform>();
+	// Awake 시 _missileFirePositions / _missileFireDelays에 합류됨.
+	private List<MissileFireEntry> fixedMissileFireEntries = new List<MissileFireEntry>();
+
+	[Tooltip("Sequential: 배열 순서대로 발사.\nRandom: 매 살보마다 발사 순서를 랜덤 셔플 후 발사.")]
+	public MissileFireMode missileFireMode = MissileFireMode.Sequential;
 
 
 	// ================== [레이저 설정] ==================
@@ -128,6 +147,8 @@ public class WeaponSystem : MonoBehaviour
 
 	// LAUNCHER_MISSILE 파츠가 RegisterFirePos로 등록.
 	private List<Transform> _missileFirePositions = new List<Transform>();
+	// _missileFirePositions과 1:1 대응. 파츠 등록분은 항상 0f.
+	private List<float> _missileFireDelays = new List<float>();
 
 	// 발사 위치별 LauncherAnim 캐시 (컴포넌트 없는 파츠는 등록 안 됨)
 	private Dictionary<Transform, LauncherAnim> _launcherAnims = new Dictionary<Transform, LauncherAnim>();
@@ -179,11 +200,12 @@ public class WeaponSystem : MonoBehaviour
 			}
 		}
 
-		foreach (Transform pos in fixedMissileFirePositions)
+		foreach (MissileFireEntry entry in fixedMissileFireEntries)
 		{
-			if (pos != null)
+			if (entry.firePos != null)
 			{
-				_missileFirePositions.Add(pos);
+				_missileFirePositions.Add(entry.firePos);
+				_missileFireDelays.Add(entry.delay);
 			}
 		}
 
@@ -337,7 +359,8 @@ public class WeaponSystem : MonoBehaviour
 	}
 
 	/// <summary>
-	/// 미사일 — 잔탄과 발사위치 수 중 작은 값만큼 동시 발사.
+	/// 미사일 — delay 설정에 따라 동시 또는 순차 발사.
+	/// 모든 delay가 0이면 같은 프레임에 전부 발사. delay > 0 항목이 있으면 코루틴으로 처리.
 	/// </summary>
 	private void ShootAllMissiles(SOUND_TYPE soundType)
 	{
@@ -346,17 +369,50 @@ public class WeaponSystem : MonoBehaviour
 		{
 			return;
 		}
+		StartCoroutine(SalvoCoroutine(soundType, curSlot));
+	}
 
-		int actualFire = Mathf.Min(_missileFirePositions.Count, curSlot.curAmmo);
+	private IEnumerator SalvoCoroutine(SOUND_TYPE soundType, MissileSlot slot)
+	{
+		int actualFire = Mathf.Min(_missileFirePositions.Count, slot.curAmmo);
 
+		// 발사 순서 인덱스 생성
+		List<int> order = new List<int>(actualFire);
 		for (int i = 0; i < actualFire; i++)
 		{
+			order.Add(i);
+		}
+
+		// Random 모드면 Fisher-Yates 셔플
+		if (missileFireMode == MissileFireMode.Random)
+		{
+			for (int i = order.Count - 1; i > 0; i--)
+			{
+				int j = Random.Range(0, i + 1);
+				int tmp = order[i];
+				order[i] = order[j];
+				order[j] = tmp;
+			}
+		}
+
+		for (int i = 0; i < order.Count; i++)
+		{
+			int idx = order[i];
+			float delay = (idx < _missileFireDelays.Count) ? _missileFireDelays[idx] : 0f;
+			if (delay > 0f)
+			{
+				yield return new WaitForSeconds(delay);
+			}
+			if (_unit == null || _unit.CurState == UNIT_STATE.DIE)
+			{
+				yield break;
+			}
 			if (useMissileSound)
 			{
 				_sound.PlaySFX3DAtPosition(soundType, _unit.transform.position);
 			}
-			ShootMissileFrom(_missileFirePositions[i]);
-			curSlot.curAmmo--;
+			ShootMissileFrom(_missileFirePositions[idx]);
+			slot.curAmmo--;
 		}
 	}
 
@@ -461,6 +517,7 @@ public class WeaponSystem : MonoBehaviour
 				break;
 			case WEAPON_POS_TYPE.MISSILE:
 				_missileFirePositions.Add(pos);
+				_missileFireDelays.Add(0f); // 파츠 등록분은 항상 동시 발사
 				LauncherAnim missileAnim = pos.GetComponentInParent<LauncherAnim>();
 				if (missileAnim != null)
 				{
@@ -490,9 +547,16 @@ public class WeaponSystem : MonoBehaviour
 				}
 				break;
 			case WEAPON_POS_TYPE.MISSILE:
-				_missileFirePositions.Remove(pos);
+			{
+				int idx = _missileFirePositions.IndexOf(pos);
+				if (idx >= 0)
+				{
+					_missileFirePositions.RemoveAt(idx);
+					_missileFireDelays.RemoveAt(idx);
+				}
 				_launcherAnims.Remove(pos);
 				break;
+			}
 			case WEAPON_POS_TYPE.LASER:
 				if (_laserFirePos == pos)
 				{

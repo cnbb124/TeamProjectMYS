@@ -262,9 +262,9 @@ MonoBehaviour:
   repositionDuration: 3
   evadeDuration: 1.5
   repositionDistance: 200
-  minAttackDistance: 200
+  minAttackDistance: 350
   passOffsetDir: 0
-  passOffsetStartDist: 200
+  passOffsetStartDist: 125
   passHorizontalDist: 60
   passVerticalRange: 40
   evadeChance: 0.35
@@ -289,13 +289,14 @@ MonoBehaviour:
   useBulletSound: 1
   useMissileMuzzle: 1
   useMissileSound: 1
-  bulletMuzzleFlashVFXPlayTime: 0.2
+  bulletMuzzleFlashVFXPlayTime: 0.03
   missileMuzzleFlashVFXPlayTime: 0.2
   fireMissileDelay: 2
   fixedBulletFirePositions:
   - {fileID: 1009696163447187148}
   - {fileID: 6182860956872268411}
-  fixedMissileFirePositions: []
+  fixedMissileFireEntries: []
+  missileFireMode: 0
   missileSlots:
   - type: 0
     curAmmo: 9999

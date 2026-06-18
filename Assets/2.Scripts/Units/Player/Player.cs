@@ -58,6 +58,7 @@ using UnityEngine;
 
 public delegate void HitDirectionHandler(Vector3 dir);
 
+[RequireComponent(typeof(Rigidbody))]
 public class Player : Unit
 {
 

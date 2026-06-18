@@ -53,7 +53,8 @@ public class LockOnSystem : MonoBehaviour
 	public int maxMultiLockCount = 4;
 
 	[Header("락온 탐지 범위")]
-	public float lockOnRange = 80f;
+	
+	public float lockOnRange = 400f;
 
 	[Header("락온 확정까지 필요한 시간초")]
 	public float lockOnRequiredTime = 1.2f;
