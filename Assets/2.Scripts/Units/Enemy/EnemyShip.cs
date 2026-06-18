@@ -26,8 +26,8 @@ using UnityEngine;
 //   └── EVADE: CanEvade + 확률 → 도주 시작 (데미지는 받음)
 //
 // ================================================================
-// PickCombatPattern()      ATTACK_CHASE / ATTACK_HOLD / ATTACK_PASS 가중치 선택
-// EnterAttack()            ATTACK_CHASE 진입
+// PickCombatPattern()      attackChaseWeight / attackPassWeight / attackHoldWeight 가중치 선택
+// EnterAttackChase()       ATTACK_CHASE 진입
 // EnterAttackHold()        ATTACK_HOLD 진입
 // EnterAttackPass()        ATTACK_PASS 진입 (좌우 방향 결정 포함)
 // EnterReposition()        REPOSITION 진입 + _repositionTarget 선정
@@ -54,30 +54,30 @@ public class EnemyShip : Enemy
     [Tooltip("돌진 후 타겟을 지나쳐 재배치하는 패턴")]
     [Range(0f, 1f)]
     public float attackPassWeight = 1f;
-    [Tooltip("타겟을 추적하며 사격하는 패턴")]
+    [Tooltip("타겟을 추적하며 사격하는 패턴 (ATTACK_CHASE)")]
     [Range(0f, 1f)]
-    public float attackWeight = 1f;
+    public float attackChaseWeight = 1f;
     [Tooltip("제자리 정지 후 타겟을 공격하는 패턴")]
     [Range(0f, 1f)]
-    public float attackHoldWeight = 0f;
+    public float attackHoldWeight = 1f;
 
     [Header("기동 패턴 지속 시간 (초)")]
     [Tooltip("ATTACK_CHASE 지속 시간. 0이면 범위 이탈 전까지 유지.")]
-    public float attackDuration = 5f;
+    public float attackChaseDuration = 2f;
     [Tooltip("ATTACK_HOLD 지속 시간. 0이면 범위 이탈 전까지 유지.")]
-    public float attackHoldDuration = 5f;
+    public float attackHoldDuration = 3f;
     [Tooltip("ATTACK_PASS 최대 지속 시간. 만료 시 강제 REPOSITION 전환.")]
-    public float attackPassDuration = 3f;
+    public float attackPassDuration = 4f;
     [Tooltip("REPOSITION 지속 시간. 도착 또는 만료 시 CHASE 복귀.")]
-    public float repositionDuration = 4f;
+    public float repositionDuration = 2.5f;
     [Tooltip("EVADE 지속 시간.")]
-    public float evadeDuration = 2f;
+    public float evadeDuration = 1.5f;
     [Tooltip("재배치 목표 거리 (플레이어 기준)")]
-    public float repositionDistance = 150f;
+    public float repositionDistance = 200f;
 
     [Header("ATTACK_CHASE 최소 접근 거리")]
     [Tooltip("타겟과 이 거리 이하로 좁혀지면 전진 멈춤. 0이면 비활성화.")]
-    public float minAttackDistance = 50f;
+    public float minAttackDistance = 200f;
 
     [Header("ATTACK_PASS 궤도 오프셋")]
     [Tooltip("ATTACK_PASS 진입 시 타겟 기준 어느 쪽으로 비껴갈지 결정.\n" +
@@ -90,13 +90,14 @@ public class EnemyShip : Enemy
     [Tooltip("이 거리 이내로 접근하기 시작할 때부터 측면 조향 시작 (단위: 유닛).\n" +
              "클수록 일찍 방향을 틀어 완만한 곡선으로 비껴감.\n" +
              "0 이하로 설정하면 오프셋 없이 직선 돌진.\n" +
-             "※ passOrbitDistance 의 3배 이상 권장.")]
+             "※ passHorizontalDist 의 3배 이상 권장.")]
     public float passOffsetStartDist = 200f;
 
-    [Tooltip("통과 시 타겟과의 목표 수평 수직 거리 (단위: 유닛).\n" +
-             "클수록 타겟에서 더 멀리 벗어나며 지나감.\n" +
-             "0 이하로 설정하면 수평 오프셋 없이 직선 돌진.")]
-    public float passOrbitDistance = 60f;
+    [Tooltip("통과 시 타겟 기준 좌우(수평) 이탈 폭 (단위: 유닛).\n" +
+             "클수록 타겟 옆을 더 넓게 비껴 지나감.\n" +
+             "0 이하로 설정하면 좌우 오프셋 없이 직선 돌진.\n" +
+             "※ 상하(수직) 오프셋은 passVerticalRange 가 담당.")]
+    public float passHorizontalDist = 60f;
 
     [Tooltip("통과 시 타겟 기준 상하 오프셋 최대 범위 (단위: 유닛).\n" +
              "진입마다 ±범위 안에서 랜덤하게 결정됨.\n" +
@@ -218,12 +219,12 @@ public class EnemyShip : Enemy
                 // passOffsetStartDist 밖   : 타겟을 향해 직선 접근 (오프셋 없음)
                 // passOffsetStartDist 이내 : 타겟 옆을 향해 점진적으로 방향 전환
                 //   t = 0 (passOffsetStartDist 진입 직후) → t = 1 (타겟에 가장 근접)
-                //   오프셋량 = passOrbitDistance * t  (가까워질수록 점점 벌어짐)
-                // passOrbitDistance or passOffsetStartDist 가 0 이하면 직선 돌진.
+                //   오프셋량 = passHorizontalDist * t  (가까워질수록 점점 벌어짐)
+                // passHorizontalDist or passOffsetStartDist 가 0 이하면 직선 돌진.
                 // ────────────────────────────────────────────────────────────────
                 Vector3 aimPoint;
 
-                if (passOrbitDistance > 0f
+                if (passHorizontalDist > 0f
                     && passOffsetStartDist > 0f
                     && distToTarget <= passOffsetStartDist)
                 {
@@ -243,7 +244,7 @@ public class EnemyShip : Enemy
                     float t = Mathf.Clamp01(1f - distToTarget / passOffsetStartDist);
                     // 수평(좌우) + 수직(상하) 오프셋을 독립적으로 합산
                     aimPoint = target.position
-                        + perp            * (passOrbitDistance * t)
+                        + perp            * (passHorizontalDist * t)
                         + Vector3.up      * (_passVerticalOffset * t);
                 }
                 else
@@ -311,7 +312,7 @@ public class EnemyShip : Enemy
                 OnAIChase();
                 break;
             case AI_STATE.ATTACK_CHASE:
-                OnAIAttack();
+                OnAIAttackChase();
                 break;
             case AI_STATE.ATTACK_HOLD:
                 OnAIAttackHold();
@@ -389,8 +390,8 @@ public class EnemyShip : Enemy
         }
     }
 
-    // ATTACK_CHASE 처리. attackDuration 만료 시 PickCombatPattern 재호출.
-    protected virtual void OnAIAttack()
+    // ATTACK_CHASE 처리. attackChaseDuration 만료 시 PickCombatPattern 재호출.
+    protected virtual void OnAIAttackChase()
     {
         if (!IsTargetInRange(detectRange))
         {
@@ -402,7 +403,7 @@ public class EnemyShip : Enemy
             aiState = AI_STATE.CHASE;
             return;
         }
-        if (attackDuration > 0f && _stateTimer <= 0f)
+        if (attackChaseDuration > 0f && _stateTimer <= 0f)
         {
             PickCombatPattern();
             return;
@@ -493,10 +494,10 @@ public class EnemyShip : Enemy
     // 가중치 기반 전투 패턴 선택. 모두 0이면 기본 ATTACK_CHASE.
     protected virtual void PickCombatPattern()
     {
-        float total = attackPassWeight + attackWeight + attackHoldWeight;
+        float total = attackPassWeight + attackChaseWeight + attackHoldWeight;
         if (total <= 0f)
         {
-            EnterAttack();
+            EnterAttackChase();
             return;
         }
         float rand = Random.Range(0f, total);
@@ -504,9 +505,9 @@ public class EnemyShip : Enemy
         {
             EnterAttackPass();
         }
-        else if (rand < attackPassWeight + attackWeight)
+        else if (rand < attackPassWeight + attackChaseWeight)
         {
-            EnterAttack();
+            EnterAttackChase();
         }
         else
         {
@@ -514,10 +515,10 @@ public class EnemyShip : Enemy
         }
     }
 
-    protected void EnterAttack()
+    protected void EnterAttackChase()
     {
         aiState = AI_STATE.ATTACK_CHASE;
-        _stateTimer = attackDuration;
+        _stateTimer = attackChaseDuration;
     }
 
     protected void EnterAttackHold()

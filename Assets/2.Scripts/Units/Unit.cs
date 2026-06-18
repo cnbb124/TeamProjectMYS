@@ -25,9 +25,11 @@ using UnityEngine;
 //   float shieldRatio = (float)unit.curShieldRemaining / unit.maxShieldCapacity;
 //   float boostRatio  = unit.curBoostRemaining / unit.maxBoostCapacity;
 //
-// ▶ 이펙트팀 참조용
+// ▶ 이펙트/사운드팀 참조용
 //   OnHitReaction(DamageInfo info) : 피격 시 Player/Enemy에서 override → 여기서 VFXManager 호출
-//   OnStateEnter(UNIT_STATE.DIE)   : 사망 진입 시 이펙트 호출 위치
+//   OnStateEnter(UNIT_STATE state) : IDLE/MOVING/BOOSTING 애니+루프사운드 재생, DODGE 무적/타이머, DIE 애니
+//   OnStateExit(UNIT_STATE state)  : IDLE/MOVING/BOOSTING 루프사운드 정지
+//                                    Player는 DODGE(RCS버스트)만 추가 override
 // ================================================================
 
 // FirePosEntry / BoostPosEntry 제거 — WeaponFirePos 마커 컴포넌트 + 파츠 프리팹으로 동적 관리
@@ -416,11 +418,34 @@ public abstract class Unit : MonoBehaviour, IDamageable
 		switch (state)
 		{
 			case UNIT_STATE.IDLE:
-				PlayAnim(ANIM_TYPE.IDLE);
+				// 부스트 직후 정지는 블렌드를 길게 해 관성이 빠지는 느낌
+				if (previousState == UNIT_STATE.BOOSTING)
+				{
+					PlayAnim(ANIM_TYPE.IDLE, 0.3f);
+				}
+				else
+				{
+					PlayAnim(ANIM_TYPE.IDLE);
+				}
+				_sound?.PlaySFX3DLoop(SOUND_TYPE.SFX_IDLE, this.transform);
 				break;
 
 			case UNIT_STATE.MOVING:
-				PlayAnim(ANIM_TYPE.MOVING);
+				// 부스트 → 일반 이동 전환도 동일하게 블렌드를 길게
+				if (previousState == UNIT_STATE.BOOSTING)
+				{
+					PlayAnim(ANIM_TYPE.MOVING, 0.3f);
+				}
+				else
+				{
+					PlayAnim(ANIM_TYPE.MOVING);
+				}
+				_sound?.PlaySFX3DLoop(SOUND_TYPE.SFX_MOVING, this.transform);
+				break;
+
+			case UNIT_STATE.BOOSTING:
+				PlayAnim(ANIM_TYPE.BOOST);
+				_sound?.PlaySFX3DLoop(SOUND_TYPE.SFX_BOOST, this.transform);
 				break;
 
 			case UNIT_STATE.DODGE:
@@ -440,7 +465,14 @@ public abstract class Unit : MonoBehaviour, IDamageable
 	}
 	protected virtual void OnStateExit(UNIT_STATE state)
 	{
-
+		switch (state)
+		{
+			case UNIT_STATE.IDLE:
+			case UNIT_STATE.MOVING:
+			case UNIT_STATE.BOOSTING:
+				_sound?.StopSFX3DLoop(this.transform);
+				break;
+		}
 	}
 	protected virtual void OnIdle()
 	{

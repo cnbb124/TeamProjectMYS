@@ -16,13 +16,13 @@ using UnityEngine.SceneManagement;
 // ▶ 적 / 스폰 참조용
 //   OnEnemyKilled()     : 적 사망 시 Enemy.Die()에서 호출
 //   OnObjectDestroyed() : 파괴 오브젝트 파괴 시 호출
-//   OnBossSpawn         : 보스 스폰 조건 달성 시 발행 이벤트
-//   예시) GameManager.Instance.OnBossSpawn += 내스폰함수;
+//   onBossSpawn         : 보스 스폰 조건 달성 시 발행 이벤트
+//   예시) GameManager.Instance.onBossSpawn += 내스폰함수;
 //
 // ▶ UI 참조용
 //   PauseGame() / ResumeGame()  : 일시정지 / 해제
-//   OnGameStateChanged          : 상태 변화 이벤트. 패널 전환 등에 구독.
-//   예시) GameManager.Instance.OnGameStateChanged += OnStateChange;
+//   onGameStateChanged          : 상태 변화 이벤트. 패널 전환 등에 구독.
+//   예시) GameManager.Instance.onGameStateChanged += OnStateChange;
 //
 // ▶ 씬 전환 참조용
 //   LoadScene(SCENE_TYPE)       : enum으로 씬 전환 (권장)
@@ -46,6 +46,9 @@ using UnityEngine.SceneManagement;
 //
 // 저장 데이터: SaveData.cs 참고
 // =====================================================================
+public delegate void GameStateHandler(GAME_STATE state);
+public delegate void BossSpawnHandler();
+
 public class GameManager : MonoBehaviour
 {
     // =====================================================================
@@ -86,7 +89,7 @@ public class GameManager : MonoBehaviour
     public GAME_STATE curState;
 
     // 상태 변화 시 UI에서 구독 (패널 전환 등)
-    public System.Action<GAME_STATE> OnGameStateChanged;
+    public GameStateHandler onGameStateChanged;
 
     // Time.timeScale 대신 플래그로 제어
     // Player, Enemy 등 게임 로직에서 이 값을 체크해 스스로 멈춤
@@ -114,7 +117,7 @@ public class GameManager : MonoBehaviour
     [HideInInspector] public bool bossSpawned;
 
     // 보스 스폰 조건 달성 시 발행 (SpawnManager 등이 구독)
-    public System.Action OnBossSpawn;
+    public BossSpawnHandler onBossSpawn;
 
     // =====================================================================
     // 저장 경로
@@ -289,7 +292,7 @@ public class GameManager : MonoBehaviour
     /// <summary>
     /// 플레이어 사망 시 Player.Die()에서 호출.
     /// Time.timeScale 건드리지 않음 - 죽음 연출(폭발 등)이 재생되어야 하므로.
-    /// UI / 음악은 OnGameStateChanged 이벤트로 처리.
+    /// UI / 음악은 onGameStateChanged 이벤트로 처리.
     /// </summary>
     public void GameOver()
     {
@@ -342,10 +345,10 @@ public class GameManager : MonoBehaviour
     private void ChangeState(GAME_STATE state)
     {
         curState = state;
-        OnGameStateChanged?.Invoke(curState);
+        onGameStateChanged?.Invoke(curState);
     }
 
-    /// <summary>보스 스폰 조건 체크. 조건 달성 시 OnBossSpawn 이벤트 발행.</summary>
+    /// <summary>보스 스폰 조건 체크. 조건 달성 시 onBossSpawn 이벤트 발행.</summary>
     private void CheckBossSpawnCondition()
     {
         if (bossSpawned) return;
@@ -357,7 +360,7 @@ public class GameManager : MonoBehaviour
         {
             bossSpawned = true;
             Debug.Log($"[GameManager] 보스 스폰 조건 달성 (킬: {killCount}, 파괴: {destroyedObjectCount})");
-            OnBossSpawn?.Invoke();
+            onBossSpawn?.Invoke();
         }
     }
 

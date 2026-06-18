@@ -8,6 +8,11 @@ using UnityEngine;
 // UnregisterPlayer(Unit)         플레이어 해제 — Player.Die()에서 호출
 // GetNearestPlayer(Vector3 from) 가장 가까운 플레이어 Transform 반환 (없으면 null)
 //                                 → Enemy에서 target 갱신 시 사용
+//
+// RegisterEnemy(Unit)            적 등록 — Enemy.Start()에서 호출
+// UnregisterEnemy(Unit)          적 해제 — Enemy.Die()에서 호출
+// GetAllEnemies()                현재 살아있는 적 리스트 반환 (읽기전용)
+//                                 → 레이더 UI팀에서 적 방향 계산 시 사용
 // ================================================================
 
 public class UnitManager : MonoBehaviour
@@ -44,6 +49,7 @@ public class UnitManager : MonoBehaviour
     }
 
     private readonly List<Unit> _players = new List<Unit>();
+    private readonly List<Unit> _enemies = new List<Unit>();
 
     public void RegisterPlayer(Unit player)
     {
@@ -56,6 +62,32 @@ public class UnitManager : MonoBehaviour
     public void UnregisterPlayer(Unit player)
     {
         _players.Remove(player);
+    }
+
+    public void RegisterEnemy(Unit enemy)
+    {
+        if (!_enemies.Contains(enemy))
+        {
+            _enemies.Add(enemy);
+        }
+    }
+
+    public void UnregisterEnemy(Unit enemy)
+    {
+        _enemies.Remove(enemy);
+    }
+
+    // 현재 살아있는 적 리스트 반환. 뒤에서부터 순회해 null 항목 자동 정리.
+    public System.Collections.Generic.IReadOnlyList<Unit> GetAllEnemies()
+    {
+        for (int i = _enemies.Count - 1; i >= 0; i--)
+        {
+            if (_enemies[i] == null)
+            {
+                _enemies.RemoveAt(i);
+            }
+        }
+        return _enemies;
     }
 
     // 가장 가까운 살아있는 플레이어 Transform 반환. 리스트를 뒤에서부터 순회해 null(파괴된 오브젝트)은 자동 정리.

@@ -11,6 +11,8 @@ using UnityEngine;
 // UpdateAI() — 1초마다 UnitManager에서 최근접 플레이어로 target 갱신
 //
 // ================================================================
+// Start()                                UnitManager.RegisterEnemy 호출
+// Die()                                  UnitManager.UnregisterEnemy 호출 + base.Die()
 // IsTargetInRange(float range)           단순 거리 비교
 // HasTargetInAttackRange()               LockOnSystem.TargetsInLockonRange 수 체크
 // ShootWeapons()                         virtual — 자식이 override해 발사 종류 지정
@@ -45,11 +47,19 @@ public class Enemy : Unit
         base.Start();
         UpdateTarget();
         spawnPosition = transform.position;
+        UnitManager.Instance?.RegisterEnemy(this);
+    }
+
+    protected override void Die()
+    {
+        UnitManager.Instance?.UnregisterEnemy(this);
+        base.Die();
     }
 
     protected override void Update()
     {
         base.Update();
+        //일시정지중,죽었을시, AI사용안할시 AI사용안함
         if (ShouldPause || CurState == UNIT_STATE.DIE || !UseGenericAI)
         {
             return;

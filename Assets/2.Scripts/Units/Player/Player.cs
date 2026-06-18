@@ -17,6 +17,10 @@ using UnityEngine;
 //   maxFuelCapacity  : 최대 연료량
 //   (HP / 실드 / 부스트 등은 Unit.cs 참조)
 //
+//   onHitDirectionWorld : HitDirectionHandler — 피격 시 DamageInfo.hitDiriection 그대로 전달
+//                         (투사체→플레이어 방향. 화면 위치 계산 시 부호 반전 필요할 수 있음)
+//                         예) player.OnHitDirectionWorld += dir => hud.ShowHitIndicator(-dir);
+//
 //   예시)
 //   float expRatio = (float)player.exp / player.expToNextLevel;
 //   hudManager.SetLevel(player.level);
@@ -50,6 +54,8 @@ using UnityEngine;
 // 플레이어 입력을 받는 이동/회전/사격 입력 처리는 여기서 담당.
 
 
+
+public delegate void HitDirectionHandler(Vector3 dir);
 
 public class Player : Unit
 {
@@ -231,42 +237,13 @@ public class Player : Unit
 
 
 	//===============override 메서드 FSM==================
+	// IDLE / MOVING / BOOSTING 애니+사운드는 Unit.OnStateEnter에서 처리.
+	// Player는 입력 의존적인 DODGE 방향/RCS, DIE 로그만 추가 처리.
 	protected override void OnStateEnter(UNIT_STATE state)
 	{
 		base.OnStateEnter(state);
 		switch (state)
 		{
-			case UNIT_STATE.IDLE:
-				// 부스트 직후 정지는 관성이 빠지는 느낌이 나도록 블렌드를 길게
-				if (previousState == UNIT_STATE.BOOSTING)
-				{
-					PlayAnim(ANIM_TYPE.IDLE, 0.3f);
-				}
-				else
-				{
-					PlayAnim(ANIM_TYPE.IDLE);
-				}
-				_sound.PlaySFX3DLoop(SOUND_TYPE.SFX_IDLE, this.transform);
-				break;
-
-			case UNIT_STATE.MOVING:
-				// 부스트 → 일반 이동 전환도 동일하게 블렌드를 길게
-				if (previousState == UNIT_STATE.BOOSTING)
-				{
-					PlayAnim(ANIM_TYPE.MOVING, 0.3f);
-				}
-				else
-				{
-					PlayAnim(ANIM_TYPE.MOVING);
-				}
-				_sound.PlaySFX3DLoop(SOUND_TYPE.SFX_MOVING, this.transform);
-				break;
-
-			case UNIT_STATE.BOOSTING:
-				PlayAnim(ANIM_TYPE.BOOST);
-				_sound.PlaySFX3DLoop(SOUND_TYPE.SFX_BOOST, this.transform);
-				break;
-
 			case UNIT_STATE.DODGE:
 				// 좌우 입력 있으면 해당 방향, 없으면 좌/우 랜덤 — 방향을 변수에 저장해 RCS와 동기화
 				bool dodgeLeft;
@@ -317,36 +294,23 @@ public class Player : Unit
 					PlayAll(_rcsRoll[(int)RCS.RTop]);  PlayAll(_rcsRoll[(int)RCS.LBot]);
 				}
 				break;
+
 			case UNIT_STATE.DIE:
 				Debug.Log("[Player] 사망");
-
 				break;
 		}
 	}
 
 
+	// IDLE / MOVING / BOOSTING 루프 사운드 정지는 Unit.OnStateExit에서 처리.
+	// Player는 DODGE RCS 정지만 추가 처리.
 	protected override void OnStateExit(UNIT_STATE state)
 	{
+		base.OnStateExit(state);
 		switch (state)
 		{
-			case UNIT_STATE.IDLE:
-				_sound.StopSFX3DLoop(this.transform);
-				break;
-
-			case UNIT_STATE.MOVING:
-				_sound.StopSFX3DLoop(this.transform);
-				break;
-
-			case UNIT_STATE.BOOSTING:
-				_sound.StopSFX3DLoop(this.transform);
-				break;
-
 			case UNIT_STATE.DODGE:
 				foreach (var arr in _rcsRoll) StopAll(arr);
-				break;
-			case UNIT_STATE.DIE:
-
-
 				break;
 		}
 	}
@@ -356,10 +320,24 @@ public class Player : Unit
 	protected override void OnDodge() { base.OnDodge(); }
 	protected override void OnDying() { }
 
+	// UI팀 구독용 — 피격 시 공격자의 월드 방향 벡터 전달 (정규화).
+	// HUD 피격 방향 인디케이터에서 이 이벤트를 구독하면 됨.
+	// 예) player.OnHitDirectionWorld += dir => hudManager.ShowHitIndicator(dir);
+	public HitDirectionHandler onHitDirectionWorld;
+
 	// 피격 반동 - 카메라 쉐이크, 넉백 등
 	protected override void OnHitReaction(DamageInfo info)
 	{
 		base.OnHitReaction(info);
+
+		// 피격 방향 이벤트 발생 (HUD 피격 인디케이터용)
+		// hitDiriection = 투사체→플레이어 방향 (총알이 날아온 방향).
+		// 화면 어느 쪽에서 맞았는지 표시할 때는 -hitDiriection(플레이어→공격자)을 사용할 것.
+		if (info.hitDiriection != Vector3.zero)
+		{
+			onHitDirectionWorld?.Invoke(info.hitDiriection);
+		}
+
 		// 크리티컬이면 강한 쉐이크
 		// ex. if (info.isCritical) CameraShake.Strong(); else CameraShake.Light();
 	}
