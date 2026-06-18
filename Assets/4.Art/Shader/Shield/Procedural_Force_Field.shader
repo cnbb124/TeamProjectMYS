@@ -47,10 +47,18 @@ Shader "FX/Procedural Force Field"
 
         [Header(Impact)]
         _HitColor("Hit Color", Color) = (1.00, 1.00, 1.00, 1)
-        _HitRingWidth("Hit Ring Width", Range(0.001, 1)) = 0.08
+        _HitRingWidth("Hit Ring Width", Range(0, 1)) = 0.08
         _HitFalloff("Hit Falloff", Range(0.1, 12)) = 4.0
         _HitIntensity("Hit Intensity", Range(0, 20)) = 6.0
         _HitDuration("Hit Duration", Range(0.05, 3)) = 0.55
+
+        [Header(Hit Shape)]
+        _HexBlend("Hex Pattern Blend (0=원형 1=육각형)", Range(0, 1)) = 1.0
+        _HexScale("Hex Scale", Range(0.1, 5)) = 1.0
+        _RippleIntensity("Ripple Intensity (0=끔)", Range(0, 10)) = 3.0
+        _RippleFreq("Ripple Frequency", Range(1, 20)) = 8.0
+        _RippleSpeed("Ripple Speed", Range(1, 30)) = 15.0
+        _RippleRadius("Ripple Radius", Range(0.5, 5)) = 2.0
 
         [Header(Deformation)]
         _HitPositionOS("Hit Position (Object)", Vector) = (0, 0, 0, 0)
@@ -65,6 +73,17 @@ Shader "FX/Procedural Force Field"
         _HitRadius("Hit Radius", Float) = 0.6
         _HitStrength("Hit Strength", Float) = 1.0
         _BoundsRadiusWS("Bounds Radius (World)", Float) = 1.0
+
+        _HitPosition2("Hit Position 2 (World)", Vector) = (0, 0, 0, 0)
+        _HitTime2("Hit Time 2", Float) = -9999
+        _HitPositionOS2("Hit Position 2 (Object)", Vector) = (0, 0, 0, 0)
+
+        _HitPosition3("Hit Position 3 (World)", Vector) = (0, 0, 0, 0)
+        _HitTime3("Hit Time 3", Float) = -9999
+        _HitPositionOS3("Hit Position 3 (Object)", Vector) = (0, 0, 0, 0)
+
+        [Header(Team Color)]
+        _ShieldTintColor("Shield Tint Color", Color) = (0.10, 0.65, 1.00, 1)
     }
 
         SubShader
@@ -121,6 +140,13 @@ Shader "FX/Procedural Force Field"
             float _HitIntensity;
             float _HitDuration;
 
+            float _HexBlend;
+            float _HexScale;
+            float _RippleIntensity;
+            float _RippleFreq;
+            float _RippleSpeed;
+            float _RippleRadius;
+
             float4 _HitPositionOS;
             float4 _BoundsExtentsOS;
             float _DeformStrength;
@@ -132,6 +158,16 @@ Shader "FX/Procedural Force Field"
             float _HitRadius;
             float _HitStrength;
             float _BoundsRadiusWS;
+
+            float4 _HitPosition2;
+            float  _HitTime2;
+            float4 _HitPositionOS2;
+
+            float4 _HitPosition3;
+            float  _HitTime3;
+            float4 _HitPositionOS3;
+
+            fixed4 _ShieldTintColor;
 
             struct appdata
             {
@@ -150,6 +186,10 @@ Shader "FX/Procedural Force Field"
                 float3 posOS : TEXCOORD4;
                 float hitAge : TEXCOORD5;
                 float hitMask : TEXCOORD6;
+                float hitAge2 : TEXCOORD7;
+                float hitMask2 : TEXCOORD8;
+                float hitAge3 : TEXCOORD9;
+                float hitMask3 : TEXCOORD10;
             };
 
             float Hash21(float2 p)
@@ -184,6 +224,42 @@ Shader "FX/Procedural Force Field"
                 }
 
                 return v;
+            }
+
+            // 육각형 거리 함수 (2D)
+            float HexDist(float2 p)
+            {
+                p = abs(p);
+                return max(dot(p, normalize(float2(1.0, 1.732))), p.x);
+            }
+
+            // 피격 지점 기준 육각형/원형 블렌드 거리
+            float HitShapeDist(float2 delta)
+            {
+                float2 scaled = delta * _HexScale;
+                float circleDist = length(scaled);
+                float hexDist    = HexDist(scaled);
+                return lerp(circleDist, hexDist, _HexBlend);
+            }
+
+            // 피격 지점에서 십자/방사형 버스트
+            float RadialBurst(float2 delta, float hitAge, float env)
+            {
+                float dist  = length(delta);
+                if (dist < 0.0001) return 0.0;
+
+                // 방사형 라인 (RippleFreq = 라인 수 × 2)
+                float angle  = atan2(delta.y, delta.x);
+                float rays   = abs(sin(angle * _RippleFreq));
+                rays         = pow(rays, max(8.0 / max(_RippleFreq, 1.0), 1.0));
+
+                // 피격 직후 바깥으로 퍼지며 사라짐
+                float expand = saturate(hitAge * _RippleSpeed * 0.3);
+                float ring   = 1.0 - abs(dist - expand * _RippleRadius) / max(_RippleRadius * 0.3, 0.001);
+                ring         = saturate(ring);
+
+                float falloff = saturate(1.0 - dist / max(_RippleRadius, 0.001));
+                return rays * ring * falloff * env * _RippleIntensity;
             }
 
             float HitEnvelope(float hitAge)
@@ -250,6 +326,18 @@ Shader "FX/Procedural Force Field"
                 float hitMask = saturate(1.0 - distN / radiusN);
                 hitMask = pow(hitMask, max(_HitFalloff, 0.0001));
 
+                // Hit slot 2
+                float hitAge2  = _Time.y - _HitTime2;
+                float3 q2      = (posOSRaw - _HitPositionOS2.xyz) / ext;
+                float distN2   = length(q2);
+                float hitMask2 = pow(saturate(1.0 - distN2 / radiusN), max(_HitFalloff, 0.0001));
+
+                // Hit slot 3
+                float hitAge3  = _Time.y - _HitTime3;
+                float3 q3      = (posOSRaw - _HitPositionOS3.xyz) / ext;
+                float distN3   = length(q3);
+                float hitMask3 = pow(saturate(1.0 - distN3 / radiusN), max(_HitFalloff, 0.0001));
+
                 float2 np = worldPos.xz * _NoiseScale + _Time.y * _NoiseSpeed;
                 float n = Fbm2(np);
                 float wobble = (n - 0.5) * 2.0;
@@ -257,6 +345,14 @@ Shader "FX/Procedural Force Field"
                 float wave = sin(distN * _DeformFrequency - hitAge * 14.0 + wobble * 2.0);
                 float damping = exp(-hitAge * _DeformDamping);
                 float deform = wave * _DeformStrength * damping * env * hitMask * _HitStrength;
+
+                float wave2   = sin(distN2 * _DeformFrequency - hitAge2 * 14.0 + wobble * 2.0);
+                float damping2 = exp(-hitAge2 * _DeformDamping);
+                deform += wave2 * _DeformStrength * damping2 * HitEnvelope(hitAge2) * hitMask2 * _HitStrength;
+
+                float wave3   = sin(distN3 * _DeformFrequency - hitAge3 * 14.0 + wobble * 2.0);
+                float damping3 = exp(-hitAge3 * _DeformDamping);
+                deform += wave3 * _DeformStrength * damping3 * HitEnvelope(hitAge3) * hitMask3 * _HitStrength;
 
                 float3 deformedWorldPos = worldPos + worldN * deform;
 
@@ -266,8 +362,12 @@ Shader "FX/Procedural Force Field"
                 o.uv = v.uv;
 
                 o.posOS = posOSRaw;
-                o.hitAge = hitAge;
+                o.hitAge  = hitAge;
                 o.hitMask = hitMask;
+                o.hitAge2  = hitAge2;
+                o.hitMask2 = hitMask2;
+                o.hitAge3  = hitAge3;
+                o.hitMask3 = hitMask3;
 
                 o.pos = UnityWorldToClipPos(deformedWorldPos);
                 return o;
@@ -297,35 +397,55 @@ Shader "FX/Procedural Force Field"
                 float env = HitEnvelope(hitAge);
 
                 float3 ext = max(_BoundsExtentsOS.xyz, float3(0.0001, 0.0001, 0.0001));
-                float3 q = (i.posOS - _HitPositionOS.xyz) / ext;
-                float distN = length(q);
-
                 float radiusN = max(_HitRadius, 0.0001);
-                float d01 = saturate(distN / radiusN);
 
-                float ring = Ring01(d01, 0.55, max(_HitRingWidth, 0.0001));
-                float centerGlow = pow(saturate(1.0 - d01), 2.2);
-                float hit = (ring * 1.35 + centerGlow * 0.6) * env * i.hitMask;
+                // Hit slot 1
+                float2 delta1 = (i.posOS.xz - _HitPositionOS.xz) / ext.xz;
+                float  sd1    = HitShapeDist(delta1) / radiusN;
+                float  d01    = saturate(sd1);
+                float ring1   = Ring01(d01, 0.55, max(_HitRingWidth, 0.0001));
+                float ripple1 = RadialBurst(delta1, hitAge, env);
+                float hit1    = ring1 * 2.0 * env * i.hitMask + ripple1 * i.hitMask;
 
-                float3 hitCol = _HitColor.rgb * hit * _HitIntensity * _HitStrength;
+                // Hit slot 2
+                float2 delta2 = (i.posOS.xz - _HitPositionOS2.xz) / ext.xz;
+                float  sd2    = HitShapeDist(delta2) / radiusN;
+                float  d02    = saturate(sd2);
+                float  env2   = HitEnvelope(i.hitAge2);
+                float ring2   = Ring01(d02, 0.55, max(_HitRingWidth, 0.0001));
+                float ripple2 = RadialBurst(delta2, i.hitAge2, env2);
+                float hit2    = ring2 * 2.0 * env2 * i.hitMask2 + ripple2 * i.hitMask2;
 
-                float edgeWave;
-                float revealFromHit = ActivationMask(i.worldPos, _HitPosition.xyz, hitAge, edgeWave);
+                // Hit slot 3
+                float2 delta3 = (i.posOS.xz - _HitPositionOS3.xz) / ext.xz;
+                float  sd3    = HitShapeDist(delta3) / radiusN;
+                float  d03    = saturate(sd3);
+                float  env3   = HitEnvelope(i.hitAge3);
+                float ring3   = Ring01(d03, 0.55, max(_HitRingWidth, 0.0001));
+                float ripple3 = RadialBurst(delta3, i.hitAge3, env3);
+                float hit3    = ring3 * 2.0 * env3 * i.hitMask3 + ripple3 * i.hitMask3;
+
+                float hit = saturate(max(hit1, max(hit2, hit3)));
+                float3 hitCol = _HitColor.rgb * _ShieldTintColor.rgb * hit * _HitIntensity * _HitStrength;
+
+                // 3개 슬롯 reveal 합산 — 각 피격 지점마다 독립적으로 쉴드 표시
+                float edgeWave, edgeWave2, edgeWave3;
+                float reveal1 = ActivationMask(i.worldPos, _HitPosition.xyz,  hitAge,    edgeWave);
+                float reveal2 = ActivationMask(i.worldPos, _HitPosition2.xyz, i.hitAge2, edgeWave2);
+                float reveal3 = ActivationMask(i.worldPos, _HitPosition3.xyz, i.hitAge3, edgeWave3);
 
                 float hasHit = step(-1000.0, _HitTime);
                 float reveal = saturate(_DefaultVisible);
 
                 if (_ActivationReveal > 0.5 && hasHit > 0.5)
                 {
-                    float revealMask = revealFromHit;
+                    float revealMask = saturate(reveal1 + reveal2 + reveal3);
                     if (_DefaultVisible > 0.5)
-                    {
                         revealMask = 1.0;
-                    }
                     reveal = revealMask;
                 }
 
-                float3 edgeCol = _RevealEdgeColor.rgb * edgeWave * _RevealEdgeIntensity;
+                float3 edgeCol = _RevealEdgeColor.rgb * saturate(edgeWave + edgeWave2 + edgeWave3) * _RevealEdgeIntensity;
 
                 float visibility = saturate(_FieldVisibility);
 
@@ -339,16 +459,18 @@ Shader "FX/Procedural Force Field"
                 float edge = smoothstep(max(visibility - width, 0.0), visibility, dissolveN) * (1.0 - smoothstep(visibility, min(visibility + width, 1.0), dissolveN));
                 edge *= (1.0 - visibility);
 
-                float3 baseCol = _BaseColor.rgb * (0.55 + 0.45 * n);
-                float3 fieldCol = baseCol + bandCol + rim + hitCol + edgeCol;
+                float3 tint    = _ShieldTintColor.rgb;
+                float3 baseCol = _BaseColor.rgb * tint * (0.55 + 0.45 * n);
+                float3 tintedRim = rim * tint;
+                float3 fieldCol = baseCol + bandCol * tint + tintedRim + hitCol + edgeCol;
 
                 float totalMask = reveal;  // fadeMask 제거 - reveal만으로 충돌 지점 표시
 
-                float3 dissolveEdgeCol = _DissolveEdgeColor.rgb * edge * _DissolveEdgeIntensity;
+                float3 dissolveEdgeCol = _DissolveEdgeColor.rgb * edge * _DissolveEdgeIntensity * visibility;
                 float3 col = fieldCol * totalMask + dissolveEdgeCol * reveal;
 
-                float alphaBase = saturate(_Opacity * (0.25 + 0.75 * fresnel) + hit * 0.15);
-                float alpha = saturate(alphaBase * totalMask + edge * _DissolveEdgeAlpha * _Opacity * reveal);
+                float alphaBase = saturate(_Opacity * (0.4 + 0.6 * fresnel) + hit * 0.3);
+                float alpha = saturate(alphaBase * totalMask + edge * _DissolveEdgeAlpha * _Opacity * reveal * visibility);
 
                 return fixed4(saturate(col), alpha);
             }
