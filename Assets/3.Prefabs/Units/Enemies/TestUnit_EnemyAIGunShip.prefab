@@ -1,36 +1,5 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1 &147326341103643830
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1797312549135825355}
-  m_Layer: 7
-  m_Name: TestMissilePos (2)
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &1797312549135825355
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 147326341103643830}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -2.19, y: -1.44, z: -0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 673522139347252847}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &958756249314482461
 GameObject:
   m_ObjectHideFlags: 0
@@ -107,7 +76,7 @@ GameObject:
   - component: {fileID: 1362720476840258239}
   - component: {fileID: 5857083173443625146}
   m_Layer: 13
-  m_Name: Cube
+  m_Name: RightWing
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -191,37 +160,6 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1.89, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 2.42}
---- !u!1 &5822701364081694502
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 8663010223620771107}
-  m_Layer: 7
-  m_Name: TestMissilePos (3)
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &8663010223620771107
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5822701364081694502}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 2.08, y: -1.54, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 673522139347252847}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &6428153736698038514
 GameObject:
   m_ObjectHideFlags: 0
@@ -231,14 +169,14 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 673522139347252847}
-  - component: {fileID: -1324600693008482999}
+  - component: {fileID: 1174679257422973203}
   - component: {fileID: 1803401708122000012}
   - component: {fileID: 3033844199734762928}
   - component: {fileID: 5403785105017938777}
   - component: {fileID: 4105334935508367049}
   - component: {fileID: 2545426210833529410}
   m_Layer: 7
-  m_Name: TestUnit_EnemyAICruiser
+  m_Name: TestUnit_EnemyAIGunShip
   m_TagString: Enemy
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -263,11 +201,9 @@ Transform:
   - {fileID: 8372739686909836075}
   - {fileID: 1009696163447187148}
   - {fileID: 6182860956872268411}
-  - {fileID: 1797312549135825355}
-  - {fileID: 8663010223620771107}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &-1324600693008482999
+--- !u!114 &1174679257422973203
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -276,32 +212,32 @@ MonoBehaviour:
   m_GameObject: {fileID: 6428153736698038514}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fc5b2645dc27d2649a95ec668bee21c7, type: 3}
+  m_Script: {fileID: 11500000, guid: a7dbd4302b073af4d93739cb6419ec89, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   weaponSystem: {fileID: 0}
-  maxHpRemaining: 999
-  maxShieldCapacity: 999
-  shieldRegainDelay: 5
-  shieldRegainRate: 15
+  maxHpRemaining: 250
+  maxShieldCapacity: 150
+  shieldRegainDelay: 2.5
+  shieldRegainRate: 10
   isShieldRegaining: 0
   shield: {fileID: 5387513345644067634}
   bodyHitboxRoot: {fileID: 2491442456591101992}
-  maxArmor: 0
-  defense: 0
-  criChance: 0
-  criDamageMultiplier: 0
-  baseMoveSpeed: 325
-  boostSpeed: 500
+  maxArmor: 25
+  defense: 1
+  criChance: 20
+  criDamageMultiplier: 1.5
+  baseMoveSpeed: 350
+  boostSpeed: 650
   maxSpeed: 800
-  maxBoostCapacity: 150
+  maxBoostCapacity: 100
   minBoostRequired: 10
   boostConsumeAmont: 25
-  boostRegainDelay: 1
+  boostRegainDelay: 2
   boostRegainRate: 20
   dodgeDuration: 0.5
   dodgeInvincibleTime: 0.4
-  dodgeCoolTime: 15
+  dodgeCoolTime: 5
   dodgeForce: 800
   speedMultiPlier: 0
   curState: 0
@@ -313,17 +249,17 @@ MonoBehaviour:
   _playSoundType: 0
   detectRange: 750
   rotateSpeed: 180
-  aiState: 1
+  aiState: 0
   patrolRadius: 1000
   patrolArriveDist: 25
   patrolHeightRange: 100
-  attackPassWeight: 0.6
-  attackChaseWeight: 0.2
-  attackHoldWeight: 0.2
-  attackChaseDuration: 2
-  attackHoldDuration: 3
+  attackPassWeight: 0.5
+  attackChaseWeight: 0.4
+  attackHoldWeight: 0.1
+  attackChaseDuration: 2.5
+  attackHoldDuration: 1
   attackPassDuration: 4
-  repositionDuration: 2.5
+  repositionDuration: 3
   evadeDuration: 1.5
   repositionDistance: 200
   minAttackDistance: 200
@@ -333,7 +269,7 @@ MonoBehaviour:
   passVerticalRange: 40
   evadeChance: 0.35
   evadeCoolTime: 5
-  dodgeProbability: 0.1
+  dodgeProbability: 0.2
 --- !u!114 &1803401708122000012
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -347,7 +283,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   lockOnSystem: {fileID: 3033844199734762928}
-  fireBulletDelay: 0.1
+  fireBulletDelay: 0.05
   curBulletData: {fileID: 0}
   useBulletMuzzle: 1
   useBulletSound: 1
@@ -359,9 +295,7 @@ MonoBehaviour:
   fixedBulletFirePositions:
   - {fileID: 1009696163447187148}
   - {fileID: 6182860956872268411}
-  fixedMissileFirePositions:
-  - {fileID: 1797312549135825355}
-  - {fileID: 8663010223620771107}
+  fixedMissileFirePositions: []
   missileSlots:
   - type: 0
     curAmmo: 9999
@@ -480,7 +414,7 @@ GameObject:
   - component: {fileID: 8798006891209285971}
   - component: {fileID: 7188861945656897673}
   m_Layer: 13
-  m_Name: HitBox_MovingEnemy
+  m_Name: HitBox
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -499,8 +433,8 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 6082319736789710895}
   - {fileID: 8180910614148662240}
+  - {fileID: 6082319736789710895}
   m_Father: {fileID: 673522139347252847}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!65 &3018504676011720797
@@ -579,7 +513,7 @@ GameObject:
   - component: {fileID: 2238687663032514640}
   - component: {fileID: 5276839690309756994}
   m_Layer: 13
-  m_Name: Cube (1)
+  m_Name: LeftWing
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

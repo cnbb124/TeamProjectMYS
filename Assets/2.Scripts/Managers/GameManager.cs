@@ -72,7 +72,7 @@ public class GameManager : MonoBehaviour
     // =====================================================================
     // 씬-BGM 매핑 (씬 추가 시 여기에 한 줄만 추가)
     // =====================================================================
-    private static readonly Dictionary<string, SOUND_TYPE> _sceneBGMMap = new Dictionary<string, SOUND_TYPE>
+    private static Dictionary<string, SOUND_TYPE> _sceneBGMMap = new Dictionary<string, SOUND_TYPE>
     {
         { "MAIN",             SOUND_TYPE.BGM_MAIN      },
         { "STATION",          SOUND_TYPE.BGM_STATION   },
@@ -120,6 +120,13 @@ public class GameManager : MonoBehaviour
     public BossSpawnHandler onBossSpawn;
 
     // =====================================================================
+    // 아이템 데이터베이스
+    // =====================================================================
+    [Header("━━━━━━ 아이템 데이터베이스 ━━━━━━")]
+    [Tooltip("ItemDatabase.asset 연결 필수. Awake에서 Init() 호출.")]
+    public ItemDatabase itemDatabase;
+
+    // =====================================================================
     // 저장 경로
     // =====================================================================
     private string SavePath(int slot) =>
@@ -141,6 +148,11 @@ public class GameManager : MonoBehaviour
             instance = this;
             DontDestroyOnLoad(gameObject);
             SceneManager.sceneLoaded += OnSceneLoaded;
+
+            if (itemDatabase != null)
+                itemDatabase.Init();
+            else
+                Debug.LogWarning("[GameManager] itemDatabase 미연결. 저장/로드 시 파츠 복원 불가.");
         }
         else if (instance != this)
         {
@@ -416,17 +428,35 @@ public class GameManager : MonoBehaviour
             data.curArmor = playerRef.curArmorRemaining;
             data.curBoost = playerRef.curBoostRemaining;
 
-            // 미사일 슬롯 복사
+            // 파츠 슬롯 저장 (SO 참조 → id int)
+            UnitParts unitParts = playerRef.GetComponent<UnitParts>();
+            if (unitParts != null && unitParts.partSlots != null)
+            {
+                data.partSlots = new SavedPartSlot[unitParts.partSlots.Count];
+                for (int i = 0; i < unitParts.partSlots.Count; i++)
+                {
+                    PartSlotEntry slot = unitParts.partSlots[i];
+                    data.partSlots[i] = new SavedPartSlot
+                    {
+                        slotType = slot.slotType,
+                        partId   = slot.equippedPart != null ? (int)slot.equippedPart.id : 0
+                    };
+                }
+            }
+
+            // 미사일 슬롯 저장 (SO 참조 → id int)
             if (playerRef.weaponSystem.missileSlots != null)
             {
-                data.missileSlots = new MissileSlot[playerRef.weaponSystem.missileSlots.Count];
+                data.missileSlots = new SavedMissileSlot[playerRef.weaponSystem.missileSlots.Count];
                 for (int i = 0; i < playerRef.weaponSystem.missileSlots.Count; i++)
                 {
-                    data.missileSlots[i] = new MissileSlot
+                    MissileSlot src = playerRef.weaponSystem.missileSlots[i];
+                    data.missileSlots[i] = new SavedMissileSlot
                     {
-                        type    = playerRef.weaponSystem.missileSlots[i].type,
-                        curAmmo = playerRef.weaponSystem.missileSlots[i].curAmmo,
-                        maxAmmo = playerRef.weaponSystem.missileSlots[i].maxAmmo
+                        type          = src.type,
+                        missileDataId = src.missileData != null ? (int)src.missileData.id : 0,
+                        curAmmo       = src.curAmmo,
+                        maxAmmo       = src.maxAmmo
                     };
                 }
             }
@@ -454,17 +484,43 @@ public class GameManager : MonoBehaviour
             playerRef.curArmorRemaining  = data.curArmor;
             playerRef.curBoostRemaining  = data.curBoost;
 
-            // 미사일 슬롯 복원
+            // 파츠 슬롯 복원 (id int → SO 참조)
+            if (data.partSlots != null && itemDatabase != null)
+            {
+                UnitParts unitParts = playerRef.GetComponent<UnitParts>();
+                if (unitParts != null)
+                {
+                    for (int i = 0; i < data.partSlots.Length; i++)
+                    {
+                        SavedPartSlot saved = data.partSlots[i];
+                        if (saved.partId == 0) continue;
+                        PartData partData = itemDatabase.Get<PartData>((ITEM_ID)saved.partId);
+                        if (partData == null)
+                        {
+                            Debug.LogWarning($"[GameManager] 파츠 복원 실패: id={saved.partId}");
+                            continue;
+                        }
+                        unitParts.Equip(saved.slotType, partData);
+                    }
+                }
+            }
+
+            // 미사일 슬롯 복원 (id int → SO 참조)
             if (data.missileSlots != null)
             {
                 playerRef.weaponSystem.missileSlots = new List<MissileSlot>();
                 for (int i = 0; i < data.missileSlots.Length; i++)
                 {
+                    SavedMissileSlot saved = data.missileSlots[i];
+                    MissileData missileData = itemDatabase != null && saved.missileDataId != 0
+                        ? itemDatabase.Get<MissileData>((ITEM_ID)saved.missileDataId)
+                        : null;
                     playerRef.weaponSystem.missileSlots.Add(new MissileSlot
                     {
-                        type    = data.missileSlots[i].type,
-                        curAmmo = data.missileSlots[i].curAmmo,
-                        maxAmmo = data.missileSlots[i].maxAmmo
+                        type        = saved.type,
+                        missileData = missileData,
+                        curAmmo     = saved.curAmmo,
+                        maxAmmo     = saved.maxAmmo
                     });
                 }
             }

@@ -7,7 +7,7 @@ using UnityEngine;
 public class PartDataEditor : Editor
 {
     // providedSlots에서 제외할 BASE 타입 (항상 자동 생성되므로 선택 불필요)
-    private static readonly PART_TYPE[] EXCLUDED_TYPES = { PART_TYPE.ENGINE, PART_TYPE.FRAME };
+    private static PART_TYPE[] EXCLUDED_TYPES = { PART_TYPE.ENGINE, PART_TYPE.FRAME };
 
     private PART_TYPE[] _allowedTypes;
     private string[] _allowedTypeNames;

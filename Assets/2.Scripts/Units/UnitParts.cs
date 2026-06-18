@@ -44,7 +44,7 @@ public class UnitParts : MonoBehaviour
     private WeaponSystem _weaponSystem;
 
     // ENGINE, FRAME은 프레임과 무관하게 항상 존재하는 기본 슬롯
-    private static readonly PART_TYPE[] BASE_SLOT_TYPES = { PART_TYPE.ENGINE, PART_TYPE.FRAME };
+    private static PART_TYPE[] BASE_SLOT_TYPES = { PART_TYPE.ENGINE, PART_TYPE.FRAME };
 
     [Header("<size=14>기본 로드아웃 (설정 시 인스펙터 파츠 슬롯 무시)</size>")]
     [SerializeField] private DefaultLoadout _defaultLoadout;

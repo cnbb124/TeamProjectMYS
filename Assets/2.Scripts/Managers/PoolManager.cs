@@ -95,7 +95,7 @@ public class PoolManager : MonoBehaviour
     private Dictionary<POOL_TYPE, List<Projectile>> _projectilePools = new Dictionary<POOL_TYPE, List<Projectile>>();
 
     // DisableAllProjectiles() 대상 목록 (투사체만)
-    private static readonly POOL_TYPE[] _projectileTypes =
+    private static POOL_TYPE[] _projectileTypes =
     {
         POOL_TYPE.BULLET,
         POOL_TYPE.MISSILE,
