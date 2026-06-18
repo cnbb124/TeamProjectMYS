@@ -80,15 +80,9 @@ public class TestBoss : Enemy
         {
             yield return new WaitForSeconds(wave.delay);
 
-            GameObject prefab = wave.bulletPrefab != null
-                ? wave.bulletPrefab
-                : data.bulletPrefab;
-
-            if (prefab == null) continue;
-
             foreach (PatternPoint point in wave.points)
             {
-                FirePoint(prefab, point);
+                FirePoint(point);
             }
         }
 
@@ -97,26 +91,24 @@ public class TestBoss : Enemy
 
     // ── 탄 1개 발사 ───────────────────────────────────────
 
-    private void FirePoint(GameObject prefab, PatternPoint point)
+    private void FirePoint(PatternPoint point)
     {
         Vector3 fireDir;
-    if (point.aimAtPlayer && _player != null)
-    {
-        Vector3 toPlayer = (_player.position - transform.position).normalized;
-        Quaternion baseRot = Quaternion.LookRotation(toPlayer);
-        Vector3 localOffset = new Vector3(point.localDir.x, point.localDir.y, 1f).normalized;
-        fireDir = baseRot * localOffset;
-    }
-    else
-    {
-        Vector3 localOffset = new Vector3(point.localDir.x, point.localDir.y, 1f).normalized;
-        fireDir = transform.rotation * localOffset;
-    }
+        if (point.aimAtPlayer && _player != null)
+        {
+            Vector3 toPlayer = (_player.position - transform.position).normalized;
+            Quaternion baseRot = Quaternion.LookRotation(toPlayer);
+            Vector3 localOffset = new Vector3(point.localDir.x, point.localDir.y, 1f).normalized;
+            fireDir = baseRot * localOffset;
+        }
+        else
+        {
+            Vector3 localOffset = new Vector3(point.localDir.x, point.localDir.y, 1f).normalized;
+            fireDir = transform.rotation * localOffset;
+        }
 
-    GameObject bullet = Instantiate(prefab, transform.position, Quaternion.LookRotation(fireDir));
-
-    Projectile proj = bullet.GetComponent<Projectile>();
-    if (proj != null)
-        proj.Init(transform.position, fireDir, this);
+        Projectile proj = PoolManager.Instance.GetBullet();
+        if (proj != null)
+            proj.Init(transform.position, fireDir, this);
     }
 }

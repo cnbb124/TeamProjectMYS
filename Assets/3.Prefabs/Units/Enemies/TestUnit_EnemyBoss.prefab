@@ -31,6 +31,59 @@ Transform:
   m_Children: []
   m_Father: {fileID: 5458041597701461603}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &3692905366719536396
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1288111529565547965}
+  - component: {fileID: 5407223943602974231}
+  m_Layer: 7
+  m_Name: HitBox_EnemyBoss
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1288111529565547965
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3692905366719536396}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 5458041597701461603}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!65 &5407223943602974231
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3692905366719536396}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 1, y: 1, z: 1}
+  m_Center: {x: 0, y: 0, z: 0}
 --- !u!1 &7737870044430659340
 GameObject:
   m_ObjectHideFlags: 0
@@ -166,6 +219,7 @@ Transform:
   - {fileID: 2718037437430796775}
   - {fileID: 7543803328305267749}
   - {fileID: 6633133415321047738}
+  - {fileID: 1288111529565547965}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!33 &7106307247501627741
@@ -291,8 +345,6 @@ MonoBehaviour:
   _playSoundType: 0
   detectRange: 50
   rotateSpeed: 3
-  patrolRadius: 20
-  patrolArriveDist: 2
   aiState: 1
   patterns:
   - {fileID: 11400000, guid: 8e028c3fba8c0404dbf722aece6f864b, type: 2}
@@ -344,7 +396,7 @@ MonoBehaviour:
   lockOnRequiredTime: 1.2
   targetLayerMask:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 128
   lockOnAngle: 60
   TargetsInLockonRange: []
   TargetsInRadarRange: []
