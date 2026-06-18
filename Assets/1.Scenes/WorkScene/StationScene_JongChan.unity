@@ -24545,18 +24545,26 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   soundList:
   - type: 2
-    clip: {fileID: 8300000, guid: 40650b473ea806344b46d777bd84bdf4, type: 3}
+    clip: {fileID: 8300000, guid: 8d68b6f54bcc76642971cbf3e3b0c03c, type: 3}
+    volumeScale: 1
     minDistance: 0
     maxDistance: 0
-    volumeScale: 1
+    maxConcurrent: 4
+    dropOldest: 0
+    pitchMin: 1
+    pitchMax: 1
   - type: 3
     clip: {fileID: 8300000, guid: dccd54d9063ab7f4ba6a43ba34654482, type: 3}
+    volumeScale: 1
     minDistance: 0
     maxDistance: 0
-    volumeScale: 1
+    maxConcurrent: 4
+    dropOldest: 0
+    pitchMin: 1
+    pitchMax: 1
   bgmSource: {fileID: 502022204}
-  curBGM: 0
   sfxUISource: {fileID: 0}
+  curBGM: 0
   bgmVolume: 1
   sfxUIVolume: 1
   sfx3DVolume: 1
