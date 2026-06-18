@@ -30,6 +30,8 @@ public class InspectorPanelUI : MonoBehaviour
     [SerializeField] private Image bodyImage;       // Armor 비율
     [SerializeField] private Image engineCoreImage; // HP 비율
     [SerializeField] private Image thrusterImage;   // HP 비율
+    [SerializeField] private Image bulletPosImage;  // HP 비율
+    [SerializeField] private Image missilePosImage; // HP 비율
 
     [Header("HitPanel — 텍스트")]
     [SerializeField] private TMP_Text nameText;
@@ -86,6 +88,8 @@ public class InspectorPanelUI : MonoBehaviour
         SetPartColor(bodyImage,       armorRatio);
         SetPartColor(engineCoreImage, hpRatio);
         SetPartColor(thrusterImage,   hpRatio);
+        SetPartColor(bulletPosImage,  hpRatio);
+        SetPartColor(missilePosImage, hpRatio);
     }
 
     private void SetPartColor(Image img, float ratio)
