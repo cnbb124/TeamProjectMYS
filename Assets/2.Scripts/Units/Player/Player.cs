@@ -19,7 +19,8 @@ using UnityEngine;
 //
 //   onHitDirectionWorld : HitDirectionHandler — 피격 시 DamageInfo.hitDiriection 그대로 전달
 //                         (투사체→플레이어 방향. 화면 위치 계산 시 부호 반전 필요할 수 있음)
-//                         예) player.OnHitDirectionWorld += dir => hud.ShowHitIndicator(-dir);
+//                         예) GameManager.Instance.playerRef.onHitDirectionWorld += ShowHitIndicator;
+//                             void ShowHitIndicator(Vector3 dir) { /* -dir 방향이 공격자 위치 */ }
 //
 //   예시)
 //   float expRatio = (float)player.exp / player.expToNextLevel;
