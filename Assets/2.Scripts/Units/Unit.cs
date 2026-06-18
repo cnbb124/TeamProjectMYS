@@ -48,7 +48,6 @@ public class MissileSlot // 미사일 슬롯 — 타입+잔탄 통합 관리. eq
 	public bool HasAmmo { get { return curAmmo > 0; } }
 }
 
-[RequireComponent(typeof(Rigidbody))]
 public abstract class Unit : MonoBehaviour, IDamageable
 {
 
@@ -73,7 +72,7 @@ public abstract class Unit : MonoBehaviour, IDamageable
 	[Header("<size=18>유닛 공통 기본 스탯 설정창</size>")]
 
 	[Header("HP")]
-	public int maxHpRemaining; //최대,현재HP수치
+	public int maxHpRemaining = 150; //최대,현재HP수치
 
 
 	[Header("Shield - 피격후 일정딜레이 후 자동회복")]
@@ -81,7 +80,7 @@ public abstract class Unit : MonoBehaviour, IDamageable
 
 	public float shieldRegainDelay;//피격후 회복까지딜레이시간
 	public float shieldRegainRate; //실드회복수치
-								   //private float shieldRegainTimer = 0f;//딜레이 시간까지잴 타이머 >0516 코루틴으로변경
+										 //private float shieldRegainTimer = 0f;//딜레이 시간까지잴 타이머 >0516 코루틴으로변경
 	public bool isShieldRegaining = false; //회복중인지 여부
 	private Coroutine _shieldRegenCoroutine;//중간 정지등을 위한 코루틴변수 따로
 											//실드연결용
@@ -274,7 +273,7 @@ public abstract class Unit : MonoBehaviour, IDamageable
 		updateTimer += Time.deltaTime;
 		if (updateTimer > 0.5f)
 		{
-			curSpeed = _rb.velocity.magnitude < 0.01f ? 0f : _rb.velocity.magnitude;
+			curSpeed = _rb != null ? (_rb.velocity.magnitude < 0.01f ? 0f : _rb.velocity.magnitude) : 0f;
 			updateTimer = 0f;
 		}
 	}
@@ -297,7 +296,7 @@ public abstract class Unit : MonoBehaviour, IDamageable
 	protected UNIT_STATE previousState = UNIT_STATE.IDLE;
 	public int curHpRemaining;
 	public int CurHp => curHpRemaining;//인터페이스 프로퍼티용
-	//public int CurShiled => curShieldRemaining;//인터페이스 프로퍼티용
+									   //public int CurShiled => curShieldRemaining;//인터페이스 프로퍼티용
 	public int curShieldRemaining;
 	public int curArmorRemaining;
 	public float curSpeed;

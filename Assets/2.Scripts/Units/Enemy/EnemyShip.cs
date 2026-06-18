@@ -40,6 +40,7 @@ using UnityEngine;
 // (Enemy 기준 좌우 — 카메라 시점 기준 아님)
 public enum PassOffsetDir { Random, Right, Left }
 
+[RequireComponent(typeof(Rigidbody))]
 public class EnemyShip : Enemy
 {
     [Header("순찰 설정")]
@@ -113,7 +114,7 @@ public class EnemyShip : Enemy
 
     [Header("DODGE 설정 (피격 시 순간 무적 / 쿨타임·무적시간은 Unit.dodgeCoolTime 공용)")]
     [Tooltip("피격 시 DODGE 발동 확률 (0~1)")]
-    [Range(0.1f, 1f)]
+    [Range(0f, 1f)]
     public float dodgeProbability = 0.1f;
 
     // 서브클래스에서 false로 override하면 해당 반응 비활성화

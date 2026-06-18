@@ -25,10 +25,10 @@ using UnityEngine;
 public class Enemy : Unit
 {
     [Header("<size=18>Enemy AI 설정</size>")]
-    [Tooltip("이 범위 안에 타겟이 들어오면 추격/공격 시작.")]
+    [Tooltip("이 범위 안에 타겟이 들어오면 추격 시작. 공격 진입은 LockOnSystem의 lockOnRange 기준.")]
     public float detectRange = 500f;
     [Tooltip("선회 속도 (도/초). 90 = 2초에 180도 회전.")]
-    public float rotateSpeed = 90f;
+    public float rotateSpeed = 180f;
 
     [Header("AI 상태 (참고용, 입력X)")]
     public AI_STATE aiState = AI_STATE.STANDBY;
@@ -71,7 +71,7 @@ public class Enemy : Unit
     {
         base.FixedUpdate();
         // 물리 스핀 방지 — 상태 무관 항상 리셋
-        _rb.angularVelocity = Vector3.zero;
+        if (_rb != null) _rb.angularVelocity = Vector3.zero;
         if (ShouldPause || CurState == UNIT_STATE.DIE || !UseGenericAI)
         {
             return;
@@ -155,6 +155,7 @@ public class Enemy : Unit
         Vector3 dir = (worldPos - transform.position).normalized;
         float multiplier = speedMultiPlier > 0f ? speedMultiPlier : 1f;
         float speed = _isBoosting ? boostSpeed : baseMoveSpeed;
+        if (_rb == null) return;
         _rb.AddForce(dir * speed * multiplier, ForceMode.Acceleration);
         if (_rb.velocity.magnitude > maxSpeed)
         {

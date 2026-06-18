@@ -1,7 +1,9 @@
 using UnityEngine;
 
 // 고정 포탑 공통 베이스. Enemy 직접 상속 — 이동/순찰/전투패턴 필드 없음.
-// UpdateAI : 탐지 범위 체크 → 범위 내 + 공격 범위 → ATTACK_HOLD + 발사. 이외는 STANDBY.
+// UpdateAI : STANDBY ↔ ATTACK_HOLD 사이클 관리.
+//   STANDBY : 타이머 만료 + 타겟 범위 내 → EnterAttackHold
+//   ATTACK_HOLD : 발사. 타겟 이탈 시 즉시 STANDBY. attackHoldDuration 만료 시 standbyDuration 쿨타임 후 재공격.
 // FixedUpdate : 탐지 범위 내 타겟이 있으면 swivel/mount 회전.
 // 자식은 ShootWeapons()만 override해 발사 무기 종류를 지정.
 public class EnemyTurretBase : Enemy
@@ -11,6 +13,17 @@ public class EnemyTurretBase : Enemy
     public Transform swivelTransform;
     [Tooltip("*SOCKET_MOUNT — 수직(X축) 상하 회전")]
     public Transform mountTransform;
+
+    [Header("공격 타이밍")]
+    [Tooltip("ATTACK_HOLD 지속 시간(초). 이 시간만큼 발사 후 강제 대기.\n" +
+             "0이면 타겟이 범위를 벗어날 때까지 계속 발사.")]
+    public float attackHoldDuration = 3f;
+    [Tooltip("ATTACK_HOLD 종료 후 STANDBY 대기 시간(초).\n" +
+             "타겟이 범위 내에 있어도 이 시간만큼 발사를 멈춤.\n" +
+             "0이면 즉시 재공격.")]
+    public float standbyDuration = 2f;
+
+    private float _stateTimer = 0f;
 
     protected override void Start()
     {
@@ -36,20 +49,59 @@ public class EnemyTurretBase : Enemy
     {
         base.UpdateAI(); // target 1초 갱신
 
-        if (IsTargetInRange(detectRange) && HasTargetInAttackRange())
+        if (_stateTimer > 0f)
         {
-            aiState = AI_STATE.ATTACK_HOLD;
-            ShootWeapons();
+            _stateTimer -= Time.deltaTime;
         }
-        else
+
+        switch (aiState)
         {
-            aiState = AI_STATE.STANDBY;
+            case AI_STATE.STANDBY:
+                // 강제 대기(쿨타임) 중이면 발사 안 함
+                if (_stateTimer > 0f)
+                {
+                    break;
+                }
+                // 대기 완료 — 범위 내 타겟 있으면 공격 시작
+                if (IsTargetInRange(detectRange) && HasTargetInAttackRange())
+                {
+                    EnterAttackHold();
+                }
+                break;
+
+            case AI_STATE.ATTACK_HOLD:
+                if (!IsTargetInRange(detectRange) || !HasTargetInAttackRange())
+                {
+                    // 타겟 이탈 — 쿨타임 없이 STANDBY (타겟 복귀 시 즉시 재공격)
+                    EnterStandby(0f);
+                    break;
+                }
+                if (attackHoldDuration > 0f && _stateTimer <= 0f)
+                {
+                    // 공격 지속시간 만료 — standbyDuration 쿨타임
+                    EnterStandby(standbyDuration);
+                    break;
+                }
+                ShootWeapons();
+                break;
         }
 
         if (CurState != UNIT_STATE.DIE)
         {
             CurState = UNIT_STATE.IDLE;
         }
+    }
+
+    private void EnterAttackHold()
+    {
+        aiState = AI_STATE.ATTACK_HOLD;
+        _stateTimer = attackHoldDuration;
+    }
+
+    private void EnterStandby(float duration)
+    {
+        aiState = AI_STATE.STANDBY;
+        _stateTimer = duration;
     }
 
     // 루트 전체 대신 swivel(좌우)/mount(상하)만 회전.

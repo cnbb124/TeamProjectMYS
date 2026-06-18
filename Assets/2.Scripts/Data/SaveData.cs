@@ -7,10 +7,31 @@ using UnityEngine;
 // GameManager.SaveGame() 에서 Player/Loadout 등에서 수집해 JSON으로 저장.
 // GameManager.LoadGame() 에서 역직렬화 후 각 스크립트에 분배.
 //
-// ※ MissileAmmoSaveData 별도 클래스 불필요.
-//   MissileSlot이 이미 [System.Serializable]이고 필드 동일해서 직접 사용.
+// SO 참조(PartData, MissileData 등)는 ITEM_ID 값(int)으로 변환해서 저장.
+// 복원 시 ItemDatabase.Get()으로 역참조.
 // ※ 착용 장비 / 인벤토리 항목은 PlayerLoadout 구현 후 추가
 // =====================================================================
+
+// 파츠 슬롯 하나를 JSON-safe 하게 저장하는 구조체.
+// partId == 0(NONE) 이면 빈 슬롯.
+[System.Serializable]
+public class SavedPartSlot
+{
+    public PART_TYPE slotType;
+    public int       partId;  // (int)ITEM_ID
+}
+
+// 미사일 슬롯 하나를 JSON-safe 하게 저장하는 구조체.
+// MissileSlot.missileData(SO 참조) → missileDataId(int)로 변환.
+[System.Serializable]
+public class SavedMissileSlot
+{
+    public MISSILE_TYPE type;
+    public int          missileDataId; // (int)ITEM_ID
+    public int          curAmmo;
+    public int          maxAmmo;
+}
+
 [System.Serializable]
 public class SaveData
 {
@@ -28,13 +49,16 @@ public class SaveData
     [Header("재화")]
     public int gold;
 
+    [Header("파츠 슬롯")]
+    public SavedPartSlot[] partSlots;
+
     [Header("미사일 슬롯")]
-    public MissileSlot[] missileSlots;
+    public SavedMissileSlot[] missileSlots;
 
     // =====================================================================
     // 아래 항목은 PlayerLoadout.cs 구현 후 추가 예정
     // =====================================================================
-    // public List<string> ownedItemIds;       // 보유 아이템
-    // public List<string> equippedItemIds;    // 착용 장비
+    // public List<int> ownedItemIds;       // 보유 아이템 (ITEM_ID int)
+    // public List<int> equippedItemIds;    // 착용 장비
     // public List<ConsumableSaveData> consumables; // 소모품 슬롯
 }

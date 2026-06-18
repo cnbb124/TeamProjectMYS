@@ -1253,10 +1253,9 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4813471907493243705}
-  - component: {fileID: 3205087385195567410}
   - component: {fileID: 8780441365474338247}
+  - component: {fileID: 3205087385195567410}
   - component: {fileID: 5346114771317425202}
-  - component: {fileID: 7678537977678329168}
   m_Layer: 7
   m_Name: Turret_DUAL_MYS
   m_TagString: Enemy
@@ -1272,8 +1271,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6706981218406096366}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0.934304, z: 0, w: 0.3564772}
-  m_LocalPosition: {x: -0.65, y: 0, z: 11.24}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -1281,38 +1280,7 @@ Transform:
   - {fileID: 7108436658103652942}
   - {fileID: 8568410838902004592}
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 138.232, z: 0}
---- !u!114 &3205087385195567410
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6706981218406096366}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: aa66153ac3873e44589a1d73fc8a0257, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  lockOnSystem: {fileID: 5346114771317425202}
-  fireBulletDelay: 0.1
-  curBulletData: {fileID: 0}
-  useBulletMuzzle: 1
-  useMissileMuzzle: 1
-  bulletMuzzleFlashVFXPlayTime: 0.2
-  missileMuzzleFlashVFXPlayTime: 0.2
-  fireMissileDelay: 2
-  fixedBulletFirePositions:
-  - {fileID: 5223868083962179837}
-  fixedMissileFirePositions:
-  - {fileID: 7337206497944033394}
-  - {fileID: 3107201299407590855}
-  missileSlots:
-  - type: 0
-    curAmmo: 999
-    maxAmmo: 999
-    missileData: {fileID: 11400000, guid: 2652fd978459f5a44aad1cc7fa6033a7, type: 2}
-  curMissileType: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &8780441365474338247
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1348,6 +1316,7 @@ MonoBehaviour:
   dodgeDuration: 0.5
   dodgeInvincibleTime: 0.4
   dodgeCoolTime: 0
+  dodgeForce: 800
   speedMultiPlier: 0
   curState: 0
   curHpRemaining: 0
@@ -1358,11 +1327,42 @@ MonoBehaviour:
   _playSoundType: 0
   detectRange: 500
   rotateSpeed: 3
-  patrolRadius: 0
-  patrolArriveDist: 2
   aiState: 1
   swivelTransform: {fileID: 4177762561641812126}
   mountTransform: {fileID: 9141556630602784414}
+--- !u!114 &3205087385195567410
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6706981218406096366}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aa66153ac3873e44589a1d73fc8a0257, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  lockOnSystem: {fileID: 5346114771317425202}
+  fireBulletDelay: 0.1
+  curBulletData: {fileID: 0}
+  useBulletMuzzle: 1
+  useBulletSound: 1
+  useMissileMuzzle: 1
+  useMissileSound: 1
+  bulletMuzzleFlashVFXPlayTime: 0.2
+  missileMuzzleFlashVFXPlayTime: 0.2
+  fireMissileDelay: 2
+  fixedBulletFirePositions:
+  - {fileID: 5223868083962179837}
+  fixedMissileFirePositions:
+  - {fileID: 7337206497944033394}
+  - {fileID: 3107201299407590855}
+  missileSlots:
+  - type: 0
+    curAmmo: 999
+    maxAmmo: 999
+    missileData: {fileID: 11400000, guid: 2652fd978459f5a44aad1cc7fa6033a7, type: 2}
+  curMissileType: 0
 --- !u!114 &5346114771317425202
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1391,33 +1391,6 @@ MonoBehaviour:
   MultiLockedTargets: []
   LockOnProgress: 0
   IsLocked: 0
---- !u!54 &7678537977678329168
-Rigidbody:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6706981218406096366}
-  serializedVersion: 4
-  m_Mass: 1
-  m_Drag: 0
-  m_AngularDrag: 0.05
-  m_CenterOfMass: {x: 0, y: 0, z: 0}
-  m_InertiaTensor: {x: 1, y: 1, z: 1}
-  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ImplicitCom: 1
-  m_ImplicitTensor: 1
-  m_UseGravity: 0
-  m_IsKinematic: 0
-  m_Interpolate: 0
-  m_Constraints: 0
-  m_CollisionDetection: 0
 --- !u!1 &6814546276404120738
 GameObject:
   m_ObjectHideFlags: 0
@@ -1556,7 +1529,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7433835192380241918}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: -0.2093189, y: -1.8591112e-16, z: 5.293956e-22, w: 0.97784746}
   m_LocalPosition: {x: 0, y: 0.75, z: -0.069}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -1564,7 +1537,7 @@ Transform:
   - {fileID: 4427784494764362071}
   - {fileID: 4020669407626692759}
   m_Father: {fileID: 4959671248059575}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: -24.165, y: 0, z: 0}
 --- !u!1 &7644339385419126479
 GameObject:
   m_ObjectHideFlags: 0

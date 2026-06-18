@@ -1,7 +1,7 @@
 using UnityEngine;
 
 // 총알+미사일 동시 사격하는 순양함급.
-public class EnemyCruiser : EnemyShip
+public class EnemyFighterShip : EnemyShip
 {
 	protected override void ShootWeapons()
 	{
