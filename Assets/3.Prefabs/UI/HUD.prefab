@@ -31014,6 +31014,8 @@ MonoBehaviour:
   radius: 120
   duration: 1.5
   maxMarkers: 4
+  shieldHitColor: {r: 0.4, g: 0.8, b: 1, a: 1}
+  hpHitColor: {r: 1, g: 0.1, b: 0.1, a: 1}
 --- !u!1 &8855608183892877548
 GameObject:
   m_ObjectHideFlags: 0
@@ -31359,11 +31361,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   lockOnSystem: {fileID: 0}
   mainCam: {fileID: 0}
-  markerPrefab: {fileID: 6074635509940672222, guid: ea43edbc80446254dad34cd1e08c5e35, type: 3}
+  markerPrefab: {fileID: 3118912164272735557, guid: ea43edbc80446254dad34cd1e08c5e35, type: 3}
   markerParent: {fileID: 9158351113349286552}
   edgePadding: 20
   onScreenScale: 1
   offScreenScale: 0.8
+  markerColor: {r: 1, g: 0.1, b: 0.1, a: 1}
 --- !u!1 &9029622717440825994
 GameObject:
   m_ObjectHideFlags: 0
