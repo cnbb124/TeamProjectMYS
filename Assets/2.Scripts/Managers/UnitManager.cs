@@ -27,7 +27,7 @@ public class UnitManager : MonoBehaviour
                 instance = FindObjectOfType<UnitManager>();
                 if (instance == null)
                 {
-                    Debug.Log("씬에 UnitManager 누락! 하이어라키에 추가 필요");
+                    Debug.LogError("[UnitManager] 씬에 UnitManager 없음! 하이어라키에 추가 필요");
                 }
             }
             return instance;

@@ -222,6 +222,10 @@ public class Player : Unit
 		{
 			return;
 		}
+		if (_input == null)
+		{
+			return;
+		}
 
 		//항상 회전이먼저!!!
 		RotateByInput();
