@@ -14,12 +14,14 @@ using UnityEngine.UI;
 ///
 /// [인스펙터 연결]
 /// - crosshairRect : CrosshairUI의 RectTransform
+/// - player        : 플레이어 기체 Transform (롤 회전 참조용)
 /// - fpdOffset     : 크로스헤어 기준 위치 오프셋 (기본 0,0 — 인스펙터에서 조절)
 /// </summary>
 public class FPD : MonoBehaviour
 {
     [Header("References")]
     [SerializeField] private RectTransform crosshairRect;
+    [SerializeField] private Transform     player;
 
     [Header("설정")]
     [SerializeField] private Vector2 fpdOffset = Vector2.zero;
@@ -33,7 +35,18 @@ public class FPD : MonoBehaviour
 
     private void Update()
     {
-        if (crosshairRect == null || _rect == null) return;
-        _rect.anchoredPosition = crosshairRect.anchoredPosition + fpdOffset;
+        if (_rect == null) return;
+
+        // 크로스헤어 위치 추적
+        if (crosshairRect != null)
+            _rect.anchoredPosition = crosshairRect.anchoredPosition + fpdOffset;
+
+        // 기체 롤 값 반영 (Z축 회전)
+        if (player != null)
+        {
+            float roll = player.eulerAngles.z;
+            if (roll > 180f) roll -= 360f; // 0~360 → -180~180 변환
+            _rect.localRotation = Quaternion.Euler(0f, 0f, roll);
+        }
     }
 }
