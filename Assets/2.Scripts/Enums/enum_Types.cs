@@ -177,6 +177,9 @@ public enum POOL_TYPE
 	ITEM,
 	ITEM_ASTEROID,
 	VFX,
+
+	// 쉴드 이펙트
+	SHIELD_PULSEWAVE,
 }
 /// <summary>
 /// 파츠종류
