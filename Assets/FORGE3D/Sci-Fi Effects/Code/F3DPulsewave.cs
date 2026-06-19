@@ -47,8 +47,8 @@ namespace FORGE3D
         // OnSpawned called by pool manager 
         void OnSpawned()
         {
-            // Set scale to zero
-            transform.localScale = new Vector3(0f, 0f, 0f);
+            // Set scale to ScaleSize (shrink from large to zero)
+            transform.localScale = ScaleSize;
 
             // Set required flags and set delayed fade flag using timer 
             isEnabled = true;
@@ -83,7 +83,7 @@ namespace FORGE3D
             if (isEnabled)
             {
                 // Scale the wave
-                transform.localScale = Vector3.Lerp(transform.localScale, ScaleSize, Time.deltaTime*ScaleTime);
+                transform.localScale = Vector3.Lerp(transform.localScale, Vector3.zero, Time.deltaTime*ScaleTime);
 
                 // Check the fading state 
                 if (isFadeOut)
@@ -93,7 +93,7 @@ namespace FORGE3D
                     meshRenderer.material.SetColor(tintColorRef, color);
 
                     // Make sure alpha value is not overshooting 
-                    if (color.a <= 0f)
+                    if (color.a <= 0.1f)
                     {
                         // Disable the update loop 
                         isEnabled = false;
