@@ -287,7 +287,11 @@ public class Missile : Projectile, IExplodable
 		VFXManager.Instance.PlayEffectAtPosition(EFFECT_TYPE.VFX_EXPLOSION_MISSILE, transform.position, Quaternion.identity, 0f, Vector3.one * vfxRatio);
 		SoundManager.Instance.PlaySFX3DAtPosition(SOUND_TYPE.SFX_EXPLOSION, transform.position);
 		//맞은것들의 충돌박스 갯수 카운트
-		int hitCount = Physics.OverlapSphereNonAlloc(transform.position, explosionInfo.explosionRadius, explosionHits);
+		int hitMask = LayerMask.GetMask("HitBox");
+		int hitCount = Physics.OverlapSphereNonAlloc(transform.position, explosionInfo.explosionRadius, explosionHits, hitMask);
+		
+		
+		//int hitCount = Physics.OverlapSphereNonAlloc(transform.position, explosionInfo.explosionRadius, explosionHits);
 		//Debug.Log($"hitCount: {hitCount}, radius: {explosionInfo.explosionRadius}");
 		// 중복 타격 방지를 위한 HashSet 초기화
 		damagedTargets.Clear();

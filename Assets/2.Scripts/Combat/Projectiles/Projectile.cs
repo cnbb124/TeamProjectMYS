@@ -74,9 +74,6 @@ public abstract class Projectile : MonoBehaviour
 	[Header("공격한 유닛(참조, 확인용)")]
 	public Unit attacker;
 
-	[Header("팀킬 가능 여부")]
-    public bool friendlyFire = false;
-    
 
     //풀매니저에서 식별할 투사체 타입
     [HideInInspector]
@@ -163,15 +160,11 @@ public abstract class Projectile : MonoBehaviour
 
 
 
-    //같은팀인지 체크 (공격자와 피격대상 루트의 태그 비교, Player/Enemy/Neutral)
-    protected bool IsSameTeam(Collider other)
+    //같은팀인지 체크 (attacker와 피격 Unit 태그 비교)
+    protected bool IsSameTeam(Unit targetUnit)
     {
-        if (attacker == null)
-        {
-            return false;
-        }
-
-        return attacker.gameObject.tag == other.transform.root.tag;
+        if (attacker == null || targetUnit == null) return false;
+        return attacker.CompareTag(targetUnit.tag);
     }
 
 
@@ -249,8 +242,8 @@ public abstract class Projectile : MonoBehaviour
             return;
         }
 
-        // 아군 타격 방지 (오인사격 Off 상태일 때 데미지 생략)
-        if (IsSameTeam(targetCollider) && !friendlyFire)
+        // 아군 타격 방지
+        if (IsSameTeam(target as Unit))
         {
             Debug.Log("ApplyDamage 상대가 같은팀");
             return;
@@ -287,8 +280,8 @@ public abstract class Projectile : MonoBehaviour
             return;
         }
 
-        // 아군 타격 방지 (오인사격 Off 상태일 때 데미지 생략)
-        if (IsSameTeam(targetCollider) && !friendlyFire)
+        // 아군 타격 방지
+        if (IsSameTeam(target as Unit))
         {
             Debug.Log("ApplyDamage 상대가 같은팀");
             return;
@@ -314,7 +307,7 @@ public abstract class Projectile : MonoBehaviour
         {
             return;
         }
-        if (IsSameTeam(targetCollider) && !friendlyFire)
+        if (IsSameTeam(target as Unit))
         {
             return;
         }

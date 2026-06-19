@@ -289,7 +289,7 @@ public class EnemyShip : Enemy
 
             case AI_STATE.RELOAD:
                 RotateTowardTarget();
-                MoveTowardPosition(transform.position + transform.forward);
+                _rb.velocity = Vector3.MoveTowards(_rb.velocity, Vector3.zero, baseMoveSpeed * 5f * Time.fixedDeltaTime);
                 break;
         }
     }
