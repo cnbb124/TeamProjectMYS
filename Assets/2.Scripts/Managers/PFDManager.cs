@@ -6,8 +6,11 @@ public class PFDManager : MonoBehaviour
     public static PFDManager Instance { get; private set; }
 
     [Header("References")]
-    [SerializeField] private Player    player;
-    [SerializeField] private Rigidbody playerRb;
+    [SerializeField] private Player        player;
+    [SerializeField] private Rigidbody     playerRb;
+    [SerializeField] private RectTransform pfdRect;       // PFD 패널 RectTransform
+    [SerializeField] private RectTransform crosshairRect; // 크로스헤어 위치 기준
+    [SerializeField] private Vector2       pfdOffset = new Vector2(-120f, -60f); // 크로스헤어 기준 오프셋
 
     [Header("Speedometer")]
     [SerializeField] private TMP_Text speedText;
@@ -34,6 +37,8 @@ public class PFDManager : MonoBehaviour
     {
         if (player == null || playerRb == null) return;
 
+        UpdatePFDPosition();
+
         _updateTimer += Time.deltaTime;
         if (_updateTimer < INTERVAL) return;
         _updateTimer = 0f;
@@ -41,6 +46,12 @@ public class PFDManager : MonoBehaviour
         UpdateSpeed();
         UpdateThrottle();
         UpdateAltitude();
+    }
+
+    private void UpdatePFDPosition()
+    {
+        if (pfdRect == null || crosshairRect == null) return;
+        pfdRect.anchoredPosition = crosshairRect.anchoredPosition + pfdOffset;
     }
 
     private void UpdateSpeed()

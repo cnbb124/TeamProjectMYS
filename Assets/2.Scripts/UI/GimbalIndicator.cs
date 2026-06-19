@@ -34,7 +34,6 @@ public class GimbalIndicatorUI : MonoBehaviour
 
     private void Start()
     {
-        if (indicatorRect  != null) indicatorRect.sizeDelta  = Vector2.one * indicatorSize;
         if (indicatorImage != null) indicatorImage.color     = normalColor;
         if (indicatorRect  != null) indicatorRect.anchoredPosition = Vector2.zero;
     }
