@@ -176,7 +176,7 @@ GameObject:
   - component: {fileID: 4105334935508367049}
   - component: {fileID: 2545426210833529410}
   m_Layer: 7
-  m_Name: TestUnit_EnemyAIGunShip
+  m_Name: TestUnit_EnemyAI_GunShip
   m_TagString: Enemy
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -248,21 +248,21 @@ MonoBehaviour:
   curBoostRemaining: 0
   _playSoundType: 0
   detectRange: 750
-  rotateSpeed: 180
+  rotateSpeed: 240
   aiState: 0
   patrolRadius: 1000
   patrolArriveDist: 25
   patrolHeightRange: 100
-  attackPassWeight: 0.5
+  attackPassWeight: 0.55
   attackChaseWeight: 0.4
-  attackHoldWeight: 0.1
-  attackChaseDuration: 2.5
+  attackHoldWeight: 0.05
+  attackChaseDuration: 4
   attackHoldDuration: 1
   attackPassDuration: 4
   repositionDuration: 3
   evadeDuration: 1.5
-  repositionDistance: 200
-  minAttackDistance: 350
+  repositionDistance: 150
+  minAttackDistance: 175
   passOffsetDir: 0
   passOffsetStartDist: 125
   passHorizontalDist: 60
@@ -297,6 +297,7 @@ MonoBehaviour:
   - {fileID: 6182860956872268411}
   fixedMissileFireEntries: []
   missileFireMode: 0
+  autoDetectFirePositions: 0
   missileSlots:
   - type: 0
     curAmmo: 9999
@@ -317,7 +318,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   currentLockMode: 0
   maxMultiLockCount: 4
-  lockOnRange: 550
+  lockOnRange: 650
   lockOnRequiredTime: 1
   targetLayerMask:
     serializedVersion: 2
