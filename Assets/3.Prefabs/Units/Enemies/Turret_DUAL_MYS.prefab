@@ -1326,10 +1326,13 @@ MonoBehaviour:
   curBoostRemaining: 0
   _playSoundType: 0
   detectRange: 500
-  rotateSpeed: 3
+  rotateSpeed: 270
+  rotateDeadZone: 0
   aiState: 1
   swivelTransform: {fileID: 4177762561641812126}
   mountTransform: {fileID: 9141556630602784414}
+  attackHoldDuration: 10
+  reloadDuration: 2
 --- !u!114 &3205087385195567410
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1343,7 +1346,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   lockOnSystem: {fileID: 5346114771317425202}
-  fireBulletDelay: 0.1
+  bulletFireCooldown: 0.1
   curBulletData: {fileID: 0}
   useBulletMuzzle: 1
   useBulletSound: 1
@@ -1351,12 +1354,15 @@ MonoBehaviour:
   useMissileSound: 1
   bulletMuzzleFlashVFXPlayTime: 0.2
   missileMuzzleFlashVFXPlayTime: 0.2
-  fireMissileDelay: 2
+  bulletFireMode: 0
+  missileFireMode: 0
+  autoDetectFirePositions: 0
   fixedBulletFirePositions:
   - {fileID: 5223868083962179837}
   fixedMissileFirePositions:
   - {fileID: 7337206497944033394}
   - {fileID: 3107201299407590855}
+  missileFireCooldown: 2
   missileSlots:
   - type: 0
     curAmmo: 999
@@ -1377,7 +1383,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   currentLockMode: 0
   maxMultiLockCount: 4
-  lockOnRange: 500
+  lockOnRange: 400
   lockOnRequiredTime: 1.2
   targetLayerMask:
     serializedVersion: 2

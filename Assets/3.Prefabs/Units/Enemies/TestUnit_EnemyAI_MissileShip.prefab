@@ -894,14 +894,14 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1139779494959354490}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -3.552714e-15, y: -0.6919847, z: 0.000000030247623, w: 0.72191215}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 180614108866721536}
   m_Father: {fileID: 4659408774555268760}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: -87.575, z: 0}
 --- !u!1 &1220990736305905835
 GameObject:
   m_ObjectHideFlags: 0
@@ -4886,6 +4886,10 @@ GameObject:
   - component: {fileID: 6892535802448861962}
   - component: {fileID: 4057434538564405140}
   - component: {fileID: 6120159218522609150}
+  - component: {fileID: 3774840918939606558}
+  - component: {fileID: 3734592408409609432}
+  - component: {fileID: 3392769619772178549}
+  - component: {fileID: 2166254428839377297}
   m_Layer: 7
   m_Name: TestUnit_EnemyAI_MissileShip
   m_TagString: Enemy
@@ -4972,7 +4976,7 @@ MonoBehaviour:
   attackChaseDuration: 2
   attackHoldDuration: 7
   attackPassDuration: 4
-  repositionDuration: 1
+  repositionDuration: 4
   evadeDuration: 1.5
   repositionDistance: 200
   reloadDuration: 2
@@ -5004,13 +5008,13 @@ MonoBehaviour:
   useMissileMuzzle: 0
   useMissileSound: 1
   bulletMuzzleFlashVFXPlayTime: 0.1
-  missileMuzzleFlashVFXPlayTime: 0.2
+  missileMuzzleFlashVFXPlayTime: 0.3
   bulletFireMode: 0
   missileFireMode: 1
   autoDetectFirePositions: 1
   fixedBulletFirePositions: []
   fixedMissileFirePositions: []
-  missileFireCooldown: 2
+  missileFireCooldown: 0.2
   missileSlots:
   - type: 0
     curAmmo: 9999
@@ -5072,6 +5076,90 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!65 &3774840918939606558
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8508547545565869303}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 22, y: 5, z: 12}
+  m_Center: {x: 0, y: 0, z: -1.41}
+--- !u!65 &3734592408409609432
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8508547545565869303}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 2.85, y: 16.95, z: 19.23}
+  m_Center: {x: -8.61, y: 0, z: -1.1}
+--- !u!65 &3392769619772178549
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8508547545565869303}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 1, y: 1, z: 1}
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!65 &2166254428839377297
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8508547545565869303}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 2.85, y: 16.95, z: 19.23}
+  m_Center: {x: 8.61, y: 0, z: -1.1}
 --- !u!1 &8577692801610593443
 GameObject:
   m_ObjectHideFlags: 0

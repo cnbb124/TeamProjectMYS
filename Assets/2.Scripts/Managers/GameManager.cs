@@ -15,8 +15,10 @@ using UnityEngine.SceneManagement;
 //
 // ▶ 적 / 스폰 참조용
 //   OnEnemyKilled()     : 적 사망 시 Enemy.Die()에서 호출
+//   OnBossKilled()      : 보스 사망 시 보스 오브젝트에서 호출
 //   OnObjectDestroyed() : 파괴 오브젝트 파괴 시 호출
 //   onBossSpawn         : 보스 스폰 조건 달성 시 발행 이벤트
+//   onBossKilled        : 보스 처치 시 발행 이벤트
 //   예시) GameManager.Instance.onBossSpawn += 내스폰함수;
 //
 // ▶ UI 참조용
@@ -118,6 +120,17 @@ public class GameManager : MonoBehaviour
 
     // 보스 스폰 조건 달성 시 발행 (SpawnManager 등이 구독)
     public BossSpawnHandler onBossSpawn;
+    // 보스 처치 시 발행
+    public event System.Action onBossKilled;
+
+    // =====================================================================
+    // 페이드 연출
+    // =====================================================================
+    [Header("━━━━━━ 페이드 설정 ━━━━━━")]
+    [Tooltip("페이드 연출용 CanvasGroup. GameManager 자식 Canvas에 부착. null이면 페이드 스킵.")]
+    [SerializeField] private UnityEngine.UI.Image fadeImage;
+    [Tooltip("페이드 인/아웃 시간 (초)")]
+    public float fadeDuration = 0.5f;
 
     // =====================================================================
     // 아이템 데이터베이스
@@ -180,6 +193,8 @@ public class GameManager : MonoBehaviour
         {
             ResetBattleData();
         }
+
+        StartCoroutine(FadeIn());
     }
 
     // =====================================================================
@@ -204,11 +219,57 @@ public class GameManager : MonoBehaviour
         SoundManager.Instance.StopSFXAll();
         VFXManager.Instance.ReturnAll();
 
-        // 필요 시 페이드아웃 연출 추가
-        // yield return StartCoroutine(FadeOut());
+        yield return StartCoroutine(FadeOut());
 
         yield return null;
         SceneManager.LoadScene(sceneName);
+    }
+
+    private IEnumerator FadeOut()
+    {
+        if (fadeImage == null)
+        {
+            yield break;
+        }
+        Color c = fadeImage.color;
+        c.a = 0f;
+        fadeImage.color = c;
+        fadeImage.gameObject.SetActive(true);
+
+        float elapsed = 0f;
+        while (elapsed < fadeDuration)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            c.a = Mathf.Clamp01(elapsed / fadeDuration);
+            fadeImage.color = c;
+            yield return null;
+        }
+        c.a = 1f;
+        fadeImage.color = c;
+    }
+
+    private IEnumerator FadeIn()
+    {
+        if (fadeImage == null)
+        {
+            yield break;
+        }
+        Color c = fadeImage.color;
+        c.a = 1f;
+        fadeImage.color = c;
+        fadeImage.gameObject.SetActive(true);
+
+        float elapsed = 0f;
+        while (elapsed < fadeDuration)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            c.a = Mathf.Clamp01(1f - elapsed / fadeDuration);
+            fadeImage.color = c;
+            yield return null;
+        }
+        c.a = 0f;
+        fadeImage.color = c;
+        fadeImage.gameObject.SetActive(false);
     }
 
     private void PlaySceneBGM(string sceneName)
@@ -338,6 +399,16 @@ public class GameManager : MonoBehaviour
     {
         killCount++;
         CheckBossSpawnCondition();
+    }
+
+    /// <summary>
+    /// 보스 처치 시 보스 오브젝트에서 호출.
+    /// 킬카운트 누적 + onBossKilled 이벤트 발행.
+    /// </summary>
+    public void OnBossKilled()
+    {
+        killCount++;
+        onBossKilled?.Invoke();
     }
 
     /// <summary>

@@ -56,6 +56,7 @@ public class Enemy : Unit
     protected override void Die()
     {
         UnitManager.Instance?.UnregisterEnemy(this);
+        GameManager.Instance?.OnEnemyKilled();
         base.Die();
     }
 

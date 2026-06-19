@@ -30,6 +30,8 @@ public class EnemyTurretBase : Enemy
         base.Start();
         baseMoveSpeed = 0f;
         maxSpeed = 0f;
+        aiState = AI_STATE.RELOAD;
+        _stateTimer = 0f;
     }
 
     protected override void FixedUpdate()

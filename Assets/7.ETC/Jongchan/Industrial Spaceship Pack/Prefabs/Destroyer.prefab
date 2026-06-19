@@ -15468,6 +15468,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 400718}
+  - component: {fileID: 6176700558289712485}
   m_Layer: 0
   m_Name: BShip_Turret001
   m_TagString: Untagged
@@ -15491,6 +15492,58 @@ Transform:
   - {fileID: 400274}
   m_Father: {fileID: 400696}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &6176700558289712485
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 100718}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e9e6ea5e11016074ab3bc72b55db0b5f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  weaponSystem: {fileID: 0}
+  maxHpRemaining: 150
+  maxShieldCapacity: 0
+  shieldRegainDelay: 0
+  shieldRegainRate: 0
+  isShieldRegaining: 0
+  shield: {fileID: 0}
+  bodyHitboxRoot: {fileID: 0}
+  maxArmor: 0
+  defense: 0
+  criChance: 0
+  criDamageMultiplier: 0
+  baseMoveSpeed: 0
+  boostSpeed: 0
+  maxSpeed: 0
+  maxBoostCapacity: 0
+  minBoostRequired: 0
+  boostConsumeAmont: 0
+  boostRegainDelay: 0
+  boostRegainRate: 0
+  dodgeDuration: 0.5
+  dodgeInvincibleTime: 0.4
+  dodgeCoolTime: 5
+  dodgeForce: 800
+  speedMultiPlier: 0
+  curState: 0
+  curHpRemaining: 0
+  curShieldRemaining: 0
+  curArmorRemaining: 0
+  curSpeed: 0
+  curBoostRemaining: 0
+  _playSoundType: 0
+  detectRange: 500
+  rotateSpeed: 180
+  rotateDeadZone: 0
+  aiState: 0
+  swivelTransform: {fileID: 0}
+  mountTransform: {fileID: 0}
+  attackHoldDuration: 3
+  reloadDuration: 2
 --- !u!1 &100720
 GameObject:
   m_ObjectHideFlags: 0
