@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 
 namespace ProceduralForceField
@@ -82,7 +83,23 @@ namespace ProceduralForceField
             "2  = 적당한 밝기 (권장)\n" +
             "10 이상 = 너무 밝아져 쉴드 패턴이 가려지고 단색처럼 보일 수 있음\n" +
             "권장값: 1.5 ~ 3.0")]
-        [SerializeField, Range(0f, 20f)] private float _hitIntensity = 6f;
+        [SerializeField, Range(0f, 20f)] private float _hitIntensity = 3f;
+
+        [Header("쉴드 파괴 이펙트")]
+        [Tooltip("▶ 쉴드 파괴 시 생성할 Pulsewave 프리팹\n" +
+            "PoolManager에 SHIELD_PULSEWAVE 타입으로 등록된 프리팹 사용\n" +
+            "비워두면 파괴 이펙트 없이 사라지기만 함")]
+        [SerializeField] private bool _usePulsewave = true;
+
+        [Tooltip("▶ 쉴드 HP가 낮아질 때 깜빡임 시작 비율\n" +
+            "예) 0.3 → 쉴드 HP 30% 이하일 때 깜빡이기 시작\n" +
+            "권장값: 0.3 ~ 0.5")]
+        [SerializeField, Range(0f, 1f)] private float _flickerThreshold = 0.3f;
+
+        [Tooltip("▶ 깜빡임 속도\n" +
+            "값이 클수록 빠르게 깜빡임\n" +
+            "권장값: 8 ~ 15")]
+        [SerializeField] private float _flickerSpeed = 10f;
 
         private Color _activeColor;
         private MaterialPropertyBlock _propertyBlock;
@@ -91,6 +108,10 @@ namespace ProceduralForceField
         private float _visibility;
         private float _fadeOutStartTime;
         private bool  _fadingOut;
+
+        // 쉴드 HP 비율 (0~1), Unit에서 설정
+        private float _shieldHpRatio = 1f;
+        private bool  _isDestroyed   = false;
 
         private static readonly int FieldVisibilityId   = Shader.PropertyToID("_FieldVisibility");
         private static readonly int RevealMaxDistanceId  = Shader.PropertyToID("_RevealMaxDistance");
@@ -134,6 +155,17 @@ namespace ProceduralForceField
         private void Update()
         {
             if (_overlayRenderer == null) return;
+            if (_isDestroyed) return;
+
+            // HP 낮을 때 깜빡임 — opacity를 sin 파형으로 흔들기
+            if (_shieldHpRatio <= _flickerThreshold && _shieldHpRatio > 0f && _overlayRenderer.enabled)
+            {
+                float flicker = 0.5f + 0.5f * Mathf.Sin(Time.time * _flickerSpeed * (1f - _shieldHpRatio + 0.1f));
+                _propertyBlock ??= new MaterialPropertyBlock();
+                _overlayRenderer.GetPropertyBlock(_propertyBlock);
+                _propertyBlock.SetFloat(OpacityId, _opacity * flicker);
+                _overlayRenderer.SetPropertyBlock(_propertyBlock);
+            }
 
             if (!_autoHide)
             {
@@ -174,6 +206,56 @@ namespace ProceduralForceField
         }
 
         #region Methods
+        // Unit에서 피격 시 호출 — 쉴드 HP 비율 전달 (0~1)
+        public void UpdateShieldHP(float hpRatio)
+        {
+            _shieldHpRatio = Mathf.Clamp01(hpRatio);
+        }
+
+        // 쉴드 파괴 시 Unit에서 호출
+        public void TriggerDestroy()
+        {
+            if (_isDestroyed) return;
+            _isDestroyed = true;
+
+            // 쉴드 숨기기
+            _visibility = 0f;
+            _fadingOut  = false;
+            ApplyProperties();
+            if (_overlayRenderer != null)
+                _overlayRenderer.enabled = false;
+
+            // Pulsewave 스폰
+            if (_usePulsewave && PoolManager.Instance != null)
+            {
+                GameObject wave = PoolManager.Instance.Get(POOL_TYPE.SHIELD_PULSEWAVE);
+                if (wave != null)
+                {
+                    wave.transform.position = transform.position;
+                    wave.transform.rotation = transform.rotation;
+                    wave.SetActive(true);
+                    // F3DPulsewave는 OnSpawned() 호출해야 초기화됨
+                    wave.BroadcastMessage("OnSpawned", SendMessageOptions.DontRequireReceiver);
+                    StartCoroutine(ReturnPulsewaveAfterDelay(wave, 3f));
+                }
+            }
+        }
+
+        private IEnumerator ReturnPulsewaveAfterDelay(GameObject wave, float delay)
+        {
+            yield return new WaitForSeconds(delay);
+            if (wave != null && wave.activeInHierarchy)
+                PoolManager.Instance.Return(wave);
+        }
+
+        // 쉴드 재생성 시 Unit에서 호출
+        public void TriggerReset()
+        {
+            _isDestroyed   = false;
+            _shieldHpRatio = 1f;
+            _visibility    = 0f;
+        }
+
         public void Trigger(Vector3 hitWorldPosition)
         {
             CacheReferences();
