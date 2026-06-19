@@ -124,7 +124,8 @@ public abstract class Unit : MonoBehaviour, IDamageable
 	//(실드x,아머o)Damageinfo.damage-defense *(크리시)criDamageMultiplier;
 	//(실드x,아머x)Damageinfo.damage) * (크리시)criDamageMultiplier;
 	//curHp-=damageAmount;
-
+	[Header("=========터렛등 좌표고정유닛은 적용안됨==========")]
+	[Space(5)]
 	[Header("<size=18>이동 관련</size>")]
 	[Tooltip("기본 이동속도")]
 	public float baseMoveSpeed;//기본이동속ㄷ
