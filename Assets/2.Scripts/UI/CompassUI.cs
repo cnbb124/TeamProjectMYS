@@ -14,8 +14,7 @@ using TMPro;
 public class CompassUI : MonoBehaviour
 {
     [Header("References")]
-    [SerializeField] private Transform     player;
-    [SerializeField] private RectTransform crosshairRect; // 크로스헤어 위치 기준
+    [SerializeField] private Transform player;
 
     [Header("Compass (Yaw — 가로)")]
     [SerializeField] private RectTransform compassRect;         // Compass 오브젝트
@@ -51,23 +50,8 @@ public class CompassUI : MonoBehaviour
     {
         if (player == null) return;
 
-        UpdateAnchor();
         UpdateCompass();
         UpdatePitch();
-    }
-
-    // 크로스헤어 위치로 Compass/Pitch 패널 이동
-    private void UpdateAnchor()
-    {
-        if (crosshairRect == null) return;
-
-        Vector2 crossPos = crosshairRect.anchoredPosition;
-
-        if (compassRect != null)
-            compassRect.anchoredPosition = new Vector2(crossPos.x, compassRect.anchoredPosition.y);
-
-        if (pitchRect != null)
-            pitchRect.anchoredPosition = new Vector2(pitchRect.anchoredPosition.x, crossPos.y);
     }
 
     // ── 나침반 테이프 생성 ────────────────────────────────────
