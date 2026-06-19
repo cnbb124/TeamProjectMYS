@@ -46,11 +46,10 @@ public class TargettingRadarSystem : MonoBehaviour
     if (playerArrow != null)
     {
         playerArrow.anchoredPosition = Vector2.zero;
-        playerArrow.localRotation = Quaternion.Euler(0f, 0f, -player.eulerAngles.y);
     }
 
     if (cardinalRoot != null)
-        cardinalRoot.localRotation = Quaternion.Euler(0f, 0f, -player.eulerAngles.y);
+        cardinalRoot.localRotation = Quaternion.Euler(0f, 0f, player.eulerAngles.y);
 
     _activeDotCount = 0;
 
