@@ -21,8 +21,10 @@ public class LobbyUIManager : MonoBehaviour
 
     public void OnClickNewGame()
     {
-        GameManager.Instance.LoadScene("Test");//차후에 GameScene
-    }
+         GameManager.Instance.LoadScene("Test");//차후에 GameScene
+        //GameManager.Instance.LoadScene("Jayeon");
+
+	}
 
     public void OnClickCharacter()
     {

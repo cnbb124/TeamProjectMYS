@@ -61,8 +61,22 @@ namespace ProceduralForceField
         {
             if (_targetRenderer == null) return;
 
-            _hitPositions[_hitWriteIdx] = worldPosition;
-            _hitTimes[_hitWriteIdx]     = Time.time;
+            // 히트 위치를 타원체 실드 메쉬 표면으로 투영
+            Vector3 hitOs    = _targetRenderer.transform.InverseTransformPoint(worldPosition);
+            Vector3 extentsOs = _targetRenderer.localBounds.extents;
+            extentsOs.x = Mathf.Max(0.0001f, extentsOs.x);
+            extentsOs.y = Mathf.Max(0.0001f, extentsOs.y);
+            extentsOs.z = Mathf.Max(0.0001f, extentsOs.z);
+
+            Vector3 unitVec = new Vector3(hitOs.x / extentsOs.x, hitOs.y / extentsOs.y, hitOs.z / extentsOs.z);
+            if (unitVec == Vector3.zero) unitVec = Vector3.up;
+            unitVec = unitVec.normalized;
+
+            Vector3 surfaceOs = new Vector3(unitVec.x * extentsOs.x, unitVec.y * extentsOs.y, unitVec.z * extentsOs.z);
+            Vector3 projectedWS = _targetRenderer.transform.TransformPoint(surfaceOs);
+
+            _hitPositions[_hitWriteIdx] = projectedWS;
+            _hitTimes[_hitWriteIdx]     = Time.timeSinceLevelLoad;
             _hitWriteIdx = (_hitWriteIdx + 1) % MAX_HITS;
 
             ApplyAllHits();
