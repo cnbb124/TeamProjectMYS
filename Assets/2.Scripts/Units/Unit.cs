@@ -514,6 +514,13 @@ public abstract class Unit : MonoBehaviour, IDamageable
 		//피격 후 설정된 딜레이(초)만큼 대기합니다. (Update의 타이머 연산을 완벽히 대체)
 		yield return new WaitForSeconds(shieldRegainDelay);
 
+		// 회복 시작 시 Overlay 리셋 (파괴 상태 해제, 다시 피격 이펙트 보이게)
+		if (shield != null)
+		{
+			var overlay = shield.GetComponentInChildren<ProceduralForceField.ProceduralForceFieldOverlay>();
+			overlay?.TriggerReset();
+		}
+
 		isShieldRegaining = true;
 
 		// 최적화를 위해 0.1초마다 대기할 캐싱 객체 생성
@@ -536,6 +543,13 @@ public abstract class Unit : MonoBehaviour, IDamageable
 		// 회복이 완료되었거나 죽었을 경우 상태 초기화
 		isShieldRegaining = false;
 		_shieldRegenCoroutine = null;
+
+		// 쉴드 완전 회복 시 Overlay 리셋
+		if (shield != null)
+		{
+			var overlay = shield.GetComponentInChildren<ProceduralForceField.ProceduralForceFieldOverlay>();
+			overlay?.TriggerReset();
+		}
 	}
 
 	//0516 실드회복 코루틴으로변겨ㅑㅇ
@@ -747,6 +761,19 @@ public abstract class Unit : MonoBehaviour, IDamageable
 			curShieldRemaining -= shieldDamage;//실드에 가해진 피해량만큼 현재실드량 깎기
 			damageAmount -= shieldDamage;//실드에 가해진피해량만큼 데미지잔량도 깎기
 
+			// 쉴드 Overlay에 HP 비율 전달 (깜빡임/투명도 연출용)
+			if (shield != null && maxShieldCapacity > 0)
+			{
+				float hpRatio = (float)curShieldRemaining / maxShieldCapacity;
+				var overlay = shield.GetComponentInChildren<ProceduralForceField.ProceduralForceFieldOverlay>();
+				if (overlay != null)
+				{
+					overlay.UpdateShieldHP(hpRatio);
+					// 쉴드 완전 소진 시 파괴 이펙트
+					if (curShieldRemaining <= 0)
+						overlay.TriggerDestroy();
+				}
+			}
 		}
 		if (damageAmount > 0 && curArmorRemaining > 0)//데미지잔량0초과,실드0,아머0초과
 		{
