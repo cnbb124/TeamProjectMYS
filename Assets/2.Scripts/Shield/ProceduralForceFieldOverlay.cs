@@ -231,12 +231,13 @@ namespace ProceduralForceField
                 GameObject wave = PoolManager.Instance.Get(POOL_TYPE.SHIELD_PULSEWAVE);
                 if (wave != null)
                 {
-                    wave.transform.position = transform.position;
-                    wave.transform.rotation = transform.rotation;
+                    wave.transform.SetParent(transform);
+                    wave.transform.localPosition = Vector3.zero;
+                    wave.transform.rotation = Quaternion.identity;
                     wave.SetActive(true);
                     // F3DPulsewave는 OnSpawned() 호출해야 초기화됨
                     wave.BroadcastMessage("OnSpawned", SendMessageOptions.DontRequireReceiver);
-                    StartCoroutine(ReturnPulsewaveAfterDelay(wave, 3f));
+                    StartCoroutine(ReturnPulsewaveAfterDelay(wave, 0.5f));
                 }
             }
         }
@@ -244,8 +245,17 @@ namespace ProceduralForceField
         private IEnumerator ReturnPulsewaveAfterDelay(GameObject wave, float delay)
         {
             yield return new WaitForSeconds(delay);
+
+            ParticleSystem[] particles = wave.GetComponentsInChildren<ParticleSystem>();
+            while (wave != null && wave.activeInHierarchy &&
+                   System.Array.Exists(particles, p => p.IsAlive(true)))
+                yield return null;
+
             if (wave != null && wave.activeInHierarchy)
+            {
+                wave.transform.SetParent(null);
                 PoolManager.Instance.Return(wave);
+            }
         }
 
         // 쉴드 재생성 시 Unit에서 호출

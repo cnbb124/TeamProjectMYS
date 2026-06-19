@@ -65,9 +65,23 @@ namespace FORGE3D
         /// </summary>
         void Awake()
         {
+            if (time != null && time != this)
+            {
+                Destroy(gameObject);
+                return;
+            }
             time = this;
             timers = new List<Timer>();
             removalPending = new List<int>();
+        }
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+        static void AutoCreate()
+        {
+            if (time != null) return;
+            GameObject go = new GameObject("F3DTime");
+            go.AddComponent<F3DTime>();
+            DontDestroyOnLoad(go);
         }
 
         /// <summary>
