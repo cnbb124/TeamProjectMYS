@@ -66,7 +66,7 @@ public class EnemyMarkerUI : MonoBehaviour
         // 각 적마다 마커 갱신
         for (int i = 0; i < count; i++)
         {
-            if (targets[i] == null || targets[i].transform.root.CompareTag("Player"))
+            if (targets[i] == null || targets[i].GetComponentInParent<Player>() != null)
             {
                 _markers[i].root.SetActive(false);
                 continue;
