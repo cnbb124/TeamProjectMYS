@@ -242,7 +242,7 @@ MonoBehaviour:
   criChance: 20
   criDamageMultiplier: 1.5
   baseMoveSpeed: 350
-  boostSpeed: 650
+  boostSpeed: 550
   maxSpeed: 800
   maxBoostCapacity: 100
   minBoostRequired: 10
@@ -262,12 +262,12 @@ MonoBehaviour:
   curBoostRemaining: 0
   _playSoundType: 0
   detectRange: 750
-  rotateSpeed: 240
+  rotateSpeed: 210
   rotateDeadZone: 0
   aiState: 0
   patrolRadius: 1000
   patrolArriveDist: 25
-  patrolHeightRange: 100
+  patrolHeightRange: 250
   attackPassWeight: 0.55
   attackChaseWeight: 0.4
   attackHoldWeight: 0.05
@@ -280,9 +280,9 @@ MonoBehaviour:
   reloadDuration: 0
   minAttackDistance: 175
   passOffsetDir: 0
-  passOffsetStartDist: 125
-  passHorizontalDist: 60
-  passVerticalRange: 40
+  passOffsetStartDist: 150
+  passHorizontalDist: 100
+  passVerticalRange: 125
   evadeChance: 0.35
   evadeCoolTime: 5
   dodgeProbability: 0.2
@@ -333,7 +333,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   currentLockMode: 0
   maxMultiLockCount: 4
-  lockOnRange: 650
+  lockOnRange: 600
   lockOnRequiredTime: 1
   targetLayerMask:
     serializedVersion: 2
