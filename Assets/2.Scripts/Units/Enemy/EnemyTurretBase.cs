@@ -1,27 +1,27 @@
 using UnityEngine;
 
 // 고정 포탑 공통 베이스. Enemy 직접 상속 — 이동/순찰/전투패턴 필드 없음.
-// UpdateAI : STANDBY ↔ ATTACK_HOLD 사이클 관리.
-//   STANDBY : 타이머 만료 + 타겟 범위 내 → EnterAttackHold
-//   ATTACK_HOLD : 발사. 타겟 이탈 시 즉시 STANDBY. attackHoldDuration 만료 시 standbyDuration 쿨타임 후 재공격.
+// UpdateAI : ATTACK_HOLD ↔ RELOAD 사이클 관리.
+//   ATTACK_HOLD : 발사. 타겟 이탈 시 즉시 RELOAD(0f). attackHoldDuration 만료 시 RELOAD(reloadDuration).
+//   RELOAD : 타이머 만료 + 타겟 범위 내 → EnterAttackHold. 타겟 없으면 대기 유지.
 // FixedUpdate : 탐지 범위 내 타겟이 있으면 swivel/mount 회전.
 // 자식은 ShootWeapons()만 override해 발사 무기 종류를 지정.
 public class EnemyTurretBase : Enemy
 {
-    [Header("회전할 파츠")]
+    [Header("<size=18>회전할 파츠</size>")]
     [Tooltip("*SOCKET_SWIVEL — 수평(Y축) 좌우 회전")]
     public Transform swivelTransform;
     [Tooltip("*SOCKET_MOUNT — 수직(X축) 상하 회전")]
     public Transform mountTransform;
 
-    [Header("공격 타이밍")]
+    [Header("<size=18>공격 타이밍</size>")]
     [Tooltip("ATTACK_HOLD 지속 시간(초). 이 시간만큼 발사 후 강제 대기.\n" +
              "0이면 타겟이 범위를 벗어날 때까지 계속 발사.")]
     public float attackHoldDuration = 3f;
-    [Tooltip("ATTACK_HOLD 종료 후 STANDBY 대기 시간(초).\n" +
+    [Tooltip("ATTACK_HOLD 종료 후 RELOAD 대기 시간(초).\n" +
              "타겟이 범위 내에 있어도 이 시간만큼 발사를 멈춤.\n" +
              "0이면 즉시 재공격.")]
-    public float standbyDuration = 2f;
+    public float reloadDuration = 2f;
 
     private float _stateTimer = 0f;
 
@@ -56,33 +56,29 @@ public class EnemyTurretBase : Enemy
 
         switch (aiState)
         {
-            case AI_STATE.STANDBY:
-                // 강제 대기(쿨타임) 중이면 발사 안 함
-                if (_stateTimer > 0f)
-                {
-                    break;
-                }
-                // 대기 완료 — 범위 내 타겟 있으면 공격 시작
-                if (IsTargetInRange(detectRange) && HasTargetInAttackRange())
-                {
-                    EnterAttackHold();
-                }
-                break;
-
             case AI_STATE.ATTACK_HOLD:
                 if (!IsTargetInRange(detectRange) || !HasTargetInAttackRange())
                 {
-                    // 타겟 이탈 — 쿨타임 없이 STANDBY (타겟 복귀 시 즉시 재공격)
-                    EnterStandby(0f);
+                    // 타겟 이탈 — 쿨타임 없이 Reload (타겟 복귀 시 즉시 재공격)
+                    EnterReload(0f);
                     break;
                 }
                 if (attackHoldDuration > 0f && _stateTimer <= 0f)
                 {
-                    // 공격 지속시간 만료 — standbyDuration 쿨타임
-                    EnterStandby(standbyDuration);
+                    // 공격 지속시간 만료 — reloadDuration 쿨타임
+                    EnterReload(reloadDuration);
                     break;
                 }
                 ShootWeapons();
+                break;
+            case AI_STATE.RELOAD:
+                if (_stateTimer <= 0f)
+                {
+                    if (IsTargetInRange(detectRange) && HasTargetInAttackRange())
+                    {
+                        EnterAttackHold();
+                    }
+                }
                 break;
         }
 
@@ -98,9 +94,19 @@ public class EnemyTurretBase : Enemy
         _stateTimer = attackHoldDuration;
     }
 
+    /// <summary>
+    /// 레거시
+    /// </summary>
+    /// <param name="duration"></param>
     private void EnterStandby(float duration)
     {
         aiState = AI_STATE.STANDBY;
+        _stateTimer = duration;
+    }
+
+    protected void EnterReload(float duration)
+    {
+        aiState = AI_STATE.RELOAD;
         _stateTimer = duration;
     }
 

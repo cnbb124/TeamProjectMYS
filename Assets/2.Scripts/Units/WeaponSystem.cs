@@ -1,18 +1,11 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-// 미사일 발사 위치 + 딜레이 쌍.
-// delay: 직전 항목 발사 후 대기 시간(초). 0이면 직전 항목과 동시 발사.
-[System.Serializable]
-public class MissileFireEntry
-{
-    public Transform firePos;
-    [Tooltip("직전 항목 발사 후 대기 시간(초). 0이면 동시 발사.")]
-    public float delay = 0f;
-}
-
-// Sequential: 배열 순서대로 발사. Random: 매 살보마다 순서를 셔플 후 발사.
-public enum MissileFireMode { Sequential, Random }
+// Sequential: 트리거 한 번에 총구(발사구) 하나씩 교대 발사 (1→2→3→1→...).
+// Random:     트리거 한 번에 랜덤 총구(발사구) 하나.
+// Simultaneous: 트리거 한 번에 모든 총구(발사구) 동시 발사.
+public enum BulletFireMode { Sequential, Random, Simultaneous }
+public enum MissileFireMode { Sequential, Random, Simultaneous }
 
 
 // ================================================================
@@ -38,7 +31,7 @@ public enum MissileFireMode { Sequential, Random }
 // ================================================================
 // [이펙트팀 참조 — 머즐플래시 호출 위치]
 // ================================================================
-// 총알  : ShootBullet()    내부 (useBulletMuzzle=true 일 때만 재생)
+// 총알  : ShootBulletFrom()    내부 (useBulletMuzzle=true 일 때만 재생)
 //   → VFXManager.PlayEffectAtUnit(VFX_BULLET_MUZZLE, _unit.transform, firePos, rot, 0.2f)
 // 미사일: ShootMissileFrom() 내부 (useMissileMuzzle=true 일 때만 재생)
 //   → VFXManager.PlayEffectAtUnit(VFX_MISSILE_MUZZLE, _unit.transform, firePos, rot, 0.3f)
@@ -79,11 +72,11 @@ public class WeaponSystem : MonoBehaviour
 
 	// ================== [총알 설정] ==================
 	[Space(5)]
-	[Header("<size=18>[무기 시스템]</size>")]
-	[Header("<size=14>총알 설정<size>")]
-	[Tooltip("총알 발사 간격 (초)")]
-	public float fireBulletDelay = 0.1f;
-	private float _lastFireBulletTime = 0f;
+	[Header("<size=22>[무기 시스템]</size>")]
+	[Header("<size=18>총알 설정</size>")]
+	[Tooltip("발사 쿨다운 (초). 이전 발사 후 이 시간이 지나야 다음 발사 허용.")]
+	public float bulletFireCooldown = 0.1f;
+	private float _lastBulletFireTime = 0f;
 
 	[Tooltip("장착된 총알의 데이터(SO). curBulletPoolType으로 풀 종류 지정 (변형탄 대응).")]
 	public BulletData curBulletData;
@@ -109,33 +102,35 @@ public class WeaponSystem : MonoBehaviour
 	[SerializeField]
 	private float missileMuzzleFlashVFXPlayTime = 0.2f;
 
-	[Header("미사일 설정")]
-	public float fireMissileDelay = 2f;
-	private float _lastFireMissileTime = 0f;
+	[Header("<size=14>발사 모드 설정</size>")]
+	[Tooltip("Sequential: 총구 하나씩 교대 발사 (1→2→3→1→...).\n" +
+			 "Random: 매 발사마다 랜덤 총구 하나.\n" +
+			 "Simultaneous: 모든 총구 동시 발사.")]
+	public BulletFireMode bulletFireMode = BulletFireMode.Sequential;
 
-	// LAUNCHER_BULLET 파츠가 RegisterFirePos로 등록. 순서대로 교대 발사.
-	private List<Transform> _bulletFirePositions = new List<Transform>();
-	private int _bulletFireIndex = 0;
-
-	[Header("테스트용 파츠없이 사용할 총구좌표")]
-	[Tooltip("UnitParts 없이 발사 위치를 직접 지정.")]
-	[SerializeField]
-	// Awake 시 _bulletFirePositions에 합류됨
-	private List<Transform> fixedBulletFirePositions = new List<Transform>();
-
-	[Tooltip("UnitParts 없이 미사일 발사 위치 + 딜레이 직접 지정.\n" +
-             "delay=0: 직전 항목과 동시 발사 / delay>0: 직전 발사 후 N초 대기 후 발사.")]
-	[SerializeField]
-	// Awake 시 _missileFirePositions / _missileFireDelays에 합류됨.
-	private List<MissileFireEntry> fixedMissileFireEntries = new List<MissileFireEntry>();
-
-	[Tooltip("Sequential: 배열 순서대로 발사.\nRandom: 매 살보마다 발사 순서를 랜덤 셔플 후 발사.")]
+	[Tooltip("Sequential: 발사구 하나씩 교대 발사 (1→2→3→1→...).\n" +
+			 "Random: 매 발사마다 랜덤 발사구 하나.\n" +
+			 "Simultaneous: 모든 발사구 동시 발사.")]
 	public MissileFireMode missileFireMode = MissileFireMode.Sequential;
 
+	// LAUNCHER_BULLET 파츠가 RegisterFirePos로 등록.
+	private List<Transform> _bulletFirePositions = new List<Transform>();
+	// Sequential 모드 전용 교대 발사 인덱스.
+	private int _bulletFireIndex = 0;
+
+	[Header("<size=14>자동 설정 (WeaponFirePos 컴포넌트 있는 것들 좌표 받아옴)</size>")]
 	[Tooltip("ON: Awake 시 자식 오브젝트의 WeaponFirePos 컴포넌트를 자동 수집.\n" +
-             "딜레이는 각 WeaponFirePos의 설정값 사용(고정/랜덤 모두 지원).\n" +
-             "플레이어(UnitParts 사용)는 OFF 유지.")]
+			 "플레이어(UnitParts 사용)는 OFF 유지.")]
 	public bool autoDetectFirePositions = false;
+
+	[Header("<size=14>수동 설정 (UnitParts 없이 직접 지정할 총구 좌표)</size>")]
+	[Tooltip("UnitParts 없이 총알 발사 위치 직접 지정.")]
+	[SerializeField]
+	private List<Transform> fixedBulletFirePositions = new List<Transform>();
+
+	[Tooltip("UnitParts 없이 미사일 발사 위치 직접 지정.")]
+	[SerializeField]
+	private List<Transform> fixedMissileFirePositions = new List<Transform>();
 
 
 	// ================== [레이저 설정] ==================
@@ -144,27 +139,20 @@ public class WeaponSystem : MonoBehaviour
 
 
 	// ================== [미사일 설정] ==================
+	[Header("<size=18>미사일 설정</size>")]
+	[Tooltip("발사 쿨다운 (초). 이전 발사 후 이 시간이 지나야 다음 발사 허용.")]
+	public float missileFireCooldown = 2f;
+	private float _lastMissileFireTime = 0f;
+
 	[Space(5)]
-	[Header("미사일 슬롯 (보유 타입+잔탄)")]
+	[Header("<size=14>미사일 슬롯 (보유 타입+잔탄)</size>")]
 	[Tooltip("보유 미사일 타입 목록. 인벤토리/상점에서 AddMissileSlot()으로 추가.")]
 	public List<MissileSlot> missileSlots = new List<MissileSlot>();
 
 	// LAUNCHER_MISSILE 파츠가 RegisterFirePos로 등록.
 	private List<Transform> _missileFirePositions = new List<Transform>();
-	// _missileFirePositions과 1:1 대응. 파츠 등록분은 항상 0f.
-	private List<float> _missileFireDelays = new List<float>();
-	// _missileFirePositions과 1:1 대응. 자동수집 분은 WeaponFirePos 참조 보관(GetDelay() 호출용), 그 외는 null.
-	private List<WeaponFirePos> _missileFirePosRefs = new List<WeaponFirePos>();
-
-	// 딜레이 발사 예약 큐. Update()에서 scheduledTime 도달 시 발사.
-	private struct PendingMissileFire
-	{
-		public float scheduledTime;
-		public int posIndex;
-		public SOUND_TYPE soundType;
-		public MissileSlot slot;
-	}
-	private readonly List<PendingMissileFire> _pendingFires = new List<PendingMissileFire>();
+	// Sequential 모드 전용 교대 발사 인덱스.
+	private int _missileFireIndex = 0;
 
 	// 발사 위치별 LauncherAnim 캐시 (컴포넌트 없는 파츠는 등록 안 됨)
 	private Dictionary<Transform, LauncherAnim> _launcherAnims = new Dictionary<Transform, LauncherAnim>();
@@ -177,7 +165,7 @@ public class WeaponSystem : MonoBehaviour
 
 	// 외부 참조용 (HUD / AmmoUI). 슬롯 전환 시 자동 갱신, 확인용.
 	//[HideInInspector]
-	[Header("현재 장착된 미사일, 외부참조 및 확인용")]
+	[Header("<size=14>현재 장착된 미사일 (외부참조 및 확인용)</size>")]
 	public MISSILE_TYPE curMissileType = MISSILE_TYPE.HOMING;
 
 	/// <summary>
@@ -207,7 +195,7 @@ public class WeaponSystem : MonoBehaviour
 	{
 		_unit = GetComponent<Unit>();
 		lockOnSystem = GetComponent<LockOnSystem>();
-		// 테스트용 발사 위치를 정식 발사 위치 목록에 합류
+
 		foreach (Transform pos in fixedBulletFirePositions)
 		{
 			if (pos != null)
@@ -216,13 +204,11 @@ public class WeaponSystem : MonoBehaviour
 			}
 		}
 
-		foreach (MissileFireEntry entry in fixedMissileFireEntries)
+		foreach (Transform pos in fixedMissileFirePositions)
 		{
-			if (entry.firePos != null)
+			if (pos != null)
 			{
-				_missileFirePositions.Add(entry.firePos);
-				_missileFireDelays.Add(entry.delay);
-				_missileFirePosRefs.Add(null);
+				_missileFirePositions.Add(pos);
 			}
 		}
 
@@ -238,8 +224,6 @@ public class WeaponSystem : MonoBehaviour
 				else if (fp.posType == WEAPON_POS_TYPE.MISSILE)
 				{
 					_missileFirePositions.Add(fp.transform);
-					_missileFireDelays.Add(0f);
-					_missileFirePosRefs.Add(fp);
 				}
 			}
 		}
@@ -255,36 +239,6 @@ public class WeaponSystem : MonoBehaviour
 		_pool = PoolManager.Instance;
 		_sound = SoundManager.Instance;
 		_vfx = VFXManager.Instance;
-	}
-
-	private void Update()
-	{
-		if (_pendingFires.Count == 0)
-		{
-			return;
-		}
-		for (int i = _pendingFires.Count - 1; i >= 0; i--)
-		{
-			if (Time.time >= _pendingFires[i].scheduledTime)
-			{
-				PendingMissileFire pf = _pendingFires[i];
-				_pendingFires.RemoveAt(i);
-				if (_unit == null || _unit.CurState == UNIT_STATE.DIE)
-				{
-					continue;
-				}
-				if (pf.posIndex >= _missileFirePositions.Count)
-				{
-					continue;
-				}
-				if (useMissileSound)
-				{
-					_sound.PlaySFX3DAtPosition(pf.soundType, _unit.transform.position);
-				}
-				ShootMissileFrom(_missileFirePositions[pf.posIndex]);
-				pf.slot.curAmmo--;
-			}
-		}
 	}
 
 	/// <summary>
@@ -337,13 +291,12 @@ public class WeaponSystem : MonoBehaviour
 		switch (type)
 		{
 			case PROJECTILE_TYPE.BULLET:
-				if (Time.time < _lastFireBulletTime + fireBulletDelay)
+				if (Time.time < _lastBulletFireTime + bulletFireCooldown)
 				{
 					return;
 				}
-				_lastFireBulletTime = Time.time;
-
-				ShootBullet(soundType);
+				_lastBulletFireTime = Time.time;
+				ShootAllBullets(soundType);
 				break;
 
 			case PROJECTILE_TYPE.LASER:
@@ -352,11 +305,11 @@ public class WeaponSystem : MonoBehaviour
 				break;
 
 			case PROJECTILE_TYPE.MISSILE:
-				if (Time.time < _lastFireMissileTime + fireMissileDelay)
+				if (Time.time < _lastMissileFireTime + missileFireCooldown)
 				{
 					return;
 				}
-				_lastFireMissileTime = Time.time;
+				_lastMissileFireTime = Time.time;
 				ShootAllMissiles(soundType);
 				break;
 
@@ -367,32 +320,55 @@ public class WeaponSystem : MonoBehaviour
 	// ================== [개별 발사 로직] ==================
 
 	/// <summary>
-	/// 총알 — 등록된 발사 위치를 순서대로 교대 발사.
+	/// 총알 — bulletFireMode에 따라 발사.
+	/// Sequential: 총구 하나씩 교대. Random: 랜덤 총구 하나. Simultaneous: 전체 동시.
 	/// </summary>
-	private void ShootBullet(SOUND_TYPE soundType)
+	private void ShootAllBullets(SOUND_TYPE soundType)
 	{
 		if (_bulletFirePositions.Count == 0)
 		{
 			return;
 		}
 
-		Transform curFirePos = _bulletFirePositions[_bulletFireIndex];
-		_bulletFireIndex = (_bulletFireIndex + 1) % _bulletFirePositions.Count;
+		switch (bulletFireMode)
+		{
+			case BulletFireMode.Sequential:
+				ShootBulletFrom(_bulletFirePositions[_bulletFireIndex], soundType);
+				_bulletFireIndex = (_bulletFireIndex + 1) % _bulletFirePositions.Count;
+				break;
 
-		if (_launcherAnims.TryGetValue(curFirePos, out LauncherAnim bulletAnim))
+			case BulletFireMode.Random:
+				ShootBulletFrom(_bulletFirePositions[Random.Range(0, _bulletFirePositions.Count)], soundType);
+				break;
+
+			case BulletFireMode.Simultaneous:
+				for (int i = 0; i < _bulletFirePositions.Count; i++)
+				{
+					ShootBulletFrom(_bulletFirePositions[i], soundType);
+				}
+				break;
+		}
+	}
+
+	/// <summary>
+	/// 지정 위치에서 총알 1발 발사.
+	/// </summary>
+	private void ShootBulletFrom(Transform firePos, SOUND_TYPE soundType)
+	{
+		if (_launcherAnims.TryGetValue(firePos, out LauncherAnim bulletAnim))
 		{
 			bulletAnim.PlayFire();
 		}
 		if (useBulletMuzzle)
 		{
-			_vfx.PlayEffectAtUnit(EFFECT_TYPE.VFX_BULLET_MUZZLE, _unit.transform, curFirePos.position, curFirePos.rotation, bulletMuzzleFlashVFXPlayTime);
+			_vfx.PlayEffectAtUnit(EFFECT_TYPE.VFX_BULLET_MUZZLE, _unit.transform, firePos.position, firePos.rotation, bulletMuzzleFlashVFXPlayTime);
 		}
 		if (useBulletSound)
 		{
-			_sound.PlaySFX3DAtUnit(soundType, _unit.transform, curFirePos);
+			_sound.PlaySFX3DAtUnit(soundType, _unit.transform, firePos);
 		}
 		Bullet newBullet = _pool.GetProjectile(GetBulletPoolType()) as Bullet;
-		newBullet.Init(curFirePos.position, curFirePos.forward, _unit);
+		newBullet.Init(firePos.position, firePos.forward, _unit);
 	}
 
 	/// <summary>
@@ -424,7 +400,8 @@ public class WeaponSystem : MonoBehaviour
 	}
 
 	/// <summary>
-	/// 미사일 — 발사 예약 큐에 등록. 딜레이 없으면 즉시 발사(scheduledTime = Time.time).
+	/// 미사일 — missileFireMode에 따라 발사.
+	/// Sequential: 발사구 하나씩 교대. Random: 랜덤 발사구 하나. Simultaneous: 전체 동시.
 	/// </summary>
 	private void ShootAllMissiles(SOUND_TYPE soundType)
 	{
@@ -434,46 +411,42 @@ public class WeaponSystem : MonoBehaviour
 			return;
 		}
 
-		int actualFire = Mathf.Min(_missileFirePositions.Count, curSlot.curAmmo);
-		List<int> order = BuildFireOrder(actualFire);
+		switch (missileFireMode)
+		{
+			case MissileFireMode.Sequential:
+				if (useMissileSound)
+				{
+					_sound.PlaySFX3DAtPosition(soundType, _unit.transform.position);
+				}
+				ShootMissileFrom(_missileFirePositions[_missileFireIndex]);
+				curSlot.curAmmo--;
+				_missileFireIndex = (_missileFireIndex + 1) % _missileFirePositions.Count;
+				break;
 
-		float scheduledTime = Time.time;
-		for (int i = 0; i < order.Count; i++)
-		{
-			int idx = order[i];
-			WeaponFirePos posRef = (idx < _missileFirePosRefs.Count) ? _missileFirePosRefs[idx] : null;
-			float delay = posRef != null ? posRef.GetDelay()
-			            : (idx < _missileFireDelays.Count ? _missileFireDelays[idx] : 0f);
-			scheduledTime += delay;
-			_pendingFires.Add(new PendingMissileFire
-			{
-				scheduledTime = scheduledTime,
-				posIndex = idx,
-				soundType = soundType,
-				slot = curSlot
-			});
-		}
-	}
+			case MissileFireMode.Random:
+				if (useMissileSound)
+				{
+					_sound.PlaySFX3DAtPosition(soundType, _unit.transform.position);
+				}
+				ShootMissileFrom(_missileFirePositions[Random.Range(0, _missileFirePositions.Count)]);
+				curSlot.curAmmo--;
+				break;
 
-	// 발사 순서 인덱스 목록 생성. Random 모드면 Fisher-Yates 셔플.
-	private List<int> BuildFireOrder(int count)
-	{
-		List<int> order = new List<int>(count);
-		for (int i = 0; i < count; i++)
-		{
-			order.Add(i);
-		}
-		if (missileFireMode == MissileFireMode.Random)
-		{
-			for (int i = order.Count - 1; i > 0; i--)
+			case MissileFireMode.Simultaneous:
 			{
-				int j = Random.Range(0, i + 1);
-				int tmp = order[i];
-				order[i] = order[j];
-				order[j] = tmp;
+				int fireCount = Mathf.Min(_missileFirePositions.Count, curSlot.curAmmo);
+				for (int i = 0; i < fireCount; i++)
+				{
+					if (useMissileSound)
+					{
+						_sound.PlaySFX3DAtPosition(soundType, _unit.transform.position);
+					}
+					ShootMissileFrom(_missileFirePositions[i]);
+					curSlot.curAmmo--;
+				}
+				break;
 			}
 		}
-		return order;
 	}
 
 	/// <summary>
@@ -577,8 +550,6 @@ public class WeaponSystem : MonoBehaviour
 				break;
 			case WEAPON_POS_TYPE.MISSILE:
 				_missileFirePositions.Add(pos);
-				_missileFireDelays.Add(0f); // 파츠 등록분은 항상 동시 발사
-				_missileFirePosRefs.Add(null);
 				LauncherAnim missileAnim = pos.GetComponentInParent<LauncherAnim>();
 				if (missileAnim != null)
 				{
@@ -608,17 +579,13 @@ public class WeaponSystem : MonoBehaviour
 				}
 				break;
 			case WEAPON_POS_TYPE.MISSILE:
-			{
-				int idx = _missileFirePositions.IndexOf(pos);
-				if (idx >= 0)
-				{
-					_missileFirePositions.RemoveAt(idx);
-					_missileFireDelays.RemoveAt(idx);
-					_missileFirePosRefs.RemoveAt(idx);
-				}
+				_missileFirePositions.Remove(pos);
 				_launcherAnims.Remove(pos);
+				if (_missileFireIndex >= _missileFirePositions.Count)
+				{
+					_missileFireIndex = 0;
+				}
 				break;
-			}
 			case WEAPON_POS_TYPE.LASER:
 				if (_laserFirePos == pos)
 				{

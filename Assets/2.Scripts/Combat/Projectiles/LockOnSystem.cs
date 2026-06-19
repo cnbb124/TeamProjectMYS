@@ -41,7 +41,7 @@ using UnityEngine;
 public class LockOnSystem : MonoBehaviour
 {
 	[Space(5)]
-	[Header("<size=18>[락온 시스템 설정]</size>")]
+	[Header("<size=22>[락온 시스템 설정]</size>")]
 
 	[Header("현재 락온 모드 (미사일 종류에 따라 변경)")]
 	//플레이어에서 장비되는 미사일따라 스위칭해서 입력할것.

@@ -42,7 +42,8 @@ public enum AI_STATE
 	ATTACK_PASS,
 	REPOSITION,
 	EVADE,
-	DODGE
+	DODGE,
+	RELOAD,
 }
 public enum GAME_STATE
 {

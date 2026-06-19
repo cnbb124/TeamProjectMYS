@@ -20,6 +20,7 @@ using UnityEngine;
 //               ATTACK_CHASE : minAttackDistance 이상일 때만 전진
 //               ATTACK_PASS  : passOffsetStartDist 이내 진입 시 측면 오프셋 조향, 통과 후 REPOSITION
 //               EVADE        : 반대 방향으로 회전 + 이동
+//               RELOAD       : CHASE 이동과 동일 (타겟 추적, 발사 없음)
 //
 // TakeDamage() override
 //   ├── DODGE: CanDodge + 확률 → 데미지 무효화
@@ -32,6 +33,7 @@ using UnityEngine;
 // EnterAttackPass()        ATTACK_PASS 진입 (좌우 방향 결정 포함)
 // EnterReposition()        REPOSITION 진입 + _repositionTarget 선정
 // EnterEvade()             EVADE 진입 + 쿨타임 세팅
+// EnterReload(float)       RELOAD 진입 + 타이머 세팅
 // PickNewPatrolPoint()     spawnPosition 기준 랜덤 순찰 지점 선정
 // ================================================================
 
@@ -43,7 +45,7 @@ public enum PassOffsetDir { Random, Right, Left }
 [RequireComponent(typeof(Rigidbody))]
 public class EnemyShip : Enemy
 {
-    [Header("순찰 설정")]
+    [Header("<size=18>순찰 설정</size>")]
     [Tooltip("스폰 위치 기준 수평 순찰 반경")]
     public float patrolRadius = 500f;
     [Tooltip("순찰 지점 도착 판정 거리")]
@@ -51,7 +53,8 @@ public class EnemyShip : Enemy
     [Tooltip("스폰 위치 기준 수직 순찰 범위 (±). 0이면 수평면 고정.")]
     public float patrolHeightRange = 100f;
 
-    [Header("기동 패턴 가중치 (합계 기반 확률 / 모두 0이면 기본 ATTACK_CHASE)")]
+    [Header("<size=18>기동 패턴</size>")]
+    [Header("<size=14>가중치  (합계 기반 확률 / 모두 0이면 기본 ATTACK_CHASE)</size>")]
     [Tooltip("돌진 후 타겟을 지나쳐 재배치하는 패턴")]
     [Range(0f, 1f)]
     public float attackPassWeight = 1f;
@@ -62,7 +65,7 @@ public class EnemyShip : Enemy
     [Range(0f, 1f)]
     public float attackHoldWeight = 1f;
 
-    [Header("기동 패턴 지속 시간 (초)")]
+    [Header("<size=14>지속 시간 (초)</size>")]
     [Tooltip("ATTACK_CHASE 지속 시간. 0이면 범위 이탈 전까지 유지.")]
     public float attackChaseDuration = 2f;
     [Tooltip("ATTACK_HOLD 지속 시간. 0이면 범위 이탈 전까지 유지.")]
@@ -75,12 +78,15 @@ public class EnemyShip : Enemy
     public float evadeDuration = 1.5f;
     [Tooltip("재배치 목표 거리 (플레이어 기준)")]
     public float repositionDistance = 200f;
+    [Tooltip("발사 후 재장전 대기 시간 (초). 0이면 비활성화.")]
+    public float reloadDuration = 0f;
 
-    [Header("ATTACK_CHASE 최소 접근 거리")]
+    [Header("<size=18>전투 설정</size>")]
+    [Header("<size=14>ATTACK_CHASE 최소 접근 거리</size>")]
     [Tooltip("타겟과 이 거리 이하로 좁혀지면 전진 멈춤. 0이면 비활성화.")]
     public float minAttackDistance = 200f;
 
-    [Header("ATTACK_PASS 궤도 오프셋")]
+    [Header("<size=14>ATTACK_PASS 궤도 오프셋</size>")]
     [Tooltip("ATTACK_PASS 진입 시 타겟 기준 어느 쪽으로 비껴갈지 결정.\n" +
              "· Random : 진입마다 좌/우 랜덤 선택\n" +
              "· Right  : 항상 Enemy 기준 오른쪽으로 통과\n" +
@@ -105,14 +111,15 @@ public class EnemyShip : Enemy
              "0이면 상하 변화 없이 수평으로만 비껴감.")]
     public float passVerticalRange = 40f;
 
-    [Header("EVADE 설정")]
+    [Header("<size=18>특수 기동</size>")]
+    [Header("<size=14>EVADE 설정</size>")]
     [Tooltip("피격 시 EVADE 진입 확률 (0~1)")]
     [Range(0f, 1f)]
     public float evadeChance = 0.4f;
     [Tooltip("EVADE 쿨타임 (초).")]
     public float evadeCoolTime = 5f;
 
-    [Header("DODGE 설정 (피격 시 순간 무적 / 쿨타임·무적시간은 Unit.dodgeCoolTime 공용)")]
+    [Header("<size=14>DODGE 설정 (피격 시 순간 무적 / 쿨타임·무적시간은 Unit.dodgeCoolTime 공용)</size>")]
     [Tooltip("피격 시 DODGE 발동 확률 (0~1)")]
     [Range(0f, 1f)]
     public float dodgeProbability = 0.1f;
@@ -279,6 +286,11 @@ public class EnemyShip : Enemy
             case AI_STATE.DODGE:
                 // 진입 시 Impulse 이미 적용됨. 별도 이동 없음.
                 break;
+
+            case AI_STATE.RELOAD:
+                RotateTowardTarget();
+                MoveTowardPosition(transform.position + transform.forward);
+                break;
         }
     }
 
@@ -331,6 +343,9 @@ public class EnemyShip : Enemy
             case AI_STATE.DODGE:
                 OnAIDodge();
                 break;
+            case AI_STATE.RELOAD:
+                OnAIReload();
+                break;
         }
     }
 
@@ -363,8 +378,13 @@ public class EnemyShip : Enemy
 
     //=============== OnAI* 메서드 ===============
 
-    // 진짜 정지 상태. 현재 미사용 (자식에서 필요 시 진입/탈출 조건 구현).
-    protected virtual void OnAIStandby() { }
+    protected virtual void OnAIStandby()
+    {
+        if (IsTargetInRange(detectRange))
+            aiState = AI_STATE.CHASE;
+        else
+            aiState = AI_STATE.PATROL;
+    }
 
     protected virtual void OnAIPatrol()
     {
@@ -411,6 +431,8 @@ public class EnemyShip : Enemy
             return;
         }
         ShootWeapons();
+        if (reloadDuration > 0f && HasTargetInAttackRange())
+            EnterReload(reloadDuration);
     }
 
     // ATTACK_HOLD 처리. 제자리 정지 + 발사. attackHoldDuration 만료 시 PickCombatPattern 재호출.
@@ -432,6 +454,8 @@ public class EnemyShip : Enemy
             return;
         }
         ShootWeapons();
+        if (reloadDuration > 0f && HasTargetInAttackRange())
+            EnterReload(reloadDuration);
     }
 
     // 플레이어를 향해 돌진. dot < 0 = 뒤로 지나침 → EnterReposition.
@@ -451,6 +475,23 @@ public class EnemyShip : Enemy
         }
         ShootWeaponsOnPass();
     }
+
+	/// <summary>
+	/// 체이스와 동일, 공격만X
+	/// </summary>
+	protected virtual void OnAIReload()
+    {
+        
+		if (!IsTargetInRange(detectRange))
+		{
+			aiState = AI_STATE.PATROL;
+			return;
+		}
+		if (_stateTimer <= 0f)
+		{
+			PickCombatPattern();
+		}
+	}
 
     // ATTACK_PASS 전용 발사. 기본값 empty = 총알 미사용.
     // 미사일을 유지하려는 서브클래스는 override해서 Shoot(MISSILE)만 호출.
@@ -567,6 +608,11 @@ public class EnemyShip : Enemy
         _evadeCoolTimer = evadeCoolTime;
     }
 
+    protected void EnterReload(float duration)
+    {
+        aiState = AI_STATE.RELOAD;
+        _stateTimer = duration;
+    }
     // spawnPosition 기준 patrolRadius(수평), patrolHeightRange(수직) 안의 랜덤 지점을 새 순찰 목표로 선정.
     protected void PickNewPatrolPoint()
     {

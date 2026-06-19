@@ -41,7 +41,7 @@ using UnityEngine;
 public abstract class Projectile : MonoBehaviour
 {
 
-    [Header("<size=18>[투사체 공통 스탯 기본 설정]</size>")]
+    [Header("<size=22>[투사체 공통 스탯 기본 설정]</size>")]
 
 
 	//============자식 클래스 Data(SO)에서 자동입력==========

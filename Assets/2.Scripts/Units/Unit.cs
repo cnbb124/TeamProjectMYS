@@ -69,13 +69,13 @@ public abstract class Unit : MonoBehaviour, IDamageable
 
 	//==================유닛데이터==================//
 
-	[Header("<size=18>유닛 공통 기본 스탯 설정창</size>")]
+	[Header("<size=22>유닛 공통 기본 스탯 설정창</size>")]
 
-	[Header("HP")]
+	[Header("<size=18>HP</size>")]
 	public int maxHpRemaining = 150; //최대,현재HP수치
 
 
-	[Header("Shield - 피격후 일정딜레이 후 자동회복")]
+	[Header("<size=18>Shield - 피격 후 일정 딜레이 후 자동회복</size>")]
 	public int maxShieldCapacity;//최대,현재실드수치
 
 	public float shieldRegainDelay;//피격후 회복까지딜레이시간
@@ -99,7 +99,7 @@ public abstract class Unit : MonoBehaviour, IDamageable
 	private Collider[] _shieldColliders;
 
 
-	[Header("Armor - 자동회복x")]
+	[Header("<size=18>Armor - 자동회복 X</size>")]
 	public int maxArmor;//최대,현재아머수치
 
 
@@ -108,7 +108,7 @@ public abstract class Unit : MonoBehaviour, IDamageable
 
 
 
-	[Header("Critical")]
+	[Header("<size=18>Critical</size>")]
 	public float criChance;
 	public float criDamageMultiplier;
 
@@ -125,7 +125,7 @@ public abstract class Unit : MonoBehaviour, IDamageable
 	//(실드x,아머x)Damageinfo.damage) * (크리시)criDamageMultiplier;
 	//curHp-=damageAmount;
 
-	[Header("이동 관련")]
+	[Header("<size=18>이동 관련</size>")]
 	[Tooltip("기본 이동속도")]
 	public float baseMoveSpeed;//기본이동속ㄷ
 	[Tooltip("부스트 사용시 이동속도")]
@@ -150,7 +150,7 @@ public abstract class Unit : MonoBehaviour, IDamageable
 
 
 
-	[Header("회피 & 무적")]
+	[Header("<size=18>회피 & 무적</size>")]
 	[Tooltip("회피 지속시간")]
 	public float dodgeDuration = 0.5f;
 	[Tooltip("무적 지속시간")]

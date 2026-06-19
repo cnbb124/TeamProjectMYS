@@ -9,6 +9,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1009696163447187148}
+  - component: {fileID: 8487920842518733197}
   m_Layer: 7
   m_Name: TestBulletPos
   m_TagString: Untagged
@@ -31,6 +32,19 @@ Transform:
   m_Children: []
   m_Father: {fileID: 673522139347252847}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &8487920842518733197
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 958756249314482461}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9442a80cf77e72c49b2fa4022e443d90, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  posType: 0
 --- !u!1 &2253267072905822167
 GameObject:
   m_ObjectHideFlags: 0
@@ -249,6 +263,7 @@ MonoBehaviour:
   _playSoundType: 0
   detectRange: 750
   rotateSpeed: 240
+  rotateDeadZone: 0
   aiState: 0
   patrolRadius: 1000
   patrolArriveDist: 25
@@ -259,9 +274,10 @@ MonoBehaviour:
   attackChaseDuration: 4
   attackHoldDuration: 1
   attackPassDuration: 4
-  repositionDuration: 3
+  repositionDuration: 4
   evadeDuration: 1.5
   repositionDistance: 150
+  reloadDuration: 0
   minAttackDistance: 175
   passOffsetDir: 0
   passOffsetStartDist: 125
@@ -283,7 +299,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   lockOnSystem: {fileID: 3033844199734762928}
-  fireBulletDelay: 0.05
+  bulletFireCooldown: 0.1
   curBulletData: {fileID: 0}
   useBulletMuzzle: 1
   useBulletSound: 1
@@ -291,13 +307,12 @@ MonoBehaviour:
   useMissileSound: 1
   bulletMuzzleFlashVFXPlayTime: 0.03
   missileMuzzleFlashVFXPlayTime: 0.2
-  fireMissileDelay: 2
-  fixedBulletFirePositions:
-  - {fileID: 1009696163447187148}
-  - {fileID: 6182860956872268411}
-  fixedMissileFireEntries: []
+  bulletFireMode: 0
   missileFireMode: 0
-  autoDetectFirePositions: 0
+  autoDetectFirePositions: 1
+  fixedBulletFirePositions: []
+  fixedMissileFirePositions: []
+  missileFireCooldown: 2
   missileSlots:
   - type: 0
     curAmmo: 9999
@@ -608,6 +623,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 6182860956872268411}
+  - component: {fileID: 8269560822721679581}
   m_Layer: 7
   m_Name: TestBulletPos (1)
   m_TagString: Untagged
@@ -630,6 +646,19 @@ Transform:
   m_Children: []
   m_Father: {fileID: 673522139347252847}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &8269560822721679581
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8195507717261121455}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9442a80cf77e72c49b2fa4022e443d90, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  posType: 0
 --- !u!1 &8743053886999795635
 GameObject:
   m_ObjectHideFlags: 0

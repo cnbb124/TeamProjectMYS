@@ -99,7 +99,7 @@ public class Player : Unit
 	// ==================회전 감도==================
 	[Header("")]
 	[Space(10)]
-	[Header("<size=18>플레이어 설정<size>")]
+	[Header("<size=22>플레이어 설정<size>")]
 	[Header("마우스 감도")]
 	[Tooltip("마우스 좌우 회전(Yaw) 감도")]
 	public float xSensitivity = 120f;

@@ -44,7 +44,7 @@ public class Missile : Projectile, IExplodable
 	//[SerializeField]
 	//private int hitsArraySize = 30;
 	[Space(5)]
-	[Header("<size=18>[미사일 설정]</size>")]
+	[Header("<size=22>[미사일 설정]</size>")]
 	[Header("투사체 데이터(SO)")]
 	public MissileData missileData;
 	//[Header("폭발 범위 세팅")]

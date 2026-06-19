@@ -1242,7 +1242,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   weaponSystem: {fileID: 0}
   maxHpRemaining: 999
-  maxShieldCapacity: 9999
+  maxShieldCapacity: 9999999
   shieldRegainDelay: 2
   shieldRegainRate: 50
   isShieldRegaining: 0
@@ -1296,17 +1296,20 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   lockOnSystem: {fileID: 1161755328960943635}
-  fireBulletDelay: 0.25
+  bulletFireCooldown: 0.15
   curBulletData: {fileID: 0}
   useBulletMuzzle: 1
   useBulletSound: 1
   useMissileMuzzle: 0
   useMissileSound: 0
-  bulletMuzzleFlashVFXPlayTime: 0.05
+  bulletMuzzleFlashVFXPlayTime: 0.07
   missileMuzzleFlashVFXPlayTime: 0.2
-  fireMissileDelay: 1
+  bulletFireMode: 0
+  missileFireMode: 2
+  autoDetectFirePositions: 0
   fixedBulletFirePositions: []
   fixedMissileFirePositions: []
+  missileFireCooldown: 2
   missileSlots:
   - type: 0
     curAmmo: 999

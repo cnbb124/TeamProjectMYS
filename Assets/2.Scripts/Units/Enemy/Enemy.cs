@@ -24,13 +24,16 @@ using UnityEngine;
 
 public class Enemy : Unit
 {
-    [Header("<size=18>Enemy AI 설정</size>")]
+    [Header("<size=22>Enemy AI 설정</size>")]
     [Tooltip("이 범위 안에 타겟이 들어오면 추격 시작. 공격 진입은 LockOnSystem의 lockOnRange 기준.")]
     public float detectRange = 500f;
     [Tooltip("선회 속도 (도/초). 90 = 2초에 180도 회전.")]
     public float rotateSpeed = 180f;
+    [Tooltip("이 각도(도) 이내에 타겟이 있으면 회전하지 않음. 0이면 비활성화.\n" +
+             "전함/대형 유닛처럼 세밀한 조준을 안 하는 느낌에 적합.")]
+    public float rotateDeadZone = 0f;
 
-    [Header("AI 상태 (참고용, 입력X)")]
+    [Header("<size=14>AI 상태 (참고용, 입력X)</size>")]
     public AI_STATE aiState = AI_STATE.STANDBY;
 
     protected Transform target;
@@ -133,12 +136,17 @@ public class Enemy : Unit
     protected void RotateTowardPosition(Vector3 worldPos)
     {
         Vector3 dir = (worldPos - transform.position).normalized;
-        if (dir != Vector3.zero)
+        if (dir == Vector3.zero)
         {
-            Quaternion targetRot = Quaternion.LookRotation(dir);
-            transform.rotation = Quaternion.RotateTowards(
-                transform.rotation, targetRot, rotateSpeed * Time.fixedDeltaTime);
+            return;
         }
+        if (rotateDeadZone > 0f && Vector3.Angle(transform.forward, dir) <= rotateDeadZone)
+        {
+            return;
+        }
+        Quaternion targetRot = Quaternion.LookRotation(dir);
+        transform.rotation = Quaternion.RotateTowards(
+            transform.rotation, targetRot, rotateSpeed * Time.fixedDeltaTime);
     }
 
     protected void MoveTowardTarget()
