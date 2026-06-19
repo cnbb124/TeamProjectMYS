@@ -167,7 +167,8 @@ public class EnemyShip : Enemy
 
             case AI_STATE.CHASE:
                 RotateTowardTarget();
-                MoveTowardPosition(transform.position + transform.forward * 500f);
+                //선회용값 
+                MoveTowardPosition(transform.position + transform.forward);
                 break;
 
             case AI_STATE.ATTACK_CHASE:
@@ -198,7 +199,7 @@ public class EnemyShip : Enemy
                 }
                 else
                 {
-                    MoveTowardPosition(transform.position + transform.forward * 500f);
+                    MoveTowardPosition(transform.position + transform.forward);
                 }
                 break;
             }
@@ -255,7 +256,7 @@ public class EnemyShip : Enemy
                 }
 
                 RotateTowardPosition(aimPoint);
-                MoveTowardPosition(transform.position + transform.forward * 500f);
+                MoveTowardPosition(transform.position + transform.forward);
                 break;
             }
 
@@ -271,7 +272,7 @@ public class EnemyShip : Enemy
                     Vector3 awayTarget = transform.position + awayDir * 500f;
                     RotateTowardPosition(awayTarget);
                     // 이동은 현재 기수 방향(transform.forward) 기준 — 선회하면서 그 방향으로 가속
-                    MoveTowardPosition(transform.position + transform.forward * 500f);
+                    MoveTowardPosition(transform.position + transform.forward);
                 }
                 break;
 
