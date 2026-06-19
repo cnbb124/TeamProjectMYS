@@ -7706,7 +7706,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   category: 1
-  iconImage: {fileID: 1642621523927502768}
+  iconImage: {fileID: 0}
   nameText: {fileID: 6175006730613889029}
   countText: {fileID: 0}
   emptySprite: {fileID: 0}
@@ -9827,6 +9827,7 @@ MonoBehaviour:
   player: {fileID: 0}
   playerRb: {fileID: 0}
   indicatorRect: {fileID: 1390846155785286250}
+  crosshairRect: {fileID: 3530252078762818328}
   indicatorImage: {fileID: 8513804551842803565}
   minSpeed: 1
   maxSpeed: 1000
@@ -14084,12 +14085,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   crosshairRect: {fileID: 3530252078762818328}
+  player: {fileID: 0}
+  mainCam: {fileID: 0}
   normalScale: 1
   firingScale: 1.4
   scaleSpeed: 10
   canvasGroup: {fileID: 0}
   normalOpacity: 0.8
   aimOpacity: 1
+  aimDistance: 500
 --- !u!1 &3783729993564025501
 GameObject:
   m_ObjectHideFlags: 0

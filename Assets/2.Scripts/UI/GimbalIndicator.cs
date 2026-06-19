@@ -1,12 +1,25 @@
 using UnityEngine;
 using UnityEngine.UI;
 
+/// <summary>
+/// 짐벌 인디케이터 UI.
+/// 플레이어 속도 방향을 기준으로 크로스헤어 위치에서 오프셋으로 표시.
+/// 속도가 minSpeed 이하면 크로스헤어 위치에 고정.
+///
+/// [인스펙터 연결]
+/// - player        : 플레이어 기체 Transform
+/// - playerRb      : 플레이어 Rigidbody
+/// - indicatorRect : 짐벌 인디케이터 RectTransform
+/// - crosshairRect : CrosshairUI의 RectTransform (기준점)
+/// - indicatorImage: 색상 제어용 Image
+/// </summary>
 public class GimbalIndicatorUI : MonoBehaviour
 {
     [Header("References")]
     [SerializeField] private Transform     player;
     [SerializeField] private Rigidbody     playerRb;
     [SerializeField] private RectTransform indicatorRect;
+    [SerializeField] private RectTransform crosshairRect; // 크로스헤어 위치 기준
     [SerializeField] private Image         indicatorImage;
 
     [Header("Settings")]
@@ -61,10 +74,14 @@ public class GimbalIndicatorUI : MonoBehaviour
                 targetOffset = targetOffset.normalized * screenRange;
         }
 
-        // 부드럽게 중앙 기준 이동
+        // 크로스헤어 위치 기준으로 오프셋 적용
+        Vector2 basePos = crosshairRect != null
+            ? crosshairRect.anchoredPosition
+            : Vector2.zero;
+
         indicatorRect.anchoredPosition = Vector2.Lerp(
             indicatorRect.anchoredPosition,
-            targetOffset,
+            basePos + targetOffset,
             trackSpeed * Time.deltaTime
         );
     }

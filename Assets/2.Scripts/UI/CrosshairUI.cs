@@ -1,20 +1,38 @@
 using UnityEngine;
 
+/// <summary>
+/// 크로스헤어 UI.
+/// 플레이어 기체의 forward 방향을 화면 좌표로 변환해 크로스헤어를 실제 조준점에 표시.
+/// 기관총 발사 시 크로스헤어 확대, 투명도 변경.
+///
+/// [인스펙터 연결]
+/// - crosshairRect : 크로스헤어 RectTransform
+/// - player        : 플레이어 기체 Transform
+/// - mainCam       : Main Camera
+/// - canvasGroup   : 투명도 제어용 CanvasGroup
+/// - aimDistance   : 조준점까지의 거리 (기본 500)
+/// </summary>
 public class CrosshairUI : MonoBehaviour
 {
     [Header("References")]
     [SerializeField] private RectTransform crosshairRect;
+    [SerializeField] private Transform     player;
+    [SerializeField] private Camera        mainCam;
 
     [Header("Scale")]
     [SerializeField] private float normalScale  = 1f;
-    [SerializeField] private float firingScale  = 1.4f; // 기관총 발사 시 커지는 배율
-    [SerializeField] private float scaleSpeed   = 10f;  // 전환 속도
+    [SerializeField] private float firingScale  = 1.4f;
+    [SerializeField] private float scaleSpeed   = 10f;
 
     [Header("Opacity")]
     [SerializeField] private CanvasGroup canvasGroup;
     [SerializeField] private float normalOpacity = 0.8f;
     [SerializeField] private float aimOpacity    = 1f;
 
+    [Header("Aim")]
+    [SerializeField] private float aimDistance  = 500f; // 조준점까지 거리
+
+    private Canvas _canvas;
     private float _targetScale;
     private float _targetOpacity;
 
@@ -23,24 +41,51 @@ public class CrosshairUI : MonoBehaviour
         if (crosshairRect == null)
             crosshairRect = GetComponent<RectTransform>();
 
+        _canvas        = GetComponentInParent<Canvas>();
         _targetScale   = normalScale;
         _targetOpacity = normalOpacity;
     }
 
     private void Update()
     {
-        bool isFiring = Input.GetMouseButton(0); // 좌클릭 = 기관총 발사
+        UpdatePosition();
 
+        bool isFiring  = Input.GetMouseButton(0);
         _targetScale   = isFiring ? firingScale  : normalScale;
         _targetOpacity = isFiring ? aimOpacity   : normalOpacity;
 
-        // 스케일 부드럽게 전환
         float currentScale = crosshairRect.localScale.x;
         float nextScale    = Mathf.Lerp(currentScale, _targetScale, scaleSpeed * Time.deltaTime);
         crosshairRect.localScale = Vector3.one * nextScale;
 
-        // 투명도 부드럽게 전환
         if (canvasGroup != null)
             canvasGroup.alpha = Mathf.Lerp(canvasGroup.alpha, _targetOpacity, scaleSpeed * Time.deltaTime);
+    }
+
+    private void UpdatePosition()
+    {
+        if (player == null || mainCam == null || _canvas == null) return;
+
+        // 플레이어 forward 방향으로 aimDistance 만큼 앞의 월드 좌표
+        Vector3 aimWorldPos = player.position + player.forward * aimDistance;
+
+        // 월드 좌표 → 스크린 좌표
+        Vector3 screenPos = mainCam.WorldToScreenPoint(aimWorldPos);
+
+        // 기체가 카메라 뒤에 있으면 화면 중앙 유지
+        if (screenPos.z < 0f)
+        {
+            crosshairRect.anchoredPosition = Vector2.zero;
+            return;
+        }
+
+        // 스크린 좌표 → Canvas 로컬 좌표
+        RectTransformUtility.ScreenPointToLocalPointInRectangle(
+            _canvas.GetComponent<RectTransform>(),
+            screenPos,
+            _canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : mainCam,
+            out Vector2 localPos);
+
+        crosshairRect.localPosition = localPos;
     }
 }
