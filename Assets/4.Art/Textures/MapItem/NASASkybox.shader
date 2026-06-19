@@ -12,6 +12,9 @@ Shader "Custom/NASASkybox"
         [Header(Color Settings)]
         _Exposure ("Exposure", Range(0.0, 8.0)) = 1.0
         _Tint ("Tint Color", Color) = (1, 1, 1, 1)
+
+        [Header(Parallax Settings)]
+        _ParallaxOffset ("Parallax Offset", Vector) = (0, 0, 0, 0)
     }
 
     SubShader
@@ -34,6 +37,7 @@ Shader "Custom/NASASkybox"
             float _TwinkleScale;
             float _Exposure;
             float4 _Tint;
+            float4 _ParallaxOffset;
 
             struct appdata
             {
@@ -77,7 +81,7 @@ Shader "Custom/NASASkybox"
 
             fixed4 frag(v2f i) : SV_Target
             {
-                float3 dir = normalize(i.worldDir);
+                float3 dir = normalize(i.worldDir + _ParallaxOffset.xyz);
                 float2 uv = dirToEquirect(dir);
     
                 float4 col = tex2D(_MainTex, uv);
