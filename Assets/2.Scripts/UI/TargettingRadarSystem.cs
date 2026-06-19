@@ -15,6 +15,9 @@ public class TargettingRadarSystem : MonoBehaviour
     [Header("Player Arrow")]
     [SerializeField] private RectTransform playerArrow;
 
+    [Header("Cardinal Direction")]
+    [SerializeField] private RectTransform cardinalRoot; // East/West/South/North 묶음
+
     [Header("Settings")]
     [SerializeField] private float radarDisplayRadius = 75f;
 
@@ -45,6 +48,9 @@ public class TargettingRadarSystem : MonoBehaviour
         playerArrow.anchoredPosition = Vector2.zero;
         playerArrow.localRotation = Quaternion.Euler(0f, 0f, -player.eulerAngles.y);
     }
+
+    if (cardinalRoot != null)
+        cardinalRoot.localRotation = Quaternion.Euler(0f, 0f, -player.eulerAngles.y);
 
     _activeDotCount = 0;
 
