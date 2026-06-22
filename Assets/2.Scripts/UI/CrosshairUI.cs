@@ -30,7 +30,9 @@ public class CrosshairUI : MonoBehaviour
     [SerializeField] private float aimOpacity    = 1f;
 
     [Header("Aim")]
-    [SerializeField] private float aimDistance  = 500f; // 조준점까지 거리
+    [SerializeField] private float aimDistance    = 500f; // 조준점까지 거리
+    [SerializeField] private float aimPitchOffset = 0f;   // 조준 피치 보정(도). +면 조준점이 위로,
+                                                          // 카메라/총구 오프셋 때문에 탄착이 안 맞을 때 미세 조정
 
     private Canvas _canvas;
     private float _targetScale;
@@ -66,8 +68,12 @@ public class CrosshairUI : MonoBehaviour
     {
         if (player == null || mainCam == null || _canvas == null) return;
 
-        // 플레이어 forward 방향으로 aimDistance 만큼 앞의 월드 좌표
-        Vector3 aimWorldPos = player.position + player.forward * aimDistance;
+        // 기수(forward)에 피치 보정을 적용한 조준 방향
+        // player.right 축으로 회전 → 위/아래로 살짝 기울여 탄착점에 맞춤
+        Vector3 aimDir = Quaternion.AngleAxis(-aimPitchOffset, player.right) * player.forward;
+
+        // 보정된 방향으로 aimDistance 만큼 앞의 월드 좌표
+        Vector3 aimWorldPos = player.position + aimDir * aimDistance;
 
         // 월드 좌표 → 스크린 좌표
         Vector3 screenPos = mainCam.WorldToScreenPoint(aimWorldPos);
