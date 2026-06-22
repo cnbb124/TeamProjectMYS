@@ -27,7 +27,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 31351130847174131}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: 0.000000059604638, y: 0.007695033, z: -0.00000001117587, w: 0.9999704}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 850, y: 850, z: 850}
   m_ConstrainProportionsScale: 0
@@ -99,7 +99,7 @@ SphereCollider:
     serializedVersion: 2
     m_Bits: 0
   m_LayerOverridePriority: 0
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
@@ -132,9 +132,9 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1021998329237295013}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 830, y: 830, z: 830}
+  m_LocalRotation: {x: -0.21911912, y: 0.14160717, z: 0.03215985, w: 0.9648316}
+  m_LocalPosition: {x: 1.5244735, y: 2.541966, z: 5.069814}
+  m_LocalScale: {x: 815.8422, y: 815.8422, z: 815.8422}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1368351399937116568}
@@ -204,7 +204,7 @@ SphereCollider:
     serializedVersion: 2
     m_Bits: 0
   m_LayerOverridePriority: 0
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
@@ -309,7 +309,7 @@ SphereCollider:
     serializedVersion: 2
     m_Bits: 0
   m_LayerOverridePriority: 0
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
@@ -418,7 +418,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1368351399937116568}
-  - component: {fileID: 4057232841623795043}
+  - component: {fileID: 596090458565124920}
   m_Layer: 0
   m_Name: SunObjet
   m_TagString: Untagged
@@ -436,7 +436,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 1000}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 804.7531, y: 804.7531, z: 804.7531}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 3461848777333583248}
@@ -445,7 +445,7 @@ Transform:
   - {fileID: 8815355649164017660}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &4057232841623795043
+--- !u!114 &596090458565124920
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -457,3 +457,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f579d0feba239dc40b847e2e872585d5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  targetCamera: {fileID: 0}
+  sunDirection: {x: 0.3, y: 0.5, z: 1}
+  distance: 5000
+  baseScale: 800
+  pulseAmount: 3
+  pulseSpeed: 0.5
+  spinTarget: {fileID: 3461848777333583248}
+  spinAxis: {x: 0, y: 1, z: 0}
+  spinSpeed: 0.2

@@ -9,11 +9,13 @@
 // 4. ★ Post Processing의 Bloom을 반드시 켜야 이글거림이 살아남 (Emission 강도 + Bloom)
 //
 // [주요 파라미터]
-// _CoreColor   : 태양 중심 색 (HDR, 강도 높게)
-// _EdgeColor   : 가장자리 코로나 색 (HDR)
-// _NoiseScale  : 표면 노이즈 촘촘함
-// _FlowSpeed   : 일렁임 속도
-// _FresnelPow  : 가장자리 발광 두께
+// _CoreColor    : 태양 중심 색 (HDR, 강도 높게)
+// _EdgeColor    : 가장자리 코로나 색 (HDR)
+// _NoiseScale   : 표면 노이즈 촘촘함
+// _FlowSpeed    : 일렁임 속도
+// _FresnelPow   : 가장자리 발광 두께
+// _SpinSpeed    : 자전 속도 (표면이 U방향으로 흐름. 0이면 자전 없음)
+// _Differential : 차등 자전 강도 (실제 태양처럼 적도는 빠르고 극지방은 느리게. 0이면 균일 자전)
 
 Shader "Custom/SunSurface"
 {
@@ -26,6 +28,8 @@ Shader "Custom/SunSurface"
         _Distort    ("Surface Distort", Float)= 0.15
         _FresnelPow ("Fresnel Power", Float)  = 2.0
         _Intensity  ("Emission Intensity", Float) = 3.0
+        _SpinSpeed    ("Spin Speed", Float)        = 0.05
+        _Differential ("Differential Rotation", Float) = 0.4
     }
 
     SubShader
@@ -62,6 +66,8 @@ Shader "Custom/SunSurface"
             float  _Distort;
             float  _FresnelPow;
             float  _Intensity;
+            float  _SpinSpeed;
+            float  _Differential;
 
             // ── 해시 기반 그래디언트 노이즈 (텍스처 불필요) ──
             float2 hash22(float2 p)
@@ -113,8 +119,15 @@ Shader "Custom/SunSurface"
             {
                 float t = _Time.y * _FlowSpeed;
 
-                // 서로 다른 속도의 노이즈 2겹으로 일렁임
+                // ── 자전 (U방향 UV 스크롤) ──
+                // 차등 자전: 적도(v=0.5)에서 가장 빠르고 극지방(v=0,1)에서 느림.
+                // sin(v*PI) = 적도 1.0 → 극지방 0.0 곡선.
+                float latitudeFactor = lerp(1.0, sin(i.uv.y * UNITY_PI), _Differential);
+                float spinOffset = _Time.y * _SpinSpeed * latitudeFactor;
+
+                // 서로 다른 속도의 노이즈 2겹으로 일렁임 (+ 자전 오프셋)
                 float2 uv = i.uv * _NoiseScale;
+                uv.x += spinOffset * _NoiseScale;
                 float n1 = fbm(uv + float2(t, t * 0.7));
                 float n2 = fbm(uv * 1.8 - float2(t * 0.5, t));
 

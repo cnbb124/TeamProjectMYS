@@ -7,6 +7,9 @@
  * 2. sunDirection : 태양이 위치할 월드 방향 (예: 비스듬한 위쪽)
  * 3. distance     : 카메라로부터 떨어뜨릴 거리 (far clip보다 약간 안쪽)
  * 4. 태양 메시는 Billboard로 항상 카메라를 향하게 처리
+ * 5. 자전 : spinTarget(실제 태양 메시 자식)을 지정하면 아주 천천히 회전.
+ *          빌보드가 부모 회전을 덮어쓰므로 자전은 반드시 "자식 메시"에 적용함.
+ *          (Sphere 메시면 빌보드 없이 spinTarget만 돌려도 됨)
  */
 
 using UnityEngine;
@@ -26,6 +29,11 @@ public class SunObject : MonoBehaviour
     [SerializeField] private float pulseAmount = 30f;   // 크기 진동 폭
     [SerializeField] private float pulseSpeed  = 2f;    // 진동 속도
 
+    [Header("자전 (실제 태양 메시 자식)")]
+    [SerializeField] private Transform spinTarget;            // 자전시킬 메시 (비우면 자전 안 함)
+    [SerializeField] private Vector3   spinAxis  = Vector3.up; // 자전 축
+    [SerializeField] private float     spinSpeed = 0.2f;       // 자전 속도(도/초) — 정말 느리게
+
     private void LateUpdate()
     {
         if (targetCamera == null) targetCamera = Camera.main;
@@ -44,5 +52,9 @@ public class SunObject : MonoBehaviour
                     + Mathf.PerlinNoise(Time.time * pulseSpeed * 1.7f, 0f) * pulseAmount;
         float s = baseScale + pulse;
         transform.localScale = new Vector3(s, s, s);
+
+        // 자전 — 빌보드에 영향받지 않도록 자식 메시를 로컬 회전
+        if (spinTarget != null)
+            spinTarget.Rotate(spinAxis.normalized, spinSpeed * Time.deltaTime, Space.Self);
     }
 }
