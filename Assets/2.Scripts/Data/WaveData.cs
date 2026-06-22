@@ -7,7 +7,7 @@ public enum SpawnMethod { ScenePlaced, RandomSpawn }
 
 // 한 웨이브의 구성 정의.
 // SpawnManager.waves[]에 순서대로 연결.
-[CreateAssetMenu(menuName = "Data/WaveData", fileName = "WaveData")]
+[CreateAssetMenu(fileName = "New WaveData", menuName = "Create Data/WaveData" )]
 public class WaveData : ScriptableObject
 {
     [System.Serializable]
