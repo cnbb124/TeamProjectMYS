@@ -18,7 +18,6 @@
 
 using UnityEngine;
 
-[ExecuteAlways]
 public class SunObject : MonoBehaviour
 {
     [Header("자전")]
