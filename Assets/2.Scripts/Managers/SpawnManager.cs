@@ -116,6 +116,12 @@ public class SpawnManager : MonoBehaviour
 
     private IEnumerator SpawnWaveRoutine(WaveData wave)
     {
+        if (wave == null || wave.entries == null)
+        {
+            Debug.Log("[SpawnManager] WaveData 또는 entries가 비어있어 스폰을 스킵함");
+            yield break;
+        }
+
         foreach (WaveData.SpawnEntry entry in wave.entries)
         {
             if (entry.delay > 0f)
