@@ -55,6 +55,7 @@ MonoBehaviour:
     volumeMax: 1
     pitchMin: 1
     pitchMax: 1
+    minPlayInterval: 0
     maxConcurrent: 0
     dropOldest: 0
     minDistance: 0
@@ -63,13 +64,14 @@ MonoBehaviour:
     clips:
     - {fileID: 8300000, guid: 14ba2f7d17b7a434f851c648484e0806, type: 3}
     volumeScale: 1
-    volumeMin: 0.8
-    volumeMax: 1
-    pitchMin: 0.8
+    volumeMin: 0.5
+    volumeMax: 0.7
+    pitchMin: 0.85
     pitchMax: 1
+    minPlayInterval: 0.03
     maxConcurrent: 12
     dropOldest: 1
-    minDistance: 5
+    minDistance: 15
     maxDistance: 25
   - type: 15
     clips:
@@ -84,9 +86,10 @@ MonoBehaviour:
     volumeMax: 1
     pitchMin: 0.9
     pitchMax: 1
-    maxConcurrent: 4
+    minPlayInterval: 0.1
+    maxConcurrent: 8
     dropOldest: 1
-    minDistance: 5
+    minDistance: 15
     maxDistance: 25
   - type: 12
     clips:
@@ -96,9 +99,10 @@ MonoBehaviour:
     volumeMax: 1
     pitchMin: 0.9
     pitchMax: 1
+    minPlayInterval: 0.1
     maxConcurrent: 12
     dropOldest: 1
-    minDistance: 5
+    minDistance: 15
     maxDistance: 25
   - type: 16
     clips:
@@ -114,9 +118,10 @@ MonoBehaviour:
     volumeMax: 1
     pitchMin: 0.9
     pitchMax: 1
+    minPlayInterval: 0.1
     maxConcurrent: 4
     dropOldest: 1
-    minDistance: 5
+    minDistance: 15
     maxDistance: 25
   - type: 13
     clips:
@@ -127,9 +132,10 @@ MonoBehaviour:
     volumeMax: 1
     pitchMin: 0.9
     pitchMax: 1
-    maxConcurrent: 4
+    minPlayInterval: 0.1
+    maxConcurrent: 8
     dropOldest: 1
-    minDistance: 5
+    minDistance: 15
     maxDistance: 25
   - type: 17
     clips:
@@ -141,9 +147,10 @@ MonoBehaviour:
     volumeMax: 1
     pitchMin: 0.9
     pitchMax: 1
+    minPlayInterval: 0.1
     maxConcurrent: 4
     dropOldest: 1
-    minDistance: 5
+    minDistance: 30
     maxDistance: 100
   - type: 21
     clips:
@@ -156,9 +163,10 @@ MonoBehaviour:
     volumeMax: 1
     pitchMin: 0.9
     pitchMax: 1
+    minPlayInterval: 0.1
     maxConcurrent: 4
     dropOldest: 1
-    minDistance: 5
+    minDistance: 15
     maxDistance: 25
   - type: 22
     clips:
@@ -168,9 +176,10 @@ MonoBehaviour:
     volumeMax: 1
     pitchMin: 0.88
     pitchMax: 1
+    minPlayInterval: 0.1
     maxConcurrent: 4
     dropOldest: 1
-    minDistance: 5
+    minDistance: 15
     maxDistance: 25
   bgmSource: {fileID: 3570786864977759437}
   sfxUISource: {fileID: 4715387980489473752}
