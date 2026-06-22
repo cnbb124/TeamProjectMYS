@@ -1297,28 +1297,28 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   lockOnSystem: {fileID: 1161755328960943635}
   bulletFireCooldown: 0.15
-  curBulletData: {fileID: 0}
+  curBulletData: {fileID: 11400000, guid: 78ae5846b86eca04eafcb56df9874caa, type: 2}
   useBulletMuzzle: 1
   useBulletSound: 1
-  useMissileMuzzle: 0
-  useMissileSound: 0
-  bulletMuzzleFlashVFXPlayTime: 0.07
+  useMissileMuzzle: 1
+  useMissileSound: 1
+  bulletMuzzleFlashVFXPlayTime: 0.09
   missileMuzzleFlashVFXPlayTime: 0.2
   bulletFireMode: 0
   missileFireMode: 2
   autoDetectFirePositions: 0
   fixedBulletFirePositions: []
   fixedMissileFirePositions: []
-  missileFireCooldown: 2
+  missileFireCooldown: 1.5
   missileSlots:
   - type: 0
     curAmmo: 999
     maxAmmo: 999
-    missileData: {fileID: 0}
+    missileData: {fileID: 11400000, guid: 2652fd978459f5a44aad1cc7fa6033a7, type: 2}
   - type: 2
     curAmmo: 100
     maxAmmo: 100
-    missileData: {fileID: 0}
+    missileData: {fileID: 11400000, guid: 8c191d98c98221143a109045fef3cf95, type: 2}
   - type: 1
     curAmmo: 555
     maxAmmo: 555
@@ -3613,6 +3613,18 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 6433512454957104831}
     m_Modifications:
+    - target: {fileID: 1220959983750552006, guid: 7ae37ae0e309f5544904bfc066e06c4e, type: 3}
+      propertyPath: _allyColor.b
+      value: 0.990566
+      objectReference: {fileID: 0}
+    - target: {fileID: 1220959983750552006, guid: 7ae37ae0e309f5544904bfc066e06c4e, type: 3}
+      propertyPath: _allyColor.g
+      value: 0.6346179
+      objectReference: {fileID: 0}
+    - target: {fileID: 1220959983750552006, guid: 7ae37ae0e309f5544904bfc066e06c4e, type: 3}
+      propertyPath: _allyColor.r
+      value: 0.2663314
+      objectReference: {fileID: 0}
     - target: {fileID: 5776847615673391110, guid: 7ae37ae0e309f5544904bfc066e06c4e, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0

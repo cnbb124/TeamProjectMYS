@@ -96,6 +96,13 @@ public class Enemy : Unit
     // 자식이 override해 발사 종류 지정.
     protected virtual void ShootWeapons() { }
 
+    // 미사일 쏘는 서브클래스(MissileShip/FighterShip/터렛 등)가 발사 전에 호출.
+    // 락온이 필요한 타입인데 락온이 안 되어 있으면 false — Enemy AI만 이 체크를 거침, Player는 자유 발사.
+    protected bool CanFireMissile()
+    {
+        return weaponSystem.lockOnSystem == null || weaponSystem.HasValidLockOn();
+    }
+
     private void UpdateTarget()
     {
         if (UnitManager.Instance == null)

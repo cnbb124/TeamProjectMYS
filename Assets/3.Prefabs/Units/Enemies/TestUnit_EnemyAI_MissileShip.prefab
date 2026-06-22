@@ -1900,8 +1900,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   lockOnSystem: {fileID: 0}
-  bulletFireCooldown: 0.1
-  curBulletData: {fileID: 11400000, guid: 78ae5846b86eca04eafcb56df9874caa, type: 2}
+  bulletFireCooldown: 0.2
+  curBulletData: {fileID: 11400000, guid: f24cca7fba8ef164aa78249e4e93e164, type: 2}
   useBulletMuzzle: 1
   useBulletSound: 1
   useMissileMuzzle: 0
@@ -1918,7 +1918,7 @@ MonoBehaviour:
   - type: 0
     curAmmo: 9999
     maxAmmo: 9999
-    missileData: {fileID: 11400000, guid: 2652fd978459f5a44aad1cc7fa6033a7, type: 2}
+    missileData: {fileID: 11400000, guid: 0244da2786bc0eb459b48ad5684e8e80, type: 2}
   curMissileType: 0
 --- !u!114 &7564222775606011435
 MonoBehaviour:
@@ -4047,7 +4047,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   lockOnSystem: {fileID: 0}
   bulletFireCooldown: 0.1
-  curBulletData: {fileID: 0}
+  curBulletData: {fileID: 11400000, guid: 78ae5846b86eca04eafcb56df9874caa, type: 2}
   useBulletMuzzle: 1
   useBulletSound: 1
   useMissileMuzzle: 0
@@ -4932,15 +4932,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   weaponSystem: {fileID: 0}
-  maxHpRemaining: 500
-  maxShieldCapacity: 150
+  maxHpRemaining: 150
+  maxShieldCapacity: 100
   shieldRegainDelay: 5
-  shieldRegainRate: 25
+  shieldRegainRate: 15
   isShieldRegaining: 0
   shield: {fileID: 7771774742503094527}
   bodyHitboxRoot: {fileID: 7967166862090601426}
-  maxArmor: 0
-  defense: 0
+  maxArmor: 15
+  defense: 3
   criChance: 0
   criDamageMultiplier: 0
   baseMoveSpeed: 175
@@ -5006,7 +5006,7 @@ MonoBehaviour:
   useBulletMuzzle: 1
   useBulletSound: 1
   useMissileMuzzle: 0
-  useMissileSound: 1
+  useMissileSound: 0
   bulletMuzzleFlashVFXPlayTime: 0.1
   missileMuzzleFlashVFXPlayTime: 0.3
   bulletFireMode: 0
@@ -5014,12 +5014,12 @@ MonoBehaviour:
   autoDetectFirePositions: 1
   fixedBulletFirePositions: []
   fixedMissileFirePositions: []
-  missileFireCooldown: 0.2
+  missileFireCooldown: 0.4
   missileSlots:
   - type: 0
     curAmmo: 9999
     maxAmmo: 9999
-    missileData: {fileID: 11400000, guid: 2652fd978459f5a44aad1cc7fa6033a7, type: 2}
+    missileData: {fileID: 11400000, guid: 0244da2786bc0eb459b48ad5684e8e80, type: 2}
   curMissileType: 0
 --- !u!114 &4057434538564405140
 MonoBehaviour:

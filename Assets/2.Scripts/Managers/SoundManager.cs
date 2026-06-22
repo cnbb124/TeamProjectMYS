@@ -41,8 +41,9 @@ using UnityEngine.UI;
 // [SoundTypeClip 인스펙터 설정 항목]
 // ================================================================
 // type          : SOUND_TYPE 매핑
-// clip          : 오디오 클립
-// volumeScale   : 개별 볼륨 배율 (0~1)
+// clips         : 오디오 클립(들). 여러 개 등록 시 재생마다 랜덤 선택
+// volumeScale   : 개별 볼륨 배율 (0~1). volumeMin/Max가 다르면 무시됨
+// volumeMin/Max : 볼륨 랜덤 범위 (같으면 volumeScale 고정값 사용)
 // minDistance   : 3D 전용 — 최대 볼륨 유지 거리
 // maxDistance   : 3D 전용 — 소리 소멸 거리
 // maxConcurrent : 동시 재생 한도 (0=무제한)
@@ -60,31 +61,46 @@ public class SoundTypeClip
 {
 	[Tooltip("재생할 사운드의 종류를 선택")]
 	public SOUND_TYPE type; // 사운드 종류
-	[Tooltip("연결할 오디오 클립(.wav, .mp3 등)을 할당")]
-	public AudioClip clip;// 실제 사운드 파일
+	[Tooltip("연결할 오디오 클립(.wav, .mp3 등)을 할당. 여러 개 등록 시 재생마다 랜덤으로 하나 선택됨")]
+	public AudioClip[] clips;// 실제 사운드 파일(들)
+
+	[Header("<size=14>소리 재생 설정</size>")]
 	[Range(0f, 1f)]
-	[Tooltip("해당 사운드 클립 볼륨 개별 배율 (0~1)")]
+	[Tooltip("해당 사운드 클립 볼륨 개별 배율 (0~1). volumeMin/Max가 서로 다르면 무시되고 그쪽이 우선됨")]
 	public float volumeScale = 1.0f; // 기본값은 1 (최대)
+	[Range(0f, 1f)]
+	[Tooltip("재생 볼륨 최솟값. volumeMax와 같으면 무시(volumeScale 고정값 사용)")]
+	public float volumeMin = 1.0f;
+	[Range(0f, 1f)]
+	[Tooltip("재생 볼륨 최댓값. volumeMin과 같으면 무시(volumeScale 고정값 사용)")]
+	public float volumeMax = 1.0f;
+	[Range(0f, 1.0f)]
+	[Tooltip("재생 피치 최솟값. pitchMax와 같으면 고정 피치")]
+	public float pitchMin = 1.0f;
+	[Range(0f, 1.0f)]
+	[Tooltip("재생 피치 최댓값. pitchMin과 같으면 고정 피치")]
+	public float pitchMax = 1.0f;
+
+	[Tooltip("최소 재생 간격(초). 마지막 재생 후 이 시간 안에 다시 호출되면 무시(스킵). 0이면 비활성(제한 없음).\n" +
+		"초고속 연사 무기(발칸 등)처럼 너무 잦은 호출로 사운드가 겹쳐서 찢어질 때 사용.")]
+	public float minPlayInterval;
+
+	[Header("<size=14>폴리포니(다중재생) 설정</size>")]
+	[Tooltip("동시 재생 허용 개수. 0 = 무제한 (권장: 발사음 3~4, 폭발음 3, 이동루프 1)")]
+	public int maxConcurrent = 4;
+	[Tooltip("한도 초과 시 true이면 가장 오래된 소리를 끊고 새 소리 재생, false이면 새 소리 무시")]
+	public bool dropOldest = false;
 
 
-
-	[Header("3D 사운드 범위 설정 (BGM,UI등 2D 사운드는 적용 안 됨)")]
+	[Space(10)]
+	[Header("<size=14>3D 사운드 전용 재생 범위 설정</size>")]
 	[Tooltip("3D 효과음 전용.이 거리 안에서는 소리가 최대유지")]
 	public float minDistance = 1.0f;
 	[Tooltip("3D 효과음 전용.이 거리 밖에서는 소리 X")]
 	public float maxDistance = 50.0f;
 
-	[Header("폴리포니(다중재생) / 피치 설정")]
-	[Tooltip("동시 재생 허용 개수. 0 = 무제한 (권장: 발사음 3~4, 폭발음 3, 이동루프 1)")]
-	public int maxConcurrent = 4;
-	[Tooltip("한도 초과 시 true이면 가장 오래된 소리를 끊고 새 소리 재생, false이면 새 소리 무시")]
-	public bool dropOldest = false;
-	[Range(0.1f, 1.5f)]
-	[Tooltip("재생 피치 최솟값. pitchMax와 같으면 고정 피치")]
-	public float pitchMin = 1.0f;
-	[Range(0.1f, 1.5f)]
-	[Tooltip("재생 피치 최댓값. pitchMin과 같으면 고정 피치")]
-	public float pitchMax = 1.0f;
+	
+
 }
 
 public class SoundManager : MonoBehaviour
@@ -115,14 +131,17 @@ public class SoundManager : MonoBehaviour
 		"1. PlayBGM(SOUND_TYPE) - 배경음 재생함\n" +
 		"2. PlaySFXUI(SOUND_TYPE) - UI(2D)효과음 재생함\n" +
 		"3. PlaySFX3DAtPosition(SOUND_TYPE, Vector3) - 3D 효과음 재생함\n" +
+		"4. PlaySFX3DAtUnit(SOUND_TYPE, Transform unitTr, Transform playPos) - 유닛에 부착된 단발성 3D 효과음 재생함\n" +
+		"5. PlaySFX3DLoop(SOUND_TYPE, Transform targetTr) - 루프 3D 효과음 시작함\n" +
+		"6. StopSFX3DLoop(Transform targetTr) - 루프 3D 효과음 정지함\n" +
 		"※ 플레이 함수 뒤에 피치값(float형 min, max) 추가 시 랜덤 재생됨(오버로딩)\n" +
-		"4. StopBGM() - 배경음 정지함\n" +
-		"5. StopAll() - 모든 소리 정지함\n" +
-		"6. SetBGM,SFX등 메서드 - 차후 UI옵션창과 연동")]
+		"7. StopBGM() - 배경음 정지함\n" +
+		"8. StopSFXAll() - 모든 소리 정지함\n" +
+		"9. SetBGM,SFX등 메서드 - 차후 UI옵션창과 연동")]
 
 
 	[Space(10)]
-	[Header("<size=14>사운드 데이터 등록</size>")]
+	[Header("<size=18>사운드 데이터 등록</size>")]
 	[Tooltip("사운드 타입과 오디오 클립을 짝지어 등록하는 리스트")]
 	[SerializeField]
 	private SoundTypeClip[] soundList;
@@ -167,6 +186,9 @@ public class SoundManager : MonoBehaviour
 	private List<AudioSource> pendingUnparentSources = new List<AudioSource>();
 	// 타입별 현재 재생 중인 3D SFX 소스 추적 (폴리포니 제한 용도)
 	private Dictionary<SOUND_TYPE, List<AudioSource>> activeTypeSourceMap = new Dictionary<SOUND_TYPE, List<AudioSource>>();
+	// (타입, 발사 주체) 조합별 마지막 재생 시각. minPlayInterval(최소 재생 간격) 체크용.
+	// 발사 주체(unitTr)까지 키에 포함 — 유닛별로 따로 제한해야 여러 유닛이 같은 무기를 써도 서로 안 막음.
+	private Dictionary<(SOUND_TYPE, Transform), float> _lastPlayTimeMap = new Dictionary<(SOUND_TYPE, Transform), float>();
 
 	private void Awake()
 	{
@@ -246,6 +268,7 @@ public class SoundManager : MonoBehaviour
 		AudioSource source = go.AddComponent<AudioSource>();
 		source.spatialBlend = 1.0f; // 1.0 = 완전한 3D 사운드
 		source.playOnAwake = false;
+		source.dopplerLevel = 0f; // 도플러 효과 끔 — 빠르게 움직이는 유닛(미사일/부스트 등)에서 피치가 왜곡되며 소리가 찢어지는 현상 방지
 
 		sfx3DPool.Add(source);
 		return source;
@@ -316,8 +339,18 @@ public class SoundManager : MonoBehaviour
 
 
 	// 폴리포니 체크 후 재생 가능한 소스 반환. maxConcurrent 초과 + dropOldest=false이면 null 반환(재생 스킵).
-	private AudioSource AcquireSFX3DSource(SOUND_TYPE type, SoundTypeClip data)
+	// sourceUnit: 발사 주체(유닛). minPlayInterval 체크를 유닛별로 따로 적용하기 위함 — null이면(위치 기반 1회성 사운드 등) 체크 생략.
+	private AudioSource AcquireSFX3DSource(SOUND_TYPE type, SoundTypeClip data, Transform sourceUnit = null)
 	{
+		// 최소 재생 간격(minPlayInterval) 체크 — 같은 유닛이 마지막 재생 후 이 시간 안에 또 호출하면 스킵.
+		var throttleKey = (type, sourceUnit);
+		if (sourceUnit != null && data.minPlayInterval > 0f
+			&& _lastPlayTimeMap.TryGetValue(throttleKey, out float lastTime)
+			&& Time.time - lastTime < data.minPlayInterval)
+		{
+			return null;
+		}
+
 		if (!activeTypeSourceMap.ContainsKey(type))
 		{
 			activeTypeSourceMap[type] = new List<AudioSource>();
@@ -349,6 +382,10 @@ public class SoundManager : MonoBehaviour
 
 		AudioSource source = GetAvailableSFX3DSource();
 		active.Add(source);
+		if (sourceUnit != null)
+		{
+			_lastPlayTimeMap[throttleKey] = Time.time;
+		}
 		return source;
 	}
 
@@ -360,6 +397,31 @@ public class SoundManager : MonoBehaviour
 			return Random.Range(data.pitchMin, data.pitchMax);
 		}
 		return data.pitchMin;
+	}
+
+	// clips 배열에서 랜덤으로 하나 선택. 1개뿐이면 그대로 반환, 비어있으면 null.
+	private AudioClip GetRandomClip(SoundTypeClip data)
+	{
+		if (data.clips == null || data.clips.Length == 0)
+		{
+			Debug.LogWarning($"[SoundManager] {data.type} 클립 배열이 비어있음");
+			return null;
+		}
+		if (data.clips.Length == 1)
+		{
+			return data.clips[0];
+		}
+		return data.clips[Random.Range(0, data.clips.Length)];
+	}
+
+	// SoundTypeClip 볼륨 설정 적용. volumeMin == volumeMax이면 volumeScale 고정값 반환.
+	private float GetVolume(SoundTypeClip data)
+	{
+		if (data.volumeMin != data.volumeMax)
+		{
+			return Random.Range(data.volumeMin, data.volumeMax);
+		}
+		return data.volumeScale;
 	}
 
 	#region 외부 호출용
@@ -385,7 +447,7 @@ public class SoundManager : MonoBehaviour
 		{
 			curBGM = type;
 			bgmSource.volume = bgmVolume;
-			bgmSource.clip = data.clip;
+			bgmSource.clip = GetRandomClip(data);
 			bgmSource.loop = true; // BGM은 무한반복
 			bgmSource.Play();
 		}
@@ -409,7 +471,7 @@ public class SoundManager : MonoBehaviour
 		{
 
 			sfxUISource.pitch = 1.0f; // 기본 피치로 초기화
-			sfxUISource.PlayOneShot(data.clip, sfxUIVolume * data.volumeScale);
+			sfxUISource.PlayOneShot(GetRandomClip(data), sfxUIVolume * GetVolume(data));
 		}
 	}
 	// 사용예
@@ -431,7 +493,7 @@ public class SoundManager : MonoBehaviour
 		{
 
 			sfxUISource.pitch = Random.Range(pitchMin, pitchMax);
-			sfxUISource.PlayOneShot(data.clip, sfxUIVolume * data.volumeScale);
+			sfxUISource.PlayOneShot(GetRandomClip(data), sfxUIVolume * GetVolume(data));
 
 		}
 	}
@@ -447,21 +509,25 @@ public class SoundManager : MonoBehaviour
 	public void PlaySFX3DAtPosition(SOUND_TYPE type, Vector3 position)
 	{
 		SoundTypeClip data = GetSoundData(type);
+		//Debug.Log($"[PlaySFX3DAtPosition-DEBUG] type={type}, data!=null={data != null}");
 		if (data != null && data.type != SOUND_TYPE.SFX_NONE)
 		{
 
 			// 지정된 위치에 임시 스피커를 만들고, 소리가 끝나면 알아서 삭제됨
 			AudioSource source = AcquireSFX3DSource(type, data);
+			//Debug.Log($"[PlaySFX3DAtPosition-DEBUG] source!=null={source != null}, clipsCount={data.clips?.Length ?? 0}, volumeScale={data.volumeScale}");
 			if (source == null) { return; }
 			source.transform.position = position;
-			source.clip = data.clip;
+			source.clip = GetRandomClip(data);
 
 			source.minDistance = data.minDistance;
 			source.maxDistance = data.maxDistance;
-			source.volume = sfx3DVolume * data.volumeScale;
+			source.volume = sfx3DVolume * GetVolume(data);
 			source.pitch = GetPitch(data);
 			source.loop = false;
+			//Debug.Log($"[PlaySFX3DAtPosition-DEBUG] clip!=null={source.clip != null}, clipName={source.clip?.name}, finalVolume={source.volume}, sfx3DVolume={sfx3DVolume}, minDist={source.minDistance}, maxDist={source.maxDistance}, sourcePos={source.transform.position}, mute={source.mute}");
 			source.Play();
+			//Debug.Log($"[PlaySFX3DAtPosition-DEBUG] isPlaying={source.isPlaying}, gameObjectActive={source.gameObject.activeInHierarchy}");
 
 		}
 	}
@@ -486,10 +552,10 @@ public class SoundManager : MonoBehaviour
 			AudioSource source = AcquireSFX3DSource(type, data);
 			if (source == null) { return; }
 			source.transform.position = position;
-			source.clip = data.clip;
+			source.clip = GetRandomClip(data);
 			source.minDistance = data.minDistance;
 			source.maxDistance = data.maxDistance;
-			source.volume = sfx3DVolume * data.volumeScale;
+			source.volume = sfx3DVolume * GetVolume(data);
 
 			source.pitch = Random.Range(pitchMin, pitchMax);
 			source.loop = false;
@@ -514,7 +580,8 @@ public class SoundManager : MonoBehaviour
             Transform posSource = (playPos != null) ? playPos : unitTr;
 
             // 지정된 위치에 임시 스피커를 만들고, 소리가 끝나면 알아서 삭제됨
-            AudioSource source = AcquireSFX3DSource(type, data);
+            // unitTr을 발사 주체로 넘겨서 minPlayInterval이 유닛별로 적용되게 함 (다른 유닛이 같은 사운드 써도 안 막히도록)
+            AudioSource source = AcquireSFX3DSource(type, data, unitTr);
             if (source == null) { return; }
             //좌표일치 (재생 위치 = 총구 등 playPos 기준)
             source.transform.position = posSource.position;
@@ -522,11 +589,11 @@ public class SoundManager : MonoBehaviour
             //주의: playPos(총구 등 파츠 자식)에 직접 붙이면, 재생 도중 파츠가 교체/파괴될 때
             //같이 파괴되어 풀 손실 + pendingUnparentSources에서 파괴된 참조 접근 문제가 생길 수 있음.
             source.transform.SetParent(unitTr);
-            source.clip = data.clip;
+            source.clip = GetRandomClip(data);
 
             source.minDistance = data.minDistance;
             source.maxDistance = data.maxDistance;
-            source.volume = sfx3DVolume * data.volumeScale;
+            source.volume = sfx3DVolume * GetVolume(data);
             source.pitch = GetPitch(data);
             source.loop = false;
             source.Play();
@@ -556,14 +623,16 @@ public class SoundManager : MonoBehaviour
 		SoundTypeClip data = GetSoundData(type);
 		if (data != null && data.type != SOUND_TYPE.SFX_NONE)
 		{
-			AudioSource source = GetAvailableSFX3DSource();
+			//폴리포니(maxConcurrent/dropOldest) 체크 거쳐서 소스 확보. targetTr을 발사 주체로 넘겨 유닛별 minPlayInterval 적용.
+			AudioSource source = AcquireSFX3DSource(type, data, targetTr);
+			if (source == null) { return; }
 			//좌표일치
 			source.transform.position = targetTr.position;
 			//해당 타겟에 이 오디오소스 붙이기(지속재생용)
 			source.transform.SetParent(targetTr);
 
-			source.clip = data.clip;
-			source.volume = sfx3DVolume * data.volumeScale;
+			source.clip = GetRandomClip(data);
+			source.volume = sfx3DVolume * GetVolume(data);
 			source.minDistance = data.minDistance;
 			source.maxDistance = data.maxDistance;
 			source.pitch = GetPitch(data);

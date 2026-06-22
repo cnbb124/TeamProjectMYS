@@ -9,6 +9,7 @@ public class EnemyMissileTurret : EnemyTurretBase
 
 	protected override void ShootWeapons()
 	{
+		if (!CanFireMissile()) return;
 		weaponSystem.Shoot(PROJECTILE_TYPE.MISSILE);
 		EnterReload(reloadDuration);
 	}

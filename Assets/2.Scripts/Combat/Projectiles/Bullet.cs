@@ -48,6 +48,7 @@ public class Bullet : Projectile
 			speed = bulletData.speed;
 			baseDamage = bulletData.damage;
 			maxRange = bulletData.maxRange;
+			hitSoundType = bulletData.hitSoundType;
 			// ignoreArmor, shieldDamageMultiplier는 DamageInfo 생성 시 사용 (ApplyDamage 쪽)
 		}
 	}

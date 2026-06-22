@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 07497ca0f0c50794a93a6e3e723922c8, type: 3}
-  m_Name: Bullet_Default
+  m_Name: Enemy_Bullet_Vulcan_Default
   m_EditorClassIdentifier: 
   id: 0
   itemName: 
@@ -23,6 +23,9 @@ MonoBehaviour:
   ignoreArmor: 0
   shieldDamageMultiplier: 1
   damageType: 0
-  hitEffect: 1
-  speed: 1500
-  curBulletPoolType: 0
+  curProjectilePoolType: 0
+  hitEffectType: 0
+  muzzleEffectType: 3
+  shootSoundType: 11
+  hitSoundType: 15
+  speed: 750

@@ -10,6 +10,8 @@ public struct DamageInfo
 	public Vector3 hitDiriection; //맞은 방향(밀려나거나 하는용)
 	public GameObject attacker; //누가 공격했는지
 	public float aoeRadius; // 0 = 단발(가장 가까운 파츠 1개), >0 = AOE(반경 내 모든 파츠)
+	public SOUND_TYPE hitSoundType; // 탄종(SO)에서 지정한 피격(실드 없을때) 사운드. SFX_NONE(미등록)이면 무음
+	// 실드 피격음은 여기 없음 — Unit.GetPlaySoundTypeShield(DamageInfo)에서 DAMAGE_TYPE 기준으로 따로 결정함
 }
 
 

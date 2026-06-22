@@ -7,4 +7,10 @@ public class EnemyGunShip : EnemyShip
 	{
 		weaponSystem.Shoot(PROJECTILE_TYPE.BULLET);
 	}
+
+	// ATTACK_PASS 중에도 타겟을 지나치기 전까지는 계속 사격.
+	protected override void ShootWeaponsOnPass()
+	{
+		weaponSystem.Shoot(PROJECTILE_TYPE.BULLET);
+	}
 }

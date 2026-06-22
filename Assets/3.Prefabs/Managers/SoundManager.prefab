@@ -48,59 +48,130 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   soundList:
   - type: 0
-    clip: {fileID: 8300000, guid: 6273a8bf5e7514848aa2b6871cb327ad, type: 3}
+    clips:
+    - {fileID: 8300000, guid: 6273a8bf5e7514848aa2b6871cb327ad, type: 3}
     volumeScale: 1
-    minDistance: 0
-    maxDistance: 0
-    maxConcurrent: 0
-    dropOldest: 0
+    volumeMin: 1
+    volumeMax: 1
     pitchMin: 1
     pitchMax: 1
+    maxConcurrent: 0
+    dropOldest: 0
+    minDistance: 0
+    maxDistance: 0
   - type: 11
-    clip: {fileID: 8300000, guid: 86b964999062391498f3b49a3215cdf7, type: 3}
+    clips:
+    - {fileID: 8300000, guid: 14ba2f7d17b7a434f851c648484e0806, type: 3}
     volumeScale: 1
-    minDistance: 20
-    maxDistance: 200
-    maxConcurrent: 5
-    dropOldest: 1
-    pitchMin: 0.85
-    pitchMax: 1.1
-  - type: 14
-    clip: {fileID: 8300000, guid: 86b964999062391498f3b49a3215cdf7, type: 3}
-    volumeScale: 1
-    minDistance: 10
-    maxDistance: 200
-    maxConcurrent: 5
-    dropOldest: 1
-    pitchMin: 0.85
-    pitchMax: 1.1
-  - type: 12
-    clip: {fileID: 8300000, guid: 1d28b3dc1528699479899e51fea87f6d, type: 3}
-    volumeScale: 1
-    minDistance: 10
-    maxDistance: 200
-    maxConcurrent: 5
-    dropOldest: 1
-    pitchMin: 0.85
-    pitchMax: 1.1
-  - type: 15
-    clip: {fileID: 8300000, guid: 5c3f072ec1a001541b7d1814571547ee, type: 3}
-    volumeScale: 1
-    minDistance: 20
-    maxDistance: 200
-    maxConcurrent: 5
-    dropOldest: 1
-    pitchMin: 0.9
-    pitchMax: 1.1
-  - type: 28
-    clip: {fileID: 0}
-    volumeScale: 1
-    minDistance: 0
-    maxDistance: 0
-    maxConcurrent: 0
-    dropOldest: 0
-    pitchMin: 1
+    volumeMin: 0.8
+    volumeMax: 1
+    pitchMin: 0.8
     pitchMax: 1
+    maxConcurrent: 12
+    dropOldest: 1
+    minDistance: 5
+    maxDistance: 25
+  - type: 15
+    clips:
+    - {fileID: 8300000, guid: b12187930d6f4b04b8a14c4e942c7f93, type: 3}
+    - {fileID: 8300000, guid: ee945bf47a1d77342b0e71d7e4421695, type: 3}
+    - {fileID: 8300000, guid: 4baa43d1a2555714a9dcc3b0b06a220c, type: 3}
+    - {fileID: 8300000, guid: fd4838b36b4237d41b494abc26434ccd, type: 3}
+    - {fileID: 8300000, guid: 9d8dda217f9277a4190a9e722542bd4a, type: 3}
+    - {fileID: 8300000, guid: e2b151c357bc3d848ab8ae87d63650f5, type: 3}
+    volumeScale: 1
+    volumeMin: 0.8
+    volumeMax: 1
+    pitchMin: 0.9
+    pitchMax: 1
+    maxConcurrent: 4
+    dropOldest: 1
+    minDistance: 5
+    maxDistance: 25
+  - type: 12
+    clips:
+    - {fileID: 8300000, guid: 15a3211a3c389664a94d401850cad8c7, type: 3}
+    volumeScale: 1
+    volumeMin: 0.8
+    volumeMax: 1
+    pitchMin: 0.9
+    pitchMax: 1
+    maxConcurrent: 12
+    dropOldest: 1
+    minDistance: 5
+    maxDistance: 25
+  - type: 16
+    clips:
+    - {fileID: 8300000, guid: 4a5f1abf2aef3f84986f73751d63fc11, type: 3}
+    - {fileID: 8300000, guid: cc1180ee178a70e4db502919244f6755, type: 3}
+    - {fileID: 8300000, guid: 60ba8f3f1e4b1b145ad629b5ba4d5c0b, type: 3}
+    - {fileID: 8300000, guid: b7ec6b248f1d72648ac6aef71fe447e9, type: 3}
+    - {fileID: 8300000, guid: 8acc3a66fd56dcc46b110c7a0d3213e4, type: 3}
+    - {fileID: 8300000, guid: d3b08de41108d154b83f1fba126cc359, type: 3}
+    - {fileID: 8300000, guid: 7ca11a0945a5da14e8281e45670ad7ef, type: 3}
+    volumeScale: 1
+    volumeMin: 0.8
+    volumeMax: 1
+    pitchMin: 0.9
+    pitchMax: 1
+    maxConcurrent: 4
+    dropOldest: 1
+    minDistance: 5
+    maxDistance: 25
+  - type: 13
+    clips:
+    - {fileID: 8300000, guid: deb31dbb1a26c054891a4186c584a5d0, type: 3}
+    - {fileID: 8300000, guid: 1d28b3dc1528699479899e51fea87f6d, type: 3}
+    volumeScale: 1
+    volumeMin: 0.8
+    volumeMax: 1
+    pitchMin: 0.9
+    pitchMax: 1
+    maxConcurrent: 4
+    dropOldest: 1
+    minDistance: 5
+    maxDistance: 25
+  - type: 17
+    clips:
+    - {fileID: 8300000, guid: e49a8a34f479db846af1106a5fe97951, type: 3}
+    - {fileID: 8300000, guid: 75c2520332d47c543ab6ecbed510a94f, type: 3}
+    - {fileID: 8300000, guid: 0e06c997f66813242af742395e3e0dc3, type: 3}
+    volumeScale: 1
+    volumeMin: 0.8
+    volumeMax: 1
+    pitchMin: 0.9
+    pitchMax: 1
+    maxConcurrent: 4
+    dropOldest: 1
+    minDistance: 5
+    maxDistance: 100
+  - type: 21
+    clips:
+    - {fileID: 8300000, guid: 81a346a7999a81243b8e6e18df6852ef, type: 3}
+    - {fileID: 8300000, guid: 58a24ee7c3371ff49bb6833b316f040a, type: 3}
+    - {fileID: 8300000, guid: b3325a8b2aa1db6408262e058666a0e2, type: 3}
+    - {fileID: 8300000, guid: 7c9ba602437be9b4f9271fb55179b1b0, type: 3}
+    volumeScale: 1
+    volumeMin: 0.8
+    volumeMax: 1
+    pitchMin: 0.9
+    pitchMax: 1
+    maxConcurrent: 4
+    dropOldest: 1
+    minDistance: 5
+    maxDistance: 25
+  - type: 22
+    clips:
+    - {fileID: 8300000, guid: 51f46968ed339684b975b62416e9bd8e, type: 3}
+    volumeScale: 1
+    volumeMin: 1
+    volumeMax: 1
+    pitchMin: 0.88
+    pitchMax: 1
+    maxConcurrent: 4
+    dropOldest: 1
+    minDistance: 5
+    maxDistance: 25
   bgmSource: {fileID: 3570786864977759437}
   sfxUISource: {fileID: 4715387980489473752}
   curBGM: 0

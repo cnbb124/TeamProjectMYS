@@ -22,7 +22,7 @@ namespace ProceduralForceField
         private MaterialPropertyBlock _propertyBlock;
 
         // 최대 3개 피격 동시 표시
-        private const int MAX_HITS = 3;
+        private const int MAX_HITS = 12;
         private Vector3[] _hitPositions = new Vector3[MAX_HITS];
         private float[]   _hitTimes     = new float[MAX_HITS];
         private int       _hitWriteIdx  = 0;

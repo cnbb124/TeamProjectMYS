@@ -230,10 +230,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   weaponSystem: {fileID: 0}
-  maxHpRemaining: 250
-  maxShieldCapacity: 150
-  shieldRegainDelay: 2.5
-  shieldRegainRate: 10
+  maxHpRemaining: 30
+  maxShieldCapacity: 25
+  shieldRegainDelay: 3
+  shieldRegainRate: 4
   isShieldRegaining: 0
   shield: {fileID: 5387513345644067634}
   bodyHitboxRoot: {fileID: 2491442456591101992}
@@ -268,21 +268,21 @@ MonoBehaviour:
   patrolRadius: 1000
   patrolArriveDist: 25
   patrolHeightRange: 250
-  attackPassWeight: 0.55
-  attackChaseWeight: 0.4
+  attackPassWeight: 0.7
+  attackChaseWeight: 0.25
   attackHoldWeight: 0.05
-  attackChaseDuration: 4
+  attackChaseDuration: 3
   attackHoldDuration: 1
-  attackPassDuration: 4
-  repositionDuration: 4
+  attackPassDuration: 5
+  repositionDuration: 3.5
   evadeDuration: 1.5
   repositionDistance: 300
   reloadDuration: 0
-  minAttackDistance: 175
+  minAttackDistance: 150
   passOffsetDir: 0
-  passOffsetStartDist: 225
-  passHorizontalDist: 75
-  passVerticalRange: 150
+  passOffsetStartDist: 200
+  passHorizontalDist: 40
+  passVerticalRange: 120
   evadeChance: 0.35
   evadeCoolTime: 5
   dodgeProbability: 0.2
@@ -299,8 +299,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   lockOnSystem: {fileID: 3033844199734762928}
-  bulletFireCooldown: 0.1
-  curBulletData: {fileID: 0}
+  bulletFireCooldown: 0.05
+  curBulletData: {fileID: 11400000, guid: f24cca7fba8ef164aa78249e4e93e164, type: 2}
   useBulletMuzzle: 1
   useBulletSound: 1
   useMissileMuzzle: 1
@@ -313,11 +313,7 @@ MonoBehaviour:
   fixedBulletFirePositions: []
   fixedMissileFirePositions: []
   missileFireCooldown: 2
-  missileSlots:
-  - type: 0
-    curAmmo: 9999
-    maxAmmo: 9999
-    missileData: {fileID: 11400000, guid: 2652fd978459f5a44aad1cc7fa6033a7, type: 2}
+  missileSlots: []
   curMissileType: 0
 --- !u!114 &3033844199734762928
 MonoBehaviour:

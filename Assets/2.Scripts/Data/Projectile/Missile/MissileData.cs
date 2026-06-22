@@ -6,6 +6,11 @@ using UnityEngine;
 [CreateAssetMenu(fileName = "New Missile Data", menuName = "Create Data/Item/Projectile Data/Missile")]
 public class MissileData : ProjectileData
 {
+	[Tooltip("폭발 시 재생할 사운드 (Missile.Explode()에서 1번만 재생, 맞은 유닛 수와 무관). SFX_NONE(미등록)이면 무음.\n" +
+		"※ 미사일은 hitSoundType이 따로 없음 — 실드 없는 유닛 피격음은 이 explosionSoundType이 담당함.")]
+	public SOUND_TYPE explosionSoundType = SOUND_TYPE.SFX_NONE;
+
+	[Header("<size=18>미사일 설정</size>")]
 	[Tooltip("초당 최대 선회 각도 (도/초). 클수록 날카롭게 꺾음.")]
 	public float turnRate = 120f;
 	[Tooltip("발사 직후 직진 유지 거리. 근거리 자폭 방지.")]
@@ -25,4 +30,5 @@ public class MissileData : ProjectileData
 
 	[Tooltip("실제 발사될 미사일 프리팹이 등록된 풀 종류. WeaponSystem이 이 값으로 PoolManager.GetProjectile(POOL_TYPE) 호출.")]
 	public POOL_TYPE curMissilePoolType;
+
 }

@@ -6,6 +6,9 @@ public class EnemyDualTurret : EnemyTurretBase
 	protected override void ShootWeapons()
 	{
 		weaponSystem.Shoot(PROJECTILE_TYPE.BULLET);
-		weaponSystem.Shoot(PROJECTILE_TYPE.MISSILE);
+		if (CanFireMissile())
+		{
+			weaponSystem.Shoot(PROJECTILE_TYPE.MISSILE);
+		}
 	}
 }

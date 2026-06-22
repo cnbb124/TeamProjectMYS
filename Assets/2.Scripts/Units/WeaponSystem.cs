@@ -32,10 +32,11 @@ public enum MissileFireMode { Sequential, Random, Simultaneous }
 // [이펙트팀 참조 — 머즐플래시 호출 위치]
 // ================================================================
 // 총알  : ShootBulletFrom()    내부 (useBulletMuzzle=true 일 때만 재생)
-//   → VFXManager.PlayEffectAtUnit(VFX_BULLET_MUZZLE, _unit.transform, firePos, rot, 0.2f)
+//   → 풀에서 꺼낸 Bullet의 bulletData.muzzleEffectType 사용 (BulletData 미설정 시 VFX_BULLET_MUZZLE 폴백)
 // 미사일: ShootMissileFrom() 내부 (useMissileMuzzle=true 일 때만 재생)
-//   → VFXManager.PlayEffectAtUnit(VFX_MISSILE_MUZZLE, _unit.transform, firePos, rot, 0.3f)
+//   → 풀에서 꺼낸 Missile의 missileData.muzzleEffectType 사용 (MissileData 미설정 시 VFX_MISSILE_MUZZLE 폴백)
 //   유닛에 부착되어 유닛과 같이 움직임. 위치/회전은 호출 순간 총구 기준.
+//   ※ 탄종(SO)에 머즐을 등록하면 WeaponSystem 코드 안 건드리고 머즐 종류 변경 가능.
 //
 // ================================================================
 // [발사 위치 등록 경로]
@@ -56,6 +57,7 @@ public enum MissileFireMode { Sequential, Random, Simultaneous }
 // EquipMissile(int, MISSILE_TYPE, int, MissileData)  슬롯에 미사일 장착
 // HasMissileAmmo(MISSILE_TYPE)               잔탄 여부 확인
 // AddMissileAmmo(MISSILE_TYPE, int)          잔탄 추가
+// EquipBullet(BulletData)                    총알 데이터 장착 (curBulletData 교체, 무한탄이라 슬롯/잔탄 없음)
 // ================================================================
 [RequireComponent(typeof(LockOnSystem))]
 public class WeaponSystem : MonoBehaviour
@@ -118,12 +120,13 @@ public class WeaponSystem : MonoBehaviour
 	// Sequential 모드 전용 교대 발사 인덱스.
 	private int _bulletFireIndex = 0;
 
-	[Header("<size=14>자동 설정 (WeaponFirePos 컴포넌트 있는 것들 좌표 받아옴)</size>")]
+	[Header("<size=14>총구 좌표 프리펩 직접 설정용(Enemy)</size>")]
+	[Header("자동 설정 (WeaponFirePos 컴포넌트 있는 것들 좌표 받아옴)")]
 	[Tooltip("ON: Awake 시 자식 오브젝트의 WeaponFirePos 컴포넌트를 자동 수집.\n" +
 			 "플레이어(UnitParts 사용)는 OFF 유지.")]
 	public bool autoDetectFirePositions = false;
 
-	[Header("<size=14>수동 설정 (UnitParts 없이 직접 지정할 총구 좌표)</size>")]
+	[Header("수동 설정 (UnitParts 없이 직접 지정할 총구 좌표)")]
 	[Tooltip("UnitParts 없이 총알 발사 위치 직접 지정.")]
 	[SerializeField]
 	private List<Transform> fixedBulletFirePositions = new List<Transform>();
@@ -286,8 +289,6 @@ public class WeaponSystem : MonoBehaviour
 	/// </summary>
 	public void Shoot(PROJECTILE_TYPE type)
 	{
-		SOUND_TYPE soundType = _unit.GetPlaySoundType(type);
-
 		switch (type)
 		{
 			case PROJECTILE_TYPE.BULLET:
@@ -296,11 +297,12 @@ public class WeaponSystem : MonoBehaviour
 					return;
 				}
 				_lastBulletFireTime = Time.time;
-				ShootAllBullets(soundType);
+				ShootAllBullets();
 				break;
 
 			case PROJECTILE_TYPE.LASER:
-				_sound.PlaySFX3DAtUnit(soundType, _unit.transform, _laserFirePos);
+				// LASER는 ProjectileData 기반이 아니라 고정 카테고리 사운드(SFX_LASERSHOOT), 머즐 없음 — 기존 그대로 유지.
+				_sound.PlaySFX3DAtUnit(SOUND_TYPE.SFX_LASERSHOOT, _unit.transform, _laserFirePos);
 				ShootLaser();
 				break;
 
@@ -310,9 +312,27 @@ public class WeaponSystem : MonoBehaviour
 					return;
 				}
 				_lastMissileFireTime = Time.time;
-				ShootAllMissiles(soundType);
+				ShootAllMissiles();
 				break;
 
+		}
+	}
+
+	/// <summary>
+	/// 현재 락온 모드 기준으로 발사 가능한 락온 상태인지 확인.
+	/// NONE(DUMB 미사일) = 항상 true. SINGLE = IsLocked. MULTI = MultiLockedTargets 1개 이상.
+	/// Player는 락온 없이도 자유 발사 허용 — Enemy AI(EnemyShip)에서만 발사 전에 이 체크를 거침.
+	/// </summary>
+	public bool HasValidLockOn()
+	{
+		switch (lockOnSystem.currentLockMode)
+		{
+			case LOCK_ON_MODE.SINGLE:
+				return lockOnSystem.IsLocked;
+			case LOCK_ON_MODE.MULTI:
+				return lockOnSystem.MultiLockedTargets.Count > 0;
+			default:
+				return true;
 		}
 	}
 
@@ -323,7 +343,7 @@ public class WeaponSystem : MonoBehaviour
 	/// 총알 — bulletFireMode에 따라 발사.
 	/// Sequential: 총구 하나씩 교대. Random: 랜덤 총구 하나. Simultaneous: 전체 동시.
 	/// </summary>
-	private void ShootAllBullets(SOUND_TYPE soundType)
+	private void ShootAllBullets()
 	{
 		if (_bulletFirePositions.Count == 0)
 		{
@@ -333,18 +353,18 @@ public class WeaponSystem : MonoBehaviour
 		switch (bulletFireMode)
 		{
 			case BulletFireMode.Sequential:
-				ShootBulletFrom(_bulletFirePositions[_bulletFireIndex], soundType);
+				ShootBulletFrom(_bulletFirePositions[_bulletFireIndex]);
 				_bulletFireIndex = (_bulletFireIndex + 1) % _bulletFirePositions.Count;
 				break;
 
 			case BulletFireMode.Random:
-				ShootBulletFrom(_bulletFirePositions[Random.Range(0, _bulletFirePositions.Count)], soundType);
+				ShootBulletFrom(_bulletFirePositions[Random.Range(0, _bulletFirePositions.Count)]);
 				break;
 
 			case BulletFireMode.Simultaneous:
 				for (int i = 0; i < _bulletFirePositions.Count; i++)
 				{
-					ShootBulletFrom(_bulletFirePositions[i], soundType);
+					ShootBulletFrom(_bulletFirePositions[i]);
 				}
 				break;
 		}
@@ -352,22 +372,31 @@ public class WeaponSystem : MonoBehaviour
 
 	/// <summary>
 	/// 지정 위치에서 총알 1발 발사.
+	/// 먼저 풀에서 Bullet을 꺼낸 뒤, 그 Bullet 자신의 bulletData(프리팹에 미리 연결된 SO)에서
+	/// 머즐플래시/발사음을 가져와 재생 — WeaponSystem에 따로 등록 안 해도 프리팹 데이터만으로 일치되게 함.
+	/// curBulletData는 풀 종류(어떤 프리팹을 꺼낼지) 결정용으로만 남음.
 	/// </summary>
-	private void ShootBulletFrom(Transform firePos, SOUND_TYPE soundType)
+	private void ShootBulletFrom(Transform firePos)
 	{
 		if (_launcherAnims.TryGetValue(firePos, out LauncherAnim bulletAnim))
 		{
 			bulletAnim.PlayFire();
 		}
+
+		Bullet newBullet = _pool.GetProjectile(GetBulletPoolType()) as Bullet;
+		BulletData data = newBullet.bulletData;
+
 		if (useBulletMuzzle)
 		{
-			_vfx.PlayEffectAtUnit(EFFECT_TYPE.VFX_BULLET_MUZZLE, _unit.transform, firePos.position, firePos.rotation, bulletMuzzleFlashVFXPlayTime);
+			EFFECT_TYPE muzzleType = (data != null) ? data.muzzleEffectType : EFFECT_TYPE.VFX_BULLET_MUZZLE;
+			_vfx.PlayEffectAtUnit(muzzleType, _unit.transform, firePos.position, firePos.rotation, bulletMuzzleFlashVFXPlayTime);
 		}
 		if (useBulletSound)
 		{
+			SOUND_TYPE soundType = (data != null) ? data.shootSoundType : SOUND_TYPE.SFX_NONE;
 			_sound.PlaySFX3DAtUnit(soundType, _unit.transform, firePos);
 		}
-		Bullet newBullet = _pool.GetProjectile(GetBulletPoolType()) as Bullet;
+
 		newBullet.Init(firePos.position, firePos.forward, _unit);
 	}
 
@@ -379,10 +408,19 @@ public class WeaponSystem : MonoBehaviour
 	{
 		if (curBulletData != null)
 		{
-			return curBulletData.curBulletPoolType;
+			return curBulletData.curProjectilePoolType;
 		}
 
 		return POOL_TYPE.BULLET;
+	}
+
+	/// <summary>
+	/// 총알 데이터 장착. EquipMissile()과 동일한 역할이지만, 총알은 무한탄이라 슬롯/잔탄 없이 curBulletData만 교체.
+	/// 인벤토리 등 외부 시스템에서 탄종 변경 시 호출.
+	/// </summary>
+	public void EquipBullet(BulletData data)
+	{
+		curBulletData = data;
 	}
 
 	/// <summary>
@@ -403,7 +441,7 @@ public class WeaponSystem : MonoBehaviour
 	/// 미사일 — missileFireMode에 따라 발사.
 	/// Sequential: 발사구 하나씩 교대. Random: 랜덤 발사구 하나. Simultaneous: 전체 동시.
 	/// </summary>
-	private void ShootAllMissiles(SOUND_TYPE soundType)
+	private void ShootAllMissiles()
 	{
 		MissileSlot curSlot = CurMissileSlot;
 		if (curSlot == null || curSlot.curAmmo <= 0 || _missileFirePositions.Count == 0)
@@ -414,20 +452,12 @@ public class WeaponSystem : MonoBehaviour
 		switch (missileFireMode)
 		{
 			case MissileFireMode.Sequential:
-				if (useMissileSound)
-				{
-					_sound.PlaySFX3DAtPosition(soundType, _unit.transform.position);
-				}
 				ShootMissileFrom(_missileFirePositions[_missileFireIndex]);
 				curSlot.curAmmo--;
 				_missileFireIndex = (_missileFireIndex + 1) % _missileFirePositions.Count;
 				break;
 
 			case MissileFireMode.Random:
-				if (useMissileSound)
-				{
-					_sound.PlaySFX3DAtPosition(soundType, _unit.transform.position);
-				}
 				ShootMissileFrom(_missileFirePositions[Random.Range(0, _missileFirePositions.Count)]);
 				curSlot.curAmmo--;
 				break;
@@ -437,10 +467,6 @@ public class WeaponSystem : MonoBehaviour
 				int fireCount = Mathf.Min(_missileFirePositions.Count, curSlot.curAmmo);
 				for (int i = 0; i < fireCount; i++)
 				{
-					if (useMissileSound)
-					{
-						_sound.PlaySFX3DAtPosition(soundType, _unit.transform.position);
-					}
 					ShootMissileFrom(_missileFirePositions[i]);
 					curSlot.curAmmo--;
 				}
@@ -453,6 +479,8 @@ public class WeaponSystem : MonoBehaviour
 	/// 지정 위치에서 미사일 1발 발사.
 	/// 풀에서 꺼낼 프리팹은 missileData.curMissilePoolType으로 결정(변형탄 대응).
 	/// missileData가 비어있으면(에디터 미설정) curMissileType 기준 기본 풀로 폴백.
+	/// 먼저 풀에서 꺼낸 뒤 그 missileData(프리팹에 미리 연결된 SO)에서 머즐/발사음을 가져와 재생
+	/// — WeaponSystem에 따로 등록 안 해도 프리팹 데이터만으로 일치되게 함.
 	/// </summary>
 	private void ShootMissileFrom(Transform firePos)
 	{
@@ -461,12 +489,19 @@ public class WeaponSystem : MonoBehaviour
 			missileAnim.PlayFire();
 		}
 
+		Projectile proj = _pool.GetProjectile(GetMissilePoolType(CurMissileSlot));
+		MissileData data = (proj as Missile)?.missileData;
+
 		if (useMissileMuzzle)
 		{
-			_vfx.PlayEffectAtUnit(EFFECT_TYPE.VFX_MISSILE_MUZZLE, _unit.transform, firePos.position, firePos.rotation, missileMuzzleFlashVFXPlayTime);
+			EFFECT_TYPE muzzleType = (data != null) ? data.muzzleEffectType : EFFECT_TYPE.VFX_MISSILE_MUZZLE;
+			_vfx.PlayEffectAtUnit(muzzleType, _unit.transform, firePos.position, firePos.rotation, missileMuzzleFlashVFXPlayTime);
 		}
-
-		Projectile proj = _pool.GetProjectile(GetMissilePoolType(CurMissileSlot));
+		if (useMissileSound)
+		{
+			SOUND_TYPE soundType = (data != null) ? data.shootSoundType : SOUND_TYPE.SFX_NONE;
+			_sound.PlaySFX3DAtPosition(soundType, _unit.transform.position);
+		}
 
 		switch (curMissileType)
 		{

@@ -713,9 +713,11 @@ public abstract class Unit : MonoBehaviour, IDamageable
 	{
 		//피격 애니메이션재생 필요
 		//피격 사운드재생 필요 실드있을떄는 실드사운드, 아니면 타입맞춰서
+		//실드 없을때: 탄종(SO)에 등록된 hitSoundType 그대로 사용. 미등록(SFX_NONE)이면 SoundManager가 자동 무음 처리.
+		//실드 있을때: 탄종별로 안 나누고 DAMAGE_TYPE 기준(GetPlaySoundTypeShield)으로 일괄 처리.
 		if (curShieldRemaining <= 0)
 		{
-			_playSoundType = GetPlaySoundType(info);
+			_playSoundType = info.hitSoundType;
 		}
 		else
 		{
@@ -732,6 +734,7 @@ public abstract class Unit : MonoBehaviour, IDamageable
 			// ex) shield.GetComponent<ProceduralForceFieldOverlay>().Trigger(info.hitPosition);
 			// 호출하면 해당 위치에 실드 피격 이펙트(쉐이더 비주얼+사운드) 재생됨.
 		}
+		//Debug.Log($"[OnHitReaction-DEBUG] curShieldRemaining={curShieldRemaining}, _playSoundType={_playSoundType}, dmgType={info.type}");
 		_sound.PlaySFX3DAtPosition(_playSoundType, info.hitPosition);
 		//피격 카메라무빙필요
 
@@ -802,64 +805,43 @@ public abstract class Unit : MonoBehaviour, IDamageable
 
 
 
-	/// <summary>
-	/// 재생할 사운드 찾는 함수 (오버로딩)
-	/// 피격
-	/// </summary>
-	/// <param name="info">맞은 투사체 정보</param>
-	/// <returns></returns>
-	protected SOUND_TYPE GetPlaySoundType(DamageInfo info)
-	{
+	//레거시
+	///// <summary>
+	///// 재생할 사운드 찾는 함수 (오버로딩)
+	///// 피격
+	///// </summary>
+	///// <param name="info">맞은 투사체 정보</param>
+	///// <returns></returns>
+	//protected SOUND_TYPE GetPlaySoundType(DamageInfo info)
+	//{
 
 
-		switch (info.type)
-		{
-			case DAMAGE_TYPE.BULLET:
-				return SOUND_TYPE.SFX_BULLETHIT;
+	//	switch (info.type)
+	//	{
+	//		case DAMAGE_TYPE.BULLET:
+	//			return SOUND_TYPE.SFX_BULLETHIT;
 
-			case DAMAGE_TYPE.LASER:
-				return SOUND_TYPE.SFX_LASERHIT;
+	//		case DAMAGE_TYPE.LASER:
+	//			return SOUND_TYPE.SFX_LASERHIT;
 
-			case DAMAGE_TYPE.EXPLOSION:
-				return SOUND_TYPE.SFX_NONE; // 폭발 소리는 Missile.Explode()가 담당
+	//		case DAMAGE_TYPE.EXPLOSION:
+	//			return SOUND_TYPE.SFX_NONE; // 폭발 소리는 Missile.Explode()가 담당
 
-			case DAMAGE_TYPE.CONTACT:
-				if (info.attacker.CompareTag("Enemy"))
-				{
-					return SOUND_TYPE.SFX_CONTACTSHIP;
-				}
-				if (info.attacker.CompareTag("Ground"))
-				{
-					return SOUND_TYPE.SFX_CONTACTGROUND;
-				}
-				break;
-		}
-		return SOUND_TYPE.SFX_NONE;
-	}
-	/// <summary>
-	/// 사격시
-	/// </summary>
-	/// <param name="type">발사할 투사체 타입</param>
-	/// <returns></returns>
-	public SOUND_TYPE GetPlaySoundType(PROJECTILE_TYPE type)
-	{
-		switch (type)
-		{
-			case PROJECTILE_TYPE.BULLET:
-				return SOUND_TYPE.SFX_BULLETSHOOT;
-			case PROJECTILE_TYPE.LASER:
-				return SOUND_TYPE.SFX_LASERSHOOT;
-
-			case PROJECTILE_TYPE.MISSILE:
-				//	case SHOOT_TYPE.MISSILE_RIGHT:
-				//case SHOOT_TYPE.MISSILE_BOTH:
-				return SOUND_TYPE.SFX_MISSILESHOOT;
-				//case SHOOT_TYPE.ALL://전체쏘는키를 구현할지...근데 그러면 소리를어케해야되나?그냥 다 누르면 다 재생되지않나
-				//	break;
-		}
-		return SOUND_TYPE.SFX_NONE;
-
-	}
+	//		case DAMAGE_TYPE.CONTACT:
+	//			if (info.attacker.CompareTag("Enemy"))
+	//			{
+	//				return SOUND_TYPE.SFX_CONTACTSHIP;
+	//			}
+	//			if (info.attacker.CompareTag("Ground"))
+	//			{
+	//				return SOUND_TYPE.SFX_CONTACTGROUND;
+	//			}
+	//			break;
+	//	}
+	//	return SOUND_TYPE.SFX_NONE;
+	//}
+	// 발사 사운드/머즐 결정 로직은 WeaponSystem.ShootBulletFrom()/ShootMissileFrom()으로 통합 이전됨 (구 GetPlaySoundType(PROJECTILE_TYPE) 삭제).
+	// BULLET/MISSILE은 풀에서 꺼낸 프리팹 자신의 bulletData/missileData(shootSoundType, muzzleEffectType)를 직접 사용. LASER만 고정값 유지.
 
 
 	protected SOUND_TYPE GetPlaySoundTypeShield(DamageInfo info)

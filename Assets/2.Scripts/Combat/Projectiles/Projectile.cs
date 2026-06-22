@@ -52,6 +52,11 @@ public abstract class Projectile : MonoBehaviour
 	[HideInInspector]
 	public DAMAGE_TYPE dmgType;
 
+	//피격(실드 없을때) 사운드. Bullet은 BulletData에서 복사, Missile은 미사용이라 항상 SFX_NONE 고정(Missile.Awake 참고). SFX_NONE(미등록)이면 무음
+	[HideInInspector]
+	public SOUND_TYPE hitSoundType;
+	// 실드 피격음은 여기 없음 — 탄종별로 안 나누고 Unit.GetPlaySoundTypeShield(DamageInfo)에서 DAMAGE_TYPE 기준으로 일괄 처리.
+
     //=======================================================
 
 
@@ -257,7 +262,8 @@ public abstract class Projectile : MonoBehaviour
             isCritical = critical,
             hitPosition = targetCollider.ClosestPoint(transform.position),
             hitDiriection = (targetCollider.ClosestPoint(transform.position) - transform.position).normalized,
-            attacker = this.attacker != null ? this.attacker.gameObject : null
+            attacker = this.attacker != null ? this.attacker.gameObject : null,
+            hitSoundType = this.hitSoundType
         };
 
         target.TakeDamage(damageInfo);
@@ -293,7 +299,8 @@ public abstract class Projectile : MonoBehaviour
             isCritical = critical,
             hitPosition = targetCollider.ClosestPoint(transform.position),
             hitDiriection = (targetCollider.ClosestPoint(transform.position) - transform.position).normalized,
-            attacker = this.attacker != null ? this.attacker.gameObject : null
+            attacker = this.attacker != null ? this.attacker.gameObject : null,
+            hitSoundType = this.hitSoundType
         };
         target.TakeDamage(damageInfo);
     }
@@ -319,6 +326,7 @@ public abstract class Projectile : MonoBehaviour
             hitPosition = targetCollider.ClosestPoint(explosionCenter),  // 변경 260611
             hitDiriection = (targetCollider.ClosestPoint(explosionCenter) - explosionCenter).normalized,  // 변경 260611
             attacker = this.attacker != null ? this.attacker.gameObject : null,
+            hitSoundType = this.hitSoundType,
             aoeRadius = aoeRadius
         };
         target.TakeDamage(damageInfo);

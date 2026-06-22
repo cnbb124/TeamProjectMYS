@@ -99,6 +99,10 @@ public class Missile : Projectile, IExplodable
 	[HideInInspector]
 	public ExplosionInfo explosionInfo;
 
+	//폭발음. Explode()에서 1번만 재생. SO에서 복사됨.
+	[HideInInspector]
+	public SOUND_TYPE explosionSoundType;
+
 	//발사후 경과시간
 	private float aliveTime = 0f;
 	//락온타겟 이전좌표(추적용)
@@ -116,6 +120,9 @@ public class Missile : Projectile, IExplodable
 		dmgType = DAMAGE_TYPE.EXPLOSION;
 		projectileType = PROJECTILE_TYPE.MISSILE;
 
+		// 미사일은 hitSoundType 미사용(폭발음은 explosionSoundType이 담당, 같이 쓰면 중복재생).
+		// Projectile.hitSoundType 기본값(enum 0번=BGM_LOBBY)이 그대로 남는 걸 막기 위해 명시적으로 고정.
+		hitSoundType = SOUND_TYPE.SFX_NONE;
 	}
 
 	/// <summary>
@@ -141,6 +148,7 @@ public class Missile : Projectile, IExplodable
 			vfxBaseRadius = missileData.vfxBaseRadius;
 			baseDamage = missileData.damage;
 			maxRange = missileData.maxRange;
+			explosionSoundType = missileData.explosionSoundType;
 		}
 
 
@@ -285,7 +293,7 @@ public class Missile : Projectile, IExplodable
 		//폭발 반경(explosionRadius) 비율에 맞춰 VFX 크기 조절
 		float vfxRatio = explosionInfo.explosionRadius / vfxBaseRadius;
 		VFXManager.Instance.PlayEffectAtPosition(EFFECT_TYPE.VFX_EXPLOSION_MISSILE, transform.position, Quaternion.identity, 0f, Vector3.one * vfxRatio);
-		SoundManager.Instance.PlaySFX3DAtPosition(SOUND_TYPE.SFX_EXPLOSION, transform.position);
+		SoundManager.Instance.PlaySFX3DAtPosition(explosionSoundType, transform.position);
 		//맞은것들의 충돌박스 갯수 카운트
 		int hitMask = LayerMask.GetMask("HitBox");
 		int hitCount = Physics.OverlapSphereNonAlloc(transform.position, explosionInfo.explosionRadius, explosionHits, hitMask);

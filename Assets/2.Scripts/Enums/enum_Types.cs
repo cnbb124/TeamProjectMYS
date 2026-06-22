@@ -96,12 +96,14 @@ public enum SOUND_TYPE
 
 
 	// 발사음
-	SFX_BULLETSHOOT,    //탄
+	SFX_BULLET_VULCAN_SHOOT,
+	SFX_BULLET_IMPULSE_SHOOT,//탄
 	SFX_MISSILESHOOT,   //미사일
 	SFX_LASERSHOOT,     //레이저
 
 	// 피격음
-	SFX_BULLETHIT,      //탄
+	SFX_BULLET_VULCAN_HIT,
+	SFX_BULLET_IMPULSE_HIT,//탄
 	SFX_EXPLOSION,      // 미사일등 폭발음
 	SFX_CONTACTSHIP,    //부딪혔을때.
 	SFX_CONTACTGROUND,  //행성등 부딪혔을떄. 차후 필드명 수정할수있음

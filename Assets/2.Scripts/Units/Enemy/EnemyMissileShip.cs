@@ -5,12 +5,14 @@ public class EnemyMissileShip : EnemyShip
 {
 	protected override void ShootWeapons()
 	{
+		if (!CanFireMissile()) return;
 		weaponSystem.Shoot(PROJECTILE_TYPE.MISSILE);
 	}
 
 	// ATTACK_PASS 중에도 미사일 발사 유지.
 	protected override void ShootWeaponsOnPass()
 	{
+		if (!CanFireMissile()) return;
 		weaponSystem.Shoot(PROJECTILE_TYPE.MISSILE);
 	}
 }
