@@ -1,15 +1,19 @@
 /*
  * [SunObject]
- * 카메라와 무관하게 항상 같은 방향·같은 크기로 보이는 태양 오브젝트.
+ * 월드의 한 지점에 고정된 "진짜 태양" 오브젝트.
+ * 카메라(비행기)가 다가가면 크게, 멀어지면 작게 보임 (일반 3D 오브젝트처럼).
  *
  * [사용법]
- * 1. 빈 오브젝트(또는 Quad/Sprite)에 부착
- * 2. sunDirection : 태양이 위치할 월드 방향 (예: 비스듬한 위쪽)
- * 3. distance     : 카메라로부터 떨어뜨릴 거리 (far clip보다 약간 안쪽)
- * 4. 태양 메시는 Billboard로 항상 카메라를 향하게 처리
- * 5. 자전 : spinTarget(실제 태양 메시 자식)을 지정하면 아주 천천히 회전.
- *          빌보드가 부모 회전을 덮어쓰므로 자전은 반드시 "자식 메시"에 적용함.
- *          (Sphere 메시면 빌보드 없이 spinTarget만 돌려도 됨)
+ * 1. Sphere 메시 오브젝트에 부착 (태양 본체)
+ * 2. 위치는 씬에서 한 번만 배치 — 이 스크립트는 위치를 건드리지 않음
+ * 3. SunSurface 셰이더 머티리얼을 적용 (표면 흐름 + 차등 자전)
+ * 4. spinSpeed로 본체 메시를 아주 천천히 자전
+ *
+ * [중요 — Far Clip Plane]
+ * 태양이 카메라 Far Clip(기본 1000) "안쪽"에 있어야 잘리지 않음.
+ * - 태양을 1000 유닛 안에 두거나
+ * - Main Camera의 Far Clip을 태양 거리보다 크게 키울 것
+ * (Far를 너무 키우면 Near와의 비율 때문에 z-fighting 발생 주의)
  */
 
 using UnityEngine;
@@ -17,44 +21,14 @@ using UnityEngine;
 [ExecuteAlways]
 public class SunObject : MonoBehaviour
 {
-    [Header("References")]
-    [SerializeField] private Camera targetCamera;
+    [Header("자전")]
+    [SerializeField] private Vector3 spinAxis  = Vector3.up; // 자전 축
+    [SerializeField] private float   spinSpeed = 0.2f;       // 자전 속도(도/초) — 정말 느리게
 
-    [Header("태양 위치")]
-    [SerializeField] private Vector3 sunDirection = new Vector3(0.3f, 0.5f, 1f); // 태양 방향
-    [SerializeField] private float   distance     = 5000f;  // 카메라로부터 거리
-
-    [Header("이글거림 (스케일 펄스)")]
-    [SerializeField] private float baseScale   = 800f;
-    [SerializeField] private float pulseAmount = 30f;   // 크기 진동 폭
-    [SerializeField] private float pulseSpeed  = 2f;    // 진동 속도
-
-    [Header("자전 (실제 태양 메시 자식)")]
-    [SerializeField] private Transform spinTarget;            // 자전시킬 메시 (비우면 자전 안 함)
-    [SerializeField] private Vector3   spinAxis  = Vector3.up; // 자전 축
-    [SerializeField] private float     spinSpeed = 0.2f;       // 자전 속도(도/초) — 정말 느리게
-
-    private void LateUpdate()
+    private void Update()
     {
-        if (targetCamera == null) targetCamera = Camera.main;
-        if (targetCamera == null) return;
-
-        // 카메라 기준 항상 같은 방향·거리에 배치 → 거리 무관 동일 크기
-        Vector3 dir = sunDirection.normalized;
-        transform.position = targetCamera.transform.position + dir * distance;
-
-        // 빌보드 — 항상 카메라를 정면으로
-        transform.rotation = Quaternion.LookRotation(
-            transform.position - targetCamera.transform.position);
-
-        // 이글이글 — 미세한 크기 진동
-        float pulse = Mathf.Sin(Time.time * pulseSpeed) * pulseAmount
-                    + Mathf.PerlinNoise(Time.time * pulseSpeed * 1.7f, 0f) * pulseAmount;
-        float s = baseScale + pulse;
-        transform.localScale = new Vector3(s, s, s);
-
-        // 자전 — 빌보드에 영향받지 않도록 자식 메시를 로컬 회전
-        if (spinTarget != null)
-            spinTarget.Rotate(spinAxis.normalized, spinSpeed * Time.deltaTime, Space.Self);
+        // 자전 — 본체 메시를 로컬 회전 (위치는 고정, 건드리지 않음)
+        if (spinSpeed != 0f)
+            transform.Rotate(spinAxis.normalized, spinSpeed * Time.deltaTime, Space.Self);
     }
 }
