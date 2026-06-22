@@ -71,7 +71,10 @@ public class EnemyTurretBase : Enemy
                     EnterReload(reloadDuration);
                     break;
                 }
-                ShootWeapons();
+                if (!ShouldSkipAttackFromBehind())
+                {
+                    ShootWeapons();
+                }
                 break;
             case AI_STATE.RELOAD:
                 if (_stateTimer <= 0f)
@@ -120,10 +123,12 @@ public class EnemyTurretBase : Enemy
             return;
         }
 
+        Vector3 aimPoint = GetPredictedAimPoint();
+
         // 수평(Y축) — Swivel이 좌우로만 회전
         if (swivelTransform != null)
         {
-            Vector3 flatTarget = target.position;
+            Vector3 flatTarget = aimPoint;
             flatTarget.y = swivelTransform.position.y;
             Quaternion rotY = Quaternion.LookRotation(flatTarget - swivelTransform.position, swivelTransform.up);
             swivelTransform.rotation = Quaternion.RotateTowards(
@@ -134,7 +139,7 @@ public class EnemyTurretBase : Enemy
         // 수직(X축) — Mount가 상하로만 회전
         if (mountTransform != null)
         {
-            Vector3 dir = target.position - mountTransform.position;
+            Vector3 dir = aimPoint - mountTransform.position;
             Vector3 up = swivelTransform != null ? swivelTransform.up : transform.up;
             Quaternion rotX = Quaternion.LookRotation(dir, up);
             mountTransform.rotation = Quaternion.RotateTowards(

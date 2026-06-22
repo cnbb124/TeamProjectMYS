@@ -33,10 +33,27 @@ public class Enemy : Unit
              "전함/대형 유닛처럼 세밀한 조준을 안 하는 느낌에 적합.")]
     public float rotateDeadZone = 0f;
 
-    [Header("<size=14>AI 상태 (참고용, 입력X)</size>")]
+    [Header("<size=18>AI 상태 (참고용, 입력X)</size>")]
     public AI_STATE aiState = AI_STATE.STANDBY;
 
+    [Header("<size=18>후방 공격 빈도 감소</size>")]
+    [Tooltip("타겟(target.forward) 기준 이 각도(도) 이상 등 뒤에 있으면 후방으로 판정.\n" +
+             "180=정반대(완전 후방), 90=측면, 0=정면.")]
+    [Range(0f, 180f)]
+    public float rearAttackAngleThreshold = 110f;
+    [Tooltip("후방 판정 시 발사를 건너뛸 확률 (0~1). 0이면 후방 페널티 없음.")]
+    [Range(0f, 1f)]
+    public float rearAttackSkipChance = 0.7f;
+
+    [Header("<size=18>예측 사격 (Bullet 전용 — 미사일은 락온이라 영향 없음)</size>")]
+    [Tooltip("0 = 예측 안 함(타겟 현재 위치 그대로 조준), 1 = 완전 예측(타겟 속도 기준 정확히 선조준).\n" +
+             "weaponSystem.curBulletData가 없으면(미사일 전용 함선 등) 값과 무관하게 예측 안 함.")]
+    [Range(0f, 1f)]
+    public float leadAccuracy = 0f;
+
     protected Transform target;
+    // target의 Velocity(Rigidbody.velocity) 참조용. UpdateTarget()에서 target과 함께 갱신.
+    protected Unit targetUnit;
     protected Vector3 spawnPosition;
 
     private float _targetUpdateTimer = 0f;
@@ -96,6 +113,24 @@ public class Enemy : Unit
     // 자식이 override해 발사 종류 지정.
     protected virtual void ShootWeapons() { }
 
+    // 타겟의 후방(등 뒤)에서 공격 중이면 rearAttackSkipChance 확률로 true.
+    // 호출부에서 true면 ShootWeapons()/ShootWeaponsOnPass() 호출을 건너뜀.
+    protected bool ShouldSkipAttackFromBehind()
+    {
+        if (target == null)
+        {
+            return false;
+        }
+        Vector3 toEnemy = (transform.position - target.position).normalized;
+        float dot = Vector3.Dot(target.forward, toEnemy);
+        float dotThreshold = Mathf.Cos(rearAttackAngleThreshold * Mathf.Deg2Rad);
+        if (dot >= dotThreshold)
+        {
+            return false;
+        }
+        return Random.value < rearAttackSkipChance;
+    }
+
     // 미사일 쏘는 서브클래스(MissileShip/FighterShip/터렛 등)가 발사 전에 호출.
     // 락온이 필요한 타입인데 락온이 안 되어 있으면 false — Enemy AI만 이 체크를 거침, Player는 자유 발사.
     protected bool CanFireMissile()
@@ -110,6 +145,30 @@ public class Enemy : Unit
             return;
         }
         target = UnitManager.Instance.GetNearestPlayer(transform.position);
+        targetUnit = target != null ? target.GetComponent<Unit>() : null;
+    }
+
+    // 타겟의 현재 위치 + (속도 * 도달시간)으로 예측 조준점 계산.
+    // leadAccuracy로 보정(0=예측없음~1=완전예측). bulletSpeed가 0 이하면 예측 안 함(미사일 전용 함선 대비).
+    protected Vector3 GetPredictedAimPoint()
+    {
+        if (target == null)
+        {
+            return Vector3.zero;
+        }
+        if (leadAccuracy <= 0f || targetUnit == null || weaponSystem == null || weaponSystem.curBulletData == null)
+        {
+            return target.position;
+        }
+        float bulletSpeed = weaponSystem.curBulletData.speed;
+        if (bulletSpeed <= 0f)
+        {
+            return target.position;
+        }
+        float distance = Vector3.Distance(transform.position, target.position);
+        float leadTime = distance / bulletSpeed;
+        Vector3 fullPredictedPos = target.position + targetUnit.Velocity * leadTime;
+        return Vector3.Lerp(target.position, fullPredictedPos, leadAccuracy);
     }
 
     protected bool IsTargetInRange(float range)
@@ -137,7 +196,7 @@ public class Enemy : Unit
         {
             return;
         }
-        RotateTowardPosition(target.position);
+        RotateTowardPosition(GetPredictedAimPoint());
     }
 
     // rotateSpeed 도/초 기준 일정 선회 속도. 즉시 스냅 없음.

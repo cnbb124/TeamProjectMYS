@@ -60,6 +60,8 @@ public abstract class Unit : MonoBehaviour, IDamageable
 	protected UnitAnimCtrl _animCtrl;
 	//리지드바디 할당용 레퍼런스
 	protected Rigidbody _rb;
+	//외부(Enemy AI 예측사격 등)에서 실제 이동 속도벡터 참조용
+	public Vector3 Velocity => _rb != null ? _rb.velocity : Vector3.zero;
 	//매니저 할당용 레퍼런스
 	protected SoundManager _sound;
 	protected PoolManager _pool;

@@ -433,7 +433,10 @@ public class EnemyShip : Enemy
                 PickCombatPattern();
             return;
         }
-        ShootWeapons();
+        if (!ShouldSkipAttackFromBehind())
+        {
+            ShootWeapons();
+        }
     }
 
     // ATTACK_HOLD 처리. 제자리 정지 + 발사. attackHoldDuration 만료 시 PickCombatPattern 재호출.
@@ -457,7 +460,10 @@ public class EnemyShip : Enemy
                 PickCombatPattern();
             return;
         }
-        ShootWeapons();
+        if (!ShouldSkipAttackFromBehind())
+        {
+            ShootWeapons();
+        }
     }
 
     // 플레이어를 향해 돌진. dot < 0 = 뒤로 지나침 → EnterReposition.
@@ -475,7 +481,10 @@ public class EnemyShip : Enemy
             EnterReposition();
             return;
         }
-        ShootWeaponsOnPass();
+        if (!ShouldSkipAttackFromBehind())
+        {
+            ShootWeaponsOnPass();
+        }
     }
 
 	/// <summary>
