@@ -86,6 +86,7 @@ public class CrosshairUI : MonoBehaviour
             _canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : mainCam,
             out Vector2 localPos);
 
-        crosshairRect.localPosition = localPos;
+        // anchoredPosition으로 통일 (카메라 뒤 경로·GimbalIndicator 기준점과 일치시킴)
+        crosshairRect.anchoredPosition = localPos;
     }
 }
