@@ -205,6 +205,10 @@ public abstract class Unit : MonoBehaviour, IDamageable
 		CurState = UNIT_STATE.IDLE;
 	}
 
+	// OnEnable과 대칭. 부모 오브젝트가 SetActive(false)되면 자식들도 같이 비활성화되며
+	// 자식 각각의 OnDisable도 호출됨 — 자식이 독립된 Unit(터렛 등)일 때 자기 자신의 정리를 직접 하게 하는 용도.
+	protected virtual void OnDisable() { }
+
 	// Start is called before the first frame update
 	protected virtual void Start()
 	{

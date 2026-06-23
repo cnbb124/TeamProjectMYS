@@ -12,7 +12,8 @@ using UnityEngine;
 //
 // ================================================================
 // OnEnable()                             aiState=STANDBY 리셋 + UnitManager.RegisterEnemy 호출 (풀 재사용 시도 매번 실행)
-// Die()                                  UnitManager.UnregisterEnemy 호출 + base.Die()
+// OnDisable()                            UnitManager.UnregisterEnemy 호출 (자기 사망이든 부모 cascade든 항상 호출됨)
+// Die()                                  GameManager.OnEnemyKilled() 호출 + base.Die() (Unregister는 OnDisable이 처리)
 // IsTargetInRange(float range)           단순 거리 비교
 // HasTargetInAttackRange()               LockOnSystem.TargetsInLockonRange 수 체크
 // ShootWeapons()                         virtual — 자식이 override해 발사 종류 지정
@@ -74,6 +75,15 @@ public class Enemy : Unit
         UnitManager.Instance?.RegisterEnemy(this);
     }
 
+    // 부모(전함/터렛 거치대 등)가 SetActive(false)되면 자식 터렛도 같이 비활성화되는데,
+    // 그 경우 자식 자신의 Die()는 호출되지 않아서 UnitManager 등록이 안 풀리는 문제가 있었음 —
+    // OnDisable은 비활성화 원인(자기 사망 vs 부모 cascade) 무관하게 항상 호출되므로 여기서 처리.
+    protected override void OnDisable()
+    {
+        base.OnDisable();
+        UnitManager.Instance?.UnregisterEnemy(this);
+    }
+
     protected override void Start()
     {
         base.Start();
@@ -91,9 +101,9 @@ public class Enemy : Unit
 
     protected override void Die()
     {
-        UnitManager.Instance?.UnregisterEnemy(this);
         GameManager.Instance?.OnEnemyKilled();
         // 풀 등록 여부와 무관하게 SetActive(false)로 정리 — 죽은 적이 씬에 계속 남아있던 문제 해결.
+        // (SetActive(false) → OnDisable() → UnitManager.UnregisterEnemy 자동 호출됨)
         PoolManager.Instance?.Return(gameObject);
         base.Die();
     }
