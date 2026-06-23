@@ -47,7 +47,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   soundList:
-  - type: 0
+  - type: 100
     clips:
     - {fileID: 8300000, guid: 6273a8bf5e7514848aa2b6871cb327ad, type: 3}
     volumeScale: 1
@@ -60,7 +60,7 @@ MonoBehaviour:
     dropOldest: 0
     minDistance: 0
     maxDistance: 0
-  - type: 11
+  - type: 300
     clips:
     - {fileID: 8300000, guid: 14ba2f7d17b7a434f851c648484e0806, type: 3}
     volumeScale: 1
@@ -73,7 +73,7 @@ MonoBehaviour:
     dropOldest: 1
     minDistance: 15
     maxDistance: 25
-  - type: 15
+  - type: 400
     clips:
     - {fileID: 8300000, guid: b12187930d6f4b04b8a14c4e942c7f93, type: 3}
     - {fileID: 8300000, guid: ee945bf47a1d77342b0e71d7e4421695, type: 3}
@@ -91,7 +91,7 @@ MonoBehaviour:
     dropOldest: 1
     minDistance: 15
     maxDistance: 25
-  - type: 12
+  - type: 301
     clips:
     - {fileID: 8300000, guid: 15a3211a3c389664a94d401850cad8c7, type: 3}
     volumeScale: 1
@@ -104,7 +104,7 @@ MonoBehaviour:
     dropOldest: 1
     minDistance: 15
     maxDistance: 25
-  - type: 16
+  - type: 401
     clips:
     - {fileID: 8300000, guid: 4a5f1abf2aef3f84986f73751d63fc11, type: 3}
     - {fileID: 8300000, guid: cc1180ee178a70e4db502919244f6755, type: 3}
@@ -123,7 +123,7 @@ MonoBehaviour:
     dropOldest: 1
     minDistance: 15
     maxDistance: 25
-  - type: 13
+  - type: 302
     clips:
     - {fileID: 8300000, guid: deb31dbb1a26c054891a4186c584a5d0, type: 3}
     - {fileID: 8300000, guid: 1d28b3dc1528699479899e51fea87f6d, type: 3}
@@ -137,7 +137,7 @@ MonoBehaviour:
     dropOldest: 1
     minDistance: 15
     maxDistance: 25
-  - type: 17
+  - type: 402
     clips:
     - {fileID: 8300000, guid: e49a8a34f479db846af1106a5fe97951, type: 3}
     - {fileID: 8300000, guid: 75c2520332d47c543ab6ecbed510a94f, type: 3}
@@ -152,7 +152,7 @@ MonoBehaviour:
     dropOldest: 1
     minDistance: 30
     maxDistance: 100
-  - type: 21
+  - type: 406
     clips:
     - {fileID: 8300000, guid: 81a346a7999a81243b8e6e18df6852ef, type: 3}
     - {fileID: 8300000, guid: 58a24ee7c3371ff49bb6833b316f040a, type: 3}
@@ -168,13 +168,52 @@ MonoBehaviour:
     dropOldest: 1
     minDistance: 15
     maxDistance: 25
-  - type: 22
+  - type: 407
     clips:
     - {fileID: 8300000, guid: 51f46968ed339684b975b62416e9bd8e, type: 3}
     volumeScale: 1
     volumeMin: 1
     volumeMax: 1
     pitchMin: 0.88
+    pitchMax: 1
+    minPlayInterval: 0.1
+    maxConcurrent: 4
+    dropOldest: 1
+    minDistance: 15
+    maxDistance: 25
+  - type: 500
+    clips:
+    - {fileID: 8300000, guid: 51b29026a14d387498c8a7e8df09f1ab, type: 3}
+    volumeScale: 1
+    volumeMin: 1
+    volumeMax: 1
+    pitchMin: 1
+    pitchMax: 1
+    minPlayInterval: 0.1
+    maxConcurrent: 4
+    dropOldest: 1
+    minDistance: 15
+    maxDistance: 25
+  - type: 501
+    clips:
+    - {fileID: 8300000, guid: 51b29026a14d387498c8a7e8df09f1ab, type: 3}
+    volumeScale: 1
+    volumeMin: 1
+    volumeMax: 1
+    pitchMin: 1
+    pitchMax: 1
+    minPlayInterval: 0.1
+    maxConcurrent: 4
+    dropOldest: 1
+    minDistance: 15
+    maxDistance: 25
+  - type: 502
+    clips:
+    - {fileID: 8300000, guid: 51b29026a14d387498c8a7e8df09f1ab, type: 3}
+    volumeScale: 1
+    volumeMin: 1
+    volumeMax: 1
+    pitchMin: 1
     pitchMax: 1
     minPlayInterval: 0.1
     maxConcurrent: 4

@@ -362,7 +362,8 @@ public class EnemyShip : Enemy
             _prevAiState = aiState;
             aiState = AI_STATE.DODGE;
             Vector3 dodgeDir = (Random.value < 0.5f) ? transform.right : -transform.right;
-            _rb.AddForce(dodgeDir * dodgeForce, ForceMode.Impulse);
+            // dodgeDistance(실제 이동거리)÷dodgeDuration = 필요한 속도. VelocityChange는 mass와 무관하게 그 속도를 그대로 더해줌.
+            _rb.AddForce(dodgeDir * (dodgeDistance / dodgeDuration), ForceMode.VelocityChange);
             CurState = UNIT_STATE.DODGE;
             return;
         }

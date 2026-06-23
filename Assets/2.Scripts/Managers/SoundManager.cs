@@ -26,8 +26,10 @@ using UnityEngine.UI;
 //   유닛에 부착된 3D 효과음 재생. unitTr = 소스 부모(유닛 루트), playPos = 실제 재생 위치(총구 등).
 //   playPos 생략 시 unitTr 위치에서 재생.
 //
-// PlaySFX3DLoop(SOUND_TYPE, Transform targetTr)     루프 사운드 시작 (유닛에 부착)
-// StopSFX3DLoop(Transform targetTr)                 루프 사운드 정지
+// PlaySFX3DLoop(SOUND_TYPE, Transform targetTr)     루프 사운드 시작 (유닛에 부착), AudioSource 반환
+//                                                     → (대상,타입) 조합별로 동시 재생 가능 (엔진음 레이어 크로스페이드 등)
+//                                                     → 이미 재생 중이면 기존 AudioSource 그대로 반환(volume/pitch 직접 조절용)
+// StopSFX3DLoop(SOUND_TYPE, Transform targetTr)     루프 사운드 정지
 // StopSFXAll()                                      모든 효과음 정지
 //
 // ================================================================
@@ -132,8 +134,8 @@ public class SoundManager : MonoBehaviour
 		"2. PlaySFXUI(SOUND_TYPE) - UI(2D)효과음 재생함\n" +
 		"3. PlaySFX3DAtPosition(SOUND_TYPE, Vector3) - 3D 효과음 재생함\n" +
 		"4. PlaySFX3DAtUnit(SOUND_TYPE, Transform unitTr, Transform playPos) - 유닛에 부착된 단발성 3D 효과음 재생함\n" +
-		"5. PlaySFX3DLoop(SOUND_TYPE, Transform targetTr) - 루프 3D 효과음 시작함\n" +
-		"6. StopSFX3DLoop(Transform targetTr) - 루프 3D 효과음 정지함\n" +
+		"5. PlaySFX3DLoop(SOUND_TYPE, Transform targetTr) - 루프 3D 효과음 시작함 (AudioSource 반환)\n" +
+		"6. StopSFX3DLoop(SOUND_TYPE, Transform targetTr) - 루프 3D 효과음 정지함\n" +
 		"※ 플레이 함수 뒤에 피치값(float형 min, max) 추가 시 랜덤 재생됨(오버로딩)\n" +
 		"7. StopBGM() - 배경음 정지함\n" +
 		"8. StopSFXAll() - 모든 소리 정지함\n" +
@@ -179,7 +181,9 @@ public class SoundManager : MonoBehaviour
 	//사운드타입을 키로받고, 클래스를 값으로
 	private Dictionary<SOUND_TYPE, SoundTypeClip> soundDict = new Dictionary<SOUND_TYPE, SoundTypeClip>();
 	//루프 사운드를 추적하기 위한 딕셔너리 (어떤 오브젝트가 어떤 소스를 쓰고 있는지 기록)
-	private Dictionary<Transform, AudioSource> activeLoopSounds = new Dictionary<Transform, AudioSource>();
+	// (Transform, SOUND_TYPE) 복합키 — 같은 유닛이라도 사운드 종류가 다르면 동시에 여러 루프 재생 가능
+	// (예: 엔진 공회전/가속/부스트 레이어를 한 유닛에서 동시에 크로스페이드)
+	private Dictionary<(Transform, SOUND_TYPE), AudioSource> activeLoopSounds = new Dictionary<(Transform, SOUND_TYPE), AudioSource>();
 	// 3D 효과음 재생을 위한 오디오 소스 풀(Pool)
 	private List<AudioSource> sfx3DPool = new List<AudioSource>();
 	// PlaySFX3DAtUnit으로 유닛에 부착된 단발성 소스 추적 (재생 끝나면 매니저로 unparent)
@@ -611,39 +615,44 @@ public class SoundManager : MonoBehaviour
     /// <param name="type"></param>
     /// <param name="targetTr"></param>
 
-    public void PlaySFX3DLoop(SOUND_TYPE type, Transform targetTr)
+    // 이미 같은 (타겟, 타입) 조합으로 재생 중이면 그 AudioSource를 그대로 반환 — 호출한 쪽이 참조를
+    // 들고 매 프레임 volume/pitch를 직접 조절할 수 있음(엔진음 레이어 크로스페이드 등에 사용).
+    public AudioSource PlaySFX3DLoop(SOUND_TYPE type, Transform targetTr)
 	{
-		//해당 오브젝트가 이미 사운드루프중이면 실행x
-		if (activeLoopSounds.ContainsKey(targetTr))
+		var key = (targetTr, type);
+
+		//이미 같은 조합으로 재생 중이면 기존 소스 그대로 반환
+		if (activeLoopSounds.TryGetValue(key, out AudioSource existing))
 		{
-			return;
+			return existing;
 		}
 
 		//데이타갖고오기
 		SoundTypeClip data = GetSoundData(type);
-		if (data != null && data.type != SOUND_TYPE.SFX_NONE)
+		if (data == null || data.type == SOUND_TYPE.SFX_NONE)
 		{
-			//폴리포니(maxConcurrent/dropOldest) 체크 거쳐서 소스 확보. targetTr을 발사 주체로 넘겨 유닛별 minPlayInterval 적용.
-			AudioSource source = AcquireSFX3DSource(type, data, targetTr);
-			if (source == null) { return; }
-			//좌표일치
-			source.transform.position = targetTr.position;
-			//해당 타겟에 이 오디오소스 붙이기(지속재생용)
-			source.transform.SetParent(targetTr);
-
-			source.clip = GetRandomClip(data);
-			source.volume = sfx3DVolume * GetVolume(data);
-			source.minDistance = data.minDistance;
-			source.maxDistance = data.maxDistance;
-			source.pitch = GetPitch(data);
-
-			source.loop = true;
-			source.Play();
-
-			activeLoopSounds.Add(targetTr, source);
+			return null;
 		}
-		
-	
+
+		//폴리포니(maxConcurrent/dropOldest) 체크 거쳐서 소스 확보. targetTr을 발사 주체로 넘겨 유닛별 minPlayInterval 적용.
+		AudioSource source = AcquireSFX3DSource(type, data, targetTr);
+		if (source == null) { return null; }
+		//좌표일치
+		source.transform.position = targetTr.position;
+		//해당 타겟에 이 오디오소스 붙이기(지속재생용)
+		source.transform.SetParent(targetTr);
+
+		source.clip = GetRandomClip(data);
+		source.volume = sfx3DVolume * GetVolume(data);
+		source.minDistance = data.minDistance;
+		source.maxDistance = data.maxDistance;
+		source.pitch = GetPitch(data);
+
+		source.loop = true;
+		source.Play();
+
+		activeLoopSounds.Add(key, source);
+		return source;
 	}
 
 
@@ -663,10 +672,11 @@ public class SoundManager : MonoBehaviour
 	
 	// 3D 루프 사운드 정지 및 회수
 
-	public void StopSFX3DLoop(Transform targetTr)
+	public void StopSFX3DLoop(SOUND_TYPE type, Transform targetTr)
 	{
-		//해당 트랜스폼에서 재생 중인 루프 사운드가 있는지 확인 및 가져오기
-		if (activeLoopSounds.TryGetValue(targetTr, out AudioSource source))
+		var key = (targetTr, type);
+		//해당 (트랜스폼,타입) 조합으로 재생 중인 루프 사운드가 있는지 확인 및 가져오기
+		if (activeLoopSounds.TryGetValue(key, out AudioSource source))
 		{
 			//사운드 재생 정지
 			source.Stop();
@@ -678,7 +688,7 @@ public class SoundManager : MonoBehaviour
 			source.transform.SetParent(this.transform);
 
 			//루프 사운드 추적 딕셔너리에서 해당 항목 제거
-			activeLoopSounds.Remove(targetTr);
+			activeLoopSounds.Remove(key);
 		}
 	}
 	// 모든 사운드(BGM 및 2D SFX) 정지

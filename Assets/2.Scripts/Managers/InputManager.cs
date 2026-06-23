@@ -314,12 +314,17 @@ public class InputManager : MonoBehaviour
     // =====================================================================
     // 마우스 커서 잠금/해제
     // 평소(조종 중): Locked + 숨김 — Mouse X/Y가 카메라 시야 조작용 델타로 쓰임.
-    // UI 패널이 열려있거나 Alt를 누르는 동안: None + 보임 — 커서로 UI 클릭/창 밖 이동 가능.
+    // UI 패널이 열려있거나 Alt를 누르는 동안, 또는 씬에 조종할 플레이어가 없을 때(로비/메뉴 등):
+    //   None + 보임 — 커서로 UI 클릭/창 밖 이동 가능.
+    // InputManager는 DontDestroyOnLoad라 모든 씬에서 같은 로직이 도는데, 플레이어가 없는 씬에서는
+    // 항상 잠금이 걸려버리는 문제가 있었음 — playerRef 체크로 해결.
     // 신규 UI 패널도 같은 방식으로 열림상태를 알리고 싶으면, IsUIRequestingCursor()에 || 조건만 추가.
     // =====================================================================
     private bool IsUIRequestingCursor()
     {
-        return Input.GetKey(KeyCode.LeftAlt) || Input.GetKey(KeyCode.RightAlt)
+        bool noPlayerInScene = GameManager.Instance == null || GameManager.Instance.playerRef == null;
+        return noPlayerInScene
+            || Input.GetKey(KeyCode.LeftAlt) || Input.GetKey(KeyCode.RightAlt)
             || InventoryPanelUI.IsOpen;
     }
 

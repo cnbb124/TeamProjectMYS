@@ -147,8 +147,12 @@ public class Player : Unit
 	[Tooltip("최대속도의 몇 % 도달 시 역추진 메인 발동 (0.95 = 95%)")]
 	public float reverseEffectSpeedThreshold = 0.95f;
 
-	
+
 	private Vector3 _dodgeDir;
+	// timeToStop 계산용 — 입력이 막 끊긴 순간의 속도를 한 번만 저장해서 그 값 기준으로 감속력을 고정시킴.
+	// (기존 _wasMoving은 UpdateBoostEffect()의 파티클 상태추적용으로 이미 쓰이고 있어서 이름 다르게 둠)
+	private float _decelStartSpeed;
+	private bool _wasThrusting;
 
 
 	protected override void Awake()
@@ -286,7 +290,8 @@ public class Player : Unit
 					_dodgeDir = Vector3.zero;
 					//_dodgeDir = dodgeLeft ? -transform.right : transform.right;
 				}
-				_rb.AddForce(_dodgeDir * dodgeForce, ForceMode.Impulse);
+				// dodgeDistance(실제 이동거리)÷dodgeDuration = 필요한 속도. VelocityChange는 mass와 무관하게 그 속도를 그대로 더해줌.
+				_rb.AddForce(_dodgeDir * (dodgeDistance / dodgeDuration), ForceMode.VelocityChange);
 
 				// 닷지 방향에 맞는 RCS 버스트 1회 재생 (애니메이션 방향과 동기화)
 				if (dodgeLeft)
@@ -487,14 +492,17 @@ public class Player : Unit
 		bool canBoost = _input.isBoosting && curBoostRemaining > minBoostRequired && _input.moveInput.z > 0 && curFuelRemaining > 0;
 		_isBoosting = canBoost;
 
+		// baseMoveSpeed/boostSpeed = 더 이상 "힘"이 아니라 실제 도달하는 목표 속도 그 자체.
+		// (이전엔 AddForce(ForceMode.Acceleration) + Rigidbody.drag 평형점이 실속도였어서,
+		//  이 값과 실제 도달 속도가 안 맞았음 — MoveTowards로 직접 목표속도를 따라가게 변경)
 		float speed = canBoost ? boostSpeed : baseMoveSpeed;
 		// speedMultiPlier: 피격/HP에 따른 속도 감소용. 0이면 1배율 적용
 		float multiplier = speedMultiPlier > 0f ? speedMultiPlier : 1f;
 
-		// 최종 가해질 힘의 크기 계산
-		float finalForce = speed * multiplier;
+		// 목표 속도(방향 포함)
+		float targetSpeed = speed * multiplier;
 
-		// AddForce를 이용한 물리 기반 가속 및 역분사
+		// 목표 속도로 점진적 접근 (timeToMaxSpeed초 만에 도달하도록 가속력을 매 프레임 역산)
 		if (isMoving)
 		{
 			if (curFuelRemaining > 0f)
@@ -510,14 +518,30 @@ public class Player : Unit
 				}
 				curFuelRemaining = Mathf.Max(0f, curFuelRemaining - fuelCost * Time.fixedDeltaTime);
 
-				// 입력이 있을 때 해당 방향으로 가속
-				_rb.AddForce(dir * finalForce, ForceMode.Acceleration);
+				// 입력 방향으로 목표 속도까지 가속 — targetSpeed÷timeToMaxSpeed초 만에 도달
+				Vector3 targetVelocity = dir * targetSpeed;
+				float accel = (timeToMaxSpeed > 0f) ? targetSpeed / timeToMaxSpeed : float.MaxValue;
+				_rb.velocity = Vector3.MoveTowards(_rb.velocity, targetVelocity, accel * Time.fixedDeltaTime);
 			}
 			// 연료 없으면 추진력 없음 (관성은 유지)
+			_wasThrusting = true;
 		}
 		else
 		{
-			// 방향키 입력 없음 — 관성 감속 중. 역추진 이펙트는 UpdateReverseEffect()에서 처리
+			// 방향키 입력 없음 — timeToStop초 만에 0까지 직접 감속.
+			// (Rigidbody.drag를 0으로 뺐기 때문에 — drag가 살아있으면 MoveTowards로 정한 속도를
+			//  매 물리스텝마다 깎아먹어서 목표속도(base/boost)에 도달을 못 하는 문제가 있었음)
+			// 멈추기 시작한 순간의 속도를 한 번 저장해두고 그 값 기준으로 감속력을 고정 —
+			// 매 프레임 "현재속도÷timeToStop"으로 다시 계산하면 속도가 줄어들수록 감속력도 줄어들어
+			// 드래그처럼 영원히 0에 못 도달하는 지수감쇠가 되어버린다.
+			if (_wasThrusting)
+			{
+				_decelStartSpeed = _rb.velocity.magnitude;
+				_wasThrusting = false;
+			}
+			float decel = (timeToStop > 0f) ? _decelStartSpeed / timeToStop : float.MaxValue;
+			// 역추진 이펙트는 UpdateReverseEffect()에서 처리
+			_rb.velocity = Vector3.MoveTowards(_rb.velocity, Vector3.zero, decel * Time.fixedDeltaTime);
 			// if (_rb.velocity.sqrMagnitude > 0.1f)
 			// {
 			// 	//ex PlayReverseThrusterEffect();

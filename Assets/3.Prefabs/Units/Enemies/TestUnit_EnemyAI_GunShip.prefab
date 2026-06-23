@@ -241,9 +241,10 @@ MonoBehaviour:
   defense: 1
   criChance: 20
   criDamageMultiplier: 1.5
-  baseMoveSpeed: 350
-  boostSpeed: 550
-  maxSpeed: 800
+  baseMoveSpeed: 125
+  boostSpeed: 200
+  maxSpeed: 250
+  decelerationRate: 800
   maxBoostCapacity: 100
   minBoostRequired: 10
   boostConsumeAmont: 25
@@ -261,6 +262,12 @@ MonoBehaviour:
   curSpeed: 0
   curBoostRemaining: 0
   _playSoundType: 0
+  idleMaxVolume: 1
+  thrustMaxVolume: 1
+  boostMaxVolume: 1
+  boostFadeSpeed: 4
+  thrustMinPitch: 0.9
+  thrustMaxPitch: 1.3
   detectRange: 1250
   rotateSpeed: 210
   rotateDeadZone: 0
@@ -355,7 +362,7 @@ Rigidbody:
   m_GameObject: {fileID: 6428153736698038514}
   serializedVersion: 4
   m_Mass: 10
-  m_Drag: 2.5
+  m_Drag: 0
   m_AngularDrag: 0.05
   m_CenterOfMass: {x: 0, y: 0, z: 0}
   m_InertiaTensor: {x: 1, y: 1, z: 1}

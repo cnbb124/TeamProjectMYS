@@ -131,12 +131,19 @@ public abstract class Unit : MonoBehaviour, IDamageable
 	[Header("=========터렛등 좌표고정유닛은 적용안됨==========")]
 	[Space(5)]
 	[Header("<size=18>이동 관련</size>")]
-	[Tooltip("기본 이동속도")]
+	[Tooltip("기본 이동속도 (초당 이동 거리, unit/s). 예: 350이면 초당 350유닛 이동.")]
 	public float baseMoveSpeed;//기본이동속ㄷ
-	[Tooltip("부스트 사용시 이동속도")]
+	[Tooltip("부스트 사용시 이동속도 (초당 이동 거리, unit/s)")]
 	public float boostSpeed;//부스트사용시 이동속도
 	[Tooltip("최대속도velocity가 넘어갈시 고정시킬속도")]
 	public float maxSpeed;
+	[Tooltip("목표 속도(baseMoveSpeed/boostSpeed)까지 도달하는 데 걸리는 시간(초).\n" +
+			 "작을수록 빠릿하게 반응함. base든 boost든 목표속도가 달라도 항상 이 시간만큼 걸림(내부에서 목표속도÷이 시간으로 가속력 계산).")]
+	public float timeToMaxSpeed = 0.4f;
+	[Tooltip("입력을 떼고 완전히 멈추는 데 걸리는 시간(초).\n" +
+			 "Rigidbody.drag를 0으로 빼서(가속 시 목표속도까지 정확히 도달하게 하려고) 자연 감속이 없어졌으므로,\n" +
+			 "정지 시 감속을 이 값으로 직접 제어함. 멈추기 시작한 시점의 속도를 기준으로 항상 이 시간 안에 0이 됨.")]
+	public float timeToStop = 0.4f;
 	[Tooltip("부스트 최대치")]
 	public float maxBoostCapacity;
 	[Tooltip("부스트 사용 최소 요구치")]
@@ -164,8 +171,9 @@ public abstract class Unit : MonoBehaviour, IDamageable
 	[Tooltip("회피 쿨타임")]
 	public float dodgeCoolTime = 5f;
 	protected float _dodgeCooldownTimer = 0f;
-	[Tooltip("회피 시 가해지는 순간 힘")]
-	public float dodgeForce = 800f;
+	[Tooltip("회피 시 실제로 이동하는 거리(unit). dodgeDuration 동안 이 거리만큼 이동하도록\n" +
+			 "내부에서 속도(거리÷dodgeDuration)를 역산해 적용함 — 질량(mass)과 무관하게 항상 같은 거리를 이동.")]
+	public float dodgeDistance = 40f;
 	public bool IsInvincible { get; private set; }
 	[Tooltip("피격부위 혹은 HP잔량에 따른이동속도 변경용")]
 	public float speedMultiPlier;//HP 혹은 피격부위에따른 속도조절용.
@@ -216,6 +224,11 @@ public abstract class Unit : MonoBehaviour, IDamageable
 		_pool = PoolManager.Instance;
 		//인스펙터에서 입력된 값 현재 스탯으로 설정
 		//저장 기능 생길시 변경필요.
+
+		// 엔진 사운드 3레이어 — 한 번 걸어두면 죽을 때까지 계속 재생, UpdateEngineAudio()가 볼륨만 조절
+		_idleLoop = _sound?.PlaySFX3DLoop(SOUND_TYPE.SFX_IDLE, transform);
+		_thrustLoop = _sound?.PlaySFX3DLoop(SOUND_TYPE.SFX_MOVING, transform);
+		_boostLoop = _sound?.PlaySFX3DLoop(SOUND_TYPE.SFX_BOOST, transform);
 
 
 
@@ -294,11 +307,43 @@ public abstract class Unit : MonoBehaviour, IDamageable
 			curSpeed = _rb != null ? (_rb.velocity.magnitude < 0.01f ? 0f : _rb.velocity.magnitude) : 0f;
 			updateTimer = 0f;
 		}
+
+		UpdateEngineAudio();
 	}
 
 	protected virtual void FixedUpdate()
 	{
 
+	}
+
+	// 매 프레임 실제 속도(_rb.velocity, 0.5초 캐시인 curSpeed 말고 즉시값 사용)를 기준으로
+	// 공회전/가속/부스트 3레이어의 볼륨(+가속음 피치)을 크로스페이드. CurState==DIE면 전부 무음.
+	private void UpdateEngineAudio()
+	{
+		if (CurState == UNIT_STATE.DIE || _rb == null)
+		{
+			if (_idleLoop != null) _idleLoop.volume = 0f;
+			if (_thrustLoop != null) _thrustLoop.volume = 0f;
+			if (_boostLoop != null) _boostLoop.volume = 0f;
+			return;
+		}
+
+		float speedRatio = maxSpeed > 0f ? Mathf.Clamp01(_rb.velocity.magnitude / maxSpeed) : 0f;
+
+		if (_idleLoop != null)
+		{
+			_idleLoop.volume = Mathf.Lerp(idleMaxVolume, 0f, speedRatio);
+		}
+		if (_thrustLoop != null)
+		{
+			_thrustLoop.volume = Mathf.Lerp(0f, thrustMaxVolume, speedRatio);
+			_thrustLoop.pitch = Mathf.Lerp(thrustMinPitch, thrustMaxPitch, speedRatio);
+		}
+		if (_boostLoop != null)
+		{
+			float targetVolume = _isBoosting ? boostMaxVolume : 0f;
+			_boostLoop.volume = Mathf.MoveTowards(_boostLoop.volume, targetVolume, Time.deltaTime * boostFadeSpeed);
+		}
 	}
 	// GetFirePos / GetBoostPos 제거 — WeaponSystem이 직접 _bulletFirePositions 등을 보유
 
@@ -341,6 +386,25 @@ public abstract class Unit : MonoBehaviour, IDamageable
 	[HideInInspector]
 	public SOUND_TYPE _playSoundType;
 
+	// =====================================================================
+	// 엔진 사운드 (공회전/가속/부스트 레이어 — 항상 동시 재생, 속도 기준으로 볼륨만 크로스페이드)
+	// =====================================================================
+	[Header("<size=14>엔진 사운드 크로스페이드</size>")]
+	[Tooltip("정지 상태(속도비율 0)일 때 공회전음 최대 볼륨")]
+	public float idleMaxVolume = 1f;
+	[Tooltip("최고속(속도비율 1)일 때 가속음 최대 볼륨")]
+	public float thrustMaxVolume = 1f;
+	[Tooltip("부스트 중일 때 부스트음 최대 볼륨")]
+	public float boostMaxVolume = 1f;
+	[Tooltip("부스트 사운드가 켜지고/꺼질 때 볼륨이 변하는 속도(초당)")]
+	public float boostFadeSpeed = 4f;
+	[Tooltip("가속음 피치 범위 — 속도비율 0일 때 minPitch, 1일 때 maxPitch")]
+	public float thrustMinPitch = 0.9f;
+	public float thrustMaxPitch = 1.3f;
+
+	private AudioSource _idleLoop;
+	private AudioSource _thrustLoop;
+	private AudioSource _boostLoop;
 
 
 
@@ -444,7 +508,8 @@ public abstract class Unit : MonoBehaviour, IDamageable
 				{
 					PlayAnim(ANIM_TYPE.IDLE);
 				}
-				_sound?.PlaySFX3DLoop(SOUND_TYPE.SFX_IDLE, this.transform);
+				// 엔진 사운드(공회전/가속/부스트)는 더 이상 상태 전환 시점에 트리거 안 함 —
+				// Start()에서 3개 레이어를 한 번씩 걸어두고, UpdateEngineAudio()가 매 프레임 속도 기준으로 볼륨만 크로스페이드함.
 				break;
 
 			case UNIT_STATE.MOVING:
@@ -457,12 +522,10 @@ public abstract class Unit : MonoBehaviour, IDamageable
 				{
 					PlayAnim(ANIM_TYPE.MOVING);
 				}
-				_sound?.PlaySFX3DLoop(SOUND_TYPE.SFX_MOVING, this.transform);
 				break;
 
 			case UNIT_STATE.BOOSTING:
 				PlayAnim(ANIM_TYPE.BOOST);
-				_sound?.PlaySFX3DLoop(SOUND_TYPE.SFX_BOOST, this.transform);
 				break;
 
 			case UNIT_STATE.DODGE:
@@ -482,14 +545,8 @@ public abstract class Unit : MonoBehaviour, IDamageable
 	}
 	protected virtual void OnStateExit(UNIT_STATE state)
 	{
-		switch (state)
-		{
-			case UNIT_STATE.IDLE:
-			case UNIT_STATE.MOVING:
-			case UNIT_STATE.BOOSTING:
-				_sound?.StopSFX3DLoop(this.transform);
-				break;
-		}
+		// 엔진 사운드(IDLE/MOVING/BOOSTING)는 항상 재생 중인 상태로 두고 볼륨만 크로스페이드하므로
+		// 상태 퇴장 시 따로 정지할 게 없음(UpdateEngineAudio() 참고).
 	}
 	protected virtual void OnIdle()
 	{

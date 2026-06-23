@@ -79,7 +79,10 @@ public enum WEAPON_POS_TYPE
 
 public enum SOUND_TYPE
 {
-	BGM_LOBBY,          // 정거장(상점) 배경음
+
+
+	//BGM관련 100번대
+	BGM_LOBBY = 100,          // 정거장(상점) 배경음
 	BGM_BATTLE,         // 우주 전투 배경음
 	BGM_1F,             // 1층 배경음
 	BGM_B2,             // 지하2층배경음
@@ -89,20 +92,22 @@ public enum SOUND_TYPE
 	BGM_GAMEOVER,
 
 
-	//UI관련
-	SFX_DICE_ROLL,      // 주사위 굴리는 소리
+	//UI관련 200번대
+
+	SFX_DICE_ROLL = 200,      // 주사위 굴리는 소리
 	SFX_UI_CLICK,       // 버튼 클릭음
 	SFX_UI_LOCKON_COMPLETE,
 
 
-	// 발사음
-	SFX_BULLET_VULCAN_SHOOT,
+	//전투 효과음관련
+	//발사음 300번대
+	SFX_BULLET_VULCAN_SHOOT = 300,
 	SFX_BULLET_IMPULSE_SHOOT,//탄
 	SFX_MISSILESHOOT,   //미사일
 	SFX_LASERSHOOT,     //레이저
 
-	// 피격음
-	SFX_BULLET_VULCAN_HIT,
+	//피격음 400번대
+	SFX_BULLET_VULCAN_HIT = 400,
 	SFX_BULLET_IMPULSE_HIT,//탄
 	SFX_EXPLOSION,      // 미사일등 폭발음
 	SFX_CONTACTSHIP,    //부딪혔을때.
@@ -114,16 +119,16 @@ public enum SOUND_TYPE
 	SFX_CONTACTGROUND_SHIELD,  //행성등 부딪혔을 때, 실드
 	SFX_LASERHIT_SHIELD,    //레이저맞았을때, 실드
 
-	//이동음
-	SFX_IDLE,
+	//이동음 500번대
+	SFX_IDLE = 500,
 	SFX_MOVING,
 	SFX_BOOST,
 	SFX_DODGE,
 
 
 
+	SFX_NONE = 9999,//빈거설정용
 
-	SFX_NONE,//빈거설정용
 }
 
 public enum LOCK_ON_MODE
