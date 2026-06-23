@@ -2,7 +2,7 @@ using UnityEngine;
 
 // 스폰 방식.
 // ScenePlaced : 씬에 미리 배치된 오브젝트 SetActive(true).
-// RandomSpawn : 지정 스폰포인트에 프리팹 Instantiate.
+// RandomSpawn : 지정 스폰포인트에 PoolManager.Get(poolType)으로 꺼내서 배치.
 public enum SpawnMethod { ScenePlaced, RandomSpawn }
 
 // 한 웨이브의 구성 정의.
@@ -17,7 +17,10 @@ public class WaveData : ScriptableObject
         public SpawnMethod method = SpawnMethod.RandomSpawn;
 
         [Header("RandomSpawn 전용")]
-        [Tooltip("스폰할 적 프리팹")]
+        [Tooltip("스폰할 적의 PoolManager.POOL_TYPE. PoolManager.poolConfigs에 해당 타입+프리팹이 등록돼있어야 함.")]
+        public POOL_TYPE poolType;
+        [Tooltip("참고용 프리팹 표시 — 실제 스폰에는 사용 안 됨(poolType이 실제 스폰 기준). " +
+                 "PoolManager.poolConfigs에 등록한 프리팹과 같은 걸로 맞춰둘 것.")]
         public GameObject enemyPrefab;
         [Tooltip("스폰 지점. null이면 SpawnManager의 defaultSpawnPoints 중 랜덤 선택.")]
         public Transform spawnPoint;

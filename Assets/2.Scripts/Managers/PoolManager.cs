@@ -97,12 +97,12 @@ public class PoolManager : MonoBehaviour
     // DisableAllProjectiles() 대상 목록 (투사체만)
     private static POOL_TYPE[] _projectileTypes =
     {
-        POOL_TYPE.BULLET,
-        POOL_TYPE.MISSILE,
-        POOL_TYPE.LASER,
-        POOL_TYPE.CLUSTER_MISSILE_BASE,
-        POOL_TYPE.CLUSTER_MISSILE_CHILDREN,
-        POOL_TYPE.DUMB_MISSILE,
+        POOL_TYPE.PROJECTILE_BULLET,
+        POOL_TYPE.PROJECTILE_MISSILE,
+        POOL_TYPE.PROJECTILE_LASER,
+        POOL_TYPE.PROJECTILE_MISSILE_CLUSTER,
+        POOL_TYPE.PROJECTILE_MISSILE_CLUSTER_CHILD,
+        POOL_TYPE.PROJECTILE_MISSILE_DUMB,
     };
 
     // =====================================================================
@@ -255,17 +255,17 @@ public class PoolManager : MonoBehaviour
 	// 기존 호출부 변경 없이 사용 가능
 	public Bullet GetBullet()
 	{
-		return GetCachedProjectile(POOL_TYPE.BULLET) as Bullet;
+		return GetCachedProjectile(POOL_TYPE.PROJECTILE_BULLET) as Bullet;
 	}
 
 	public Missile GetMissile()
 	{
-		return GetCachedProjectile(POOL_TYPE.MISSILE) as Missile;
+		return GetCachedProjectile(POOL_TYPE.PROJECTILE_MISSILE) as Missile;
 	}
 
 	public Laser GetLaser()
 	{
-		return GetCachedProjectile(POOL_TYPE.LASER) as Laser;
+		return GetCachedProjectile(POOL_TYPE.PROJECTILE_LASER) as Laser;
 	}
 
 	/// <summary>
@@ -273,21 +273,21 @@ public class PoolManager : MonoBehaviour
 	/// </summary>
 	public ClusterMissile GetClusterMissile()
 	{
-		return GetCachedProjectile(POOL_TYPE.CLUSTER_MISSILE_BASE) as ClusterMissile;
+		return GetCachedProjectile(POOL_TYPE.PROJECTILE_MISSILE_CLUSTER) as ClusterMissile;
 	}
 	/// <summary>
 	/// 클러스터 미사일 분열 자탄. 꺼낸 후 반드시 Init() 호출.
 	/// </summary>
 	public Missile GetClusterMissileChild()
 	{
-		return GetCachedProjectile(POOL_TYPE.CLUSTER_MISSILE_CHILDREN) as Missile;
+		return GetCachedProjectile(POOL_TYPE.PROJECTILE_MISSILE_CLUSTER_CHILD) as Missile;
 	}
 	/// <summary>
 	/// 유도없는 미사일. 꺼낸 후 반드시 Init() 호출.
 	/// </summary>
 	public DumbMissile GetDumbMissile()
 	{
-		return GetCachedProjectile(POOL_TYPE.DUMB_MISSILE) as DumbMissile;
+		return GetCachedProjectile(POOL_TYPE.PROJECTILE_MISSILE_DUMB) as DumbMissile;
 	}
 
 
@@ -346,16 +346,16 @@ public class PoolManager : MonoBehaviour
 	// 개별 비활성화 (필요 시 외부에서 직접 호출)
 	public void DisableBullet()
 	{
-		DisableProjectiles(POOL_TYPE.BULLET);
+		DisableProjectiles(POOL_TYPE.PROJECTILE_BULLET);
 	}
 
 	public void DisableMissile()
 	{
-		DisableProjectiles(POOL_TYPE.MISSILE);
+		DisableProjectiles(POOL_TYPE.PROJECTILE_MISSILE);
 	}
 
 	public void DisableLaser()
 	{
-		DisableProjectiles(POOL_TYPE.LASER);
+		DisableProjectiles(POOL_TYPE.PROJECTILE_LASER);
 	}
 }

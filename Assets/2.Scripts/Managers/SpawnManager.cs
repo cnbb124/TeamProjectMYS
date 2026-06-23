@@ -168,14 +168,19 @@ public class SpawnManager : MonoBehaviour
 
     private IEnumerator SpawnRandom(WaveData.SpawnEntry entry)
     {
-        if (entry.enemyPrefab == null)
+        if (PoolManager.Instance == null)
         {
             yield break;
         }
         for (int i = 0; i < entry.count; i++)
         {
             Vector3 pos = GetSpawnPosition(entry.spawnPoint);
-            GameObject go = Instantiate(entry.enemyPrefab, pos, Quaternion.identity);
+            GameObject go = PoolManager.Instance.Get(entry.poolType);
+            if (go == null)
+            {
+                continue;
+            }
+            go.transform.SetPositionAndRotation(pos, Quaternion.identity);
             Enemy enemy = go.GetComponent<Enemy>();
             if (enemy != null)
             {

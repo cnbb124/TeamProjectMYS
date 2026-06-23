@@ -74,6 +74,8 @@ public class Enemy : Unit
     {
         UnitManager.Instance?.UnregisterEnemy(this);
         GameManager.Instance?.OnEnemyKilled();
+        // 풀 등록 여부와 무관하게 SetActive(false)로 정리 — 죽은 적이 씬에 계속 남아있던 문제 해결.
+        PoolManager.Instance?.Return(gameObject);
         base.Die();
     }
 

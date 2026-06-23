@@ -402,7 +402,7 @@ public class WeaponSystem : MonoBehaviour
 
 	/// <summary>
 	/// 발사할 총알 풀 종류 결정. curBulletData.curBulletPoolType이 설정돼있으면 그 값,
-	/// curBulletData가 null이면(에디터 미설정) 기존 기본 풀(POOL_TYPE.BULLET)로 폴백.
+	/// curBulletData가 null이면(에디터 미설정) 기존 기본 풀(POOL_TYPE.PROJECTILE_BULLET)로 폴백.
 	/// </summary>
 	private POOL_TYPE GetBulletPoolType()
 	{
@@ -411,7 +411,7 @@ public class WeaponSystem : MonoBehaviour
 			return curBulletData.curProjectilePoolType;
 		}
 
-		return POOL_TYPE.BULLET;
+		return POOL_TYPE.PROJECTILE_BULLET;
 	}
 
 	/// <summary>
@@ -557,11 +557,11 @@ public class WeaponSystem : MonoBehaviour
 		switch (curMissileType)
 		{
 			case MISSILE_TYPE.CLUSTER:
-				return POOL_TYPE.CLUSTER_MISSILE_BASE;
+				return POOL_TYPE.PROJECTILE_MISSILE_CLUSTER;
 			case MISSILE_TYPE.DUMB:
-				return POOL_TYPE.DUMB_MISSILE;
+				return POOL_TYPE.PROJECTILE_MISSILE_DUMB;
 			default:
-				return POOL_TYPE.MISSILE;
+				return POOL_TYPE.PROJECTILE_MISSILE;
 		}
 	}
 
