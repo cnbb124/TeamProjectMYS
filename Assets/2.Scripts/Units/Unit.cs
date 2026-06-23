@@ -229,6 +229,10 @@ public abstract class Unit : MonoBehaviour, IDamageable
 		_idleLoop = _sound?.PlaySFX3DLoop(SOUND_TYPE.SFX_IDLE, transform);
 		_thrustLoop = _sound?.PlaySFX3DLoop(SOUND_TYPE.SFX_MOVING, transform);
 		_boostLoop = _sound?.PlaySFX3DLoop(SOUND_TYPE.SFX_BOOST, transform);
+		// PlaySFX3DLoop()가 SoundManager에 등록된 기본 볼륨으로 즉시 Play()해버리므로,
+		// 다음 Update() 전까지 잠깐 잘못된(0이어야 할 가속/부스트음이 들리는) 볼륨으로 재생되는 버그가 있었음 —
+		// 같은 프레임에서 바로 한 번 보정해서 그 틈을 없앰.
+		UpdateEngineAudio();
 
 
 
