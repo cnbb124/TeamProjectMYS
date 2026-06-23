@@ -234,6 +234,18 @@ namespace ProceduralForceField
                     wave.transform.SetParent(transform);
                     wave.transform.localPosition = Vector3.zero;
                     wave.transform.rotation = Quaternion.identity;
+
+                    // Halo / Halo_Glow 파티클 색상을 쉴드 색상(아군/적군)에 맞춰 동기화
+                    ParticleSystem[] haloParticles = wave.GetComponentsInChildren<ParticleSystem>(true);
+                    foreach (ParticleSystem ps in haloParticles)
+                    {
+                        if (ps.gameObject.name.StartsWith("Halo"))
+                        {
+                            ParticleSystem.MainModule main = ps.main;
+                            main.startColor = _activeColor;
+                        }
+                    }
+
                     wave.SetActive(true);
                     // F3DPulsewave는 OnSpawned() 호출해야 초기화됨
                     wave.BroadcastMessage("OnSpawned", SendMessageOptions.DontRequireReceiver);
