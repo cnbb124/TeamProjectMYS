@@ -10,16 +10,23 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 1ba7533c1a1ba204aa17f818495136b1, type: 3}
-  m_Name: New WaveData1
+  m_Name: Temp WaveData1
   m_EditorClassIdentifier: 
   entries:
-  - method: 0
-    poolType: 0
-    enemyPrefab: {fileID: 0}
+  - method: 1
+    poolType: 6
     spawnPoint: {fileID: 0}
-    count: 0
-    interval: 0
+    count: 10
+    interval: 0.2
     scenePlacedEnemies:
     - {fileID: 0}
-    delay: 0
-  nextWaveDelay: 3
+    delay: 1
+  - method: 1
+    poolType: 8
+    spawnPoint: {fileID: 0}
+    count: 2
+    interval: 0.2
+    scenePlacedEnemies:
+    - {fileID: 0}
+    delay: 1
+  nextWaveDelay: 15

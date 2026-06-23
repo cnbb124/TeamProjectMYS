@@ -413,7 +413,7 @@ MonoBehaviour:
   maxHpRemaining: 99999
   maxShieldCapacity: 0
   shieldRegainDelay: 0
-  shieldRegainRate: 0
+  shieldRegainRate: 6
   isShieldRegaining: 0
   shield: {fileID: 0}
   bodyHitboxRoot: {fileID: 0}
@@ -445,6 +445,9 @@ MonoBehaviour:
   rotateSpeed: 3
   rotateDeadZone: 0
   aiState: 1
+  rearAttackAngleThreshold: 110
+  rearAttackSkipChance: 0.7
+  leadAccuracy: 0
   patterns:
   - {fileID: 11400000, guid: 8e028c3fba8c0404dbf722aece6f864b, type: 2}
   - {fileID: 11400000, guid: 15611a88b562c80428526718c6bfd80d, type: 2}

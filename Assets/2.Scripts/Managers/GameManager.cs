@@ -380,14 +380,14 @@ public class GameManager : MonoBehaviour
         //기타 필요한 ui연출이나 사운드, 이펙트연출은 추가로 작성필요
     }
 
-    /// <summary>스테이지 클리어 조건 달성 시 호출.</summary>
-    public void GameClear()
+    /// <summary>스테이지 클리어 조건 달성 시 호출. (게임 전체 클리어와는 별개 — 그건 별도 로직 필요, 아직 미구현)</summary>
+    public void StageClear()
     {
-        if (curState == GAME_STATE.CLEAR)
+        if (curState == GAME_STATE.STAGE_CLEAR)
         {
             return;
         }
-        ChangeState(GAME_STATE.CLEAR);
+        ChangeState(GAME_STATE.STAGE_CLEAR);
         PoolManager.Instance.DisableAllProjectiles();
     }
 

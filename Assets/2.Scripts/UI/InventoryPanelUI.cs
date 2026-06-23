@@ -9,10 +9,14 @@ public class InventoryPanelUI : MonoBehaviour
     [Header("Panel")]
     [SerializeField] private GameObject panelRoot;
 
+    // InputManager가 읽기 전용으로 참조 — 인벤토리 열려있는 동안 마우스 커서 해제용.
+    public static bool IsOpen { get; private set; }
+
     private void Start()
     {
         if (panelRoot != null)
             panelRoot.SetActive(false);
+        IsOpen = false;
     }
 
     private void Update()
@@ -25,5 +29,6 @@ public class InventoryPanelUI : MonoBehaviour
     {
         if (panelRoot == null) return;
         panelRoot.SetActive(!panelRoot.activeSelf);
+        IsOpen = panelRoot.activeSelf;
     }
 }

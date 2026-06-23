@@ -52,6 +52,6 @@ public enum GAME_STATE
 	PLAYING,
 	PAUSED,
 	GAME_OVER,
-	CLEAR,
+	STAGE_CLEAR,
 }
 

@@ -301,11 +301,41 @@ public class InputManager : MonoBehaviour
     // =====================================================================
     private void Update()
     {
+        UpdateCursorLock();
+
         switch (controlType)
         {
             case INPUT_CONTROL_TYPE.KEYBOARD_MOUSE: ReadKeyboardMouse(); break;
             case INPUT_CONTROL_TYPE.GAMEPAD:        ReadGamepad();  break;
             case INPUT_CONTROL_TYPE.MOBILE:         ReadMobile();   break;
+        }
+    }
+
+    // =====================================================================
+    // 마우스 커서 잠금/해제
+    // 평소(조종 중): Locked + 숨김 — Mouse X/Y가 카메라 시야 조작용 델타로 쓰임.
+    // UI 패널이 열려있거나 Alt를 누르는 동안: None + 보임 — 커서로 UI 클릭/창 밖 이동 가능.
+    // 신규 UI 패널도 같은 방식으로 열림상태를 알리고 싶으면, IsUIRequestingCursor()에 || 조건만 추가.
+    // =====================================================================
+    private bool IsUIRequestingCursor()
+    {
+        return Input.GetKey(KeyCode.LeftAlt) || Input.GetKey(KeyCode.RightAlt)
+            || InventoryPanelUI.IsOpen;
+    }
+
+    private void UpdateCursorLock()
+    {
+        bool freeCursor = IsUIRequestingCursor();
+        Cursor.lockState = freeCursor ? CursorLockMode.None : CursorLockMode.Locked;
+        Cursor.visible = freeCursor;
+    }
+
+    // 알트탭 등으로 창 포커스를 잃으면 OS가 강제로 커서 잠금을 풀어버림 — 포커스 복귀 시 재적용.
+    private void OnApplicationFocus(bool hasFocus)
+    {
+        if (hasFocus)
+        {
+            UpdateCursorLock();
         }
     }
 
@@ -330,11 +360,13 @@ public class InputManager : MonoBehaviour
         rollInput = (Input.GetKey(km.rollRight) ? 1f  : 0f)
                   + (Input.GetKey(km.rollLeft)  ? -1f : 0f);
 
-        // 시야 (마우스 이동량)
-        lookInput = new Vector2(
-            Input.GetAxisRaw(km.axisMouseX),
-            Input.GetAxisRaw(km.axisMouseY)
-        );
+        // 시야 (마우스 이동량) — 커서가 풀려있는 동안(UI/Alt)은 카메라 조종 안 함
+        lookInput = IsUIRequestingCursor()
+            ? Vector2.zero
+            : new Vector2(
+                Input.GetAxisRaw(km.axisMouseX),
+                Input.GetAxisRaw(km.axisMouseY)
+            );
 
         // 부스트 / 회피
         isBoosting = Input.GetKey(km.boost);

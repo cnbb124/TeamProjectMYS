@@ -178,9 +178,14 @@ public enum POOL_TYPE
 	// 아이템 / 이펙트 (추후 세분화)
 	ITEM,
 	ITEM_ASTEROID,
-	
+}
 
-	
+// PoolEntry.category — DisableByCategory(PoolCategory)에서 poolConfigs 필터링용.
+public enum PoolCategory
+{
+	Projectile,
+	Enemy,
+	Item,
 }
 /// <summary>
 /// 파츠종류
@@ -270,4 +275,18 @@ public enum EFFECT_TYPE
 	VFX_MISSILE_MUZZLE,
 	// 쉴드 이펙트
 	VFX_SHIELD_PULSEWAVE,
+}
+
+
+
+
+
+
+// 스폰 방식.
+// ScenePlaced : 씬에 미리 배치된 오브젝트 SetActive(true).
+// RandomSpawn : 지정 스폰포인트에 PoolManager.Get(poolType)으로 꺼내서 배치.
+public enum SpawnMethod
+{
+	ScenePlaced,
+	PoolSpawn
 }

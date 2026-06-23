@@ -9,7 +9,7 @@ using UnityEngine;
 // GetNearestPlayer(Vector3 from) 가장 가까운 플레이어 Transform 반환 (없으면 null)
 //                                 → Enemy에서 target 갱신 시 사용
 //
-// RegisterEnemy(Unit)            적 등록 — Enemy.Start()에서 호출
+// RegisterEnemy(Unit)            적 등록 — Enemy.OnEnable()에서 호출 (풀 재사용 시도 매번)
 // UnregisterEnemy(Unit)          적 해제 — Enemy.Die()에서 호출
 // GetAllEnemies()                현재 살아있는 적 리스트 반환 (읽기전용)
 //                                 → 레이더 UI팀에서 적 방향 계산 시 사용

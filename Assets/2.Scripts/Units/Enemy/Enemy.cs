@@ -11,7 +11,7 @@ using UnityEngine;
 // UpdateAI() — 1초마다 UnitManager에서 최근접 플레이어로 target 갱신
 //
 // ================================================================
-// Start()                                UnitManager.RegisterEnemy 호출
+// OnEnable()                             aiState=STANDBY 리셋 + UnitManager.RegisterEnemy 호출 (풀 재사용 시도 매번 실행)
 // Die()                                  UnitManager.UnregisterEnemy 호출 + base.Die()
 // IsTargetInRange(float range)           단순 거리 비교
 // HasTargetInAttackRange()               LockOnSystem.TargetsInLockonRange 수 체크
@@ -54,6 +54,7 @@ public class Enemy : Unit
     protected Transform target;
     // target의 Velocity(Rigidbody.velocity) 참조용. UpdateTarget()에서 target과 함께 갱신.
     protected Unit targetUnit;
+
     protected Vector3 spawnPosition;
 
     private float _targetUpdateTimer = 0f;
@@ -62,12 +63,30 @@ public class Enemy : Unit
     // 범용 AI 사용 여부. EnemyWorker처럼 자체 AI를 쓰는 자식은 false로 override.
     protected virtual bool UseGenericAI => true;
 
+    // OnEnable이 Start보다 항상 먼저 호출되므로, 등록은 여기서 — 죽어서 Unregister된 뒤
+    // 풀에서 재사용(SetActive(true))될 때도 매번 다시 등록됨. RegisterEnemy는 중복등록 가드 있어 안전.
+    // aiState는 STANDBY로 리셋 — 서브클래스(EnemyShip/EnemyTurretBase)가 각자 OnAIStandby/STANDBY 케이스에서
+    // 실제 시작 상태(PATROL/RELOAD 등)로 알아서 전환함.
+    protected override void OnEnable()
+    {
+        base.OnEnable();
+        aiState = AI_STATE.STANDBY;
+        UnitManager.Instance?.RegisterEnemy(this);
+    }
+
     protected override void Start()
     {
         base.Start();
         UpdateTarget();
         spawnPosition = transform.position;
-        UnitManager.Instance?.RegisterEnemy(this);
+    }
+
+    // 위치를 직접 배치하는 스폰 호출부(SpawnManager 등)가 transform.position을 옮긴 직후 호출.
+    // OnEnable은 Get() 직후(=재배치 이전) 호출돼서 거기서 캡처하면 죽기 전 위치가 잡혀버림 —
+    // 그래서 재배치가 끝난 다음 이 메서드로 명시적으로 갱신함. (ScenePlaced는 재배치를 안 하므로 호출 불필요)
+    public void RefreshSpawnAnchor()
+    {
+        spawnPosition = transform.position;
     }
 
     protected override void Die()

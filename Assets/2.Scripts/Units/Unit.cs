@@ -81,6 +81,8 @@ public abstract class Unit : MonoBehaviour, IDamageable
 	public int maxShieldCapacity;//최대,현재실드수치
 
 	public float shieldRegainDelay;//피격후 회복까지딜레이시간
+	[Range(6.0f,100.0f)]
+	[Tooltip("실드 초당 회복수치(최소 6)")]
 	public float shieldRegainRate; //실드회복수치
 										 //private float shieldRegainTimer = 0f;//딜레이 시간까지잴 타이머 >0516 코루틴으로변경
 	public bool isShieldRegaining = false; //회복중인지 여부
@@ -193,6 +195,15 @@ public abstract class Unit : MonoBehaviour, IDamageable
 		}
 	}
 
+	// 풀에서 재사용(SetActive(true))될 때마다 호출 — Start()는 오브젝트 생애 단 한 번만 실행되므로,
+	// 죽었을 때의 상태(curHpRemaining=0, CurState=DIE 등)가 재사용 시 그대로 남는 문제를 막기 위함.
+	// 최초 활성화 시에도 Start()보다 먼저 호출되는데, 그 시점엔 RefillToMax()가 인스펙터 기본값 기준으로 한 번 돌고
+	// 곧이어 Start()가 파츠 보너스 적용 후 다시 RefillToMax()를 불러 최종값으로 덮어쓰므로 문제없음.
+	protected virtual void OnEnable()
+	{
+		RefillToMax();
+		CurState = UNIT_STATE.IDLE;
+	}
 
 	// Start is called before the first frame update
 	protected virtual void Start()

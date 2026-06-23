@@ -58,6 +58,11 @@ public class EnemyTurretBase : Enemy
 
         switch (aiState)
         {
+            // Enemy.OnEnable()이 aiState를 STANDBY로 리셋함 — Start()가 하던 것과 동일하게 즉시 RELOAD로 전환.
+            // (이 case가 없으면 STANDBY에서 영원히 못 빠져나오는 버그였음 — 세션58에서 한 번 겪었던 문제)
+            case AI_STATE.STANDBY:
+                EnterReload(0f);
+                break;
             case AI_STATE.ATTACK_HOLD:
                 if (!IsTargetInRange(detectRange) || !HasTargetInAttackRange())
                 {

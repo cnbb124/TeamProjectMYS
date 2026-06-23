@@ -3181,6 +3181,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Turret_DUAL_MYS (2)
       objectReference: {fileID: 0}
+    - target: {fileID: 8780441365474338247, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
+      propertyPath: shieldRegainRate
+      value: 6
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -3507,6 +3511,10 @@ PrefabInstance:
     - target: {fileID: 673522139347252847, guid: b043e4959cc079943be1c844c5e57168, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1174679257422973203, guid: b043e4959cc079943be1c844c5e57168, type: 3}
+      propertyPath: shieldRegainRate
+      value: 6
       objectReference: {fileID: 0}
     - target: {fileID: 6428153736698038514, guid: b043e4959cc079943be1c844c5e57168, type: 3}
       propertyPath: m_Name
@@ -4209,11 +4217,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1174679257422973203, guid: b043e4959cc079943be1c844c5e57168, type: 3}
       propertyPath: maxHpRemaining
-      value: 9999
+      value: 50
       objectReference: {fileID: 0}
     - target: {fileID: 1174679257422973203, guid: b043e4959cc079943be1c844c5e57168, type: 3}
       propertyPath: attackPassWeight
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1174679257422973203, guid: b043e4959cc079943be1c844c5e57168, type: 3}
+      propertyPath: shieldRegainRate
+      value: 6
       objectReference: {fileID: 0}
     - target: {fileID: 1174679257422973203, guid: b043e4959cc079943be1c844c5e57168, type: 3}
       propertyPath: attackChaseWeight
@@ -4221,7 +4233,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1174679257422973203, guid: b043e4959cc079943be1c844c5e57168, type: 3}
       propertyPath: maxShieldCapacity
-      value: 9999
+      value: 50
       objectReference: {fileID: 0}
     - target: {fileID: 1174679257422973203, guid: b043e4959cc079943be1c844c5e57168, type: 3}
       propertyPath: attackHoldDuration
@@ -4312,10 +4324,6 @@ PrefabInstance:
     - target: {fileID: 6428153736698038514, guid: b043e4959cc079943be1c844c5e57168, type: 3}
       propertyPath: m_Name
       value: TestUnit_EnemyAI_GunShip (6)
-      objectReference: {fileID: 0}
-    - target: {fileID: 6428153736698038514, guid: b043e4959cc079943be1c844c5e57168, type: 3}
-      propertyPath: m_IsActive
-      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -4440,6 +4448,10 @@ PrefabInstance:
     - target: {fileID: 673522139347252847, guid: b043e4959cc079943be1c844c5e57168, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1174679257422973203, guid: b043e4959cc079943be1c844c5e57168, type: 3}
+      propertyPath: shieldRegainRate
+      value: 6
       objectReference: {fileID: 0}
     - target: {fileID: 6428153736698038514, guid: b043e4959cc079943be1c844c5e57168, type: 3}
       propertyPath: m_Name
@@ -4573,6 +4585,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 1174679257422973203, guid: b043e4959cc079943be1c844c5e57168, type: 3}
+      propertyPath: shieldRegainRate
+      value: 6
+      objectReference: {fileID: 0}
     - target: {fileID: 6428153736698038514, guid: b043e4959cc079943be1c844c5e57168, type: 3}
       propertyPath: m_Name
       value: TestUnit_EnemyAI_GunShip (7)
@@ -4638,6 +4654,10 @@ PrefabInstance:
     - target: {fileID: 673522139347252847, guid: b043e4959cc079943be1c844c5e57168, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1174679257422973203, guid: b043e4959cc079943be1c844c5e57168, type: 3}
+      propertyPath: shieldRegainRate
+      value: 6
       objectReference: {fileID: 0}
     - target: {fileID: 6428153736698038514, guid: b043e4959cc079943be1c844c5e57168, type: 3}
       propertyPath: m_Name
@@ -4879,6 +4899,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1234399002}
     m_Modifications:
+    - target: {fileID: 2366323481049738711, guid: de05701f7f60baf47824a8a546651d04, type: 3}
+      propertyPath: shieldRegainRate
+      value: 6
+      objectReference: {fileID: 0}
     - target: {fileID: 5458041597701461603, guid: de05701f7f60baf47824a8a546651d04, type: 3}
       propertyPath: m_LocalPosition.x
       value: 121.5
@@ -5065,6 +5089,22 @@ PrefabInstance:
       propertyPath: m_Name
       value: VFXManager
       objectReference: {fileID: 0}
+    - target: {fileID: 2970848493800687448, guid: 5af7eb19ac78b8749a740ca971f9dfbf, type: 3}
+      propertyPath: vfxConfigs.Array.size
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 2970848493800687448, guid: 5af7eb19ac78b8749a740ca971f9dfbf, type: 3}
+      propertyPath: vfxConfigs.Array.data[5].prefab
+      value: 
+      objectReference: {fileID: 4716400053651597454, guid: ded319bd08d0e92438de97a0c9003f4c, type: 3}
+    - target: {fileID: 2970848493800687448, guid: 5af7eb19ac78b8749a740ca971f9dfbf, type: 3}
+      propertyPath: vfxConfigs.Array.data[5].effectType
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 2970848493800687448, guid: 5af7eb19ac78b8749a740ca971f9dfbf, type: 3}
+      propertyPath: vfxConfigs.Array.data[5].initialSize
+      value: 20
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -5117,10 +5157,6 @@ PrefabInstance:
     - target: {fileID: 1864595615566934619, guid: bfb62283fbe0acd4995a452340b5f64f, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6473795814811390719, guid: bfb62283fbe0acd4995a452340b5f64f, type: 3}
-      propertyPath: waves.Array.size
-      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8686961716372656570, guid: bfb62283fbe0acd4995a452340b5f64f, type: 3}
       propertyPath: m_Name
@@ -5282,5 +5318,5 @@ SceneRoots:
   - {fileID: 149112815}
   - {fileID: 4206235480063418868}
   - {fileID: 114280029}
-  - {fileID: 137110033}
   - {fileID: 810794449}
+  - {fileID: 137110033}
