@@ -1,4 +1,3 @@
-using System.Collections;
 using UnityEngine;
 
 namespace ProceduralForceField
@@ -87,7 +86,7 @@ namespace ProceduralForceField
 
         [Header("쉴드 파괴 이펙트")]
         [Tooltip("▶ 쉴드 파괴 시 생성할 Pulsewave 프리팹\n" +
-            "PoolManager에 SHIELD_PULSEWAVE 타입으로 등록된 프리팹 사용\n" +
+            "VFXManager.vfxConfigs에 EFFECT_TYPE.VFX_SHIELD_PULSEWAVE로 등록된 프리팹 사용\n" +
             "비워두면 파괴 이펙트 없이 사라지기만 함")]
         [SerializeField] private bool _usePulsewave = true;
 
@@ -225,16 +224,13 @@ namespace ProceduralForceField
             if (_overlayRenderer != null)
                 _overlayRenderer.enabled = false;
 
-            // Pulsewave 스폰
-            if (_usePulsewave && PoolManager.Instance != null)
+            // Pulsewave 스폰 — VFXManager 풀 사용 (자동반납은 EffectAutoReturn이 처리, PoolManager에는 미등록이라 작동 안 했었음)
+            if (_usePulsewave && VFXManager.Instance != null)
             {
-                GameObject wave = PoolManager.Instance.Get(POOL_TYPE.SHIELD_PULSEWAVE);
+                GameObject wave = VFXManager.Instance.PlayEffectAtUnit(
+                    EFFECT_TYPE.VFX_SHIELD_PULSEWAVE, transform, transform.position, Quaternion.identity);
                 if (wave != null)
                 {
-                    wave.transform.SetParent(transform);
-                    wave.transform.localPosition = Vector3.zero;
-                    wave.transform.rotation = Quaternion.identity;
-
                     // Halo / Halo_Glow 파티클 색상을 쉴드 색상(아군/적군)에 맞춰 동기화
                     ParticleSystem[] haloParticles = wave.GetComponentsInChildren<ParticleSystem>(true);
                     foreach (ParticleSystem ps in haloParticles)
@@ -246,27 +242,9 @@ namespace ProceduralForceField
                         }
                     }
 
-                    wave.SetActive(true);
-                    // F3DPulsewave는 OnSpawned() 호출해야 초기화됨
+                    // F3DPulsewave는 OnSpawned()(private) 호출해야 초기화됨
                     wave.BroadcastMessage("OnSpawned", SendMessageOptions.DontRequireReceiver);
-                    StartCoroutine(ReturnPulsewaveAfterDelay(wave, 0.5f));
                 }
-            }
-        }
-
-        private IEnumerator ReturnPulsewaveAfterDelay(GameObject wave, float delay)
-        {
-            yield return new WaitForSeconds(delay);
-
-            ParticleSystem[] particles = wave.GetComponentsInChildren<ParticleSystem>();
-            while (wave != null && wave.activeInHierarchy &&
-                   System.Array.Exists(particles, p => p.IsAlive(true)))
-                yield return null;
-
-            if (wave != null && wave.activeInHierarchy)
-            {
-                wave.transform.SetParent(null);
-                PoolManager.Instance.Return(wave);
             }
         }
 

@@ -234,12 +234,12 @@ public class VFXManager : MonoBehaviour
     /// <param name="pos">생성 시 위치(총구 위치 등)</param>
     /// <param name="rot">생성 시 회전(총구 방향 등)</param>
     /// <param name="duration">지속시간</param>
-	public void PlayEffectAtUnit(EFFECT_TYPE type, Transform unitTr, Vector3 pos, Quaternion rot, float duration = 0f)
+	public GameObject PlayEffectAtUnit(EFFECT_TYPE type, Transform unitTr, Vector3 pos, Quaternion rot, float duration = 0f)
 	{
 		GameObject obj = GetFromPool(type);
 		if (obj == null)
 		{
-			return;
+			return null;
 		}
 
 		obj.transform.SetPositionAndRotation(pos, rot);
@@ -263,6 +263,8 @@ public class VFXManager : MonoBehaviour
 			te.returnAt = Time.time + duration;
 			_timedEffects.Add(te);
 		}
+
+		return obj;
 	}
 
 	// =====================================================================

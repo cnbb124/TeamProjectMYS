@@ -180,8 +180,7 @@ public enum POOL_TYPE
 	ITEM_ASTEROID,
 	
 
-	// 쉴드 이펙트
-	SHIELD_PULSEWAVE,
+	
 }
 /// <summary>
 /// 파츠종류
@@ -269,4 +268,6 @@ public enum EFFECT_TYPE
 	VFX_LASERHIT,
 	VFX_BULLET_MUZZLE,
 	VFX_MISSILE_MUZZLE,
+	// 쉴드 이펙트
+	VFX_SHIELD_PULSEWAVE,
 }
