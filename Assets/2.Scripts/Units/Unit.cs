@@ -225,13 +225,12 @@ public abstract class Unit : MonoBehaviour, IDamageable
 		//인스펙터에서 입력된 값 현재 스탯으로 설정
 		//저장 기능 생길시 변경필요.
 
-		// 엔진 사운드 3레이어 — 한 번 걸어두면 죽을 때까지 계속 재생, UpdateEngineAudio()가 볼륨만 조절
-		_idleLoop = _sound?.PlaySFX3DLoop(SOUND_TYPE.SFX_IDLE, transform);
-		_thrustLoop = _sound?.PlaySFX3DLoop(SOUND_TYPE.SFX_MOVING, transform);
-		_boostLoop = _sound?.PlaySFX3DLoop(SOUND_TYPE.SFX_BOOST, transform);
-		// PlaySFX3DLoop()가 SoundManager에 등록된 기본 볼륨으로 즉시 Play()해버리므로,
-		// 다음 Update() 전까지 잠깐 잘못된(0이어야 할 가속/부스트음이 들리는) 볼륨으로 재생되는 버그가 있었음 —
-		// 같은 프레임에서 바로 한 번 보정해서 그 틈을 없앰.
+		// 엔진 사운드 3레이어 — 한 번 걸어두면 죽을 때까지 계속 재생, SoundManager가 볼륨만 조절.
+		// startVolume=0f로 명시 — Play() 호출 시점부터 무음으로 시작해서, 등록볼륨으로 잠깐 새어나가는 것 방지.
+		_sound?.PlaySFX3DLoop(SOUND_TYPE.SFX_IDLE, transform, 0f);
+		_sound?.PlaySFX3DLoop(SOUND_TYPE.SFX_MOVING, transform, 0f);
+		_sound?.PlaySFX3DLoop(SOUND_TYPE.SFX_BOOST, transform, 0f);
+		// 무음 상태로 시작한 직후, 올바른 초기 볼륨으로 즉시 보정.
 		UpdateEngineAudio();
 
 
@@ -320,34 +319,13 @@ public abstract class Unit : MonoBehaviour, IDamageable
 
 	}
 
-	// 매 프레임 실제 속도(_rb.velocity, 0.5초 캐시인 curSpeed 말고 즉시값 사용)를 기준으로
-	// 공회전/가속/부스트 3레이어의 볼륨(+가속음 피치)을 크로스페이드. CurState==DIE면 전부 무음.
+	// 매 프레임 실제 속도(_rb.velocity, 0.5초 캐시인 curSpeed 말고 즉시값 사용) 기준으로 speedRatio만 계산해서
+	// SoundManager에 넘김 — 볼륨/피치 곡선 자체(SoundManager.EngineSoundConfig)는 SoundManager가 전담(RTPC 스타일).
 	private void UpdateEngineAudio()
 	{
-		if (CurState == UNIT_STATE.DIE || _rb == null)
-		{
-			if (_idleLoop != null) _idleLoop.volume = 0f;
-			if (_thrustLoop != null) _thrustLoop.volume = 0f;
-			if (_boostLoop != null) _boostLoop.volume = 0f;
-			return;
-		}
-
-		float speedRatio = maxSpeed > 0f ? Mathf.Clamp01(_rb.velocity.magnitude / maxSpeed) : 0f;
-
-		if (_idleLoop != null)
-		{
-			_idleLoop.volume = Mathf.Lerp(idleMaxVolume, 0f, speedRatio);
-		}
-		if (_thrustLoop != null)
-		{
-			_thrustLoop.volume = Mathf.Lerp(0f, thrustMaxVolume, speedRatio);
-			_thrustLoop.pitch = Mathf.Lerp(thrustMinPitch, thrustMaxPitch, speedRatio);
-		}
-		if (_boostLoop != null)
-		{
-			float targetVolume = _isBoosting ? boostMaxVolume : 0f;
-			_boostLoop.volume = Mathf.MoveTowards(_boostLoop.volume, targetVolume, Time.deltaTime * boostFadeSpeed);
-		}
+		bool mute = CurState == UNIT_STATE.DIE || _rb == null;
+		float speedRatio = (!mute && maxSpeed > 0f) ? Mathf.Clamp01(_rb.velocity.magnitude / maxSpeed) : 0f;
+		_sound?.UpdateEngineLoopVolumes(transform, speedRatio, _isBoosting, mute);
 	}
 	// GetFirePos / GetBoostPos 제거 — WeaponSystem이 직접 _bulletFirePositions 등을 보유
 
@@ -390,25 +368,8 @@ public abstract class Unit : MonoBehaviour, IDamageable
 	[HideInInspector]
 	public SOUND_TYPE _playSoundType;
 
-	// =====================================================================
-	// 엔진 사운드 (공회전/가속/부스트 레이어 — 항상 동시 재생, 속도 기준으로 볼륨만 크로스페이드)
-	// =====================================================================
-	[Header("<size=14>엔진 사운드 크로스페이드</size>")]
-	[Tooltip("정지 상태(속도비율 0)일 때 공회전음 최대 볼륨")]
-	public float idleMaxVolume = 1f;
-	[Tooltip("최고속(속도비율 1)일 때 가속음 최대 볼륨")]
-	public float thrustMaxVolume = 1f;
-	[Tooltip("부스트 중일 때 부스트음 최대 볼륨")]
-	public float boostMaxVolume = 1f;
-	[Tooltip("부스트 사운드가 켜지고/꺼질 때 볼륨이 변하는 속도(초당)")]
-	public float boostFadeSpeed = 4f;
-	[Tooltip("가속음 피치 범위 — 속도비율 0일 때 minPitch, 1일 때 maxPitch")]
-	public float thrustMinPitch = 0.9f;
-	public float thrustMaxPitch = 1.3f;
-
-	private AudioSource _idleLoop;
-	private AudioSource _thrustLoop;
-	private AudioSource _boostLoop;
+	// 엔진 사운드(공회전/가속/부스트) 볼륨·피치 튜닝값은 SoundManager.engineSoundConfig로 이전됨.
+	// Unit은 speedRatio/isBoosting/mute만 계산해서 SoundManager.UpdateEngineLoopVolumes()에 넘김 (RTPC 스타일 분리).
 
 
 

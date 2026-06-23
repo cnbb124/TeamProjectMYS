@@ -101,8 +101,31 @@ public class SoundTypeClip
 	[Tooltip("3D 효과음 전용.이 거리 밖에서는 소리 X")]
 	public float maxDistance = 50.0f;
 
-	
 
+
+}
+
+// =====================================================================
+// EngineSoundConfig
+// 엔진 루프음(공회전/가속/부스트) 크로스페이드 전용 튜닝값.
+// Unit.cs는 speedRatio/isBoosting만 계산해서 넘기고, 곡선 자체는 여기(SoundManager) 전담 — RTPC 스타일 분리.
+// SFX_IDLE/SFX_MOVING/SFX_BOOST(SoundTypeClip)와는 별개 — 모든 사운드가 공유하는 SoundTypeClip에
+// 엔진 전용 필드를 끼워넣으면 BGM 등 무관한 항목까지 같이 보여서 혼란스러워지므로 전용 클래스로 분리.
+// =====================================================================
+[System.Serializable]
+public class EngineSoundConfig
+{
+	[Tooltip("정지 상태(속도비율 0)일 때 공회전음 최대 볼륨")]
+	public float idleMaxVolume = 1f;
+	[Tooltip("최고속(속도비율 1)일 때 가속음 최대 볼륨")]
+	public float thrustMaxVolume = 1f;
+	[Tooltip("부스트 중일 때 부스트음 최대 볼륨")]
+	public float boostMaxVolume = 1f;
+	[Tooltip("부스트 사운드가 켜지고/꺼질 때 볼륨이 변하는 속도(초당)")]
+	public float boostFadeSpeed = 4f;
+	[Tooltip("가속음 피치 범위 — 속도비율 0일 때 minPitch, 1일 때 maxPitch")]
+	public float thrustMinPitch = 0.9f;
+	public float thrustMaxPitch = 1.3f;
 }
 
 public class SoundManager : MonoBehaviour
@@ -167,6 +190,10 @@ public class SoundManager : MonoBehaviour
 	public float sfxUIVolume = 1.0f;
 	[Range(0f, 1f)]
 	public float sfx3DVolume = 1.0f;
+
+	[Space(10)]
+	[Header("<size=14>엔진 루프음 크로스페이드 설정</size>")]
+	public EngineSoundConfig engineSoundConfig = new EngineSoundConfig();
 
 	[Space(10)]
 	[Header("<size=14>3D 사운드 풀링 사이즈 설정</size>")]
@@ -617,7 +644,9 @@ public class SoundManager : MonoBehaviour
 
     // 이미 같은 (타겟, 타입) 조합으로 재생 중이면 그 AudioSource를 그대로 반환 — 호출한 쪽이 참조를
     // 들고 매 프레임 volume/pitch를 직접 조절할 수 있음(엔진음 레이어 크로스페이드 등에 사용).
-    public AudioSource PlaySFX3DLoop(SOUND_TYPE type, Transform targetTr)
+    // startVolume: 지정 안 하면(null) 기존처럼 SoundManager 등록볼륨으로 시작. 0f 등을 넘기면 그 값으로 시작
+    // (예: Unit.cs 엔진사운드처럼 Play() 직후 자기 로직으로 볼륨을 다시 잡는 경우, 새어나가는 소리 방지용).
+    public AudioSource PlaySFX3DLoop(SOUND_TYPE type, Transform targetTr, float? startVolume = null)
 	{
 		var key = (targetTr, type);
 
@@ -643,7 +672,7 @@ public class SoundManager : MonoBehaviour
 		source.transform.SetParent(targetTr);
 
 		source.clip = GetRandomClip(data);
-		source.volume = sfx3DVolume * GetVolume(data);
+		source.volume = startVolume ?? (sfx3DVolume * GetVolume(data));
 		source.minDistance = data.minDistance;
 		source.maxDistance = data.maxDistance;
 		source.pitch = GetPitch(data);
@@ -655,6 +684,44 @@ public class SoundManager : MonoBehaviour
 		return source;
 	}
 
+
+	// =====================================================================
+	// 엔진 루프음(공회전/가속/부스트) 크로스페이드 갱신.
+	// Unit.cs가 매 프레임 speedRatio(0~1)/isBoosting/mute만 계산해서 넘기고,
+	// 실제 볼륨·피치 곡선은 engineSoundConfig 기준으로 여기서 전부 처리(RTPC 스타일 분리).
+	// 대상 AudioSource는 PlaySFX3DLoop()로 이미 걸어둔 activeLoopSounds에서 직접 조회.
+	// =====================================================================
+	public void UpdateEngineLoopVolumes(Transform targetTr, float speedRatio, bool isBoosting, bool mute = false)
+	{
+		activeLoopSounds.TryGetValue((targetTr, SOUND_TYPE.SFX_IDLE), out AudioSource idle);
+		activeLoopSounds.TryGetValue((targetTr, SOUND_TYPE.SFX_MOVING), out AudioSource thrust);
+		activeLoopSounds.TryGetValue((targetTr, SOUND_TYPE.SFX_BOOST), out AudioSource boost);
+
+		if (mute)
+		{
+			if (idle != null) idle.volume = 0f;
+			if (thrust != null) thrust.volume = 0f;
+			if (boost != null) boost.volume = 0f;
+			return;
+		}
+
+		speedRatio = Mathf.Clamp01(speedRatio);
+
+		if (idle != null)
+		{
+			idle.volume = Mathf.Lerp(engineSoundConfig.idleMaxVolume, 0f, speedRatio);
+		}
+		if (thrust != null)
+		{
+			thrust.volume = Mathf.Lerp(0f, engineSoundConfig.thrustMaxVolume, speedRatio);
+			thrust.pitch = Mathf.Lerp(engineSoundConfig.thrustMinPitch, engineSoundConfig.thrustMaxPitch, speedRatio);
+		}
+		if (boost != null)
+		{
+			float targetVolume = isBoosting ? engineSoundConfig.boostMaxVolume : 0f;
+			boost.volume = Mathf.MoveTowards(boost.volume, targetVolume, Time.deltaTime * engineSoundConfig.boostFadeSpeed);
+		}
+	}
 
 	// ================== [정지 함수들] ==================
 
