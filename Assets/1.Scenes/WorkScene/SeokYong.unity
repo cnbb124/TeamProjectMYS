@@ -17597,12 +17597,20 @@ PrefabInstance:
     m_TransformParent: {fileID: 734135479}
     m_Modifications:
     - target: {fileID: 1295354817333113809, guid: a7897ad853ae9d6458830c653646215c, type: 3}
+      propertyPath: maxHpRemaining
+      value: 1234567
+      objectReference: {fileID: 0}
+    - target: {fileID: 1295354817333113809, guid: a7897ad853ae9d6458830c653646215c, type: 3}
       propertyPath: maxShieldCapacity
-      value: 100
+      value: 50
       objectReference: {fileID: 0}
     - target: {fileID: 1295354817333113809, guid: a7897ad853ae9d6458830c653646215c, type: 3}
       propertyPath: shieldRegainDelay
-      value: 1
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 1295354817333113809, guid: a7897ad853ae9d6458830c653646215c, type: 3}
+      propertyPath: reverseMinBoostHold
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 1295354817333113809, guid: a7897ad853ae9d6458830c653646215c, type: 3}
       propertyPath: reverseEffectSpeedThreshold
