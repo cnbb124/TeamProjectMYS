@@ -72,7 +72,7 @@ public class Player : Unit
 	private ParticleSystem[] _step3Particles;
 	private bool _wasBoosting = false;
 	private bool _wasMoving = false;
-	private ParticleSystem _boostBurstParticle;
+	private ParticleSystem[] _boostBurstParticles;
 
 	// RCS 방향 인덱스
 	private enum RCS { RTop = 0, RBot = 1, LTop = 2, LBot = 3 }
@@ -85,7 +85,10 @@ public class Player : Unit
 	private ParticleSystem[] _reverseMainL;   // Rev-Booster_L 하위 (1회 버스트)
 	private ParticleSystem[] _reverseMainR;   // Rev-Booster_R 하위 (1회 버스트)
 	private ParticleSystem[] _reverseSubs;    // Rev-Sub-Booster_1~8 (루프)
-	private bool _wasCondition1 = false;      // 조건① 이전 프레임 상태 (버스트 중복 방지)
+
+	// 측면 이동(Strafe) RCS — A키 → 우측(R) 분사, D키 → 좌측(L) 분사
+	private ParticleSystem[] _strafeL;        // RCS_Strafe_L 하위 (D키 누를 때)
+	private ParticleSystem[] _strafeR;        // RCS_Strafe_R 하위 (A키 누를 때)
 
 	//매니저 할당용 레퍼런스
 	private InputManager _input;
@@ -143,9 +146,10 @@ public class Player : Unit
 
 
 	[Header("역추진")]
-	[Range(0f, 1f)]
-	[Tooltip("최대속도의 몇 % 도달 시 역추진 메인 발동 (0.95 = 95%)")]
-	public float reverseEffectSpeedThreshold = 0.95f;
+	[Range(0f, 5f)]
+	[Tooltip("이 시간(초) 이상 부스터(쉬프트)를 유지했다가 끝났을 때만 역추진 발동.\n" +
+		"짧게 톡톡 누르는 연타로는 발동 안 함. 권장 2~3초.")]
+	public float reverseMinBoostHold = 2f;
 
 
 	private Vector3 _dodgeDir;
@@ -153,6 +157,8 @@ public class Player : Unit
 	// (기존 _wasMoving은 UpdateBoostEffect()의 파티클 상태추적용으로 이미 쓰이고 있어서 이름 다르게 둠)
 	private float _decelStartSpeed;
 	private bool _wasThrusting;
+	private float _boostHoldTime;    // 부스터를 연속으로 누른 시간 (역추진 발동 조건)
+	private bool _reverseBraking;    // 역추진(브레이크) 연출 진행 중 여부
 
 
 	protected override void Awake()
@@ -292,6 +298,9 @@ public class Player : Unit
 				}
 				// dodgeDistance(실제 이동거리)÷dodgeDuration = 필요한 속도. VelocityChange는 mass와 무관하게 그 속도를 그대로 더해줌.
 				_rb.AddForce(_dodgeDir * (dodgeDistance / dodgeDuration), ForceMode.VelocityChange);
+
+				// 닷지 순간 메인/보조 부스터 fire_3-3 버스트 1회 재생
+				PlayAll(_boostBurstParticles);
 
 				// 닷지 방향에 맞는 RCS 버스트 1회 재생 (애니메이션 방향과 동기화)
 				if (dodgeLeft)
@@ -602,15 +611,7 @@ public class Player : Unit
 		_step2Particles = FindParticlesByName("Step2_Normal");
 		_step3Particles = FindParticlesByNameExclude("Step3_Boost", "fire_3-3");
 
-		Transform[] allChildren = GetComponentsInChildren<Transform>();
-		foreach (Transform child in allChildren)
-		{
-			if (child.name == "fire_3-3")
-			{
-				_boostBurstParticle = child.GetComponent<ParticleSystem>();
-				break;
-			}
-		}
+		_boostBurstParticles = FindParticlesByName("fire_3-3");
 
 		// Dodge RCS 캐싱
 		_rcsDodge[(int)RCS.RTop] = FindParticlesByName("RCS_Wing_R_Top");
@@ -633,6 +634,19 @@ public class Player : Unit
 		{
 			_reverseSubs[i] = FindParticleSingle($"Rev-Sub-Booster_{i + 1}");
 		}
+
+		// 측면 이동(Strafe) RCS 캐싱 — A키 → 우측(R), D키 → 좌측(L)
+		_strafeL = FindParticlesByName("RCS_Strafe_L");
+		_strafeR = FindParticlesByName("RCS_Strafe_R");
+
+		// Play On Awake가 켜진 파티클은 시작 시 자동 1회 재생됨 — 첫 조작 때 같이 터져 보이는
+		// 문제 방지를 위해 부스트 버스트(fire_3-3)와 역추진 파티클을 초기에 전부 정지/클리어.
+		if (_boostBurstParticles != null) foreach (var ps in _boostBurstParticles) ps?.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+		if (_reverseMainL != null) foreach (var ps in _reverseMainL) ps?.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+		if (_reverseMainR != null) foreach (var ps in _reverseMainR) ps?.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+		if (_reverseSubs  != null) foreach (var ps in _reverseSubs)  ps?.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+		if (_strafeL != null) foreach (var ps in _strafeL) ps?.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+		if (_strafeR != null) foreach (var ps in _strafeR) ps?.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
 	}
 
 	// 이름이 일치하는 첫 번째 ParticleSystem 1개만 반환. 없으면 null + 경고 로그.
@@ -671,10 +685,7 @@ public class Player : Unit
 
 		if (isBoosting && !_wasBoosting && curBoostRemaining > minBoostRequired)
 		{
-			if (_boostBurstParticle != null)
-			{
-				_boostBurstParticle.Play();
-			}
+			PlayAll(_boostBurstParticles);
 		}
 		_wasMoving = isMoving;
 		_wasBoosting = isBoosting;
@@ -691,7 +702,7 @@ public class Player : Unit
 				ParticleSystem[] particles = child.GetComponentsInChildren<ParticleSystem>();
 				foreach (var ps in particles)
 				{
-					if (ps.name != excludeName)
+					if (!ps.name.EndsWith(excludeName))
 						list.Add(ps);
 				}
 			}
@@ -705,7 +716,7 @@ public class Player : Unit
 		Transform[] allChildren = GetComponentsInChildren<Transform>();
 		foreach (Transform child in allChildren)
 		{
-			if (child.name == stepName)
+			if (child.name.EndsWith(stepName))
 			{
 				ParticleSystem[] particles = child.GetComponentsInChildren<ParticleSystem>();
 				list.AddRange(particles);
@@ -737,32 +748,68 @@ public class Player : Unit
 		{
 			foreach (var arr in _rcsRoll) StopAll(arr);
 		}
+
+		// 측면 이동(Strafe) 분사 — A키(좌측, x<0) → 우측(R) 분사, D키(우측, x>0) → 좌측(L) 분사
+		float strafe = _input.moveInput.x;
+		if (strafe < -0.01f)        // A키 → 우측 분사
+		{
+			PlayAllIfStopped(_strafeR);
+			StopAll(_strafeL);
+		}
+		else if (strafe > 0.01f)    // D키 → 좌측 분사
+		{
+			PlayAllIfStopped(_strafeL);
+			StopAll(_strafeR);
+		}
+		else
+		{
+			StopAll(_strafeL);
+			StopAll(_strafeR);
+		}
 	}
 
-	// 역추진 파티클 업데이트 (FixedUpdate에서 호출)
+	// 역추진 파티클 업데이트 (FixedUpdate에서 호출) — "감속(브레이크) 기반"
 	//
-	// 조건①: 부스트 에너지 완전 소진 + 최대속도 도달
-	//   → 메인(Rev-Booster_L/R) 1회 버스트 + 소형 8개 루프 ON
-	// 조건②: W 안 누르고 관성 감속 중 (속도 > 임계값)
-	//   → 소형 8개 루프 ON
-	// 조건③: S키 후진 중
-	//   → 소형 8개 루프 ON
+	// 역추진의 실제 역할: 빠르게 날아가다 멈출 때 감속을 시각적으로 보여주는 브레이크 연출.
+	//
+	// 발동 조건: 부스터(쉬프트)를 reverseMinBoostHold초 이상 연속으로 누른 뒤 끝났을 때만.
+	//   → 짧게 톡톡 누르는 연타로는 발동 안 함 (시간이 안 쌓임).
+	// 부스터가 끝나면(쉬프트 떼거나 잔량 소진) "브레이크 모드" 진입:
+	//   메인(Rev-Booster_L/R) 1회 펑 + 보조(Rev-Sub) 루프 ON.
+	//   기체가 거의 멈추면 브레이크 모드 종료, 보조 OFF.
+	// S키 후진 중에는 보조만 ON.
 	private void UpdateReverseEffect()
 	{
-		bool condition1 = curBoostRemaining <= minBoostRequired && _rb.velocity.magnitude >= maxSpeed * reverseEffectSpeedThreshold;
-		bool condition2 = _input.moveInput.z <= 0.01f && _rb.velocity.magnitude > 1f && !condition1;
-		bool condition3 = _input.moveInput.z < -0.01f;
+		float forwardSpeed = Vector3.Dot(_rb.velocity, transform.forward);
 
-		// 메인 버스트 — 조건① 진입 순간 1회만
-		if (condition1 && !_wasCondition1)
+		// 부스터 누른 시간 누적 (연속으로 누르고 있을 때만 쌓이고, 끝나면 판정 후 리셋)
+		if (_isBoosting)
 		{
-			if (_reverseMainL != null) foreach (var ps in _reverseMainL) ps?.Play();
-			if (_reverseMainR != null) foreach (var ps in _reverseMainR) ps?.Play();
+			_boostHoldTime += Time.fixedDeltaTime;
+			// 다시 부스터를 쓰기 시작하면 이전 브레이크 모드는 해제 (새 가속 중이므로)
+			_reverseBraking = false;
 		}
-		_wasCondition1 = condition1;
+		else
+		{
+			// 부스터가 막 끝난 순간 — 충분히 오래 눌렀으면 브레이크 모드 진입
+			if (_boostHoldTime >= reverseMinBoostHold && !_reverseBraking)
+			{
+				_reverseBraking = true;
+				// 메인 1회 펑 — Clear 후 Play로 매번 확실히 터지게
+				if (_reverseMainL != null) foreach (var ps in _reverseMainL) { if (ps != null) { ps.Clear(); ps.Play(); } }
+				if (_reverseMainR != null) foreach (var ps in _reverseMainR) { if (ps != null) { ps.Clear(); ps.Play(); } }
+			}
+			_boostHoldTime = 0f;
+		}
 
-		// 소형 8개 — 조건 중 하나라도 해당되면 루프 ON
-		bool subOn = condition1 || condition2 || condition3;
+		// 브레이크 모드는 기체가 거의 멈추면 종료
+		if (_reverseBraking && forwardSpeed <= 1f)
+			_reverseBraking = false;
+
+		bool reversing = _input.moveInput.z < -0.01f; // S키 후진
+
+		// 보조 8개: 브레이크 모드 중이거나 S키 후진 중이면 루프 ON
+		bool subOn = _reverseBraking || reversing;
 		if (_reverseSubs != null)
 		{
 			foreach (var ps in _reverseSubs)
