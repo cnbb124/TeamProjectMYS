@@ -143,6 +143,10 @@ public class SoundManager : MonoBehaviour
 				{
 					Debug.LogError("씬에 SoundManager 누락! 하이어라키에 사운드매니저 필요");
 				}
+				else
+				{
+					DontDestroyOnLoad(instance.gameObject);
+				}
 			}
 			return instance;
 		}

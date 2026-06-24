@@ -79,6 +79,8 @@ public class PoolManager : MonoBehaviour
 				instance = FindObjectOfType<PoolManager>();
 				if (instance == null)
 					Debug.LogError("[PoolManager] 씬에 PoolManager 없음! 하이어라키에 추가 필요");
+				else
+					DontDestroyOnLoad(instance.gameObject);
 			}
 			return instance;
 		}

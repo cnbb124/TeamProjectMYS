@@ -189,6 +189,8 @@ public class InputManager : MonoBehaviour
                 instance = FindObjectOfType<InputManager>();
                 if (instance == null)
                     Debug.LogError("[InputManager] 씬에 InputManager 없음! 하이어라키에 추가 필요");
+                else
+                    DontDestroyOnLoad(instance.gameObject);
             }
             return instance;
         }

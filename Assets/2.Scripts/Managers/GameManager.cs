@@ -65,7 +65,13 @@ public class GameManager : MonoBehaviour
             {
                 instance = FindObjectOfType<GameManager>();
                 if (instance == null)
+                {
                     Debug.LogError("[GameManager] 씬에 GameManager 없음! 하이어라키에 추가 필요");
+                }
+                else
+                {
+                    DontDestroyOnLoad(instance.gameObject);
+                }
             }
             return instance;
         }
@@ -163,9 +169,13 @@ public class GameManager : MonoBehaviour
             SceneManager.sceneLoaded += OnSceneLoaded;
 
             if (itemDatabase != null)
+            {
                 itemDatabase.Init();
+            }
             else
+            {
                 Debug.LogWarning("[GameManager] itemDatabase 미연결. 저장/로드 시 파츠 복원 불가.");
+            }
         }
         else if (instance != this)
         {

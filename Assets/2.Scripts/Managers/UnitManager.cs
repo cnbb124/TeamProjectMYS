@@ -24,11 +24,14 @@ public class UnitManager : MonoBehaviour
         {
             if (instance == null)
             {
-                Debug.Log($"[UnitManager] Instance getter fallback 진입 (Awake 전에 누가 먼저 호출함)\n{System.Environment.StackTrace}");
                 instance = FindObjectOfType<UnitManager>();
                 if (instance == null)
                 {
                     Debug.LogError("[UnitManager] 씬에 UnitManager 없음! 하이어라키에 추가 필요");
+                }
+                else
+                {
+                    DontDestroyOnLoad(instance.gameObject);
                 }
             }
             return instance;
@@ -37,12 +40,10 @@ public class UnitManager : MonoBehaviour
 
     private void Awake()
     {
-        Debug.Log($"[UnitManager] Awake 호출됨. scene={gameObject.scene.name}, instance==null:{instance == null}, instance==this:{instance == this}");
         if (instance == null)
         {
             instance = this;
             DontDestroyOnLoad(gameObject);
-            Debug.Log("[UnitManager] DontDestroyOnLoad 적용됨");
         }
         else if (instance != this)
         {

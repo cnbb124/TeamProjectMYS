@@ -1297,7 +1297,7 @@ MonoBehaviour:
   maxHpRemaining: 999
   maxShieldCapacity: 0
   shieldRegainDelay: 0
-  shieldRegainRate: 0
+  shieldRegainRate: 6
   isShieldRegaining: 0
   shield: {fileID: 0}
   bodyHitboxRoot: {fileID: 0}
@@ -1308,6 +1308,8 @@ MonoBehaviour:
   baseMoveSpeed: 0
   boostSpeed: 0
   maxSpeed: 0
+  timeToMaxSpeed: 0.4
+  timeToStop: 0.4
   maxBoostCapacity: 0
   minBoostRequired: 0
   boostConsumeAmont: 0
@@ -1316,7 +1318,7 @@ MonoBehaviour:
   dodgeDuration: 0.5
   dodgeInvincibleTime: 0.4
   dodgeCoolTime: 0
-  dodgeForce: 800
+  dodgeDistance: 40
   speedMultiPlier: 0
   curState: 0
   curHpRemaining: 0

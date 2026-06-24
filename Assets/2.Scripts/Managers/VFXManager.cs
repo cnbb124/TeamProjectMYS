@@ -78,6 +78,10 @@ public class VFXManager : MonoBehaviour
                 {
                     Debug.LogError("[VFXManager] 씬에 VFXManager 없음! 하이어라키에 추가 필요");
                 }
+                else
+                {
+                    DontDestroyOnLoad(instance.gameObject);
+                }
             }
             return instance;
         }

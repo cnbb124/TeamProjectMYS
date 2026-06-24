@@ -75,6 +75,10 @@ public class InventoryManager : MonoBehaviour
                 {
                     Debug.Log("씬에 InventoryManager 누락! 하이어라키에 추가 필요");
                 }
+                else
+                {
+                    DontDestroyOnLoad(instance.gameObject);
+                }
             }
             return instance;
         }
