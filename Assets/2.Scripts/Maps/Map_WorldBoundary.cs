@@ -18,7 +18,8 @@ public class WorldBoundary : MonoBehaviour
 
     void Awake()
     {
-        player = GameObject.FindWithTag("Player").transform;
+            if (player == null)
+                player = GameObject.FindWithTag("Player").transform;
     }
     void Start()
     {
@@ -57,7 +58,21 @@ public class WorldBoundary : MonoBehaviour
 
     void OnBoundaryViolation()
     {
-        player.position = startPosition;
+        Rigidbody rb = player.GetComponent<Rigidbody>();
+        Debug.Log("[Boundary] 호출됨, rb=" + rb); // 추가
+
+        if (rb == null)
+        {
+            Debug.LogError("[Boundary] Rigidbody를 못 찾음! GetComponentInChildren 필요할 수도");
+            rb = player.GetComponentInChildren<Rigidbody>(); // 자식에 있을 경우 대비
+        }
+
+        if (rb != null)
+        {
+            rb.position = startPosition;
+            rb.velocity = Vector3.zero;
+            rb.angularVelocity = Vector3.zero;
+        }
         outOfBoundsTimer = 0f;
     }
 }
