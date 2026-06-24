@@ -36,10 +36,12 @@ public class UnitManager : MonoBehaviour
 
     private void Awake()
     {
+        Debug.Log($"[UnitManager] Awake 호출됨. scene={gameObject.scene.name}, instance==null:{instance == null}, instance==this:{instance == this}");
         if (instance == null)
         {
             instance = this;
             DontDestroyOnLoad(gameObject);
+            Debug.Log("[UnitManager] DontDestroyOnLoad 적용됨");
         }
         else if (instance != this)
         {
@@ -48,8 +50,8 @@ public class UnitManager : MonoBehaviour
         }
     }
 
-    private readonly List<Unit> _players = new List<Unit>();
-    private readonly List<Unit> _enemies = new List<Unit>();
+    private List<Unit> _players = new List<Unit>();
+    private List<Unit> _enemies = new List<Unit>();
 
     public void RegisterPlayer(Unit player)
     {
