@@ -24,6 +24,7 @@ public class UnitManager : MonoBehaviour
         {
             if (instance == null)
             {
+                Debug.Log($"[UnitManager] Instance getter fallback 진입 (Awake 전에 누가 먼저 호출함)\n{System.Environment.StackTrace}");
                 instance = FindObjectOfType<UnitManager>();
                 if (instance == null)
                 {
