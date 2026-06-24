@@ -24,10 +24,15 @@ public class SunObject : MonoBehaviour
     [SerializeField] private Vector3 spinAxis  = Vector3.up; // 자전 축
     [SerializeField] private float   spinSpeed = 0.2f;       // 자전 속도(도/초) — 정말 느리게
 
-    private void Update()
+    public Transform player;
+    [SerializeField] Vector3 worldOffset = new Vector3(800f, 400f, 2000f);
+
+    private void LateUpdate()
     {
         // 자전 — 본체 메시를 로컬 회전 (위치는 고정, 건드리지 않음)
         if (spinSpeed != 0f)
             transform.Rotate(spinAxis.normalized, spinSpeed * Time.deltaTime, Space.Self);
+
+        transform.position = player.position + worldOffset;
     }
 }
