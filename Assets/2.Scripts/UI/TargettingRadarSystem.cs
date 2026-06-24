@@ -56,12 +56,13 @@ public class TargettingRadarSystem : MonoBehaviour
     // ★ TargetsInRadarRange = 360도 전방향 (각도 필터 없음)
     foreach (Collider col in lockOnSystem.TargetsInRadarRange)
     {
-        if (col == null) return;
+        if (col == null) continue;
 
         Transform target = col.transform;
 
-        // 플레이어 자신 제외
-        if (target == player) continue;
+        // 플레이어 자신 제외 — col이 플레이어의 자식(LockOnBox 등)이어도 걸러지도록
+        // GetComponentInParent<Player>()로 소속을 검사 (target == player 직접 비교는 자식이라 실패함)
+        if (col.GetComponentInParent<Player>() != null) continue;
 
         Vector3 localPos = player.InverseTransformPoint(target.position);
         Vector2 radarPos = new Vector2(localPos.x, localPos.z);
