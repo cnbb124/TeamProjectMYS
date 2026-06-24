@@ -195,7 +195,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &673522139347252847
 Transform:
   m_ObjectHideFlags: 0
@@ -244,7 +244,8 @@ MonoBehaviour:
   baseMoveSpeed: 125
   boostSpeed: 200
   maxSpeed: 250
-  decelerationRate: 800
+  timeToMaxSpeed: 0.4
+  timeToStop: 0.4
   maxBoostCapacity: 100
   minBoostRequired: 10
   boostConsumeAmont: 25
@@ -253,7 +254,7 @@ MonoBehaviour:
   dodgeDuration: 0.5
   dodgeInvincibleTime: 0.4
   dodgeCoolTime: 5
-  dodgeForce: 800
+  dodgeDistance: 40
   speedMultiPlier: 0
   curState: 0
   curHpRemaining: 0
@@ -262,12 +263,6 @@ MonoBehaviour:
   curSpeed: 0
   curBoostRemaining: 0
   _playSoundType: 0
-  idleMaxVolume: 1
-  thrustMaxVolume: 1
-  boostMaxVolume: 1
-  boostFadeSpeed: 4
-  thrustMinPitch: 0.9
-  thrustMaxPitch: 1.3
   detectRange: 1250
   rotateSpeed: 210
   rotateDeadZone: 0

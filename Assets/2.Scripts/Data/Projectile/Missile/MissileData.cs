@@ -13,8 +13,8 @@ public class MissileData : ProjectileData
 	[Header("<size=18>미사일 설정</size>")]
 	[Tooltip("초당 최대 선회 각도 (도/초). 클수록 날카롭게 꺾음.")]
 	public float turnRate = 120f;
-	[Tooltip("발사 직후 직진 유지 거리. 근거리 자폭 방지.")]
-	public float armDistance = 5.0f;
+	[Tooltip("발사 직후 직진 유지 거리. 이 거리 전엔 유도(Steer) 안 하고 직진만 함.")]
+	public float straightFlightDistance = 5.0f;
 	[Tooltip("비례항법 계수 (1~5). 클수록 예측 추적 강화. 3 권장.")]
 	public float navGain = 3f;
 	[Tooltip("발사 시작 속도. accelerateTime 동안 maxSpeed로 가속.")]
