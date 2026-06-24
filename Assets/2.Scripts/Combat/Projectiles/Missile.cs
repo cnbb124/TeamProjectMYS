@@ -14,7 +14,7 @@ using UnityEngine;
 //
 // 
 // - 타겟의 이동 방향 예측해서 꺾는 각도(turnRate) 제한 있음.
-// - 발사 직후 armDistance 동안은 직진 (근거리 자폭 방지).
+// - 발사 직후 straightFlightDistance 동안은 직진(유도 안 함).
 // - 타겟 소실 시 직진 유지. maxRange 도달하면 자동 소멸.
 // - 사거리는 Projectile 누적 이동거리 기준.
 //
@@ -65,8 +65,8 @@ public class Missile : Projectile, IExplodable
 	public float turnRate = 120f;
 
 	[HideInInspector]
-	[Tooltip("발사 직후 직진 유지 거리. 근거리 자폭 방지.")]
-	public float armDistance = 5.0f;
+	[Tooltip("발사 직후 직진 유지 거리. 이 거리 전엔 유도(Steer) 안 하고 직진만 함.")]
+	public float straightFlightDistance = 5.0f;
 
 	[HideInInspector]
 	//[Tooltip("비례항법 계수 (1~5). 클수록 예측 추적 강화. 3 권장.")]
@@ -142,7 +142,7 @@ public class Missile : Projectile, IExplodable
 			maxSpeed = missileData.maxSpeed;
 			accelerateTime = missileData.accelerateTime;
 			turnRate = missileData.turnRate;
-			armDistance = missileData.armDistance;
+			straightFlightDistance = missileData.straightFlightDistance;
 			navGain = missileData.navGain;
 			explosionRadius = missileData.explosionRadius;
 			vfxBaseRadius = missileData.vfxBaseRadius;
@@ -205,10 +205,10 @@ public class Missile : Projectile, IExplodable
 		{
 			float dt = Mathf.Max(Time.deltaTime, 0.001f);
 			targetVelocity = (targetTr.position - prevTargetPos) / dt;
-			prevTargetPos = targetTr.position; // 직진(armDistance) 기간에도 정상 갱신됨
+			prevTargetPos = targetTr.position; // 직진(straightFlightDistance) 기간에도 정상 갱신됨
 		}
 
-		if (traveledDistance < armDistance || targetTr == null)
+		if (traveledDistance < straightFlightDistance || targetTr == null)
 		{
 			transform.position += transform.forward * thrustSpeed * Time.deltaTime;
 		}
@@ -222,6 +222,11 @@ public class Missile : Projectile, IExplodable
 		base.Update();
 	}
 
+	protected override void OnMaxRange()
+	{
+		Explode(explosionInfo);
+		base.OnMaxRange();
+	}
 
 	private void Steer(Vector3 targetVelocity)
 	{
@@ -261,17 +266,6 @@ public class Missile : Projectile, IExplodable
 		transform.position += transform.forward * thrustSpeed * Time.deltaTime;
 	}
 
-
-	protected override void OnTriggerEnter(Collider other)
-	{
-		//최소거리 도달안했으면 트리거무시
-		if (traveledDistance < armDistance)
-		{
-			return;
-		}
-		//그게아니면 판정주기
-		base.OnTriggerEnter(other);
-	}
 
 
 	//온트리거에 쓸 재정의함수

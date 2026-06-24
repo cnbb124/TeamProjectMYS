@@ -3135,6 +3135,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 9056391566591100251, guid: a7897ad853ae9d6458830c653646215c, type: 3}
+      propertyPath: _previewInEditor
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -3932,6 +3936,18 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1234399002}
     m_Modifications:
+    - target: {fileID: 1582346389710158118, guid: 5b6492615b4931a40b442946ade11288, type: 3}
+      propertyPath: _enemyColor.b
+      value: 0.132921
+      objectReference: {fileID: 0}
+    - target: {fileID: 1582346389710158118, guid: 5b6492615b4931a40b442946ade11288, type: 3}
+      propertyPath: _enemyColor.g
+      value: 0.27210674
+      objectReference: {fileID: 0}
+    - target: {fileID: 1582346389710158118, guid: 5b6492615b4931a40b442946ade11288, type: 3}
+      propertyPath: _enemyColor.r
+      value: 0.9716981
+      objectReference: {fileID: 0}
     - target: {fileID: 2940234585723661891, guid: 5b6492615b4931a40b442946ade11288, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -3972,6 +3988,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 6654927112562213610, guid: 5b6492615b4931a40b442946ade11288, type: 3}
+      propertyPath: shieldRegainRate
+      value: 6
+      objectReference: {fileID: 0}
     - target: {fileID: 8508547545565869303, guid: 5b6492615b4931a40b442946ade11288, type: 3}
       propertyPath: m_Name
       value: TestUnit_EnemyAI_MissileShip
@@ -4005,7 +4025,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &1234399002
 Transform:
   m_ObjectHideFlags: 0
@@ -4481,17 +4501,9 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 1174679257422973203, guid: b043e4959cc079943be1c844c5e57168, type: 3}
-      propertyPath: shieldRegainRate
-      value: 6
-      objectReference: {fileID: 0}
     - target: {fileID: 6428153736698038514, guid: b043e4959cc079943be1c844c5e57168, type: 3}
       propertyPath: m_Name
       value: TestUnit_EnemyAI_GunShip (4)
-      objectReference: {fileID: 0}
-    - target: {fileID: 6428153736698038514, guid: b043e4959cc079943be1c844c5e57168, type: 3}
-      propertyPath: m_IsActive
-      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
