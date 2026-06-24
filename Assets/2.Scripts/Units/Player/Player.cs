@@ -612,6 +612,9 @@ public class Player : Unit
 		_step3Particles = FindParticlesByNameExclude("Step3_Boost", "fire_3-3");
 
 		_boostBurstParticles = FindParticlesByName("fire_3-3");
+		// 닷지 RCS의 "D_fire_3-3"도 "fire_3-3"으로 끝나 EndsWith 검색에 같이 잡힘 —
+		// 부스터 입력 시 닷지 이펙트가 오발동하므로 D_ 접두사(닷지 전용)는 제외.
+		_boostBurstParticles = System.Array.FindAll(_boostBurstParticles, ps => ps != null && !ps.name.StartsWith("D_"));
 
 		// Dodge RCS 캐싱
 		_rcsDodge[(int)RCS.RTop] = FindParticlesByName("RCS_Wing_R_Top");
