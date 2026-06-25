@@ -25,7 +25,7 @@ Shader "FX/Procedural Force Field"
         _NoiseDistortion("Noise Distortion", Range(0, 0.35)) = 0.08
 
         [Header(Activation Reveal)]
-        _RevealDuration("Reveal Duration", Range(0.05, 3)) = 0.45
+        _RevealDuration("Reveal Duration", Range(0.05, 20)) = 0.45
         _RevealStart("Reveal Start", Range(0, 0.35)) = 0.06
         _RevealSoftness("Reveal Softness", Range(0.001, 0.35)) = 0.08
         _RevealEdgeColor("Reveal Edge Color", Color) = (0.85, 1.00, 1.00, 1)
@@ -50,7 +50,7 @@ Shader "FX/Procedural Force Field"
         _HitRingWidth("Hit Ring Width", Range(0, 1)) = 0.08
         _HitFalloff("Hit Falloff", Range(0.1, 12)) = 4.0
         _HitIntensity("Hit Intensity", Range(0, 20)) = 6.0
-        _HitDuration("Hit Duration", Range(0.05, 3)) = 0.55
+        _HitDuration("Hit Duration", Range(0.05, 20)) = 0.55
 
         [Header(Hit Shape)]
         _HexBlend("Hex Pattern Blend (0=원형 1=육각형)", Range(0, 1)) = 1.0
