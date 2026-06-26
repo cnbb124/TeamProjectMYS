@@ -381,7 +381,7 @@ public class SoundManager : MonoBehaviour
 		var throttleKey = (type, sourceUnit);
 		if (sourceUnit != null && data.minPlayInterval > 0f
 			&& _lastPlayTimeMap.TryGetValue(throttleKey, out float lastTime)
-			&& Time.time - lastTime < data.minPlayInterval)
+			&& Time.time < lastTime + data.minPlayInterval)
 		{
 			return null;
 		}

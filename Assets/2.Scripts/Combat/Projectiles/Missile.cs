@@ -310,7 +310,10 @@ public class Missile : Projectile, IExplodable
 			// 타격 대상 기록 . 중복이없으면
 			if (target != null && !damagedTargets.Contains(target))
 			{
-
+				if ((object)target == attacker)
+				{
+					continue;
+				}
 				// 거리 비례 데미지 감쇠 (중심 100%, 외곽 50%)
 				float distRatio = 1f - (Vector3.Distance(transform.position, explosionHits[i].transform.position) / explosionInfo.explosionRadius);
 				int finalDamage = Mathf.RoundToInt(explosionInfo.explosionDamage * Mathf.Lerp(0.5f, 1f, distRatio));
