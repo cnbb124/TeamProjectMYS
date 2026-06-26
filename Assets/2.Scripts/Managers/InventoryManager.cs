@@ -41,7 +41,17 @@ public class ItemStack
 //   AddItem(ItemData data, int amount = 1)
 //   RemoveItem(ItemData data, int amount = 1) : 수량 0되면 items에서 자동 제거
 //   예시) InventoryManager.Instance.RemoveItem(someItemData, 1);
-//   주의) 추가/제거 후에는 현재 탭의 GetAllOfCategory()를 다시 호출해 그리드 갱신 필요
+//
+// ▶ UI 갱신용 이벤트 (신규) — AddItem/RemoveItem/AddGold/SpendGold(성공 시) 끝에서 자동 발행됨
+//   public event System.Action OnInventoryChanged;
+//   UI팀 할 일: InventoryPanelUI(또는 InventoryTabGroup) Awake/OnEnable에서 구독,
+//              OnDisable/OnDestroy에서 구독 해제. 콜백 안에서 RefreshCurrent()(현재 탭 갱신) +
+//              골드 텍스트 갱신 호출.
+//   예시)
+//     void OnEnable()  { InventoryManager.Instance.OnInventoryChanged += HandleInventoryChanged; }
+//     void OnDisable() { InventoryManager.Instance.OnInventoryChanged -= HandleInventoryChanged; }
+//     void HandleInventoryChanged() { RefreshCurrent(); goldText.text = InventoryManager.Instance.gold.ToString(); }
+//   이제 패널이 열려있는 동안 아이템을 먹어도 그 자리에서 바로 갱신됨(전엔 패널 재오픈/탭전환 때만 갱신됐음).
 //
 // ▶ 퀵슬롯 등록 (드래그앤드롭 등)
 //   AssignToQuickSlot(ItemData data, int slotIndex) : 소모품만 가능 (파츠 넘기면 경고 후 무시)
@@ -92,6 +102,9 @@ public class InventoryManager : MonoBehaviour
     [Header("보유 아이템 목록 (파츠 / 소모품 / 재료 등)")]
     public List<ItemStack> items = new List<ItemStack>();
 
+    // 골드/아이템 변동 시 발행. UI팀이 구독해서 슬롯/골드 텍스트 갱신용으로 사용.
+    public event System.Action OnInventoryChanged;
+
     private void Awake()
     {
         if (instance == null)
@@ -113,6 +126,7 @@ public class InventoryManager : MonoBehaviour
     {
         gold += Mathf.Max(0, amount);
         Debug.Log($"[Inventory] 골드 획득: +{amount} / 보유: {gold}");
+        OnInventoryChanged?.Invoke();
     }
 
     /// <summary>골드 소모. 부족 시 false 반환. 상점 구매 등에서 호출.</summary>
@@ -124,6 +138,7 @@ public class InventoryManager : MonoBehaviour
             return false;
         }
         gold -= amount;
+        OnInventoryChanged?.Invoke();
         return true;
     }
 
@@ -146,6 +161,7 @@ public class InventoryManager : MonoBehaviour
         {
             items.Add(new ItemStack { data = data, count = amount });
         }
+        OnInventoryChanged?.Invoke();
     }
 
     /// <summary>아이템 수량 감소. 수량 0이면 목록에서 제거. 부족 시 false 반환.</summary>
@@ -162,6 +178,7 @@ public class InventoryManager : MonoBehaviour
         {
             items.Remove(stack);
         }
+        OnInventoryChanged?.Invoke();
         return true;
     }
 
