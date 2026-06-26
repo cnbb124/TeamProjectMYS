@@ -7,11 +7,11 @@ public class ItemSlotUI : MonoBehaviour
     [System.Serializable]
     public class Slot
     {
-        public Image        background;   // ?�롯 배경
+        public Image        background;   // 슬롯 배경
         public Image        weaponIcon;   // Weapon_0X Image
-        public GameObject   indicator;    // ItemIndicator (?�성??비활?�화)
-        public TMP_Text     numberText;   // ?�롯 번호
-        public Sprite       weaponSprite; // ?�당??무기 ?�이�?
+        public GameObject   indicator;    // 선택 표시 오브젝트 (선택된 슬롯만 활성화)
+        public TMP_Text     numberText;   // 슬롯 번호
+        public Sprite       weaponSprite; // 해당 무기 이미지
     }
 
     [SerializeField] private Slot[] slots = new Slot[4];

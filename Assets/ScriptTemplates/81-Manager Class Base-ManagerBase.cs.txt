@@ -1,0 +1,44 @@
+using System.Collections.Generic;
+using UnityEngine;
+
+
+public class #SCRIPTNAME# : MonoBehaviour
+{
+	private static #SCRIPTNAME# instance = null;
+
+	public static #SCRIPTNAME# Instance
+	{
+		get
+		{
+			if (instance == null)
+			{
+				instance = FindObjectOfType<#SCRIPTNAME#>();
+				if (instance == null)
+				{
+					Debug.LogError("[#SCRIPTNAME#] 씬에 #SCRIPTNAME# 없음! 하이어라키에 추가 필요");
+				}
+				else
+				{
+					DontDestroyOnLoad(instance.gameObject);
+				}
+			}
+			return instance;
+		}
+
+	}
+
+
+	private void Awake()
+	{
+		if (instance == null)
+		{
+			instance = this;
+			DontDestroyOnLoad(gameObject);
+		}
+		else
+		{
+			Debug.LogWarning("[#SCRIPTNAME#] 중복 감지. 파괴 후 기존 유지");
+			Destroy(gameObject);
+		}
+	}
+}

@@ -52,7 +52,8 @@ using UnityEngine;
 //   - 50% 패널티: 연사속도 50%
 //
 // LAUNCHER_LASER
-//   - 폐기 예정 (레이저는 스킬로 전환 확정, 정리 범위 미정)
+//   - 폐기됨 (레이저는 스킬로 전환 확정. WeaponSystem 발사 파이프라인 정리 완료.
+//     enum 값 자체는 직렬화 데이터 보호 위해 남겨둠 — 이 파츠로 새 PartData 만들지 말 것)
 //
 // SHIELD_BATTERY  (추가 예정 — enum_Types.cs PART_TYPE에 미등록)
 //   - SHIELD_MAX (최대 실드량)

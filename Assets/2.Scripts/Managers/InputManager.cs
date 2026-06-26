@@ -28,7 +28,6 @@ using UnityEngine;
 // [버튼 입력 — 누른 순간 한 프레임만 true]
 // isDodging              : bool   회피
 // fireMissile            : bool   미사일
-// fireLaser              : bool   레이저
 // fireAll                : bool   전체 발사
 // switchMissilePrev      : bool   이전 미사일 슬롯
 // switchMissileNext      : bool   다음 미사일 슬롯
@@ -36,6 +35,8 @@ using UnityEngine;
 // toggleClusterLockMode  : bool   클러스터 단일/다중 락온 전환
 // switchConsumable       : bool   소모품 슬롯 전환
 // useConsumable          : bool   소모품 사용
+// switchSkillSlot        : bool   스킬 슬롯 전환
+// useSkill               : bool   스킬 사용
 // dicePanelToggle        : bool   다이스 패널 토글
 // fuelGaugeToggle        : bool   연료 게이지 패널 토글
 // inventoryToggle        : bool   인벤토리 패널 토글
@@ -70,8 +71,7 @@ public class KeyboardMouseConfig
     [Header("사격")]
     public KeyCode fireBullet  = KeyCode.Mouse0;  // 총알 (꾹)
     public KeyCode fireMissile = KeyCode.Mouse1;  // 미사일 (순간)
-    public KeyCode fireLaser   = KeyCode.F;       // 레이저 (순간)
-    public KeyCode fireAll     = KeyCode.V;       // 전체 발사 (순간)
+    //public KeyCode fireAll     = KeyCode.V;       // 전체 발사 (순간) 미사용레거시
 
     [Header("미사일 슬롯 전환")]
     public KeyCode missilePrev = KeyCode.Z;         // 이전 슬롯
@@ -80,7 +80,11 @@ public class KeyboardMouseConfig
     [Header("소모품")]
     public KeyCode switchConsumable = KeyCode.R;    // 소모품 슬롯 전환
     public KeyCode useConsumable    = KeyCode.T;    // 소모품 사용
-    
+
+    [Header("스킬")]
+    public KeyCode switchSkillSlot = KeyCode.B;     // 스킬 슬롯 전환
+    public KeyCode useSkill        = KeyCode.H;     // 스킬 사용
+
 	[Header("다이스 패널 (토글)")]
 	public KeyCode dicePanelToggle = KeyCode.Tab;
 
@@ -88,8 +92,8 @@ public class KeyboardMouseConfig
     public KeyCode fuelGaugeToggle  = KeyCode.G; // 연료 게이지 패널
     public KeyCode inventoryToggle  = KeyCode.I; // 인벤토리 패널
 
-	[Header("모드 전환")]
-    public KeyCode switchFireMode = KeyCode.C;      // 발사 모드 전환 (교차/동시)
+	//[Header("모드 전환")]
+ //   public KeyCode switchFireMode = KeyCode.C;      // 발사 모드 전환 (교차/동시) 미사용 레거시
 
     [Header("락온 모드 전환")]
     public KeyCode toggleClusterLockMode = KeyCode.C; // 클러스터 미사일 단일/다중 락온 전환
@@ -124,8 +128,7 @@ public class GamepadConfig
     [Header("사격")]
     public KeyCode fireBullet      = KeyCode.JoystickButton5;
     public KeyCode fireMissile     = KeyCode.JoystickButton4;
-    public KeyCode fireLaser       = KeyCode.JoystickButton3;
-    public KeyCode fireAll         = KeyCode.JoystickButton2;
+    //public KeyCode fireAll         = KeyCode.JoystickButton2; 미사용레거시
 
     [Header("미사일 슬롯 전환")]
     public string axisDPadX        = "DPadX";
@@ -133,11 +136,15 @@ public class GamepadConfig
     [Header("소모품")]
     public string axisDPadY        = "DPadY";
 
+    [Header("스킬")]
+    public KeyCode switchSkillSlot = KeyCode.JoystickButton11;  // 스킬 슬롯 전환
+    public KeyCode useSkill        = KeyCode.JoystickButton12; // 스킬 사용
+
     [Header("다이스 패널(토글)")]
     public KeyCode dicePanelToggle = KeyCode.JoystickButton1;
 
-    [Header("모드 전환")]
-    public KeyCode switchFireMode  = KeyCode.JoystickButton10;
+    //[Header("모드 전환")]
+    //public KeyCode switchFireMode  = KeyCode.JoystickButton10; 미사용 레거시
 
     [Header("락온 모드 전환")]
     public KeyCode toggleClusterLockMode = KeyCode.JoystickButton0;
@@ -162,14 +169,14 @@ public class GamepadConfig
 // isDodging          : bool     누른 순간 한 프레임
 // fireBullet         : bool     누르는 동안 true
 // fireMissile        : bool     누른 순간 한 프레임
-// fireLaser          : bool     누른 순간 한 프레임
-// fireAll            : bool     누른 순간 한 프레임
 // switchLockOnTarget : float    양수=다음  음수=이전  0=없음
 // switchMissilePrev/Next : bool 누른 순간 한 프레임 (미사일 슬롯 전환)
 // switchMissileShootMode : bool 누른 순간 한 프레임 (발사모드 전환)
 // toggleClusterLockMode  : bool 누른 순간 한 프레임 (클러스터 단일/다중 락온 전환)
 // switchConsumable   : bool     누른 순간 한 프레임 (소모품 슬롯 전환)
 // useConsumable      : bool     누른 순간 한 프레임 (소모품 사용)
+// switchSkillSlot    : bool     누른 순간 한 프레임 (스킬 슬롯 전환)
+// useSkill           : bool     누른 순간 한 프레임 (스킬 사용)
 // dicePanelToggle    : bool     누른 순간 한 프레임 (다이스 패널 토글)
 // fuelGaugeToggle    : bool     누른 순간 한 프레임 (연료 게이지 패널 토글)
 // inventoryToggle    : bool     누른 순간 한 프레임 (인벤토리 패널 토글)
@@ -240,11 +247,8 @@ public class InputManager : MonoBehaviour
     [Tooltip("미사일 - 누른 순간 한 프레임만 true")]
     public bool fireMissile;
 
-    [Tooltip("레이저 - 누른 순간 한 프레임만 true")]
-    public bool fireLaser;
-
-    [Tooltip("전체 발사 - 누른 순간 한 프레임만 true")]
-    public bool fireAll;
+    //[Tooltip("전체 발사 - 누른 순간 한 프레임만 true")]
+    //public bool fireAll;미사요ㅗㅇ레거시
 
     [Tooltip("락온 대상 전환. 양수=다음  음수=이전  0=없음")]
     public float switchLockOnTarget;
@@ -268,6 +272,13 @@ public class InputManager : MonoBehaviour
 
     [Tooltip("소모품 사용 - 누른 순간 한 프레임만 true")]
     public bool useConsumable;
+
+    [Header("스킬")]
+    [Tooltip("스킬 슬롯 전환 - 누른 순간 한 프레임만 true")]
+    public bool switchSkillSlot;
+
+    [Tooltip("스킬 사용 - 누른 순간 한 프레임만 true")]
+    public bool useSkill;
     public bool dicePanelToggle;
 
     [Header("UI 패널 토글")]
@@ -384,8 +395,7 @@ public class InputManager : MonoBehaviour
         // 나머지는 GetKeyDown (즉발/토글)
         fireBullet  = Input.GetKey(km.fireBullet);
         fireMissile = Input.GetKeyDown(km.fireMissile);
-        fireLaser   = Input.GetKeyDown(km.fireLaser);
-        fireAll     = Input.GetKeyDown(km.fireAll);
+        //fireAll     = Input.GetKeyDown(km.fireAll);미사용레거시
 
         // 락온 대상 전환 (마우스휠)
         switchLockOnTarget = Input.GetAxisRaw(km.axisScrollWheel);
@@ -393,12 +403,17 @@ public class InputManager : MonoBehaviour
         // 미사일 슬롯/모드 전환
         switchMissilePrev      = Input.GetKeyDown(km.missilePrev);
         switchMissileNext      = Input.GetKeyDown(km.missileNext);
-        switchMissileShootMode = Input.GetKeyDown(km.switchFireMode);
-        toggleClusterLockMode  = Input.GetKeyDown(km.toggleClusterLockMode);
+		// switchMissileShootMode = Input.GetKeyDown(km.switchFireMode);미사용레거시
+		toggleClusterLockMode = Input.GetKeyDown(km.toggleClusterLockMode);
 
         // 소모품
         switchConsumable = Input.GetKeyDown(km.switchConsumable);
         useConsumable    = Input.GetKeyDown(km.useConsumable);
+
+        // 스킬
+        switchSkillSlot = Input.GetKeyDown(km.switchSkillSlot);
+        useSkill        = Input.GetKeyDown(km.useSkill);
+
         dicePanelToggle = Input.GetKeyDown(km.dicePanelToggle);
         fuelGaugeToggle = Input.GetKeyDown(km.fuelGaugeToggle);
         inventoryToggle = Input.GetKeyDown(km.inventoryToggle);
@@ -437,16 +452,15 @@ public class InputManager : MonoBehaviour
         // 사격
         fireBullet  = Input.GetKey(gp.fireBullet);
         fireMissile = Input.GetKeyDown(gp.fireMissile);
-        fireLaser   = Input.GetKeyDown(gp.fireLaser);
-        fireAll     = Input.GetKeyDown(gp.fireAll);
+		// fireAll     = Input.GetKeyDown(gp.fireAll);미사용레거시
 
-        // 락온 대상 전환 - D-패드 사용으로 충돌, 패드 미지원
-        // TODO: 추후 별도 버튼 지정 필요
-        switchLockOnTarget = 0f;
+		// 락온 대상 전환 - D-패드 사용으로 충돌, 패드 미지원
+		// TODO: 추후 별도 버튼 지정 필요
+		switchLockOnTarget = 0f;
 
         // 모드 전환
-        switchMissileShootMode = Input.GetKeyDown(gp.switchFireMode);
-        toggleClusterLockMode  = Input.GetKeyDown(gp.toggleClusterLockMode);
+        //switchMissileShootMode = Input.GetKeyDown(gp.switchFireMode); //미사용레거시
+		toggleClusterLockMode  = Input.GetKeyDown(gp.toggleClusterLockMode);
 
         // D-패드: 이전 프레임 비교로 "누른 순간" 감지
         //   좌 → 미사일 이전 슬롯
@@ -460,6 +474,10 @@ public class InputManager : MonoBehaviour
         switchMissileNext = (dpadX >  0.5f) && (_prevDPadX <=  0.5f);
         switchConsumable  = (dpadY >  0.5f) && (_prevDPadY <=  0.5f);
         useConsumable     = (dpadY < -0.5f) && (_prevDPadY >= -0.5f);
+
+        // 스킬
+        switchSkillSlot = Input.GetKeyDown(gp.switchSkillSlot);
+        useSkill        = Input.GetKeyDown(gp.useSkill);
 
         dicePanelToggle = Input.GetKeyDown(gp.dicePanelToggle);
         fuelGaugeToggle = false; // 게임패드 미지원 (키 없음)

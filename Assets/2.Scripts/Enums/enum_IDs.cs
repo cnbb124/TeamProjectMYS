@@ -35,5 +35,14 @@ public enum ITEM_ID
 	MATERIAL           = 4000, MATERIAL_END           = 4099,
 }
 
+/// <summary>
+/// NPC 고유 ID. 호감도 등 NPC별 데이터 저장/조회용.
+/// 실제 NPC 캐릭터가 확정되면 여기에 항목 추가.
+/// </summary>
+public enum NPC_ID
+{
+	NONE = 0,
+}
+
 
 

@@ -166,8 +166,7 @@ public class InvSlot : MonoBehaviour,
             case SlotCategory.Weapon:
                 if (!(incoming is PartData part)) return false;
                 return part.partType == PART_TYPE.LAUNCHER_BULLET
-                    || part.partType == PART_TYPE.LAUNCHER_MISSILE
-                    || part.partType == PART_TYPE.LAUNCHER_LASER;
+                    || part.partType == PART_TYPE.LAUNCHER_MISSILE;
 
             case SlotCategory.Any:
             default:

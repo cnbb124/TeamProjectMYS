@@ -3,10 +3,11 @@ using UnityEngine;
 // ================================================================
 // [외부 참조 가이드]
 // ================================================================
+// TryUseSkill()				 canUseSkill() 체크 + UseSkill() 실행을 한 번에. 슬롯/입력처리 쪽에서는 이거 하나만 호출.
 // canUseSkill()			     쿨다운/사용횟수 다 됐는지 확인용 조회 함수. 부작용 없음.
 //								 → 스킬 발동 전 자식 클래스/입력처리 쪽에서 먼저 체크
 // UseSkill()					 실제 스킬 발동 로직 + 쿨다운/사용횟수 갱신. 자식 클래스에서 override 시 base.UseSkill() 호출 권장.
-//								 → 호출하는 쪽에서 canUseSkill() 통과 확인 후 호출
+//								 → TryUseSkill() 내부에서 canUseSkill() 통과 확인 후 호출됨
 // StopSkill()					 스킬 중단/취소 로직. 주로 채널링 자식 클래스에서 override.
 // activeSkillData              skillData를 ActiveSkillData로 캐스팅한 접근자. 쿨다운/사용횟수 데이터.
 // GetRemainingSkillCooldown()   남은 쿨다운(초). 숫자 텍스트 표시용.
@@ -68,6 +69,20 @@ public abstract class ActiveSkill : Skill
 			return false;
 		}
 
+		return true;
+	}
+
+	/// <summary>
+	/// canUseSkill() 체크 후 통과하면 UseSkill() 실행. 슬롯/입력처리 쪽에서는 이 함수 하나만 호출하면 됨.
+	/// </summary>
+	public bool TryUseSkill()
+	{
+		if (!canUseSkill())
+		{
+			return false;
+		}
+
+		UseSkill();
 		return true;
 	}
 

@@ -499,6 +499,23 @@ public class GameManager : MonoBehaviour
         SaveData data = new SaveData();
         data.gold = InventoryManager.Instance != null ? InventoryManager.Instance.gold : 0;
 
+        // 호감도 저장 (Dictionary → 배열)
+        if (AffectionManager.Instance != null)
+        {
+            Dictionary<NPC_ID, int> affections = AffectionManager.Instance.GetAllAffections();
+            data.affections = new SavedAffection[affections.Count];
+            int affectionIndex = 0;
+            foreach (KeyValuePair<NPC_ID, int> pair in affections)
+            {
+                data.affections[affectionIndex] = new SavedAffection
+                {
+                    npc   = pair.Key,
+                    value = pair.Value
+                };
+                affectionIndex++;
+            }
+        }
+
         if (playerRef != null)
         {
             data.level = playerRef.level;
@@ -553,6 +570,11 @@ public class GameManager : MonoBehaviour
         if (InventoryManager.Instance != null)
         {
             InventoryManager.Instance.gold = data.gold;
+        }
+
+        if (AffectionManager.Instance != null)
+        {
+            AffectionManager.Instance.LoadAffections(data.affections);
         }
 
         if (playerRef != null)
@@ -616,6 +638,10 @@ public class GameManager : MonoBehaviour
         if (InventoryManager.Instance != null)
         {
             InventoryManager.Instance.gold = 0;
+        }
+        if (AffectionManager.Instance != null)
+        {
+            AffectionManager.Instance.LoadAffections(null);
         }
         ResetBattleData();
     }

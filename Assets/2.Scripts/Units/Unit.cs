@@ -20,6 +20,9 @@ using UnityEngine;
 //   curState            : 현재 FSM 상태 (IDLE / MOVING / DODGE / DIE)
 //   IsInvincible        : 무적 여부
 //
+// ▶ 스킬팀 참조용
+//   Teleport(Vector3 position) : 즉시 위치 이동(Rigidbody.position까지 동기화). WarpSkill에서 사용.
+//
 //   예시)
 //   float hpRatio     = (float)unit.curHpRemaining / unit.maxHpRemaining;
 //   float shieldRatio = (float)unit.curShieldRemaining / unit.maxShieldCapacity;
@@ -262,6 +265,16 @@ public abstract class Unit : MonoBehaviour, IDamageable
 		curBoostRemaining = maxBoostCapacity;
 
 		UpdateShieldHitboxState();
+	}
+
+	// 워프 등 즉시 위치 이동 스킬용. Rigidbody가 있으면 그쪽 position도 같이 맞춰야 물리 동기화가 깨지지 않음.
+	public void Teleport(Vector3 position)
+	{
+		if (_rb != null)
+		{
+			_rb.position = position;
+		}
+		transform.position = position;
 	}
 
 	// 실드 유무에 따라 실드 콜라이더 / 본체 HitBox 콜라이더를 상호토글.

@@ -136,11 +136,6 @@ public class WeaponSystem : MonoBehaviour
 	private List<Transform> fixedMissileFirePositions = new List<Transform>();
 
 
-	// ================== [레이저 설정] ==================
-	// LAUNCHER_LASER 파츠가 RegisterFirePos로 등록. 마지막 등록 위치 사용.
-	private Transform _laserFirePos = null;
-
-
 	// ================== [미사일 설정] ==================
 	[Header("<size=18>미사일 설정</size>")]
 	[Tooltip("발사 쿨다운 (초). 이전 발사 후 이 시간이 지나야 다음 발사 허용.")]
@@ -300,12 +295,6 @@ public class WeaponSystem : MonoBehaviour
 				ShootAllBullets();
 				break;
 
-			case PROJECTILE_TYPE.LASER:
-				// LASER는 ProjectileData 기반이 아니라 고정 카테고리 사운드(SFX_LASERSHOOT), 머즐 없음 — 기존 그대로 유지.
-				_sound.PlaySFX3DAtUnit(SOUND_TYPE.SFX_LASERSHOOT, _unit.transform, _laserFirePos);
-				ShootLaser();
-				break;
-
 			case PROJECTILE_TYPE.MISSILE:
 				if (Time.time < _lastMissileFireTime + missileFireCooldown)
 				{
@@ -421,20 +410,6 @@ public class WeaponSystem : MonoBehaviour
 	public void EquipBullet(BulletData data)
 	{
 		curBulletData = data;
-	}
-
-	/// <summary>
-	/// 레이저 — 등록된 레이저 발사 위치에서 발사.
-	/// </summary>
-	private void ShootLaser()
-	{
-		if (_laserFirePos == null)
-		{
-			return;
-		}
-
-		Laser newLaser = _pool.GetLaser();
-		newLaser.Init(_laserFirePos.position, _laserFirePos.forward, _unit);
 	}
 
 	/// <summary>
@@ -591,9 +566,6 @@ public class WeaponSystem : MonoBehaviour
 					_launcherAnims[pos] = missileAnim;
 				}
 				break;
-			case WEAPON_POS_TYPE.LASER:
-				_laserFirePos = pos;
-				break;
 
 		}
 	}
@@ -619,12 +591,6 @@ public class WeaponSystem : MonoBehaviour
 				if (_missileFireIndex >= _missileFirePositions.Count)
 				{
 					_missileFireIndex = 0;
-				}
-				break;
-			case WEAPON_POS_TYPE.LASER:
-				if (_laserFirePos == pos)
-				{
-					_laserFirePos = null;
 				}
 				break;
 

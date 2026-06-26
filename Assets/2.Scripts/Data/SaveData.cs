@@ -32,6 +32,14 @@ public class SavedMissileSlot
     public int          maxAmmo;
 }
 
+// NPC 한 명의 호감도를 JSON-safe 하게 저장하는 구조체.
+[System.Serializable]
+public class SavedAffection
+{
+    public NPC_ID npc;
+    public int    value;
+}
+
 [System.Serializable]
 public class SaveData
 {
@@ -48,6 +56,9 @@ public class SaveData
 
     [Header("재화")]
     public int gold;
+
+    [Header("호감도 (NPC별)")]
+    public SavedAffection[] affections;
 
     [Header("파츠 슬롯")]
     public SavedPartSlot[] partSlots;

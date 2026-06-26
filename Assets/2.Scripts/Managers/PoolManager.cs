@@ -4,7 +4,6 @@
 // ▶ 투사체 / 전투팀 참조용
 //   GetBullet()                    : Bullet 꺼내기
 //   GetMissile()                   : Missile 꺼내기
-//   GetLaser()                     : Laser 꺼내기
 //   GetProjectile(PROJECTILE_TYPE) : 타입으로 투사체 꺼내기 (Player/Enemy 공용)
 //   Get(POOL_TYPE)                 : 일반 오브젝트 꺼내기 (적, 아이템 등)
 //   Return(GameObject)             : 오브젝트 반납 (비활성화)
@@ -264,11 +263,6 @@ public class PoolManager : MonoBehaviour
 		return GetCachedProjectile(POOL_TYPE.PROJECTILE_MISSILE) as Missile;
 	}
 
-	public Laser GetLaser()
-	{
-		return GetCachedProjectile(POOL_TYPE.PROJECTILE_LASER) as Laser;
-	}
-
 	/// <summary>
 	/// 클러스터 미사일. 꺼낸 후 반드시 Init() 호출.
 	/// </summary>
@@ -305,7 +299,6 @@ public class PoolManager : MonoBehaviour
 		{
 			case PROJECTILE_TYPE.BULLET: return GetBullet();
 			case PROJECTILE_TYPE.MISSILE: return GetMissile();
-			case PROJECTILE_TYPE.LASER: return GetLaser();
 			default:
 				Debug.LogWarning($"[PoolManager] GetProjectile: 미지원 타입 {shootType}");
 				return null;
@@ -392,10 +385,5 @@ public class PoolManager : MonoBehaviour
 	public void DisableMissile()
 	{
 		Disable(POOL_TYPE.PROJECTILE_MISSILE);
-	}
-
-	public void DisableLaser()
-	{
-		Disable(POOL_TYPE.PROJECTILE_LASER);
 	}
 }

@@ -30,6 +30,12 @@ using UnityEngine;
 //   GameManager.CollectSaveData()에서 직접 읽어감 (별도 호출 불필요)
 //   GameManager.Instance.playerRef 로 접근
 //
+// ▶ 스킬 UI팀 참조용 (QuickSlot과 동일 패턴)
+//   skillSlot.slots[i]              : i번 슬롯에 등록된 ActiveSkill (없으면 null)
+//   skillSlot.CurrentSlotIndex      : 현재 선택된 슬롯 인덱스
+//   skillSlot.GetCooldownRatio(int) : 쿨다운 진행 비율(0~1). 게이지 UI용.
+//   ※ InitSkillSlots()가 자식의 ActiveSkill을 자동으로 채움 — 정식 장착(배움) 파이프라인은 미구현.
+//
 // ▶ 파티클팀 참조용 (추진/RCS 파티클 — 이름 기반 자동 탐색)
 //   파티클은 THRUSTER 파츠 프리팹(Thruster_Main.prefab) 내부에 배치할 것.
 //   Player가 Start 1프레임 뒤 자식 전체에서 아래 "이름"의 오브젝트를 찾아
@@ -94,6 +100,7 @@ public class Player : Unit
 	private InputManager _input;
 
 	public QuickSlot quickSlot { get; private set; }
+	public SkillSlot skillSlot { get; private set; }
 
 
 
@@ -168,6 +175,7 @@ public class Player : Unit
 		_rb.useGravity = false;
 		_rb.freezeRotation = true;
 		quickSlot = GetComponent<QuickSlot>();
+		skillSlot = GetComponent<SkillSlot>();
 	}
 	// Start is called before the first frame update
 	protected override void Start()
@@ -182,7 +190,26 @@ public class Player : Unit
 			InventoryManager.Instance.RegisterPlayer(this);
 		}
 
+		InitSkillSlots();
+
 		StartCoroutine(InitParticlesNextFrame());
+	}
+
+	// 자식의 ActiveSkill 컴포넌트를 찾은 순서대로 skillSlot에 자동 등록.
+	// 스킬을 배움(언락)에 따라 동적으로 채우는 연동(SkillManager 등)은 미구현 — 지금은 부착된 스킬을 전부 슬롯에 채움.
+	private void InitSkillSlots()
+	{
+		if (skillSlot == null)
+		{
+			return;
+		}
+
+		ActiveSkill[] ownedSkills = GetComponentsInChildren<ActiveSkill>(true);
+		for (int i = 0; i < ownedSkills.Length; i++)
+		{
+			ownedSkills[i].SetOwner(this);
+			skillSlot.AssignSlot(i, ownedSkills[i]);
+		}
 	}
 
 
@@ -218,6 +245,18 @@ public class Player : Unit
 
 		// 발사 모드 토글 제거 — 발사 수는 firePositions.Count와 curAmmo로 자동 결정
 		ShootByInput();
+
+		if (skillSlot != null)
+		{
+			if (_input.switchSkillSlot)
+			{
+				skillSlot.SwitchSlot();
+			}
+			if (_input.useSkill)
+			{
+				skillSlot.UseCurrentSlot();
+			}
+		}
 
 		// 회피 입력 — GetKeyDown은 Update에서만 안정적으로 감지됨 (FixedUpdate에서 씹힘)
 		if (curState != UNIT_STATE.DODGE && _input.isDodging && _dodgeCooldownTimer <= 0f)
@@ -408,17 +447,12 @@ public class Player : Unit
 		{
 			Shoot(PROJECTILE_TYPE.MISSILE);
 		}
-		//레이저발사입력
-		if (_input.fireLaser)
-		{
-			Shoot(PROJECTILE_TYPE.LASER);
-		}
-		//전체발사(총알제외.총알은 좌클릭으로유지)입력
-		if (_input.fireAll)
-		{
-			Shoot(PROJECTILE_TYPE.MISSILE);
-			Shoot(PROJECTILE_TYPE.LASER);
-		}
+		////전체발사(총알제외.총알은 좌클릭으로유지)입력
+		//if (_input.fireAll)
+		//{
+		//	Shoot(PROJECTILE_TYPE.MISSILE);
+		//}
+		//미사용레거시
 	}
 
 
