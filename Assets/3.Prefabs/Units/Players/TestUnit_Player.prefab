@@ -1242,10 +1242,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   weaponSystem: {fileID: 0}
-  maxHpRemaining: 9999
-  maxShieldCapacity: 1000
-  shieldRegainDelay: 2
-  shieldRegainRate: 25
+  maxHpRemaining: 99999
+  maxShieldCapacity: 3000
+  shieldRegainDelay: 0.2
+  shieldRegainRate: 100
   isShieldRegaining: 0
   shield: {fileID: 252685907142231170}
   bodyHitboxRoot: {fileID: 1588211745308341998}
@@ -1301,17 +1301,17 @@ MonoBehaviour:
   lockOnSystem: {fileID: 1161755328960943635}
   bulletFireCooldown: 0.15
   curBulletData: {fileID: 11400000, guid: 78ae5846b86eca04eafcb56df9874caa, type: 2}
-  useBulletMuzzle: 1
-  useBulletSound: 1
-  useMissileMuzzle: 0
-  useMissileSound: 1
-  bulletMuzzleFlashVFXPlayTime: 0.09
-  missileMuzzleFlashVFXPlayTime: 0.2
+  _useBulletMuzzle: 1
+  _useBulletSound: 1
+  _useMissileMuzzle: 0
+  _useMissileSound: 1
+  _bulletMuzzleFlashVFXPlayTime: 0.09
+  _missileMuzzleFlashVFXPlayTime: 0.2
   bulletFireMode: 0
   missileFireMode: 2
   autoDetectFirePositions: 0
-  fixedBulletFirePositions: []
-  fixedMissileFirePositions: []
+  _fixedBulletFirePositions: []
+  _fixedMissileFirePositions: []
   missileFireCooldown: 1.5
   missileSlots:
   - type: 0
@@ -1339,6 +1339,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bcb17a26509e3854eb34ea026babacc9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  equippedSkillNames:
+  - 
+  - 
+  - 
   startingSkills: []
 --- !u!114 &1161755328960943635
 MonoBehaviour:

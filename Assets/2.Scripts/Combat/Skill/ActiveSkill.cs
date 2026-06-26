@@ -14,6 +14,8 @@ using UnityEngine;
 // GetRemainingSkillCooldown()   남은 쿨다운(초). 숫자 텍스트 표시용.
 // GetCooldownRatio()            쿨다운 진행 비율(0~1). Image.fillAmount 등 게이지 표시용.
 // GetRemainingUseCount()        남은 사용 횟수. 무제한이면 -1.
+// Tick()                        매 프레임 SkillSystem.Update()가 호출. 코루틴 대신 Time.time 비교로
+//                              지속시간 있는 처리(워프 채널링 등)가 필요한 자식만 override.
 // ================================================================
 
 public abstract class ActiveSkill : Skill
@@ -92,6 +94,15 @@ public abstract class ActiveSkill : Skill
 	/// 스킬 정지(멈춰야하는 채널링 스킬일때)
 	/// </summary>
 	protected virtual void StopSkill()
+	{
+
+	}
+
+	/// <summary>
+	/// 매 프레임 SkillSystem.Update()가 호출. 코루틴 없이 Time.time 비교로 지속시간 처리가
+	/// 필요한 자식만 override(워프 채널링 등). 기본은 아무것도 안 함.
+	/// </summary>
+	public virtual void Tick()
 	{
 
 	}

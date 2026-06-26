@@ -126,6 +126,9 @@ public enum SOUND_TYPE
 	SFX_DODGE,
 
 
+	//스킬음 600번대
+	SFX_SKILL_WARP = 600,
+
 
 	SFX_NONE = 9999,//빈거설정용
 
@@ -273,13 +276,17 @@ public enum LEVEL_BONUS_TYPE
 
 public enum EFFECT_TYPE
 {
-	VFX_EXPLOSION_MISSILE,//Missile.Explode()에서 호출
+	VFX_EXPLOSION_MISSILE = 0,//Missile.Explode()에서 호출
 	VFX_BULLETHIT,
 	VFX_LASERHIT,
 	VFX_BULLET_MUZZLE,
 	VFX_MISSILE_MUZZLE,
 	// 쉴드 이펙트
 	VFX_SHIELD_PULSEWAVE,
+
+
+
+	VFX_SKILL_WARP = 100,
 }
 
 

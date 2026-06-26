@@ -7,6 +7,8 @@ using UnityEngine;
 // WeaponSystem과 같은 자리(캐릭터 전용 컴포넌트, 싱글톤 아님)에 위치.
 // 이 캐릭터가 배운 스킬 전체(_ownedSkills) + 액티브 스킬 핫바(slots) + 사용을 전부 담당.
 // 스킬 자체(Skill/ActiveSkill)는 MonoBehaviour가 아닌 순수 객체라 GameObject에 붙일 필요 없음.
+// 매 프레임 Update()가 slots[]를 돌며 ActiveSkill.Tick()을 호출 — 코루틴 없이 Time.time 비교로
+// 지속시간 있는 스킬(워프 채널링 등)을 처리하기 위함.
 //
 //   LearnSkill(SkillData)            스킬 배움. CanLearnSkill 통과 시 SkillData.CreateInstance()로
 //                                     인스턴스 생성 → 보유목록 추가 → 액티브면 빈 슬롯에 자동 배치.
@@ -53,6 +55,17 @@ public class SkillSystem : MonoBehaviour
 		for (int i = 0; i < startingSkills.Count; i++)
 		{
 			LearnSkill(startingSkills[i]);
+		}
+	}
+
+	private void Update()
+	{
+		for (int i = 0; i < SLOT_COUNT; i++)
+		{
+			if (slots[i] != null)
+			{
+				slots[i].Tick();
+			}
 		}
 	}
 

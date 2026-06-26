@@ -3079,6 +3079,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1995936454}
     m_Modifications:
+    - target: {fileID: 1295354817333113809, guid: a7897ad853ae9d6458830c653646215c, type: 3}
+      propertyPath: timeToMaxSpeed
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 3107650116710039119, guid: a7897ad853ae9d6458830c653646215c, type: 3}
       propertyPath: m_Name
       value: TestUnit_Player
@@ -3271,14 +3275,6 @@ PrefabInstance:
     - target: {fileID: 417953749035928536, guid: c071772b28b1fe04fa3d1ef4793cb675, type: 3}
       propertyPath: m_Name
       value: InputManager
-      objectReference: {fileID: 0}
-    - target: {fileID: 2794135899293206080, guid: c071772b28b1fe04fa3d1ef4793cb675, type: 3}
-      propertyPath: keyboardMouseConfig.useSkill
-      value: 102
-      objectReference: {fileID: 0}
-    - target: {fileID: 2794135899293206080, guid: c071772b28b1fe04fa3d1ef4793cb675, type: 3}
-      propertyPath: keyboardMouseConfig.switchSkillSlot
-      value: 118
       objectReference: {fileID: 0}
     - target: {fileID: 4937408709306154190, guid: c071772b28b1fe04fa3d1ef4793cb675, type: 3}
       propertyPath: m_LocalPosition.x
@@ -3666,8 +3662,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 741722251}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.21072195, y: -0.000000029736462, z: 0.0000000064100565, w: 0.97754604}
-  m_LocalPosition: {x: -306.4, y: 120.52, z: -85.67}
+  m_LocalRotation: {x: 0.17586954, y: 0.000000011976373, z: -0.0000000021396285, w: 0.9844135}
+  m_LocalPosition: {x: -306.4, y: 119.799995, z: -85.67}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -4281,6 +4277,14 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1174679257422973203, guid: b043e4959cc079943be1c844c5e57168, type: 3}
       propertyPath: attackChaseDuration
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1803401708122000012, guid: b043e4959cc079943be1c844c5e57168, type: 3}
+      propertyPath: _useMissileSound
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1803401708122000012, guid: b043e4959cc079943be1c844c5e57168, type: 3}
+      propertyPath: _useMissileMuzzle
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6428153736698038514, guid: b043e4959cc079943be1c844c5e57168, type: 3}
@@ -5003,7 +5007,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4213665552372352050, guid: d8230dc91059e0f4ba901c65fcd57ac3, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 120.52
+      value: 119.799995
       objectReference: {fileID: 0}
     - target: {fileID: 4213665552372352050, guid: d8230dc91059e0f4ba901c65fcd57ac3, type: 3}
       propertyPath: m_LocalPosition.z
@@ -5011,19 +5015,19 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4213665552372352050, guid: d8230dc91059e0f4ba901c65fcd57ac3, type: 3}
       propertyPath: m_LocalRotation.w
-      value: 0.97754604
+      value: 0.9844135
       objectReference: {fileID: 0}
     - target: {fileID: 4213665552372352050, guid: d8230dc91059e0f4ba901c65fcd57ac3, type: 3}
       propertyPath: m_LocalRotation.x
-      value: 0.21072195
+      value: 0.17586952
       objectReference: {fileID: 0}
     - target: {fileID: 4213665552372352050, guid: d8230dc91059e0f4ba901c65fcd57ac3, type: 3}
       propertyPath: m_LocalRotation.y
-      value: -0.000000026989792
+      value: 0.000000011976372
       objectReference: {fileID: 0}
     - target: {fileID: 4213665552372352050, guid: d8230dc91059e0f4ba901c65fcd57ac3, type: 3}
       propertyPath: m_LocalRotation.z
-      value: -0.000000006331837
+      value: -0.0000000021396283
       objectReference: {fileID: 0}
     - target: {fileID: 4213665552372352050, guid: d8230dc91059e0f4ba901c65fcd57ac3, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
