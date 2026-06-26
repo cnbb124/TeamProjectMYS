@@ -32,7 +32,7 @@ using UnityEngine;
 //풀에서 꺼낸 인스턴스의 data 필드는 프리팹에 미리 박혀있는 값 (풀링해도 유지됨, Init에서 매번 복사하므로 풀 오염 걱정 없음)
 //발사 시점에 WeaponSystem이 데이터를 넘길 필요 없음 — 프리팹 자체가 자기 데이터를 알고 있음. WeaponSystem은 그냥 Init(pos, dir, attacker)만 호출
 //작업 순서 (세션25 합의 기준 그대로)
-//DamageInfo에 ignoreArmor, shieldDamageMultiplier 추가 + calculTakeDamage 반영 (A안: 배율은 실드 차감량에만 적용)
+//✅완료: DamageInfo에 ignoreArmor, shieldDamageMultiplier 추가 + calculTakeDamage 반영 (A안: 배율은 실드 차감량에만 적용)
 //ProjectileData/BulletData/MissileData SO 클래스 작성 + Create Data/Item/Projectile Data/... 메뉴 등록
 //Missile.Init()에 데이터 복사 로직 연동 (유도미사일부터)
 //ClusterMissile 분리유도 작업 시 MissileData 그대로 재사용 (자탄용 별도 에셋만 추가)
@@ -149,6 +149,8 @@ public class Missile : Projectile, IExplodable
 			baseDamage = missileData.damage;
 			maxRange = missileData.maxRange;
 			explosionSoundType = missileData.explosionSoundType;
+			ignoreArmor = missileData.ignoreArmor;
+			shieldDamageMultiplier = missileData.shieldDamageMultiplier;
 		}
 
 

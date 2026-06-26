@@ -30,9 +30,9 @@ using UnityEngine;
 //
 // ▶ 이펙트/사운드팀 참조용
 //   OnHitReaction(DamageInfo info) : 피격 시 Player/Enemy에서 override → 여기서 VFXManager 호출
-//   OnStateEnter(UNIT_STATE state) : IDLE/MOVING/BOOSTING 애니+루프사운드 재생, DODGE 무적/타이머, DIE 애니
+//   OnStateEnter(UNIT_STATE state) : IDLE/MOVING/BOOSTING 애니+루프사운드 재생, BRAKE는 MOVING 모션 재사용, DODGE 무적/타이머, DIE 애니
 //   OnStateExit(UNIT_STATE state)  : IDLE/MOVING/BOOSTING 루프사운드 정지
-//                                    Player는 DODGE(RCS버스트)만 추가 override
+//                                    Player는 DODGE(RCS버스트)/BRAKE(역추진 파티클)만 추가 override
 // ================================================================
 
 // FirePosEntry / BoostPosEntry 제거 — WeaponFirePos 마커 컴포넌트 + 파츠 프리팹으로 동적 관리
@@ -147,6 +147,14 @@ public abstract class Unit : MonoBehaviour, IDamageable
 			 "Rigidbody.drag를 0으로 빼서(가속 시 목표속도까지 정확히 도달하게 하려고) 자연 감속이 없어졌으므로,\n" +
 			 "정지 시 감속을 이 값으로 직접 제어함. 멈추기 시작한 시점의 속도를 기준으로 항상 이 시간 안에 0이 됨.")]
 	public float timeToStop = 0.4f;
+	[Tooltip("입력없이 감속 중일 때 BRAKE 상태로 진입하는 속도 기준(최대속도 대비 비율, 0~1).")]
+	[Range(0f,1f)]
+	public float brakeEnterSpeedRatio = 0.65f;
+	[Tooltip("BRAKE 상태에서 빠져나가는 속도 기준(최대속도 대비 비율, 0~1).\n" +
+			 "진입 기준보다 낮게 둬서 65%/20% 사이를 오갈 때 BRAKE-MOVING이 매 프레임 깜빡이는 걸 방지(히스테리시스).")]
+	[Range(0f,1f)]
+	public float brakeExitSpeedRatio = 0.2f;
+	
 	[Tooltip("부스트 최대치")]
 	public float maxBoostCapacity;
 	[Tooltip("부스트 사용 최소 요구치")]
@@ -458,6 +466,9 @@ public abstract class Unit : MonoBehaviour, IDamageable
 			case UNIT_STATE.BOOSTING:
 				OnBoosting();
 				break;
+			case UNIT_STATE.BRAKE:
+				OnBraking();
+				break;
 			case UNIT_STATE.DODGE:
 				OnDodge();
 				break;
@@ -506,6 +517,11 @@ public abstract class Unit : MonoBehaviour, IDamageable
 				PlayAnim(ANIM_TYPE.BOOST);
 				break;
 
+			case UNIT_STATE.BRAKE:
+				// 별도 애니메이션 없음 — 비주얼상 여전히 비행 중이므로 MOVING 모션 그대로 재생
+				PlayAnim(ANIM_TYPE.MOVING);
+				break;
+
 			case UNIT_STATE.DODGE:
 				//PlayAnim(ANIM_TYPE.DODGE_N);키입력따라 좌우 혹은 랜덤방향(키입력없을때)
 				_dodgeTimer = dodgeDuration;
@@ -537,6 +553,10 @@ public abstract class Unit : MonoBehaviour, IDamageable
 	protected virtual void OnBoosting()
 	{
 		//부스트 중 매 프레임 처리
+	}
+	protected virtual void OnBraking()
+	{
+		//입력없이 감속(브레이크) 중 매 프레임 처리
 	}
 	protected virtual void OnDodge()
 	{
@@ -723,7 +743,7 @@ public abstract class Unit : MonoBehaviour, IDamageable
 			StopCoroutine(_shieldRegenCoroutine);
 		}
 		//피격 데미지수치필요(실드있을시, 없을시),실제로 데미지받음
-		calculTakeDamage(damageAmount);
+		calculTakeDamage(damageAmount, info.ignoreArmor, info.shieldDamageMultiplier);
 
 		// 피격으로 실드가 0이 됐을수있으니 콜라이더 상태 갱신
 		UpdateShieldHitboxState();
@@ -808,14 +828,19 @@ public abstract class Unit : MonoBehaviour, IDamageable
 	//	return rand < criChance;
 	//}
 
-	protected void calculTakeDamage(int damageAmount)
+	protected void calculTakeDamage(int damageAmount, bool ignoreArmor, float shieldDamageMultiplier)
 	{
+		// shieldDamageMultiplier 미지정(0)이면 1로 보정 — 기존 콜사이트(베이스 ApplyDamage)와 동일하게 동작
+		float multiplier = shieldDamageMultiplier > 0f ? shieldDamageMultiplier : 1f;
 
 		if (curShieldRemaining > 0)
 		{
-			int shieldDamage = Mathf.Min(curShieldRemaining, damageAmount);//현지실드량보다 초과해서 -가되면 안됨
+			// A안: 배율은 "실드를 깎는 양"에만 적용, 통과 데미지는 원본 기준
+			// → 실드가 원본 데미지로 흡수 가능한 양(절단)만큼만 damageAmount에서 차감
+			int absorbedOriginal = Mathf.Min(damageAmount, Mathf.FloorToInt(curShieldRemaining / multiplier));
+			int shieldDamage = Mathf.Min(curShieldRemaining, Mathf.RoundToInt(absorbedOriginal * multiplier));//현지실드량보다 초과해서 -가되면 안됨
 			curShieldRemaining -= shieldDamage;//실드에 가해진 피해량만큼 현재실드량 깎기
-			damageAmount -= shieldDamage;//실드에 가해진피해량만큼 데미지잔량도 깎기
+			damageAmount -= absorbedOriginal;//실드가 흡수한 원본 데미지만큼 데미지잔량도 깎기
 
 			// 쉴드 Overlay에 HP 비율 전달 (깜빡임/투명도 연출용)
 			if (shield != null && maxShieldCapacity > 0)
@@ -833,7 +858,9 @@ public abstract class Unit : MonoBehaviour, IDamageable
 		}
 		if (damageAmount > 0 && curArmorRemaining > 0)//데미지잔량0초과,실드0,아머0초과
 		{
-			int reducedDamage = Mathf.Max(1, damageAmount - defense);//아머가몇이건 최소 1이건 데미지들어감
+			// 관통탄(ignoreArmor): 아머 자체는 그대로 깎이되, defense(방어력) 경감만 무시하고 통과
+			int effectiveDefense = ignoreArmor ? 0 : defense;
+			int reducedDamage = Mathf.Max(1, damageAmount - effectiveDefense);//아머가몇이건 최소 1이건 데미지들어감
 			int armorDamage = Mathf.Min(curArmorRemaining, reducedDamage);//아머로 경감한데미지만큼 현재아머량깎기 초과해서 -가되면안되므로
 			curArmorRemaining -= armorDamage;//아머에 가해진피해량만큼깎기
 			damageAmount -= armorDamage;//아머에 가해진 피해량만큼 데미지잔량도깎기

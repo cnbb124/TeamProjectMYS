@@ -146,17 +146,16 @@ public class Player : Unit
 	public float curFuelRemaining;
 
 
+	[Header("좌우, 상하 이동")]
+	[Range(0f, 1f)]
+	[Tooltip("좌우(A/D)/상하(Mouse4,5) 이동 속도 비율 (전진 baseMoveSpeed/boostSpeed 대비).\n" +
+		"1이면 전진과 동일 속도, 작을수록 옆/위아래 이동이 느려짐.")]
+	public float strafeSpeedRatio = 0.5f;
+
 
 	// ==================락온 시스템==================
 
 
-
-
-	[Header("역추진")]
-	[Range(0f, 5f)]
-	[Tooltip("이 시간(초) 이상 부스터(쉬프트)를 유지했다가 끝났을 때만 역추진 발동.\n" +
-		"짧게 톡톡 누르는 연타로는 발동 안 함. 권장 2~3초.")]
-	public float reverseMinBoostHold = 2f;
 
 
 	private Vector3 _dodgeDir;
@@ -164,8 +163,6 @@ public class Player : Unit
 	// (기존 _wasMoving은 UpdateBoostEffect()의 파티클 상태추적용으로 이미 쓰이고 있어서 이름 다르게 둠)
 	private float _decelStartSpeed;
 	private bool _wasThrusting;
-	private float _boostHoldTime;    // 부스터를 연속으로 누른 시간 (역추진 발동 조건)
-	private bool _reverseBraking;    // 역추진(브레이크) 연출 진행 중 여부
 
 
 	protected override void Awake()
@@ -262,7 +259,7 @@ public class Player : Unit
 		MovingByInput();
 		UpdateBoostEffect();
 		UpdateRcsEffect();
-		UpdateReverseEffect();
+		UpdateReverseInputEffect();
 
 	}
 
@@ -274,12 +271,33 @@ public class Player : Unit
 
 	//===============override 메서드 FSM==================
 	// IDLE / MOVING / BOOSTING 애니+사운드는 Unit.OnStateEnter에서 처리.
-	// Player는 입력 의존적인 DODGE 방향/RCS, DIE 로그만 추가 처리.
+	// Player는 입력 의존적인 DODGE 방향/RCS, BRAKE 역추진 파티클, DIE 로그만 추가 처리.
 	protected override void OnStateEnter(UNIT_STATE state)
 	{
 		base.OnStateEnter(state);
 		switch (state)
 		{
+			case UNIT_STATE.BRAKE:
+				// 메인(Rev-Booster_L/R) 1회 펑 — Clear 후 Play로 매번 확실히 터지게
+				if (_reverseMainL != null) foreach (var ps in _reverseMainL) { if (ps != null) { ps.Clear(); ps.Play(); } }
+				if (_reverseMainR != null) foreach (var ps in _reverseMainR) { if (ps != null) { ps.Clear(); ps.Play(); } }
+				// 보조(Rev-Sub) 8개 루프 ON
+				PlayAll(_reverseSubs);
+
+				// 좌우(strafe) 잔여 속도 방향을 보고 감속에 맞는 분사구 선택.
+				// UpdateRcsEffect() 가속 매핑(A입력→우측분사, D입력→좌측분사)과는 반대쪽 —
+				// 가속은 "가려는 방향과 반대편" 분사구가 밀어주고, 브레이크는 "미끄러지는 방향과 같은편" 분사구가 막아줌.
+				float lateralVel = Vector3.Dot(_rb.velocity, transform.right);
+				if (lateralVel > 0.1f)       // 우측으로 미끄러지는 중 → 우측 분사구로 막음
+				{
+					PlayAll(_strafeR);
+				}
+				else if (lateralVel < -0.1f) // 좌측으로 미끄러지는 중 → 좌측 분사구로 막음
+				{
+					PlayAll(_strafeL);
+				}
+				break;
+
 			case UNIT_STATE.DODGE:
 				// 좌우 입력 있으면 해당 방향, 없으면 좌/우 랜덤 — 방향을 변수에 저장해 RCS와 동기화
 				bool dodgeLeft;
@@ -310,11 +328,10 @@ public class Player : Unit
 							  + transform.up * _input.moveInput.y;
 					_dodgeDir.Normalize();
 				}
-				// 이동입력없을시
+				// 이동입력없을시 — 위에서 정한 dodgeLeft(좌우 랜덤)와 동일한 방향으로 이동 (애니/RCS와 동기화)
 				else
 				{
-					_dodgeDir = Vector3.zero;
-					//_dodgeDir = dodgeLeft ? -transform.right : transform.right;
+					_dodgeDir = dodgeLeft ? -transform.right : transform.right;
 				}
 				// dodgeDistance(실제 이동거리)÷dodgeDuration = 필요한 속도. VelocityChange는 mass와 무관하게 그 속도를 그대로 더해줌.
 				_rb.AddForce(_dodgeDir * (dodgeDistance / dodgeDuration), ForceMode.VelocityChange);
@@ -343,7 +360,7 @@ public class Player : Unit
 
 
 	// IDLE / MOVING / BOOSTING 루프 사운드 정지는 Unit.OnStateExit에서 처리.
-	// Player는 DODGE RCS 정지만 추가 처리.
+	// Player는 DODGE RCS 정지, BRAKE 역추진 보조/좌우 분사 정지만 추가 처리.
 	protected override void OnStateExit(UNIT_STATE state)
 	{
 		base.OnStateExit(state);
@@ -351,6 +368,12 @@ public class Player : Unit
 		{
 			case UNIT_STATE.DODGE:
 				foreach (var arr in _rcsRoll) StopAll(arr);
+				break;
+
+			case UNIT_STATE.BRAKE:
+				StopAll(_reverseSubs);
+				StopAll(_strafeL);
+				StopAll(_strafeR);
 				break;
 		}
 	}
@@ -499,18 +522,42 @@ public class Player : Unit
 		{
 			return; // 회피 중 입력 차단, 관성은 유지됨
 		}
-		// 로컬 축 기준 6방향 합산
-		Vector3 dir = transform.forward * _input.moveInput.z + transform.right * _input.moveInput.x + transform.up * _input.moveInput.y;
 
-		// 대각선 이동 시 속도 튀는 것 방지
+		float forwardInput = Mathf.Max(0f, _input.moveInput.z);
+		float backwardInput = Mathf.Min(0f, _input.moveInput.z);
+		// 로컬 축 기준 6방향 합산 — 전진/후진(z)은 기준속도 그대로, 좌우(x)/상하(y)는 strafeSpeedRatio만큼 느리게
+		Vector3 forwardDir = transform.forward * forwardInput;
+		Vector3 nonForwardDir = transform.right * _input.moveInput.x +
+							transform.up * _input.moveInput.y +
+							transform.forward * backwardInput;
+		
+
+		if (nonForwardDir.magnitude > 1f)
+		{
+			nonForwardDir.Normalize();
+		}
+
+		//Vector3 lateralDir = transform.right * _input.moveInput.x + transform.up * _input.moveInput.y;
+		//// 좌우+상하 동시 입력 시 그쪽만 속도 튀는 것 방지 (전진과는 별개로 클램프)
+		//if (lateralDir.magnitude > 1f)
+		//{
+		//	lateralDir.Normalize();
+		//}
+
+		//Vector3 dir = forwardDir + lateralDir * strafeSpeedRatio;
+
+
+		//  전진 벡터 + (전진 외 벡터 * strafeSpeedRatio)
+		Vector3 dir = forwardDir + nonForwardDir * strafeSpeedRatio;
+
 		if (dir.magnitude > 1f)
 		{
 			dir.Normalize();
 		}
-
-
 		//float 오차 패딩값
 		bool isMoving = dir.sqrMagnitude > 0.001f;
+
+		
 
 		// 부스트 조건: Shift 누름 + 잔량 남아있음 + 전진 + 연료있음
 		bool canBoost = _input.isBoosting && curBoostRemaining > minBoostRequired && _input.moveInput.z > 0 && curFuelRemaining > 0;
@@ -564,7 +611,7 @@ public class Player : Unit
 				_wasThrusting = false;
 			}
 			float decel = (timeToStop > 0f) ? _decelStartSpeed / timeToStop : float.MaxValue;
-			// 역추진 이펙트는 UpdateReverseEffect()에서 처리
+			// 역추진(브레이크) 이펙트는 OnStateEnter/OnStateExit(UNIT_STATE.BRAKE)에서 처리
 			_rb.velocity = Vector3.MoveTowards(_rb.velocity, Vector3.zero, decel * Time.fixedDeltaTime);
 			// if (_rb.velocity.sqrMagnitude > 0.1f)
 			// {
@@ -585,7 +632,7 @@ public class Player : Unit
 			_rb.velocity = _rb.velocity.normalized * maxV;
 		}
 
-		// FSM 상태 전환 (MOVING / IDLE — 물리 기반이므로 FixedUpdate에서)
+		// FSM 상태 전환 (MOVING / BRAKE / IDLE — 물리 기반이므로 FixedUpdate에서)
 		// DODGE 전환은 GetKeyDown 특성상 Update()에서 처리
 		if (curState == UNIT_STATE.DODGE)
 		{
@@ -603,16 +650,27 @@ public class Player : Unit
 			}
 		}
 
-		else//입력없을시.
+		else//입력없을시 — 속도(최대속도 대비 비율) 기준으로 BRAKE/MOVING/IDLE 판정
 		{
-			if (CurState == UNIT_STATE.BOOSTING)
-			{
-				CurState = UNIT_STATE.MOVING;
-			}
-			// 입력 없음 — 관성 드리프트 중이면 현재 상태 유지, 거의 정지 시 IDLE
 			if (_rb.velocity.sqrMagnitude <= 0.1f)
 			{
 				CurState = UNIT_STATE.IDLE;
+			}
+			else
+			{
+				float speedRatio = maxSpeed > 0f ? _rb.velocity.magnitude / maxSpeed : 0f;
+				bool wasBraking = CurState == UNIT_STATE.BRAKE;
+				// 히스테리시스: 이미 BRAKE면 이탈기준(brakeExitSpeedRatio) 밑으로 떨어질 때까지 유지,
+				// 아니면 진입기준(brakeEnterSpeedRatio) 넘을 때만 BRAKE로 진입.
+				// 부스트 중 입력을 놓아도 이미 고속이라 자동으로 여기서 BRAKE로 걸림 (별도 BOOSTING 분기 불필요).
+				if (wasBraking ? speedRatio > brakeExitSpeedRatio : speedRatio >= brakeEnterSpeedRatio)
+				{
+					CurState = UNIT_STATE.BRAKE;
+				}
+				else
+				{
+					CurState = UNIT_STATE.MOVING;
+				}
 			}
 		}
 
@@ -748,7 +806,8 @@ public class Player : Unit
 	// Q(좌롤): 우측 날개 아래 + 좌측 날개 위 → 기체 좌측으로 기울어짐
 	private void UpdateRcsEffect()
 	{
-		if (curState == UNIT_STATE.DODGE) return; // 닷지 중 Roll RCS는 OnStateEnter 버스트로 처리
+		// 닷지 중 Roll RCS, 브레이크 중 Strafe RCS는 각각 OnStateEnter/OnStateExit에서 전담 처리 — 여기서 건드리면 충돌남
+		if (curState == UNIT_STATE.DODGE || curState == UNIT_STATE.BRAKE) return;
 
 		float roll = _input.rollInput;
 
@@ -786,56 +845,20 @@ public class Player : Unit
 		}
 	}
 
-	// 역추진 파티클 업데이트 (FixedUpdate에서 호출) — "감속(브레이크) 기반"
-	//
-	// 역추진의 실제 역할: 빠르게 날아가다 멈출 때 감속을 시각적으로 보여주는 브레이크 연출.
-	//
-	// 발동 조건: 부스터(쉬프트)를 reverseMinBoostHold초 이상 연속으로 누른 뒤 끝났을 때만.
-	//   → 짧게 톡톡 누르는 연타로는 발동 안 함 (시간이 안 쌓임).
-	// 부스터가 끝나면(쉬프트 떼거나 잔량 소진) "브레이크 모드" 진입:
-	//   메인(Rev-Booster_L/R) 1회 펑 + 보조(Rev-Sub) 루프 ON.
-	//   기체가 거의 멈추면 브레이크 모드 종료, 보조 OFF.
-	// S키 후진 중에는 보조만 ON.
-	private void UpdateReverseEffect()
+	// 역추진 보조(Rev-Sub) 파티클 — S키 후진 입력 전용 (FixedUpdate에서 호출).
+	// 브레이크(감속) 연출은 더 이상 여기서 안 함 — UNIT_STATE.BRAKE로 분리되어
+	// Player.OnStateEnter/OnStateExit(BRAKE)가 메인 버스트 + 보조 루프를 전부 처리함.
+	// 이 함수는 BRAKE가 아닐 때(=입력이 있을 때)만 S키 후진 여부로 보조 루프를 단독 제어.
+	private void UpdateReverseInputEffect()
 	{
-		float forwardSpeed = Vector3.Dot(_rb.velocity, transform.forward);
-
-		// 부스터 누른 시간 누적 (연속으로 누르고 있을 때만 쌓이고, 끝나면 판정 후 리셋)
-		if (_isBoosting)
+		if (_reverseSubs == null || CurState == UNIT_STATE.BRAKE)
 		{
-			_boostHoldTime += Time.fixedDeltaTime;
-			// 다시 부스터를 쓰기 시작하면 이전 브레이크 모드는 해제 (새 가속 중이므로)
-			_reverseBraking = false;
+			return;
 		}
-		else
-		{
-			// 부스터가 막 끝난 순간 — 충분히 오래 눌렀으면 브레이크 모드 진입
-			if (_boostHoldTime >= reverseMinBoostHold && !_reverseBraking)
-			{
-				_reverseBraking = true;
-				// 메인 1회 펑 — Clear 후 Play로 매번 확실히 터지게
-				if (_reverseMainL != null) foreach (var ps in _reverseMainL) { if (ps != null) { ps.Clear(); ps.Play(); } }
-				if (_reverseMainR != null) foreach (var ps in _reverseMainR) { if (ps != null) { ps.Clear(); ps.Play(); } }
-			}
-			_boostHoldTime = 0f;
-		}
-
-		// 브레이크 모드는 기체가 거의 멈추면 종료
-		if (_reverseBraking && forwardSpeed <= 1f)
-			_reverseBraking = false;
 
 		bool reversing = _input.moveInput.z < -0.01f; // S키 후진
-
-		// 보조 8개: 브레이크 모드 중이거나 S키 후진 중이면 루프 ON
-		bool subOn = _reverseBraking || reversing;
-		if (_reverseSubs != null)
-		{
-			foreach (var ps in _reverseSubs)
-			{
-				if (subOn) PlayIfStopped(ps);
-				else StopIfPlaying(ps);
-			}
-		}
+		if (reversing) PlayAllIfStopped(_reverseSubs);
+		else StopAll(_reverseSubs);
 	}
 
 	private void PlayIfStopped(ParticleSystem ps)

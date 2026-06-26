@@ -57,6 +57,12 @@ public abstract class Projectile : MonoBehaviour
 	public SOUND_TYPE hitSoundType;
 	// 실드 피격음은 여기 없음 — 탄종별로 안 나누고 Unit.GetPlaySoundTypeShield(DamageInfo)에서 DAMAGE_TYPE 기준으로 일괄 처리.
 
+	//관통탄 여부, 실드 데미지 배율. Bullet은 BulletData, Missile은 MissileData에서 Init 시 복사됨.
+	[HideInInspector]
+	public bool ignoreArmor;
+	[HideInInspector]
+	public float shieldDamageMultiplier = 1f;
+
     //=======================================================
 
 
@@ -263,7 +269,9 @@ public abstract class Projectile : MonoBehaviour
             hitPosition = targetCollider.ClosestPoint(transform.position),
             hitDiriection = (targetCollider.ClosestPoint(transform.position) - transform.position).normalized,
             attacker = this.attacker != null ? this.attacker.gameObject : null,
-            hitSoundType = this.hitSoundType
+            hitSoundType = this.hitSoundType,
+            ignoreArmor = this.ignoreArmor,
+            shieldDamageMultiplier = this.shieldDamageMultiplier
         };
 
         target.TakeDamage(damageInfo);
@@ -300,7 +308,9 @@ public abstract class Projectile : MonoBehaviour
             hitPosition = targetCollider.ClosestPoint(transform.position),
             hitDiriection = (targetCollider.ClosestPoint(transform.position) - transform.position).normalized,
             attacker = this.attacker != null ? this.attacker.gameObject : null,
-            hitSoundType = this.hitSoundType
+            hitSoundType = this.hitSoundType,
+            ignoreArmor = this.ignoreArmor,
+            shieldDamageMultiplier = this.shieldDamageMultiplier
         };
         target.TakeDamage(damageInfo);
     }
@@ -327,6 +337,8 @@ public abstract class Projectile : MonoBehaviour
             hitDiriection = (targetCollider.ClosestPoint(explosionCenter) - explosionCenter).normalized,  // 변경 260611
             attacker = this.attacker != null ? this.attacker.gameObject : null,
             hitSoundType = this.hitSoundType,
+            ignoreArmor = this.ignoreArmor,
+            shieldDamageMultiplier = this.shieldDamageMultiplier,
             aoeRadius = aoeRadius
         };
         target.TakeDamage(damageInfo);

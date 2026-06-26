@@ -26,6 +26,7 @@ public enum UNIT_STATE
 	BOOSTING,   // 부스트 중. Player 전용 — AI_STATE에 대응 값 없음
 	DODGE,      // 회피 무적 중. 진행 중엔 AI 동기화 스킵. 끝나면 자동 복귀
 	HIT,        // 피격 리액션 (현재 미사용)
+	BRAKE,      // 입력없이 관성으로 감속 중(고속 코스팅). Player 전용 — AI_STATE에 대응 값 없음. 기존 직렬화값 보호를 위해 끝에 추가(세션 규칙)
 }
 
 

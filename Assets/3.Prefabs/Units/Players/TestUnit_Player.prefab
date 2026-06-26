@@ -1256,8 +1256,10 @@ MonoBehaviour:
   baseMoveSpeed: 175
   boostSpeed: 250
   maxSpeed: 250
-  timeToMaxSpeed: 0.55
+  timeToMaxSpeed: 1
   timeToStop: 0.75
+  brakeEnterSpeedRatio: 0.65
+  brakeExitSpeedRatio: 0.2
   maxBoostCapacity: 75
   minBoostRequired: 10
   boostConsumeAmont: 25
@@ -1285,7 +1287,7 @@ MonoBehaviour:
   fuelBoostConsumeRate: 10
   maxFuelCapacity: 0
   curFuelRemaining: 0
-  reverseMinBoostHold: 2
+  strafeSpeedRatio: 0.5
 --- !u!114 &7897952812583820154
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1299,13 +1301,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   lockOnSystem: {fileID: 1161755328960943635}
-  bulletFireCooldown: 0.15
+  bulletFireCooldown: 0.07
   curBulletData: {fileID: 11400000, guid: 78ae5846b86eca04eafcb56df9874caa, type: 2}
   _useBulletMuzzle: 1
   _useBulletSound: 1
   _useMissileMuzzle: 0
   _useMissileSound: 1
-  _bulletMuzzleFlashVFXPlayTime: 0.09
+  _bulletMuzzleFlashVFXPlayTime: 0.05
   _missileMuzzleFlashVFXPlayTime: 0.2
   bulletFireMode: 0
   missileFireMode: 2
