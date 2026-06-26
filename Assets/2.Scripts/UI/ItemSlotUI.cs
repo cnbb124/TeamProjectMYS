@@ -73,12 +73,5 @@ public class ItemSlotUI : MonoBehaviour
             if (slots[i].background != null)
                 slots[i].background.color = isActive ? activeColor : inactiveColor;
         }
-
-        // 플레이어 미사일 슬롯 전환 (슬롯 0~ = missileSlots 인덱스)
-        if (player != null && player.weaponSystem.missileSlots != null
-            && index < player.weaponSystem.missileSlots.Count)
-        {
-            player.weaponSystem.SwitchToSlot(index);
-        }
     }
 }
