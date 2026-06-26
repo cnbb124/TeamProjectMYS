@@ -8,13 +8,13 @@ public class UnitAnimCtrl : MonoBehaviour
 	[Header("애니메이션 타입,해당클립")]
 	public AnimTypeClip[] animTypeClips;
 	
-	private Animator animator;
+	private Animator _animator;
 
-	private AnimDictionary animDic = new AnimDictionary();
+	private AnimDictionary _animDic = new AnimDictionary();
 
 	private void Awake()
 	{
-		animator = GetComponent<Animator>();
+		_animator = GetComponent<Animator>();
 	}
 	// Start is called before the first frame update
 	void Start()
@@ -23,19 +23,19 @@ public class UnitAnimCtrl : MonoBehaviour
 		//차후 애님클립=딕.Get으로 갖고와서 할것
 		foreach (var entry in animTypeClips)
 		{
-			animDic.Add(entry.animType, entry.animClip);
+			_animDic.Add(entry.animType, entry.animClip);
 		}
 	}
 
 
 	public void Play(ANIM_TYPE type, float duration = 0.1f)
 	{
-		AnimationClip clip = animDic.Get(type);
+		AnimationClip clip = _animDic.Get(type);
 		if (clip == null)
 		{
 			return;
 		}
-		animator.CrossFade(clip.name, duration);
+		_animator.CrossFade(clip.name, duration);
 
 
 	}

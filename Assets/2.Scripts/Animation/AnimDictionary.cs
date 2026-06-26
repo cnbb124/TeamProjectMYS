@@ -24,7 +24,7 @@ public class AnimTypeClip
 
 public class AnimDictionary
 {
-    private Dictionary<ANIM_TYPE, AnimationClip> dict = new Dictionary<ANIM_TYPE, AnimationClip>();
+    private Dictionary<ANIM_TYPE, AnimationClip> _dict = new Dictionary<ANIM_TYPE, AnimationClip>();
 
     // Add(해당하는 애니메이션타입, 클립)
     public void Add(ANIM_TYPE type, AnimationClip clip)
@@ -34,7 +34,7 @@ public class AnimDictionary
             return;
         }
 
-        dict[type] = clip;
+        _dict[type] = clip;
 
 		/*
 	    사용 예시:
@@ -51,7 +51,7 @@ public class AnimDictionary
     /// </summary>
     public AnimationClip Get(ANIM_TYPE type)
     {
-        dict.TryGetValue(type, out var clip);
+        _dict.TryGetValue(type, out var clip);
         return clip; 
 
 		/*
@@ -71,6 +71,6 @@ public class AnimDictionary
     // 전체 초기화
 	public void Clear()
     {
-        dict.Clear();
+        _dict.Clear();
     }
 }

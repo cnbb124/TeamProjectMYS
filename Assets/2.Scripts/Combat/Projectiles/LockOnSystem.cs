@@ -46,7 +46,7 @@ public class LockOnSystem : MonoBehaviour
 	[Header("현재 락온 모드 (미사일 종류에 따라 변경)")]
 	//플레이어에서 장비되는 미사일따라 스위칭해서 입력할것.
 	public LOCK_ON_MODE currentLockMode = LOCK_ON_MODE.SINGLE;
-	private WeaponSystem weaponSystem;
+	private WeaponSystem _weaponSystem;
 
 	//[Header("멀티 락온 시 최대 동시 락온 개수")]
 	[HideInInspector]//현재 Missile So에서 받아옴(Cluster)
@@ -98,17 +98,17 @@ public class LockOnSystem : MonoBehaviour
 	public bool IsLocked;
 
 
-	private float lockOnTimer = 0f;
+	private float _lockOnTimer = 0f;
 	private int _currentTargetIndex = 0;
-	private Unit ownerUnit;
+	private Unit _ownerUnit;
 
 	// 클러스터 미사일 락온 모드 (true = 단일타겟에 전탄 집중, false = 다중타겟 분산)
-	private bool clusterSingleLockMode = false;
+	private bool _clusterSingleLockMode = false;
 
 	private void Awake()
 	{
-		ownerUnit = GetComponent<Unit>();
-		weaponSystem = GetComponent<WeaponSystem>();
+		_ownerUnit = GetComponent<Unit>();
+		_weaponSystem = GetComponent<WeaponSystem>();
 		//락온박스만 쓸거면 이걸로
 		//targetLayerMask = 1 << LayerMask.NameToLayer("LockOnBox");
 	}
@@ -116,9 +116,9 @@ public class LockOnSystem : MonoBehaviour
 	private void Update()
 	{
 		// 클러스터 단일/다중 락온 모드 전환 (플레이어 입력만 반영)
-		if (ownerUnit is Player && InputManager.Instance != null && InputManager.Instance.toggleClusterLockMode)
+		if (_ownerUnit is Player && InputManager.Instance != null && InputManager.Instance.toggleClusterLockMode)
 		{
-			clusterSingleLockMode = !clusterSingleLockMode;
+			_clusterSingleLockMode = !_clusterSingleLockMode;
 		}
 
 		FindAllTargets();
@@ -151,14 +151,14 @@ public class LockOnSystem : MonoBehaviour
 	{
 		LOCK_ON_MODE newMode = currentLockMode;
 
-		switch (weaponSystem.curMissileType)
+		switch (_weaponSystem.curMissileType)
 		{
 			case MISSILE_TYPE.HOMING:
 				newMode = LOCK_ON_MODE.SINGLE;
 				break;
 
 			case MISSILE_TYPE.CLUSTER:
-				newMode = clusterSingleLockMode ? LOCK_ON_MODE.SINGLE : LOCK_ON_MODE.MULTI;
+				newMode = _clusterSingleLockMode ? LOCK_ON_MODE.SINGLE : LOCK_ON_MODE.MULTI;
 				break;
 
 			case MISSILE_TYPE.DUMB:
@@ -186,10 +186,10 @@ public class LockOnSystem : MonoBehaviour
 
 		LockOnCandidate = TargetsInLockonRange[_currentTargetIndex];
 
-		lockOnTimer += Time.deltaTime;
-		LockOnProgress = Mathf.Clamp01(lockOnTimer / lockOnRequiredTime);
+		_lockOnTimer += Time.deltaTime;
+		LockOnProgress = Mathf.Clamp01(_lockOnTimer / lockOnRequiredTime);
 
-		if (!IsLocked && lockOnTimer >= lockOnRequiredTime)
+		if (!IsLocked && _lockOnTimer >= lockOnRequiredTime)
 		{
 			IsLocked = true;
 			LockedTarget = LockOnCandidate;
@@ -216,10 +216,10 @@ public class LockOnSystem : MonoBehaviour
 			MultiLockCandidates.Add(TargetsInLockonRange[i]);
 		}
 
-		lockOnTimer += Time.deltaTime;
-		LockOnProgress = Mathf.Clamp01(lockOnTimer / lockOnRequiredTime);
+		_lockOnTimer += Time.deltaTime;
+		LockOnProgress = Mathf.Clamp01(_lockOnTimer / lockOnRequiredTime);
 
-		if (!IsLocked && lockOnTimer >= lockOnRequiredTime)
+		if (!IsLocked && _lockOnTimer >= lockOnRequiredTime)
 		{
 			IsLocked = true;
 			MultiLockedTargets.Clear();
@@ -242,7 +242,7 @@ public class LockOnSystem : MonoBehaviour
 
 		foreach (Collider hit in hits)
 		{
-			if (ownerUnit != null && hit.GetComponentInParent<Unit>() == ownerUnit)
+			if (_ownerUnit != null && hit.GetComponentInParent<Unit>() == _ownerUnit)
 			{
 				continue;
 			}
@@ -263,12 +263,12 @@ public class LockOnSystem : MonoBehaviour
 
 			//Unit에 소속된 것인지
 			Unit parentUnit = hit.GetComponentInParent<Unit>();
-			if (parentUnit == null || (ownerUnit != null && parentUnit == ownerUnit))
+			if (parentUnit == null || (_ownerUnit != null && parentUnit == _ownerUnit))
 			{
 				continue;
 			}
 			//같은팀인지 아닌지(태그로)
-			if (ownerUnit != null && parentUnit.gameObject.tag == ownerUnit.gameObject.tag)
+			if (_ownerUnit != null && parentUnit.gameObject.tag == _ownerUnit.gameObject.tag)
 			{
 				continue;
 			}
@@ -380,7 +380,7 @@ public class LockOnSystem : MonoBehaviour
 	public void ClearLock()
 	{
 		// 공통 초기화
-		lockOnTimer = 0f;
+		_lockOnTimer = 0f;
 		LockOnProgress = 0f;
 		IsLocked = false;
 		_currentTargetIndex = 0;

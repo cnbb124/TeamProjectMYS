@@ -55,8 +55,8 @@ public class Missile : Projectile, IExplodable
 	[Tooltip("VFXManager에 연결된 폭발이펙트용 파티클 원본의 범위 입력. 원본값 입력 후 수정X.")]
 	public float vfxBaseRadius = 8f;
 
-	private Collider[] explosionHits = new Collider[30]; //맞은것들 콜라이더 체크할배열 필요하면 스타트나 이닛쪽으로
-	private HashSet<IDamageable> damagedTargets = new HashSet<IDamageable>(); //중복데미지를 방지하기위한 해쉬셋
+	private Collider[] _explosionHits = new Collider[30]; //맞은것들 콜라이더 체크할배열 필요하면 스타트나 이닛쪽으로
+	private HashSet<IDamageable> _damagedTargets = new HashSet<IDamageable>(); //중복데미지를 방지하기위한 해쉬셋
 
 	[Space(5)]
 	[HideInInspector]
@@ -104,12 +104,12 @@ public class Missile : Projectile, IExplodable
 	public SOUND_TYPE explosionSoundType;
 
 	//발사후 경과시간
-	private float aliveTime = 0f;
+	private float _aliveTime = 0f;
 	//락온타겟 이전좌표(추적용)
-	private Vector3 prevTargetPos;
+	private Vector3 _prevTargetPos;
 
 	//계산된 미사일의 추진 속도
-	private float thrustSpeed;
+	private float _thrustSpeed;
 
 
 
@@ -156,15 +156,15 @@ public class Missile : Projectile, IExplodable
 		explosionInfo.explosionDamage = this.curDamage;
 		explosionInfo.explosionRadius = this.explosionRadius;
 		//발사후경과시간
-		aliveTime = 0f;
+		_aliveTime = 0f;
 		//현재 추진 스피드를 발사스피드로 입력
-		thrustSpeed = launchSpeed;
+		_thrustSpeed = launchSpeed;
 		curSpeed = 0f;
-		
+
 		//타겟이 있을경우. 타겟의 전 좌표 초기화
 		if (targetTr != null)
 		{
-			prevTargetPos = targetTr.position;
+			_prevTargetPos = targetTr.position;
 		}
 
 	}
@@ -193,10 +193,10 @@ public class Missile : Projectile, IExplodable
 		}
 
 		// 발사후 경과시간 업데이트
-		aliveTime += Time.deltaTime;
+		_aliveTime += Time.deltaTime;
 
 		// 속도 가속, 발사시간>최대속도
-		thrustSpeed = Mathf.Lerp(launchSpeed, maxSpeed, Mathf.Clamp01(aliveTime / accelerateTime));
+		_thrustSpeed = Mathf.Lerp(launchSpeed, maxSpeed, Mathf.Clamp01(_aliveTime / accelerateTime));
 
 
 		// [추가수정]Steer() 진입 여부와 무관하게 매 프레임 타겟의 속도를 계산하고 이전 좌표를 갱신
@@ -204,13 +204,13 @@ public class Missile : Projectile, IExplodable
 		if (targetTr != null)
 		{
 			float dt = Mathf.Max(Time.deltaTime, 0.001f);
-			targetVelocity = (targetTr.position - prevTargetPos) / dt;
-			prevTargetPos = targetTr.position; // 직진(straightFlightDistance) 기간에도 정상 갱신됨
+			targetVelocity = (targetTr.position - _prevTargetPos) / dt;
+			_prevTargetPos = targetTr.position; // 직진(straightFlightDistance) 기간에도 정상 갱신됨
 		}
 
-		if (traveledDistance < straightFlightDistance || targetTr == null)
+		if (_traveledDistance < straightFlightDistance || targetTr == null)
 		{
-			transform.position += transform.forward * thrustSpeed * Time.deltaTime;
+			transform.position += transform.forward * _thrustSpeed * Time.deltaTime;
 		}
 		else
 		{
@@ -218,7 +218,7 @@ public class Missile : Projectile, IExplodable
 			Steer(targetVelocity);
 		}
 
-		curSpeed = Vector3.Distance(transform.position, prevPos) / Time.deltaTime;
+		curSpeed = Vector3.Distance(transform.position, _prevPos) / Time.deltaTime;
 		base.Update();
 	}
 
@@ -239,7 +239,7 @@ public class Missile : Projectile, IExplodable
 		{
 			Vector3 finalDir = Vector3.RotateTowards(transform.forward, toTarget.normalized, turnRate * 2f * Mathf.Deg2Rad * Time.deltaTime, 0f);
 			transform.forward = finalDir;
-			transform.position += transform.forward * thrustSpeed * Time.deltaTime;
+			transform.position += transform.forward * _thrustSpeed * Time.deltaTime;
 			return;
 		}
 
@@ -249,7 +249,7 @@ public class Missile : Projectile, IExplodable
 		if (targetVelocity.sqrMagnitude > 0.1f)
 		{
 			// 현재 속도로 타겟까지 도달하는 데 걸리는 예상 시간(ETA)
-			float timeToHit = dist / Mathf.Max(thrustSpeed, 1f);
+			float timeToHit = dist / Mathf.Max(_thrustSpeed, 1f);
 
 			// 거리가 너무 멀 때 예측 좌표가 우주로 튀는 것을 막기 위해 최대 1.5초 후의 위치까지만 예측
 			timeToHit = Mathf.Min(timeToHit, 1.5f);
@@ -263,7 +263,7 @@ public class Missile : Projectile, IExplodable
 		//[추가수정] 예측된 방향으로 부드럽게 회전 및 전진
 		Vector3 newDir = Vector3.RotateTowards(transform.forward, desiredDir, turnRate * Mathf.Deg2Rad * Time.deltaTime, 0f);
 		transform.forward = newDir;
-		transform.position += transform.forward * thrustSpeed * Time.deltaTime;
+		transform.position += transform.forward * _thrustSpeed * Time.deltaTime;
 	}
 
 
@@ -290,13 +290,13 @@ public class Missile : Projectile, IExplodable
 		SoundManager.Instance.PlaySFX3DAtPosition(explosionSoundType, transform.position);
 		//맞은것들의 충돌박스 갯수 카운트
 		int hitMask = LayerMask.GetMask("HitBox");
-		int hitCount = Physics.OverlapSphereNonAlloc(transform.position, explosionInfo.explosionRadius, explosionHits, hitMask);
-		
-		
+		int hitCount = Physics.OverlapSphereNonAlloc(transform.position, explosionInfo.explosionRadius, _explosionHits, hitMask);
+
+
 		//int hitCount = Physics.OverlapSphereNonAlloc(transform.position, explosionInfo.explosionRadius, explosionHits);
 		//Debug.Log($"hitCount: {hitCount}, radius: {explosionInfo.explosionRadius}");
 		// 중복 타격 방지를 위한 HashSet 초기화
-		damagedTargets.Clear();
+		_damagedTargets.Clear();
 
 
 
@@ -305,22 +305,22 @@ public class Missile : Projectile, IExplodable
 		for (int i = 0; i < hitCount; i++)
 		{
 			//맞은것들중 부모에 데미지받는애들 갖고오기
-			IDamageable target = explosionHits[i].GetComponentInParent<IDamageable>();
+			IDamageable target = _explosionHits[i].GetComponentInParent<IDamageable>();
 
 			// 타격 대상 기록 . 중복이없으면
-			if (target != null && !damagedTargets.Contains(target))
+			if (target != null && !_damagedTargets.Contains(target))
 			{
 				if ((object)target == attacker)
 				{
 					continue;
 				}
 				// 거리 비례 데미지 감쇠 (중심 100%, 외곽 50%)
-				float distRatio = 1f - (Vector3.Distance(transform.position, explosionHits[i].transform.position) / explosionInfo.explosionRadius);
+				float distRatio = 1f - (Vector3.Distance(transform.position, _explosionHits[i].transform.position) / explosionInfo.explosionRadius);
 				int finalDamage = Mathf.RoundToInt(explosionInfo.explosionDamage * Mathf.Lerp(0.5f, 1f, distRatio));
 				//데미지 실제적용 (AOE 오버로드: 폭발 중심 + 반경 전달)
-				ApplyDamage(target, explosionHits[i], finalDamage, this.dmgType, explosionHits[i].ClosestPoint(transform.position), explosionInfo.explosionRadius);
+				ApplyDamage(target, _explosionHits[i], finalDamage, this.dmgType, _explosionHits[i].ClosestPoint(transform.position), explosionInfo.explosionRadius);
 				//중복체크용 해쉬셋Add
-				damagedTargets.Add(target);
+				_damagedTargets.Add(target);
 			}
 		}
 	}
@@ -330,6 +330,6 @@ public class Missile : Projectile, IExplodable
 	{
 		base.OnDisable();
 		targetTr = null;
-		aliveTime = 0f;
+		_aliveTime = 0f;
 	}
 }

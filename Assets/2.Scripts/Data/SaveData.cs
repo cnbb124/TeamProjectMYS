@@ -40,6 +40,15 @@ public class SavedAffection
     public int    value;
 }
 
+// 보유 스킬 하나를 JSON-safe 하게 저장하는 구조체.
+// SkillData(SO 참조) → skillId(int)로 변환. slotIndex == -1이면 핫바에 없음(보유만).
+[System.Serializable]
+public class SavedSkill
+{
+    public int skillId;   // (int)SKILL_ID
+    public int slotIndex;
+}
+
 [System.Serializable]
 public class SaveData
 {
@@ -59,6 +68,9 @@ public class SaveData
 
     [Header("호감도 (NPC별)")]
     public SavedAffection[] affections;
+
+    [Header("보유 스킬")]
+    public SavedSkill[] skills;
 
     [Header("파츠 슬롯")]
     public SavedPartSlot[] partSlots;

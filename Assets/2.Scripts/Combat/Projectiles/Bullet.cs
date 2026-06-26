@@ -12,7 +12,7 @@ public class Bullet : Projectile
 	/// <summary>
 	/// 총알 속도.
 	/// </summary>
-	private float speed;
+	private float _speed;
 	[Header("<size=22>총알 설정</size>")]
 	[Header("투사체 데이터(SO)")]
 	public BulletData bulletData;
@@ -34,7 +34,7 @@ public class Bullet : Projectile
 	protected override void Update()
 	{
 		//이동 로직
-		transform.Translate(Vector3.forward * speed * Time.deltaTime);
+		transform.Translate(Vector3.forward * _speed * Time.deltaTime);
 		//기본 업데이트 실행(사거리 업뎃)
 		base.Update();
 		
@@ -45,7 +45,7 @@ public class Bullet : Projectile
 		base.Init(startPos, dir, attacker);
 		if(bulletData!=null)
 		{
-			speed = bulletData.speed;
+			_speed = bulletData.speed;
 			baseDamage = bulletData.damage;
 			maxRange = bulletData.maxRange;
 			hitSoundType = bulletData.hitSoundType;

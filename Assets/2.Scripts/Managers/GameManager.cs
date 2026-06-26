@@ -134,7 +134,7 @@ public class GameManager : MonoBehaviour
     // =====================================================================
     [Header("━━━━━━ 페이드 설정 ━━━━━━")]
     [Tooltip("페이드 연출용 CanvasGroup. GameManager 자식 Canvas에 부착. null이면 페이드 스킵.")]
-    [SerializeField] private UnityEngine.UI.Image fadeImage;
+    [SerializeField] private UnityEngine.UI.Image _fadeImage;
     [Tooltip("페이드 인/아웃 시간 (초)")]
     public float fadeDuration = 0.5f;
 
@@ -144,6 +144,10 @@ public class GameManager : MonoBehaviour
     [Header("━━━━━━ 아이템 데이터베이스 ━━━━━━")]
     [Tooltip("ItemDatabase.asset 연결 필수. Awake에서 Init() 호출.")]
     public ItemDatabase itemDatabase;
+
+    [Header("━━━━━━ 스킬 데이터베이스 ━━━━━━")]
+    [Tooltip("SkillDatabase.asset 연결 필수. Awake에서 Init() 호출.")]
+    public SkillDatabase skillDatabase;
 
     // =====================================================================
     // 저장 경로
@@ -175,6 +179,15 @@ public class GameManager : MonoBehaviour
             else
             {
                 Debug.LogWarning("[GameManager] itemDatabase 미연결. 저장/로드 시 파츠 복원 불가.");
+            }
+
+            if (skillDatabase != null)
+            {
+                skillDatabase.Init();
+            }
+            else
+            {
+                Debug.LogWarning("[GameManager] skillDatabase 미연결. 저장/로드 시 스킬 복원 불가.");
             }
         }
         else if (instance != this)
@@ -237,49 +250,49 @@ public class GameManager : MonoBehaviour
 
     private IEnumerator FadeOut()
     {
-        if (fadeImage == null)
+        if (_fadeImage == null)
         {
             yield break;
         }
-        Color c = fadeImage.color;
+        Color c = _fadeImage.color;
         c.a = 0f;
-        fadeImage.color = c;
-        fadeImage.gameObject.SetActive(true);
+        _fadeImage.color = c;
+        _fadeImage.gameObject.SetActive(true);
 
         float elapsed = 0f;
         while (elapsed < fadeDuration)
         {
             elapsed += Time.unscaledDeltaTime;
             c.a = Mathf.Clamp01(elapsed / fadeDuration);
-            fadeImage.color = c;
+            _fadeImage.color = c;
             yield return null;
         }
         c.a = 1f;
-        fadeImage.color = c;
+        _fadeImage.color = c;
     }
 
     private IEnumerator FadeIn()
     {
-        if (fadeImage == null)
+        if (_fadeImage == null)
         {
             yield break;
         }
-        Color c = fadeImage.color;
+        Color c = _fadeImage.color;
         c.a = 1f;
-        fadeImage.color = c;
-        fadeImage.gameObject.SetActive(true);
+        _fadeImage.color = c;
+        _fadeImage.gameObject.SetActive(true);
 
         float elapsed = 0f;
         while (elapsed < fadeDuration)
         {
             elapsed += Time.unscaledDeltaTime;
             c.a = Mathf.Clamp01(1f - elapsed / fadeDuration);
-            fadeImage.color = c;
+            _fadeImage.color = c;
             yield return null;
         }
         c.a = 0f;
-        fadeImage.color = c;
-        fadeImage.gameObject.SetActive(false);
+        _fadeImage.color = c;
+        _fadeImage.gameObject.SetActive(false);
     }
 
     private void PlaySceneBGM(string sceneName)
@@ -559,6 +572,12 @@ public class GameManager : MonoBehaviour
                 }
             }
 
+            // 보유 스킬 저장 (SkillSystem이 직접 SavedSkill[] 생성)
+            if (playerRef.skillSystem != null)
+            {
+                data.skills = playerRef.skillSystem.CollectSaveData();
+            }
+
             // TODO: PlayerLoadout 구현 후 착용 장비 / 소모품 / 인벤토리 추가
         }
         return data;
@@ -628,6 +647,12 @@ public class GameManager : MonoBehaviour
                 }
             }
 
+            // 보유 스킬 복원 (skillId int → SkillData 참조, skillDatabase 통해 역참조)
+            if (playerRef.skillSystem != null)
+            {
+                playerRef.skillSystem.LoadSaveData(data.skills);
+            }
+
             // TODO: PlayerLoadout 구현 후 착용 장비 / 소모품 / 인벤토리 적용
         }
     }
@@ -642,6 +667,10 @@ public class GameManager : MonoBehaviour
         if (AffectionManager.Instance != null)
         {
             AffectionManager.Instance.LoadAffections(null);
+        }
+        if (playerRef != null && playerRef.skillSystem != null)
+        {
+            playerRef.skillSystem.LoadSaveData(null);
         }
         ResetBattleData();
     }

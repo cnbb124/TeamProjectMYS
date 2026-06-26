@@ -8,7 +8,7 @@ using UnityEngine;
 // 고정 포탑               → EnemyTurretBase 상속
 // 자체 AI가 있는 특수 적  → Enemy 직접 상속 (UseGenericAI = false)
 //
-// UpdateAI() — 1초마다 UnitManager에서 최근접 플레이어로 target 갱신
+// UpdateAI() — 1초마다 UnitManager에서 최근접 플레이어로 _target 갱신
 //
 // ================================================================
 // OnEnable()                             aiState=STANDBY 리셋 + UnitManager.RegisterEnemy 호출 (풀 재사용 시도 매번 실행)
@@ -19,7 +19,7 @@ using UnityEngine;
 // ShootWeapons()                         virtual — 자식이 override해 발사 종류 지정
 // RotateTowardTarget()                   virtual — 터렛은 swivel/mount 방식으로 override
 // RotateTowardPosition(Vector3)          RotateTowards 선회 (rotateSpeed = 도/초)
-// MoveTowardTarget()                     target.position → MoveTowardPosition 위임
+// MoveTowardTarget()                     _target.position → MoveTowardPosition 위임
 // MoveTowardPosition(Vector3)            AddForce + 최대속도 클램프
 // ================================================================
 
@@ -38,7 +38,7 @@ public class Enemy : Unit
     public AI_STATE aiState = AI_STATE.STANDBY;
 
     [Header("<size=18>후방 공격 빈도 감소</size>")]
-    [Tooltip("타겟(target.forward) 기준 이 각도(도) 이상 등 뒤에 있으면 후방으로 판정.\n" +
+    [Tooltip("타겟(_target.forward) 기준 이 각도(도) 이상 등 뒤에 있으면 후방으로 판정.\n" +
              "180=정반대(완전 후방), 90=측면, 0=정면.")]
     [Range(0f, 180f)]
     public float rearAttackAngleThreshold = 110f;
@@ -52,11 +52,11 @@ public class Enemy : Unit
     [Range(0f, 1f)]
     public float leadAccuracy = 0f;
 
-    protected Transform target;
-    // target의 Velocity(Rigidbody.velocity) 참조용. UpdateTarget()에서 target과 함께 갱신.
-    protected Unit targetUnit;
+    protected Transform _target;
+    // _target의 Velocity(Rigidbody.velocity) 참조용. UpdateTarget()에서 _target과 함께 갱신.
+    protected Unit _targetUnit;
 
-    protected Vector3 spawnPosition;
+    protected Vector3 _spawnPosition;
 
     private float _targetUpdateTimer = 0f;
     private const float TargetUpdateInterval = 1f;
@@ -88,7 +88,7 @@ public class Enemy : Unit
     {
         base.Start();
         UpdateTarget();
-        spawnPosition = transform.position;
+        _spawnPosition = transform.position;
     }
 
     // 위치를 직접 배치하는 스폰 호출부(SpawnManager 등)가 transform.position을 옮긴 직후 호출.
@@ -96,7 +96,7 @@ public class Enemy : Unit
     // 그래서 재배치가 끝난 다음 이 메서드로 명시적으로 갱신함. (ScenePlaced는 재배치를 안 하므로 호출 불필요)
     public void RefreshSpawnAnchor()
     {
-        spawnPosition = transform.position;
+        _spawnPosition = transform.position;
     }
 
     protected override void Die()
@@ -130,7 +130,7 @@ public class Enemy : Unit
         }
     }
 
-    // 1초마다 target 갱신. 자식이 base.UpdateAI() 호출로 공유.
+    // 1초마다 _target 갱신. 자식이 base.UpdateAI() 호출로 공유.
     protected virtual void UpdateAI()
     {
         _targetUpdateTimer -= Time.deltaTime;
@@ -148,12 +148,12 @@ public class Enemy : Unit
     // 호출부에서 true면 ShootWeapons()/ShootWeaponsOnPass() 호출을 건너뜀.
     protected bool ShouldSkipAttackFromBehind()
     {
-        if (target == null)
+        if (_target == null)
         {
             return false;
         }
-        Vector3 toEnemy = (transform.position - target.position).normalized;
-        float dot = Vector3.Dot(target.forward, toEnemy);
+        Vector3 toEnemy = (transform.position - _target.position).normalized;
+        float dot = Vector3.Dot(_target.forward, toEnemy);
         float dotThreshold = Mathf.Cos(rearAttackAngleThreshold * Mathf.Deg2Rad);
         if (dot >= dotThreshold)
         {
@@ -175,40 +175,40 @@ public class Enemy : Unit
         {
             return;
         }
-        target = UnitManager.Instance.GetNearestPlayer(transform.position);
-        targetUnit = target != null ? target.GetComponent<Unit>() : null;
+        _target = UnitManager.Instance.GetNearestPlayer(transform.position);
+        _targetUnit = _target != null ? _target.GetComponent<Unit>() : null;
     }
 
     // 타겟의 현재 위치 + (속도 * 도달시간)으로 예측 조준점 계산.
     // leadAccuracy로 보정(0=예측없음~1=완전예측). bulletSpeed가 0 이하면 예측 안 함(미사일 전용 함선 대비).
     protected Vector3 GetPredictedAimPoint()
     {
-        if (target == null)
+        if (_target == null)
         {
             return Vector3.zero;
         }
-        if (leadAccuracy <= 0f || targetUnit == null || weaponSystem == null || weaponSystem.curBulletData == null)
+        if (leadAccuracy <= 0f || _targetUnit == null || weaponSystem == null || weaponSystem.curBulletData == null)
         {
-            return target.position;
+            return _target.position;
         }
         float bulletSpeed = weaponSystem.curBulletData.speed;
         if (bulletSpeed <= 0f)
         {
-            return target.position;
+            return _target.position;
         }
-        float distance = Vector3.Distance(transform.position, target.position);
+        float distance = Vector3.Distance(transform.position, _target.position);
         float leadTime = distance / bulletSpeed;
-        Vector3 fullPredictedPos = target.position + targetUnit.Velocity * leadTime;
-        return Vector3.Lerp(target.position, fullPredictedPos, leadAccuracy);
+        Vector3 fullPredictedPos = _target.position + _targetUnit.Velocity * leadTime;
+        return Vector3.Lerp(_target.position, fullPredictedPos, leadAccuracy);
     }
 
     protected bool IsTargetInRange(float range)
     {
-        if (target == null)
+        if (_target == null)
         {
             return false;
         }
-        return Vector3.Distance(transform.position, target.position) <= range;
+        return Vector3.Distance(transform.position, _target.position) <= range;
     }
 
     protected bool HasTargetInAttackRange()
@@ -223,7 +223,7 @@ public class Enemy : Unit
     // 터렛은 swivel/mount 방식으로 override.
     protected virtual void RotateTowardTarget()
     {
-        if (target == null)
+        if (_target == null)
         {
             return;
         }
@@ -249,11 +249,11 @@ public class Enemy : Unit
 
     protected void MoveTowardTarget()
     {
-        if (target == null)
+        if (_target == null)
         {
             return;
         }
-        MoveTowardPosition(target.position);
+        MoveTowardPosition(_target.position);
     }
 
     protected void MoveTowardPosition(Vector3 worldPos)

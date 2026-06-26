@@ -61,13 +61,13 @@ public abstract class Projectile : MonoBehaviour
 
 
 	//발사좌표(사거리계산용.)
-	protected Vector3 startPos;
+	protected Vector3 _startPos;
     //이동거리 구하기위한 이전좌표
-    protected Vector3 prevPos;
+    protected Vector3 _prevPos;
     //실제 투사체가 이동한거리
-    protected float traveledDistance = 0f;
+    protected float _traveledDistance = 0f;
 
-	
+
 	//데미지수치
 	//인스펙터에서 설정하는 투사체 고유의 기본 데미지
 	[Header("투사체 기본 데미지(출력용)")]
@@ -86,7 +86,7 @@ public abstract class Projectile : MonoBehaviour
 
     // 크리티컬 여부. Init()에서 attacker의 criChance로 판정.
     // 투사체가 크리 판정 담당 → DamageInfo.isCritical로 전달.
-    protected bool critical;
+    protected bool _critical;
 
 
     protected virtual void Awake()
@@ -105,10 +105,10 @@ public abstract class Projectile : MonoBehaviour
 
         //사거리 벗어날시
         //출발지점과 현재이동한거리가>=최대사거리 도달혹은초과시
-        traveledDistance += (transform.position - prevPos).magnitude;
-        prevPos = transform.position;
+        _traveledDistance += (transform.position - _prevPos).magnitude;
+        _prevPos = transform.position;
 
-        if (traveledDistance >= maxRange)
+        if (_traveledDistance >= maxRange)
         {
             OnMaxRange();
         }
@@ -128,11 +128,11 @@ public abstract class Projectile : MonoBehaviour
 	public virtual void Init(Vector3 startPos, Vector3 dir, Unit attacker)
 	{
 		//출발한 좌표 저장
-		this.startPos = startPos;
+		_startPos = startPos;
 		//공격자 저장
 		this.attacker = attacker;
-		traveledDistance = 0f;
-		prevPos = startPos;
+		_traveledDistance = 0f;
+		_prevPos = startPos;
 		//출발할좌표로 현재좌표 초기화
 		transform.position = startPos;
 		//향할 방향초기화
@@ -142,7 +142,7 @@ public abstract class Projectile : MonoBehaviour
 
 		curDamage = baseDamage;//차후 로직 추가 필요.(배율증가있을시)
 
-		critical = Random.Range(0f, 100f) < attacker.criChance;//크리여부
+		_critical = Random.Range(0f, 100f) < attacker.criChance;//크리여부
 
 
 		//물리처리를 위한 레이어 입력
@@ -259,7 +259,7 @@ public abstract class Projectile : MonoBehaviour
         {
             type = currentDmgType,
             damageAmount = damage,
-            isCritical = critical,
+            isCritical = _critical,
             hitPosition = targetCollider.ClosestPoint(transform.position),
             hitDiriection = (targetCollider.ClosestPoint(transform.position) - transform.position).normalized,
             attacker = this.attacker != null ? this.attacker.gameObject : null,
@@ -296,7 +296,7 @@ public abstract class Projectile : MonoBehaviour
         {
             type = currentDmgType,
             damageAmount = damage,
-            isCritical = critical,
+            isCritical = _critical,
             hitPosition = targetCollider.ClosestPoint(transform.position),
             hitDiriection = (targetCollider.ClosestPoint(transform.position) - transform.position).normalized,
             attacker = this.attacker != null ? this.attacker.gameObject : null,
@@ -322,7 +322,7 @@ public abstract class Projectile : MonoBehaviour
         {
             type = currentDmgType,
             damageAmount = damage,
-            isCritical = critical,
+            isCritical = _critical,
             hitPosition = targetCollider.ClosestPoint(explosionCenter),  // 변경 260611
             hitDiriection = (targetCollider.ClosestPoint(explosionCenter) - explosionCenter).normalized,  // 변경 260611
             attacker = this.attacker != null ? this.attacker.gameObject : null,

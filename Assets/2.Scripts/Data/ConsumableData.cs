@@ -11,9 +11,9 @@ public class ConsumableEffect
 [CreateAssetMenu(fileName = "New Consumable Data", menuName = "Create Data/Item/Consumable Data")]
 public class ConsumableData : ItemData
 {
-    [Header("Effects")]
+    [Header("사용 효과")]
     public List<ConsumableEffect> effects = new List<ConsumableEffect>();
 
-    [Header("Cooldown")]
+    [Header("재사용 쿨다운")]
     public float cooldown = 5f;
 }

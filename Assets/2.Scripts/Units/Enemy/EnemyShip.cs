@@ -8,7 +8,7 @@ using UnityEngine;
 //
 // Update()
 //   └── UpdateAI()
-//         ├── base.UpdateAI()             target 1초 갱신
+//         ├── base.UpdateAI()             _target 1초 갱신
 //         ├── _stateTimer / _evadeCoolTimer 감소
 //         ├── AI_STATE → UNIT_STATE 동기화
 //         └── switch(aiState) → 각 OnAI*() 호출
@@ -34,7 +34,7 @@ using UnityEngine;
 // EnterReposition()        REPOSITION 진입 + _repositionTarget 선정
 // EnterEvade()             EVADE 진입 + 쿨타임 세팅
 // EnterReload(float)       RELOAD 진입 + 타이머 세팅
-// PickNewPatrolPoint()     spawnPosition 기준 랜덤 순찰 지점 선정
+// PickNewPatrolPoint()     _spawnPosition 기준 랜덤 순찰 지점 선정
 // ================================================================
 
 // ATTACK_PASS 궤도 오프셋 방향 설정.
@@ -128,7 +128,7 @@ public class EnemyShip : Enemy
     protected virtual bool CanDodge => true;
     protected virtual bool CanEvade => true;
 
-    protected Vector3 patrolTarget;
+    protected Vector3 _patrolTarget;
 
     private float _stateTimer = 0f;
     private float _evadeCoolTimer = 0f;
@@ -168,8 +168,8 @@ public class EnemyShip : Enemy
                 break;
 
             case AI_STATE.PATROL:
-                RotateTowardPosition(patrolTarget);
-                MoveTowardPosition(patrolTarget);
+                RotateTowardPosition(_patrolTarget);
+                MoveTowardPosition(_patrolTarget);
                 break;
 
             case AI_STATE.CHASE:
@@ -181,7 +181,7 @@ public class EnemyShip : Enemy
             case AI_STATE.ATTACK_CHASE:
             {
                 RotateTowardTarget();
-                float dist = target != null ? Vector3.Distance(transform.position, target.position) : float.MaxValue;
+                float dist = _target != null ? Vector3.Distance(transform.position, _target.position) : float.MaxValue;
                 if (minAttackDistance > 0f && dist <= minAttackDistance)
                 {
                     // 최소 거리 도달 — HOLD / PASS / REPOSITION 랜덤 전환
@@ -217,12 +217,12 @@ public class EnemyShip : Enemy
 
             case AI_STATE.ATTACK_PASS:
             {
-                if (target == null)
+                if (_target == null)
                 {
                     break;
                 }
 
-                float distToTarget = Vector3.Distance(transform.position, target.position);
+                float distToTarget = Vector3.Distance(transform.position, _target.position);
 
                 // ── 조향 목표 계산 ─────────────────────────────────────────────
                 // passOffsetStartDist 밖   : 타겟을 향해 직선 접근 (오프셋 없음)
@@ -237,7 +237,7 @@ public class EnemyShip : Enemy
                     && passOffsetStartDist > 0f
                     && distToTarget <= passOffsetStartDist)
                 {
-                    Vector3 dirToTarget = (target.position - transform.position).normalized;
+                    Vector3 dirToTarget = (_target.position - transform.position).normalized;
 
                     // 접근 방향에 수평으로 수직인 벡터 계산 (dirToTarget × 월드 UP)
                     // dirToTarget 이 거의 수직(↑/↓)이면 외적이 영벡터에 가까워지므로 fallback 처리
@@ -252,14 +252,14 @@ public class EnemyShip : Enemy
                     // passOffsetStartDist 경계에서 오프셋 0, 타겟에 가까울수록 1 로 증가
                     float t = Mathf.Clamp01(1f - distToTarget / passOffsetStartDist);
                     // 수평(좌우) + 수직(상하) 오프셋을 독립적으로 합산
-                    aimPoint = target.position
+                    aimPoint = _target.position
                         + perp            * (passHorizontalDist * t)
                         + Vector3.up      * (_passVerticalOffset * t);
                 }
                 else
                 {
                     // 오프셋 범위 밖이거나 비활성화 — 타겟 직선 접근
-                    aimPoint = target.position;
+                    aimPoint = _target.position;
                 }
 
                 RotateTowardPosition(aimPoint);
@@ -273,9 +273,9 @@ public class EnemyShip : Enemy
                 break;
 
             case AI_STATE.EVADE:
-                if (target != null)
+                if (_target != null)
                 {
-                    Vector3 awayDir = (transform.position - target.position).normalized;
+                    Vector3 awayDir = (transform.position - _target.position).normalized;
                     Vector3 awayTarget = transform.position + awayDir * 500f;
                     RotateTowardPosition(awayTarget);
                     // 이동은 현재 기수 방향(transform.forward) 기준 — 선회하면서 그 방향으로 가속
@@ -296,7 +296,7 @@ public class EnemyShip : Enemy
 
     protected override void UpdateAI()
     {
-        base.UpdateAI(); // target 1초 갱신
+        base.UpdateAI(); // _target 1초 갱신
 
         if (_stateTimer > 0f)
         {
@@ -394,7 +394,7 @@ public class EnemyShip : Enemy
             aiState = AI_STATE.CHASE;
             return;
         }
-        if (Vector3.Distance(transform.position, patrolTarget) <= patrolArriveDist)
+        if (Vector3.Distance(transform.position, _patrolTarget) <= patrolArriveDist)
         {
             PickNewPatrolPoint();
         }
@@ -470,12 +470,12 @@ public class EnemyShip : Enemy
     // 플레이어를 향해 돌진. dot < 0 = 뒤로 지나침 → EnterReposition.
     protected virtual void OnAIAttackPass()
     {
-        if (target == null || !IsTargetInRange(detectRange))
+        if (_target == null || !IsTargetInRange(detectRange))
         {
             aiState = AI_STATE.CHASE;
             return;
         }
-        Vector3 dirToTarget = (target.position - transform.position).normalized;
+        Vector3 dirToTarget = (_target.position - transform.position).normalized;
         bool passed = Vector3.Dot(transform.forward, dirToTarget) < 0f;
         if (passed || _stateTimer <= 0f)
         {
@@ -603,10 +603,10 @@ public class EnemyShip : Enemy
 
     protected void EnterReposition()
     {
-        if (target != null)
+        if (_target != null)
         {
             // 플레이어 반대 방향으로 직진 — 자신의 현재 위치 기준으로 멀어짐
-            Vector3 awayDir = (transform.position - target.position).normalized;
+            Vector3 awayDir = (transform.position - _target.position).normalized;
             _repositionTarget = transform.position + awayDir * repositionDistance;
         }
         aiState = AI_STATE.REPOSITION;
@@ -625,11 +625,11 @@ public class EnemyShip : Enemy
         aiState = AI_STATE.RELOAD;
         _stateTimer = duration;
     }
-    // spawnPosition 기준 patrolRadius(수평), patrolHeightRange(수직) 안의 랜덤 지점을 새 순찰 목표로 선정.
+    // _spawnPosition 기준 patrolRadius(수평), patrolHeightRange(수직) 안의 랜덤 지점을 새 순찰 목표로 선정.
     protected void PickNewPatrolPoint()
     {
         Vector2 rand = Random.insideUnitCircle * patrolRadius;
         float yOffset = Random.Range(-patrolHeightRange, patrolHeightRange);
-        patrolTarget = spawnPosition + new Vector3(rand.x, yOffset, rand.y);
+        _patrolTarget = _spawnPosition + new Vector3(rand.x, yOffset, rand.y);
     }
 }

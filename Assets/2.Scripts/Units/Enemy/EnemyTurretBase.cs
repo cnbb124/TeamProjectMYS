@@ -41,7 +41,7 @@ public class EnemyTurretBase : Enemy
         {
             return;
         }
-        if (target != null && IsTargetInRange(detectRange))
+        if (_target != null && IsTargetInRange(detectRange))
         {
             RotateTowardTarget();
         }
@@ -49,7 +49,7 @@ public class EnemyTurretBase : Enemy
 
     protected override void UpdateAI()
     {
-        base.UpdateAI(); // target 1초 갱신
+        base.UpdateAI(); // _target 1초 갱신
 
         if (_stateTimer > 0f)
         {
@@ -123,7 +123,7 @@ public class EnemyTurretBase : Enemy
     // 루트 전체 대신 swivel(좌우)/mount(상하)만 회전.
     protected override void RotateTowardTarget()
     {
-        if (target == null)
+        if (_target == null)
         {
             return;
         }

@@ -31,9 +31,9 @@ public enum MissileFireMode { Sequential, Random, Simultaneous }
 // ================================================================
 // [이펙트팀 참조 — 머즐플래시 호출 위치]
 // ================================================================
-// 총알  : ShootBulletFrom()    내부 (useBulletMuzzle=true 일 때만 재생)
+// 총알  : ShootBulletFrom()    내부 (_useBulletMuzzle=true 일 때만 재생)
 //   → 풀에서 꺼낸 Bullet의 bulletData.muzzleEffectType 사용 (BulletData 미설정 시 VFX_BULLET_MUZZLE 폴백)
-// 미사일: ShootMissileFrom() 내부 (useMissileMuzzle=true 일 때만 재생)
+// 미사일: ShootMissileFrom() 내부 (_useMissileMuzzle=true 일 때만 재생)
 //   → 풀에서 꺼낸 Missile의 missileData.muzzleEffectType 사용 (MissileData 미설정 시 VFX_MISSILE_MUZZLE 폴백)
 //   유닛에 부착되어 유닛과 같이 움직임. 위치/회전은 호출 순간 총구 기준.
 //   ※ 탄종(SO)에 머즐을 등록하면 WeaponSystem 코드 안 건드리고 머즐 종류 변경 가능.
@@ -86,23 +86,23 @@ public class WeaponSystem : MonoBehaviour
 	[Header("<size=14>SFX/VFX 관련 설정</size>")]
 	[Tooltip("총알 발사 시 머즐플래시 재생 여부. 플레이어 ON, 적은 유닛 유형에 따라 설정.")]
 	[SerializeField]
-	private bool useBulletMuzzle = true;
+	private bool _useBulletMuzzle = true;
 	[Tooltip("총알 발사 시 사운드 재생 여부.")]
 	[SerializeField]
-	private bool useBulletSound = true;
+	private bool _useBulletSound = true;
 	[Tooltip("미사일 발사 시 머즐플래시 재생 여부. 플레이어 OFF (베이 발사), 터렛/사일로형 적 ON.")]
 	[SerializeField]
-	private bool useMissileMuzzle = true;
+	private bool _useMissileMuzzle = true;
 	[Tooltip("미사일 발사 시 사운드 재생 여부. 플레이어 OFF, 터렛/사일로형 적 ON.")]
 	[SerializeField]
-	private bool useMissileSound = true;
+	private bool _useMissileSound = true;
 
 	[Tooltip("총알 발사 머즐플래시 재생 시간 설정")]
 	[SerializeField]
-	private float bulletMuzzleFlashVFXPlayTime = 0.2f;
+	private float _bulletMuzzleFlashVFXPlayTime = 0.2f;
 	[Tooltip("미사일 발사 머즐플래시 재생 시간 설정")]
 	[SerializeField]
-	private float missileMuzzleFlashVFXPlayTime = 0.2f;
+	private float _missileMuzzleFlashVFXPlayTime = 0.2f;
 
 	[Header("<size=14>발사 모드 설정</size>")]
 	[Tooltip("Sequential: 총구 하나씩 교대 발사 (1→2→3→1→...).\n" +
@@ -129,11 +129,11 @@ public class WeaponSystem : MonoBehaviour
 	[Header("수동 설정 (UnitParts 없이 직접 지정할 총구 좌표)")]
 	[Tooltip("UnitParts 없이 총알 발사 위치 직접 지정.")]
 	[SerializeField]
-	private List<Transform> fixedBulletFirePositions = new List<Transform>();
+	private List<Transform> _fixedBulletFirePositions = new List<Transform>();
 
 	[Tooltip("UnitParts 없이 미사일 발사 위치 직접 지정.")]
 	[SerializeField]
-	private List<Transform> fixedMissileFirePositions = new List<Transform>();
+	private List<Transform> _fixedMissileFirePositions = new List<Transform>();
 
 
 	// ================== [미사일 설정] ==================
@@ -194,7 +194,7 @@ public class WeaponSystem : MonoBehaviour
 		_unit = GetComponent<Unit>();
 		lockOnSystem = GetComponent<LockOnSystem>();
 
-		foreach (Transform pos in fixedBulletFirePositions)
+		foreach (Transform pos in _fixedBulletFirePositions)
 		{
 			if (pos != null)
 			{
@@ -202,7 +202,7 @@ public class WeaponSystem : MonoBehaviour
 			}
 		}
 
-		foreach (Transform pos in fixedMissileFirePositions)
+		foreach (Transform pos in _fixedMissileFirePositions)
 		{
 			if (pos != null)
 			{
@@ -375,12 +375,12 @@ public class WeaponSystem : MonoBehaviour
 		Bullet newBullet = _pool.GetProjectile(GetBulletPoolType()) as Bullet;
 		BulletData data = newBullet.bulletData;
 
-		if (useBulletMuzzle)
+		if (_useBulletMuzzle)
 		{
 			EFFECT_TYPE muzzleType = (data != null) ? data.muzzleEffectType : EFFECT_TYPE.VFX_BULLET_MUZZLE;
-			_vfx.PlayEffectAtUnit(muzzleType, _unit.transform, firePos.position, firePos.rotation, bulletMuzzleFlashVFXPlayTime);
+			_vfx.PlayEffectAtUnit(muzzleType, _unit.transform, firePos.position, firePos.rotation, _bulletMuzzleFlashVFXPlayTime);
 		}
-		if (useBulletSound)
+		if (_useBulletSound)
 		{
 			SOUND_TYPE soundType = (data != null) ? data.shootSoundType : SOUND_TYPE.SFX_NONE;
 			_sound.PlaySFX3DAtUnit(soundType, _unit.transform, firePos);
@@ -467,12 +467,12 @@ public class WeaponSystem : MonoBehaviour
 		Projectile proj = _pool.GetProjectile(GetMissilePoolType(CurMissileSlot));
 		MissileData data = (proj as Missile)?.missileData;
 
-		if (useMissileMuzzle)
+		if (_useMissileMuzzle)
 		{
 			EFFECT_TYPE muzzleType = (data != null) ? data.muzzleEffectType : EFFECT_TYPE.VFX_MISSILE_MUZZLE;
-			_vfx.PlayEffectAtUnit(muzzleType, _unit.transform, firePos.position, firePos.rotation, missileMuzzleFlashVFXPlayTime);
+			_vfx.PlayEffectAtUnit(muzzleType, _unit.transform, firePos.position, firePos.rotation, _missileMuzzleFlashVFXPlayTime);
 		}
-		if (useMissileSound)
+		if (_useMissileSound)
 		{
 			SOUND_TYPE soundType = (data != null) ? data.shootSoundType : SOUND_TYPE.SFX_NONE;
 			_sound.PlaySFX3DAtPosition(soundType, _unit.transform.position);

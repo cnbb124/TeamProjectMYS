@@ -19,24 +19,24 @@ using UnityEngine;
 // ======================================================
 public class ItemPickup : MonoBehaviour
 {
-    private ItemData data;
-    private int amount;
-    private int goldAmount;
+    private ItemData _data;
+    private int _amount;
+    private int _goldAmount;
 
     // 아이템 드랍용 초기화
     public void Init(ItemData data, int amount)
     {
-        this.data = data;
-        this.amount = amount;
-        this.goldAmount = 0;
+        _data = data;
+        _amount = amount;
+        _goldAmount = 0;
     }
 
     // 골드 드랍용 초기화
     public void Init(int goldAmount)
     {
-        this.data = null;
-        this.amount = 0;
-        this.goldAmount = goldAmount;
+        _data = null;
+        _amount = 0;
+        _goldAmount = goldAmount;
     }
 
     private void OnTriggerEnter(Collider other)
@@ -47,13 +47,13 @@ public class ItemPickup : MonoBehaviour
             return;
         }
 
-        if (data != null)
+        if (_data != null)
         {
-            InventoryManager.Instance.AddItem(data, amount);
+            InventoryManager.Instance.AddItem(_data, _amount);
         }
-        else if (goldAmount > 0)
+        else if (_goldAmount > 0)
         {
-            InventoryManager.Instance.AddGold(goldAmount);
+            InventoryManager.Instance.AddGold(_goldAmount);
         }
 
         PoolManager.Instance.Return(gameObject);
@@ -61,8 +61,8 @@ public class ItemPickup : MonoBehaviour
 
     private void OnDisable()
     {
-        data = null;
-        amount = 0;
-        goldAmount = 0;
+        _data = null;
+        _amount = 0;
+        _goldAmount = 0;
     }
 }

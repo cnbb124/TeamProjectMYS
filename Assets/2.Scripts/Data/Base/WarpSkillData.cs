@@ -6,4 +6,16 @@ public class WarpSkillData : ActiveSkillData
 {
 	[Tooltip("워프 이동 거리.")]
 	public float warpDistance = 50f;
+	[Tooltip("워프하는데 걸리는 시간")]
+	public float warpSequenceTime = 1f;
+	[Tooltip("워프시 출력될 VFX")]
+	public GameObject warpEffectPrefab;
+
+	
+
+
+	public override Skill CreateInstance(Unit owner)
+	{
+		return new WarpSkill(owner, this);
+	}
 }

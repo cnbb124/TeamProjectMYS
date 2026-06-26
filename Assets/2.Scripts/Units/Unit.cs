@@ -159,8 +159,8 @@ public abstract class Unit : MonoBehaviour, IDamageable
 	public float boostRegainRate;//초당 부스트 잔량회복수치
 
 
-	private float boostRegainTimer = 0f;//부스트 회복딜레이까지 잴 타이머
-	private bool isBoostRegaining = false;//회복유무
+	private float _boostRegainTimer = 0f;//부스트 회복딜레이까지 잴 타이머
+	private bool _isBoostRegaining = false;//회복유무
 	protected bool _isBoosting = false;//부스트 사용 중 여부 (자식에서 설정)
 
 
@@ -317,11 +317,11 @@ public abstract class Unit : MonoBehaviour, IDamageable
 			_dodgeCooldownTimer -= Time.deltaTime;
 		}
 
-		updateTimer += Time.deltaTime;
-		if (updateTimer > 0.5f)
+		_updateTimer += Time.deltaTime;
+		if (_updateTimer > 0.5f)
 		{
 			curSpeed = _rb != null ? (_rb.velocity.magnitude < 0.01f ? 0f : _rb.velocity.magnitude) : 0f;
-			updateTimer = 0f;
+			_updateTimer = 0f;
 		}
 
 		UpdateEngineAudio();
@@ -351,7 +351,7 @@ public abstract class Unit : MonoBehaviour, IDamageable
 	[Tooltip("UNIT_STATE — \"지금 어떤 상태인가\" (표현/물리 레이어)")]
 	public UNIT_STATE curState = UNIT_STATE.IDLE;
 	// 직전 상태. 전환별로 다른 애니메이션 블렌드(CrossFade duration)를 적용할 때 참조
-	protected UNIT_STATE previousState = UNIT_STATE.IDLE;
+	protected UNIT_STATE _previousState = UNIT_STATE.IDLE;
 	public int curHpRemaining;
 	public int CurHp => curHpRemaining;//인터페이스 프로퍼티용
 									   //public int CurShiled => curShieldRemaining;//인터페이스 프로퍼티용
@@ -361,7 +361,7 @@ public abstract class Unit : MonoBehaviour, IDamageable
 	public float curBoostRemaining;//부스트잔량
 								   //잔탄도추가예정
 
-	private float updateTimer = 0f;
+	private float _updateTimer = 0f;
 
 	//// ==================레이어==================
 	//[HideInInspector]
@@ -438,7 +438,7 @@ public abstract class Unit : MonoBehaviour, IDamageable
 			//현재상태에서 나가는 메섣
 			OnStateExit(curState);
 			//넣은값 적용해주고
-			previousState = curState;
+			_previousState = curState;
 			curState = value;
 			//들어가는 메서드
 			OnStateEnter(curState);
@@ -478,7 +478,7 @@ public abstract class Unit : MonoBehaviour, IDamageable
 		{
 			case UNIT_STATE.IDLE:
 				// 부스트 직후 정지는 블렌드를 길게 해 관성이 빠지는 느낌
-				if (previousState == UNIT_STATE.BOOSTING)
+				if (_previousState == UNIT_STATE.BOOSTING)
 				{
 					PlayAnim(ANIM_TYPE.IDLE, 0.3f);
 				}
@@ -492,7 +492,7 @@ public abstract class Unit : MonoBehaviour, IDamageable
 
 			case UNIT_STATE.MOVING:
 				// 부스트 → 일반 이동 전환도 동일하게 블렌드를 길게
-				if (previousState == UNIT_STATE.BOOSTING)
+				if (_previousState == UNIT_STATE.BOOSTING)
 				{
 					PlayAnim(ANIM_TYPE.MOVING, 0.3f);
 				}
@@ -642,8 +642,8 @@ public abstract class Unit : MonoBehaviour, IDamageable
 		}
 		if (_isBoosting)
 		{
-			boostRegainTimer = 0f;
-			isBoostRegaining = false;
+			_boostRegainTimer = 0f;
+			_isBoostRegaining = false;
 			return;
 		}
 		//if(curBoostRemaining>=maxBoostRemaining)//디버그 로깅같은거 필요하면 주석풀고 위에서 지울것
@@ -651,14 +651,14 @@ public abstract class Unit : MonoBehaviour, IDamageable
 		//	return;
 		//}
 		//타이머에 일정시간더해주고
-		boostRegainTimer += Time.deltaTime;
+		_boostRegainTimer += Time.deltaTime;
 		//타이머가 딜레이보다 커졌고 충전중이아닐때, 즉 딜레이만큼시간지났을떄
-		if (!isBoostRegaining && boostRegainTimer >= boostRegainDelay)
+		if (!_isBoostRegaining && _boostRegainTimer >= boostRegainDelay)
 		{
-			isBoostRegaining = true;
+			_isBoostRegaining = true;
 		}
 
-		if (isBoostRegaining)
+		if (_isBoostRegaining)
 		{
 			curBoostRemaining += boostRegainRate * Time.deltaTime;
 			curBoostRemaining = Mathf.Min(curBoostRemaining, maxBoostCapacity);//실드와동일
@@ -669,8 +669,8 @@ public abstract class Unit : MonoBehaviour, IDamageable
 	public void UseBoost(float amount)
 	{
 		curBoostRemaining = Mathf.Max(0f, curBoostRemaining - amount);
-		boostRegainTimer = 0f;
-		isBoostRegaining = false;
+		_boostRegainTimer = 0f;
+		_isBoostRegaining = false;
 	}
 
 

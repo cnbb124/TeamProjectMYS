@@ -8,14 +8,14 @@ using UnityEngine;
 public class ClusterMissile : Missile
 {
 	// ClusterMisslleData에서 복사
-	private float splitDistance;
-	private int splitCount;
-	private float splitSpreadAngle;
+	private float _splitDistance;
+	private int _splitCount;
+	private float _splitSpreadAngle;
 
 	// 분열 시 자탄에게 배정할 타겟 목록 (WeaponSystem에서 전달, 없으면 전부 직진)
-	private List<Transform> splitTargets;
+	private List<Transform> _splitTargets;
 
-	private bool hasSplit = false;
+	private bool _hasSplit = false;
 
 	public override void Init(Vector3 startPos, Vector3 dir, Unit attacker)
 	{
@@ -23,28 +23,28 @@ public class ClusterMissile : Missile
 
 		if (missileData is ClusterMisslleData clusterData)
 		{
-			splitDistance = clusterData.splitDistance;
-			splitCount = clusterData.splitCount;
-			splitSpreadAngle = clusterData.splitSpreadAngle;
+			_splitDistance = clusterData.splitDistance;
+			_splitCount = clusterData.splitCount;
+			_splitSpreadAngle = clusterData.splitSpreadAngle;
 		}
 
-		hasSplit = false;
+		_hasSplit = false;
 		// 풀링 재사용 시 이전 발사의 타겟이 남지 않도록 초기화 (필요하면 4-arg Init에서 다시 설정)
-		splitTargets = null;
+		_splitTargets = null;
 	}
 
 	// 락온된 타겟들까지 같이 넘기는 오버로드
 	public void Init(Vector3 startPos, Vector3 dir, Unit attacker, List<Transform> targets)
 	{
 		Init(startPos, dir, attacker);
-		splitTargets = targets;
+		_splitTargets = targets;
 	}
 
 	protected override void Update()
 	{
 		base.Update();
 
-		if (!hasSplit && traveledDistance >= splitDistance)
+		if (!_hasSplit && _traveledDistance >= _splitDistance)
 		{
 			Split();
 		}
@@ -53,12 +53,12 @@ public class ClusterMissile : Missile
 	// splitCount개의 HOMING 자탄을 부채꼴로 소환하고 본체는 소멸.
 	private void Split()
 	{
-		hasSplit = true;
+		_hasSplit = true;
 
-		float angleStep = splitCount > 1 ? splitSpreadAngle / (splitCount - 1) : 0f;
-		float startAngle = -splitSpreadAngle * 0.5f;
+		float angleStep = _splitCount > 1 ? _splitSpreadAngle / (_splitCount - 1) : 0f;
+		float startAngle = -_splitSpreadAngle * 0.5f;
 
-		for (int i = 0; i < splitCount; i++)
+		for (int i = 0; i < _splitCount; i++)
 		{
 			Missile child = PoolManager.Instance.GetClusterMissileChild();
 
@@ -68,9 +68,9 @@ public class ClusterMissile : Missile
 
 			// 타겟 배정, 없으면 null(직진). 탄수 > 락온대상일시 같은대상에게 중복.
 			Transform target = null;
-			if (splitTargets != null && splitTargets.Count > 0)
+			if (_splitTargets != null && _splitTargets.Count > 0)
 			{
-				target = splitTargets[i % splitTargets.Count];
+				target = _splitTargets[i % _splitTargets.Count];
 			}
 
 			child.Init(transform.position, spreadDir, attacker, target);
