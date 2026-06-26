@@ -1284,7 +1284,7 @@ MonoBehaviour:
   fuelBoostConsumeRate: 10
   maxFuelCapacity: 0
   curFuelRemaining: 0
-  reverseEffectSpeedThreshold: 0.44
+  reverseMinBoostHold: 2
 --- !u!114 &7897952812583820154
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3629,7 +3629,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1220959983750552006, guid: 7ae37ae0e309f5544904bfc066e06c4e, type: 3}
       propertyPath: _previewInEditor
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 5776847615673391110, guid: 7ae37ae0e309f5544904bfc066e06c4e, type: 3}
       propertyPath: m_LocalPosition.x
