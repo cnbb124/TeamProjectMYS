@@ -23,13 +23,15 @@ public class HUDManager : MonoBehaviour
 
     [Header("Nitro (Boost)")]
     [SerializeField] private Image nitroFill;
-    [Tooltip("게이지 충분할 때 색 (채도 높은 청록/파랑)")]
-    [SerializeField] private Color nitroFullColor  = new Color(0f, 0.85f, 1f, 1f);
-    [Tooltip("게이지 거의 다 닳았을 때 색 (빨강)")]
-    [SerializeField] private Color nitroEmptyColor = new Color(1f, 0.15f, 0.1f, 1f);
-    [Tooltip("이 비율 아래로 내려가면 빨강으로 변하기 시작 (위는 청록 유지)")]
-    [Range(0f, 1f)]
-    [SerializeField] private float nitroLowThreshold = 0.35f;
+    [Tooltip("게이지 색 (비율에 따라 자동 변화). 가득참(1) → 빈상태(0) 순서로 평가됨")]
+    [SerializeField] private Color nitroColorFull   = new Color(0f,   0.85f, 1f,   1f); // 청록 (가득)
+    [SerializeField] private Color nitroColorYellow = new Color(1f,   0.92f, 0.1f, 1f); // 노랑
+    [SerializeField] private Color nitroColorOrange = new Color(1f,   0.5f,  0.05f,1f); // 주황
+    [SerializeField] private Color nitroColorEmpty  = new Color(1f,   0.15f, 0.1f, 1f); // 빨강 (빔)
+    [Tooltip("노랑으로 바뀌기 시작하는 비율 (이 위는 청록)")]
+    [Range(0f, 1f)] [SerializeField] private float nitroYellowStop = 0.6f;
+    [Tooltip("주황으로 바뀌기 시작하는 비율")]
+    [Range(0f, 1f)] [SerializeField] private float nitroOrangeStop = 0.3f;
 
     [Header("XP")]
     [SerializeField] private Image xpFill;
@@ -61,11 +63,8 @@ public class HUDManager : MonoBehaviour
                 ? player.curBoostRemaining / player.maxBoostCapacity : 0f;
             nitroFill.fillAmount = nitroRatio;
 
-            // 색: 임계값 위는 청록 유지, 아래로 내려갈수록 빨강으로
-            // t = 1(청록) ~ 0(빨강). nitroLowThreshold에서 1, 0에서 0이 되게 remap
-            float t = nitroLowThreshold > 0f
-                ? Mathf.Clamp01(nitroRatio / nitroLowThreshold) : 1f;
-            nitroFill.color = Color.Lerp(nitroEmptyColor, nitroFullColor, t);
+            // 색: 청록 → 노랑 → 주황 → 빨강 4단계 보간
+            nitroFill.color = EvaluateNitroColor(nitroRatio);
         }
 
         if (xpFill != null)
@@ -77,6 +76,28 @@ public class HUDManager : MonoBehaviour
 
         if (levelDisplay != null)
             levelDisplay.text = $"Lv. {player.level}";
+    }
+
+    // 부스트 비율(0~1)에 따라 청록→노랑→주황→빨강 4단계 색 보간
+    private Color EvaluateNitroColor(float ratio)
+    {
+        // 스톱이 뒤집혀 들어와도 안전하게
+        float yellowStop = Mathf.Clamp01(nitroYellowStop);
+        float orangeStop = Mathf.Clamp01(Mathf.Min(nitroOrangeStop, yellowStop));
+
+        if (ratio >= yellowStop)
+            // 청록 ↔ 노랑
+            return Color.Lerp(nitroColorYellow, nitroColorFull,
+                Mathf.InverseLerp(yellowStop, 1f, ratio));
+
+        if (ratio >= orangeStop)
+            // 노랑 ↔ 주황
+            return Color.Lerp(nitroColorOrange, nitroColorYellow,
+                Mathf.InverseLerp(orangeStop, yellowStop, ratio));
+
+        // 주황 ↔ 빨강
+        return Color.Lerp(nitroColorEmpty, nitroColorOrange,
+            Mathf.InverseLerp(0f, orangeStop, ratio));
     }
 
     private void UpdateBar(Image fill, TMP_Text label, int cur, int max)
