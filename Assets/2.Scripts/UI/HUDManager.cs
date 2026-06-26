@@ -23,6 +23,13 @@ public class HUDManager : MonoBehaviour
 
     [Header("Nitro (Boost)")]
     [SerializeField] private Image nitroFill;
+    [Tooltip("게이지 충분할 때 색 (채도 높은 청록/파랑)")]
+    [SerializeField] private Color nitroFullColor  = new Color(0f, 0.85f, 1f, 1f);
+    [Tooltip("게이지 거의 다 닳았을 때 색 (빨강)")]
+    [SerializeField] private Color nitroEmptyColor = new Color(1f, 0.15f, 0.1f, 1f);
+    [Tooltip("이 비율 아래로 내려가면 빨강으로 변하기 시작 (위는 청록 유지)")]
+    [Range(0f, 1f)]
+    [SerializeField] private float nitroLowThreshold = 0.35f;
 
     [Header("XP")]
     [SerializeField] private Image xpFill;
@@ -49,8 +56,17 @@ public class HUDManager : MonoBehaviour
         UpdateBar(armorFill,  armorText,  player.curArmorRemaining,  player.maxArmor);
 
         if (nitroFill != null)
-            nitroFill.fillAmount = player.maxBoostCapacity > 0f
+        {
+            float nitroRatio = player.maxBoostCapacity > 0f
                 ? player.curBoostRemaining / player.maxBoostCapacity : 0f;
+            nitroFill.fillAmount = nitroRatio;
+
+            // 색: 임계값 위는 청록 유지, 아래로 내려갈수록 빨강으로
+            // t = 1(청록) ~ 0(빨강). nitroLowThreshold에서 1, 0에서 0이 되게 remap
+            float t = nitroLowThreshold > 0f
+                ? Mathf.Clamp01(nitroRatio / nitroLowThreshold) : 1f;
+            nitroFill.color = Color.Lerp(nitroEmptyColor, nitroFullColor, t);
+        }
 
         if (xpFill != null)
             xpFill.fillAmount = player.expToNextLevel > 0
