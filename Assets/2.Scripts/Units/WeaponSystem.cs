@@ -475,8 +475,10 @@ public class WeaponSystem : MonoBehaviour
 		if (_useMissileSound)
 		{
 			SOUND_TYPE soundType = (data != null) ? data.shootSoundType : SOUND_TYPE.SFX_NONE;
-			_sound.PlaySFX3DAtPosition(soundType, _unit.transform.position);
-		}
+			//_sound.PlaySFX3DAtPosition(soundType, _unit.transform.position);
+            _sound.PlaySFX3DAtUnit(soundType, _unit.transform, firePos);
+
+        }
 
 		switch (curMissileType)
 		{
