@@ -87,6 +87,20 @@ public class UnitParts : MonoBehaviour
         }
     }
 
+    // 풀에서 재사용(SetActive(true))될 때마다 호출 — Start()는 오브젝트 생애 단 한 번만 실행되므로,
+    // 이전 생애에서 깎였던 curPartHp가 재사용 시 그대로 남아있던 문제를 막기 위함.
+    // equippedPart가 아직 null인 슬롯(최초 활성화 시, Start()가 아직 장착하기 전)은 건너뜀 — Start()가 채움.
+    private void OnEnable()
+    {
+        foreach (PartSlotEntry slot in partSlots)
+        {
+            if (slot.equippedPart != null)
+            {
+                slot.curPartHp = slot.equippedPart.maxPartHp;
+            }
+        }
+    }
+
     private void Start()
     {
         if (_defaultLoadout != null)

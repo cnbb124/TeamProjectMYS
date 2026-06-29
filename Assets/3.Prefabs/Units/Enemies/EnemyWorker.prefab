@@ -613,7 +613,7 @@ MonoBehaviour:
   maxHpRemaining: 40
   maxShieldCapacity: 60
   shieldRegainDelay: 5
-  shieldRegainRate: 5
+  shieldRegainRate: 6
   isShieldRegaining: 0
   shield: {fileID: 0}
   bodyHitboxRoot: {fileID: 0}
@@ -624,6 +624,10 @@ MonoBehaviour:
   baseMoveSpeed: 50
   boostSpeed: 0
   maxSpeed: 100
+  timeToMaxSpeed: 0.4
+  timeToStop: 0.4
+  brakeEnterSpeedRatio: 0.65
+  brakeExitSpeedRatio: 0.2
   maxBoostCapacity: 0
   minBoostRequired: 0
   boostConsumeAmont: 0
@@ -632,7 +636,7 @@ MonoBehaviour:
   dodgeDuration: 0.5
   dodgeInvincibleTime: 0.4
   dodgeCoolTime: 0
-  dodgeForce: 800
+  dodgeDistance: 40
   speedMultiPlier: 0
   curState: 0
   curHpRemaining: 0
@@ -643,7 +647,11 @@ MonoBehaviour:
   _playSoundType: 0
   detectRange: 200
   rotateSpeed: 10
+  rotateDeadZone: 0
   aiState: 1
+  rearAttackAngleThreshold: 110
+  rearAttackSkipChance: 0.7
+  leadAccuracy: 0
   miningDamage: 100
   maxResource: 1
   currentResource: 0

@@ -1243,21 +1243,21 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   weaponSystem: {fileID: 0}
   maxHpRemaining: 99999
-  maxShieldCapacity: 3000
-  shieldRegainDelay: 0.2
+  maxShieldCapacity: 200
+  shieldRegainDelay: 0.5
   shieldRegainRate: 100
   isShieldRegaining: 0
   shield: {fileID: 252685907142231170}
   bodyHitboxRoot: {fileID: 1588211745308341998}
-  maxArmor: 50
+  maxArmor: 500
   defense: 3
   criChance: 20
   criDamageMultiplier: 1.5
-  baseMoveSpeed: 175
-  boostSpeed: 250
+  baseMoveSpeed: 150
+  boostSpeed: 225
   maxSpeed: 250
-  timeToMaxSpeed: 1
-  timeToStop: 0.75
+  timeToMaxSpeed: 1.2
+  timeToStop: 1
   brakeEnterSpeedRatio: 0.65
   brakeExitSpeedRatio: 0.2
   maxBoostCapacity: 75
@@ -1287,7 +1287,7 @@ MonoBehaviour:
   fuelBoostConsumeRate: 10
   maxFuelCapacity: 0
   curFuelRemaining: 0
-  strafeSpeedRatio: 0.5
+  strafeSpeedRatio: 0.3
 --- !u!114 &7897952812583820154
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1301,7 +1301,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   lockOnSystem: {fileID: 1161755328960943635}
-  bulletFireCooldown: 0.07
+  bulletFireCooldown: 0.1
   curBulletData: {fileID: 11400000, guid: 78ae5846b86eca04eafcb56df9874caa, type: 2}
   _useBulletMuzzle: 1
   _useBulletSound: 1
@@ -1360,7 +1360,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   currentLockMode: 0
   maxMultiLockCount: 8
-  lockOnRange: 1200
+  lockOnRange: 1125
   lockOnRequiredTime: 0.8
   targetLayerMask:
     serializedVersion: 2

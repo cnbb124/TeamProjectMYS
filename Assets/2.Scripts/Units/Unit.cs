@@ -131,7 +131,8 @@ public abstract class Unit : MonoBehaviour, IDamageable
 	//(실드x,아머o)Damageinfo.damage-defense *(크리시)criDamageMultiplier;
 	//(실드x,아머x)Damageinfo.damage) * (크리시)criDamageMultiplier;
 	//curHp-=damageAmount;
-	[Header("=========터렛등 좌표고정유닛은 적용안됨==========")]
+	[Space(10)]
+	[Header("<size=14>===========터렛등 좌표고정유닛은 적용안됨============</size>")]
 	[Space(5)]
 	[Header("<size=18>이동 관련</size>")]
 	[Tooltip("기본 이동속도 (초당 이동 거리, unit/s). 예: 350이면 초당 350유닛 이동.")]
@@ -198,6 +199,8 @@ public abstract class Unit : MonoBehaviour, IDamageable
 
 	protected virtual void Awake()
 	{
+		// SoundManager.Instance/PoolManager.Instance 최초 호출은 Start()에서만 — Awake/OnEnable은
+		// 다른 오브젝트와 실행순서가 보장 안 돼서 매니저 자신의 초기화보다 먼저 instance를 선점할 수 있음.
 		_rb = GetComponent<Rigidbody>();
 		_animCtrl = GetComponent<UnitAnimCtrl>();
 		weaponSystem = GetComponent<WeaponSystem>();
@@ -222,30 +225,66 @@ public abstract class Unit : MonoBehaviour, IDamageable
 	{
 		RefillToMax();
 		CurState = UNIT_STATE.IDLE;
+
+		// 이전 생애에 실드회복 코루틴이 돌다가 SetActive(false)로 강제종료됐을 수 있음 —
+		// 그 경우 코루틴 자체는 유니티가 자동으로 멈추지만 이 두 필드는 안 지워지고 남아있었음.
+		isShieldRegaining = false;
+		_shieldRegenCoroutine = null;
+
+		// _sound는 Start()에서 캐싱된 값을 그대로 씀(여기서 새로 Instance를 안 부름). 최초 1회차는 Start
+		// 전이라 null이라 조용히 스킵되고 Start가 등록함. 풀 재사용(2회차+)부터는 이미 캐싱돼있어 바로 작동.
+		RegisterEngineSound();
+	}
+
+	// 엔진 루프 사운드(SFX_IDLE/MOVING/BOOST) 등록. Start()(최초 1회차)와 OnEnable()(풀 재사용 2회차+) 양쪽에서 호출.
+	private void RegisterEngineSound()
+	{
+		if (HasEngineSound)
+		{
+			_sound?.PlaySFX3DLoop(SOUND_TYPE.SFX_IDLE, transform, 0f);
+			_sound?.PlaySFX3DLoop(SOUND_TYPE.SFX_MOVING, transform, 0f);
+			_sound?.PlaySFX3DLoop(SOUND_TYPE.SFX_BOOST, transform, 0f);
+			// 무음 상태로 시작한 직후, 올바른 초기 볼륨으로 즉시 보정.
+			UpdateEngineAudio();
+		}
 	}
 
 	// OnEnable과 대칭. 부모 오브젝트가 SetActive(false)되면 자식들도 같이 비활성화되며
 	// 자식 각각의 OnDisable도 호출됨 — 자식이 독립된 Unit(터렛 등)일 때 자기 자신의 정리를 직접 하게 하는 용도.
-	protected virtual void OnDisable() { }
+	// 엔진 루프(SFX_IDLE/MOVING/BOOST)도 여기서 같이 정지 — StopSFX3DLoop를 아무도 안 호출해서
+	// 죽거나 풀로 반납된 유닛의 루프 등록이 activeLoopSounds에 영원히 남아있던 버그 수정.
+	protected virtual void OnDisable()
+	{
+		if (HasEngineSound)
+		{
+			_sound?.StopSFX3DLoop(SOUND_TYPE.SFX_IDLE, transform);
+			_sound?.StopSFX3DLoop(SOUND_TYPE.SFX_MOVING, transform);
+			_sound?.StopSFX3DLoop(SOUND_TYPE.SFX_BOOST, transform);
+		}
+	}
+
+	// 엔진 루프 사운드(SFX_IDLE/MOVING/BOOST) 등록 여부. 고정 포탑처럼 이동이 없는 유닛은
+	// EnemyTurretBase에서 false로 override — SoundManager의 maxConcurrent 슬롯 낭비 방지.
+	protected virtual bool HasEngineSound
+	{
+		get
+		{
+			return true;
+		}
+	}
 
 	// Start is called before the first frame update
 	protected virtual void Start()
 	{
+		// .Instance 최초 호출은 반드시 여기(Start)에서만 — Unity가 보장하는 건 "모든 Awake가 끝난 뒤 Start가 돈다"뿐.
 		_sound = SoundManager.Instance;
 		_pool = PoolManager.Instance;
+
 		//인스펙터에서 입력된 값 현재 스탯으로 설정
 		//저장 기능 생길시 변경필요.
 
-		// 엔진 사운드 3레이어 — 한 번 걸어두면 죽을 때까지 계속 재생, SoundManager가 볼륨만 조절.
-		// startVolume=0f로 명시 — Play() 호출 시점부터 무음으로 시작해서, 등록볼륨으로 잠깐 새어나가는 것 방지.
-		_sound?.PlaySFX3DLoop(SOUND_TYPE.SFX_IDLE, transform, 0f);
-		_sound?.PlaySFX3DLoop(SOUND_TYPE.SFX_MOVING, transform, 0f);
-		_sound?.PlaySFX3DLoop(SOUND_TYPE.SFX_BOOST, transform, 0f);
-		// 무음 상태로 시작한 직후, 올바른 초기 볼륨으로 즉시 보정.
-		UpdateEngineAudio();
-
-
-
+		// 엔진사운드 최초 등록(1회차). 풀 재사용(2회차+)은 OnEnable()의 RegisterEngineSound()가 처리.
+		RegisterEngineSound();
 
 		//UnitParts.Start()의 파츠 스탯보너스 적용(max값 변경)과 실행순서가 보장되지 않으므로,
 		//파츠 적용 후 UnitParts에서 RefillToMax()를 한번 더 호출해 cur을 최종 max로 동기화함.

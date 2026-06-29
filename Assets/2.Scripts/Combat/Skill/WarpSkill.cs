@@ -17,7 +17,7 @@ using UnityEngine;
 
 public class WarpSkill : ActiveSkill
 {
-	private WarpSkillData warpSkillData
+	private WarpSkillData WarpSkillData
 	{
 		get
 		{
@@ -36,14 +36,14 @@ public class WarpSkill : ActiveSkill
 	{
 		base.UseSkill();
 
-		_vfx.PlayEffectAtUnit(warpSkillData.warpEffectType, _owner.transform, _owner.transform.position, _owner.transform.rotation, warpSkillData.warpSequenceTime);
-		_sound.PlaySFX3DAtUnit(warpSkillData.warpSoundType, _owner.transform);
+		_vfx.PlayEffectAtUnit(WarpSkillData.warpEffectType, _owner.transform, _owner.transform.position, _owner.transform.rotation, WarpSkillData.warpSequenceTime);
+		_sound.PlaySFX3DAtUnit(WarpSkillData.warpSoundType, _owner.transform);
 
 		_isWarping = true;
 		_warpStartTime = Time.time;
 	}
 
-	public override void Tick()
+	public override void UpdateSkill()
 	{
 		if (!_isWarping)
 		{
@@ -51,13 +51,13 @@ public class WarpSkill : ActiveSkill
 		}
 
 		// 마지막 시작시간 + 채널링시간을 다 넘었으면(채널링이 끝났으면) 실제 워프 실행.
-		if (Time.time < _warpStartTime + warpSkillData.warpSequenceTime)
+		if (Time.time < _warpStartTime + WarpSkillData.warpSequenceTime)
 		{
 			return;
 		}
 
 		_isWarping = false;
-		Vector3 warpTargetPos = _owner.transform.position + _owner.transform.forward * warpSkillData.warpDistance;
+		Vector3 warpTargetPos = _owner.transform.position + _owner.transform.forward * WarpSkillData.warpDistance;
 		_owner.Teleport(warpTargetPos);
 	}
 }

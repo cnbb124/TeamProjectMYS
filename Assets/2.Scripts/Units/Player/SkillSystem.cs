@@ -12,7 +12,7 @@ using UnityEngine;
 //
 //   LearnSkill(SkillData)            스킬 배움. CanLearnSkill 통과 시 SkillData.CreateInstance()로
 //                                     인스턴스 생성 → 보유목록 추가 → 액티브면 빈 슬롯에 자동 배치.
-//   slots[i] / CurrentSlotIndex      핫바 슬롯 상태 (UI 참조용)
+//   slots[i] / CurrentSlotIndex      슬롯 상태 (UI 참조용)
 //   SwitchSlot() / UseCurrentSlot()  슬롯 전환 / 현재 슬롯 사용
 //   GetCooldownRatio(int)            쿨다운 진행 비율(0~1). 게이지 UI용.
 //   CollectSaveData() / LoadSaveData(SavedSkill[])  저장/로드용. GameManager가 호출.
@@ -64,7 +64,7 @@ public class SkillSystem : MonoBehaviour
 		{
 			if (slots[i] != null)
 			{
-				slots[i].Tick();
+				slots[i].UpdateSkill();
 			}
 		}
 	}

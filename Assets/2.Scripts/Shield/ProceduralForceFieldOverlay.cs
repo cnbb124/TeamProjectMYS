@@ -228,7 +228,7 @@ namespace ProceduralForceField
             if (_usePulsewave && VFXManager.Instance != null)
             {
                 GameObject wave = VFXManager.Instance.PlayEffectAtUnit(
-                    EFFECT_TYPE.VFX_SHIELD_PULSEWAVE, transform, transform.position, Quaternion.identity);
+                    EFFECT_TYPE.VFX_SHIELD_DESTROY, transform, transform.position, Quaternion.identity);
                 if (wave != null)
                 {
                     // Halo / Halo_Glow 파티클 색상을 쉴드 색상(아군/적군)에 맞춰 동기화

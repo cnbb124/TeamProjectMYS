@@ -76,7 +76,7 @@ public abstract class ActiveSkill : Skill
 	}
 
 	/// <summary>
-	/// 스킬사용
+	/// 스킬사용 추가적인 스킬 로직은 자식 클래스에서 override
 	/// </summary>
 	protected virtual void UseSkill()
 	{
@@ -102,7 +102,7 @@ public abstract class ActiveSkill : Skill
 	/// 매 프레임 SkillSystem.Update()가 호출. 코루틴 없이 Time.time 비교로 지속시간 처리가
 	/// 필요한 자식만 override(워프 채널링 등). 기본은 아무것도 안 함.
 	/// </summary>
-	public virtual void Tick()
+	public virtual void UpdateSkill()
 	{
 
 	}

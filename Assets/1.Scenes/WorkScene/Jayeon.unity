@@ -2278,6 +2278,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: HUD (1)
       objectReference: {fileID: 0}
+    - target: {fileID: 7256621519403616864, guid: f45f3c5144b7ed64d9c1338fc3bdf571, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 7322876388753141041, guid: f45f3c5144b7ed64d9c1338fc3bdf571, type: 3}
       propertyPath: m_AnchorMax.y
       value: 0
@@ -3079,22 +3083,6 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1995936454}
     m_Modifications:
-    - target: {fileID: 1295354817333113809, guid: a7897ad853ae9d6458830c653646215c, type: 3}
-      propertyPath: maxArmor
-      value: 500
-      objectReference: {fileID: 0}
-    - target: {fileID: 1295354817333113809, guid: a7897ad853ae9d6458830c653646215c, type: 3}
-      propertyPath: timeToStop
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 1295354817333113809, guid: a7897ad853ae9d6458830c653646215c, type: 3}
-      propertyPath: timeToMaxSpeed
-      value: 1.2
-      objectReference: {fileID: 0}
-    - target: {fileID: 1295354817333113809, guid: a7897ad853ae9d6458830c653646215c, type: 3}
-      propertyPath: maxShieldCapacity
-      value: 50
-      objectReference: {fileID: 0}
     - target: {fileID: 3107650116710039119, guid: a7897ad853ae9d6458830c653646215c, type: 3}
       propertyPath: m_Name
       value: TestUnit_Player
@@ -3261,10 +3249,6 @@ PrefabInstance:
     - target: {fileID: 6428153736698038514, guid: b043e4959cc079943be1c844c5e57168, type: 3}
       propertyPath: m_Name
       value: TestUnit_EnemyAI_GunShip (1)
-      objectReference: {fileID: 0}
-    - target: {fileID: 6428153736698038514, guid: b043e4959cc079943be1c844c5e57168, type: 3}
-      propertyPath: m_IsActive
-      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -3532,17 +3516,9 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 1174679257422973203, guid: b043e4959cc079943be1c844c5e57168, type: 3}
-      propertyPath: shieldRegainRate
-      value: 6
-      objectReference: {fileID: 0}
     - target: {fileID: 6428153736698038514, guid: b043e4959cc079943be1c844c5e57168, type: 3}
       propertyPath: m_Name
       value: TestUnit_EnemyAI_GunShip (5)
-      objectReference: {fileID: 0}
-    - target: {fileID: 6428153736698038514, guid: b043e4959cc079943be1c844c5e57168, type: 3}
-      propertyPath: m_IsActive
-      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -3738,10 +3714,6 @@ PrefabInstance:
       propertyPath: m_Name
       value: TestUnit_EnemyAI_GunShip (9)
       objectReference: {fileID: 0}
-    - target: {fileID: 6428153736698038514, guid: b043e4959cc079943be1c844c5e57168, type: 3}
-      propertyPath: m_IsActive
-      value: 1
-      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -3803,6 +3775,54 @@ PrefabInstance:
     - target: {fileID: 7958776009055819432, guid: b6e739d74b36d7e4b991318bcb2d7f2d, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8014826492725034353, guid: b6e739d74b36d7e4b991318bcb2d7f2d, type: 3}
+      propertyPath: _soundList.Array.data[1].maxConcurrent
+      value: 24
+      objectReference: {fileID: 0}
+    - target: {fileID: 8014826492725034353, guid: b6e739d74b36d7e4b991318bcb2d7f2d, type: 3}
+      propertyPath: _soundList.Array.data[2].maxConcurrent
+      value: 16
+      objectReference: {fileID: 0}
+    - target: {fileID: 8014826492725034353, guid: b6e739d74b36d7e4b991318bcb2d7f2d, type: 3}
+      propertyPath: _soundList.Array.data[3].maxConcurrent
+      value: 24
+      objectReference: {fileID: 0}
+    - target: {fileID: 8014826492725034353, guid: b6e739d74b36d7e4b991318bcb2d7f2d, type: 3}
+      propertyPath: _soundList.Array.data[4].maxConcurrent
+      value: 16
+      objectReference: {fileID: 0}
+    - target: {fileID: 8014826492725034353, guid: b6e739d74b36d7e4b991318bcb2d7f2d, type: 3}
+      propertyPath: _soundList.Array.data[5].maxConcurrent
+      value: 16
+      objectReference: {fileID: 0}
+    - target: {fileID: 8014826492725034353, guid: b6e739d74b36d7e4b991318bcb2d7f2d, type: 3}
+      propertyPath: _soundList.Array.data[6].maxConcurrent
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 8014826492725034353, guid: b6e739d74b36d7e4b991318bcb2d7f2d, type: 3}
+      propertyPath: _soundList.Array.data[7].maxConcurrent
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 8014826492725034353, guid: b6e739d74b36d7e4b991318bcb2d7f2d, type: 3}
+      propertyPath: _soundList.Array.data[8].maxConcurrent
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 8014826492725034353, guid: b6e739d74b36d7e4b991318bcb2d7f2d, type: 3}
+      propertyPath: _soundList.Array.data[9].maxConcurrent
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 8014826492725034353, guid: b6e739d74b36d7e4b991318bcb2d7f2d, type: 3}
+      propertyPath: _soundList.Array.data[10].maxConcurrent
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 8014826492725034353, guid: b6e739d74b36d7e4b991318bcb2d7f2d, type: 3}
+      propertyPath: _soundList.Array.data[11].maxConcurrent
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 8014826492725034353, guid: b6e739d74b36d7e4b991318bcb2d7f2d, type: 3}
+      propertyPath: _soundList.Array.data[1].minPlayInterval
+      value: 0.07
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -3924,18 +3944,6 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1234399002}
     m_Modifications:
-    - target: {fileID: 1582346389710158118, guid: 5b6492615b4931a40b442946ade11288, type: 3}
-      propertyPath: _enemyColor.b
-      value: 0.132921
-      objectReference: {fileID: 0}
-    - target: {fileID: 1582346389710158118, guid: 5b6492615b4931a40b442946ade11288, type: 3}
-      propertyPath: _enemyColor.g
-      value: 0.27210674
-      objectReference: {fileID: 0}
-    - target: {fileID: 1582346389710158118, guid: 5b6492615b4931a40b442946ade11288, type: 3}
-      propertyPath: _enemyColor.r
-      value: 0.9716981
-      objectReference: {fileID: 0}
     - target: {fileID: 2940234585723661891, guid: 5b6492615b4931a40b442946ade11288, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -3976,17 +3984,9 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 6654927112562213610, guid: 5b6492615b4931a40b442946ade11288, type: 3}
-      propertyPath: shieldRegainRate
-      value: 6
-      objectReference: {fileID: 0}
     - target: {fileID: 8508547545565869303, guid: 5b6492615b4931a40b442946ade11288, type: 3}
       propertyPath: m_Name
       value: TestUnit_EnemyAI_MissileShip
-      objectReference: {fileID: 0}
-    - target: {fileID: 8508547545565869303, guid: 5b6492615b4931a40b442946ade11288, type: 3}
-      propertyPath: m_IsActive
-      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -4169,10 +4169,6 @@ PrefabInstance:
       propertyPath: m_Name
       value: TestUnit_EnemyAI_GunShip
       objectReference: {fileID: 0}
-    - target: {fileID: 6428153736698038514, guid: b043e4959cc079943be1c844c5e57168, type: 3}
-      propertyPath: m_IsActive
-      value: 1
-      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -4253,7 +4249,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1174679257422973203, guid: b043e4959cc079943be1c844c5e57168, type: 3}
       propertyPath: maxHpRemaining
-      value: 50
+      value: 999
       objectReference: {fileID: 0}
     - target: {fileID: 1174679257422973203, guid: b043e4959cc079943be1c844c5e57168, type: 3}
       propertyPath: attackPassWeight
@@ -4269,7 +4265,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1174679257422973203, guid: b043e4959cc079943be1c844c5e57168, type: 3}
       propertyPath: maxShieldCapacity
-      value: 50
+      value: 999
       objectReference: {fileID: 0}
     - target: {fileID: 1174679257422973203, guid: b043e4959cc079943be1c844c5e57168, type: 3}
       propertyPath: attackHoldDuration
@@ -4369,10 +4365,6 @@ PrefabInstance:
       propertyPath: m_Name
       value: TestUnit_EnemyAI_GunShip (6)
       objectReference: {fileID: 0}
-    - target: {fileID: 6428153736698038514, guid: b043e4959cc079943be1c844c5e57168, type: 3}
-      propertyPath: m_IsActive
-      value: 1
-      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -4434,10 +4426,6 @@ PrefabInstance:
     - target: {fileID: 6428153736698038514, guid: b043e4959cc079943be1c844c5e57168, type: 3}
       propertyPath: m_Name
       value: TestUnit_EnemyAI_GunShip (2)
-      objectReference: {fileID: 0}
-    - target: {fileID: 6428153736698038514, guid: b043e4959cc079943be1c844c5e57168, type: 3}
-      propertyPath: m_IsActive
-      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -4563,10 +4551,6 @@ PrefabInstance:
       propertyPath: m_Name
       value: TestUnit_EnemyAI_GunShip (8)
       objectReference: {fileID: 0}
-    - target: {fileID: 6428153736698038514, guid: b043e4959cc079943be1c844c5e57168, type: 3}
-      propertyPath: m_IsActive
-      value: 1
-      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -4625,17 +4609,9 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 1174679257422973203, guid: b043e4959cc079943be1c844c5e57168, type: 3}
-      propertyPath: shieldRegainRate
-      value: 6
-      objectReference: {fileID: 0}
     - target: {fileID: 6428153736698038514, guid: b043e4959cc079943be1c844c5e57168, type: 3}
       propertyPath: m_Name
       value: TestUnit_EnemyAI_GunShip (7)
-      objectReference: {fileID: 0}
-    - target: {fileID: 6428153736698038514, guid: b043e4959cc079943be1c844c5e57168, type: 3}
-      propertyPath: m_IsActive
-      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -4695,17 +4671,9 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 1174679257422973203, guid: b043e4959cc079943be1c844c5e57168, type: 3}
-      propertyPath: shieldRegainRate
-      value: 6
-      objectReference: {fileID: 0}
     - target: {fileID: 6428153736698038514, guid: b043e4959cc079943be1c844c5e57168, type: 3}
       propertyPath: m_Name
       value: TestUnit_EnemyAI_GunShip (3)
-      objectReference: {fileID: 0}
-    - target: {fileID: 6428153736698038514, guid: b043e4959cc079943be1c844c5e57168, type: 3}
-      propertyPath: m_IsActive
-      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -5051,6 +5019,10 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4213665552372352050, guid: d8230dc91059e0f4ba901c65fcd57ac3, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4434601847940136745, guid: d8230dc91059e0f4ba901c65fcd57ac3, type: 3}
+      propertyPath: m_AngularDampingMode
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7673160360951712198, guid: d8230dc91059e0f4ba901c65fcd57ac3, type: 3}

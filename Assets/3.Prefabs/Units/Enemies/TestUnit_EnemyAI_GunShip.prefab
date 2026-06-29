@@ -246,6 +246,8 @@ MonoBehaviour:
   maxSpeed: 250
   timeToMaxSpeed: 0.4
   timeToStop: 0.4
+  brakeEnterSpeedRatio: 0.65
+  brakeExitSpeedRatio: 0.2
   maxBoostCapacity: 100
   minBoostRequired: 10
   boostConsumeAmont: 25
@@ -263,15 +265,15 @@ MonoBehaviour:
   curSpeed: 0
   curBoostRemaining: 0
   _playSoundType: 0
-  detectRange: 1250
+  detectRange: 2000
   rotateSpeed: 210
   rotateDeadZone: 0
   aiState: 0
   rearAttackAngleThreshold: 110
   rearAttackSkipChance: 0.9
-  leadAccuracy: 0.7
+  leadAccuracy: 0.85
   patrolRadius: 1000
-  patrolArriveDist: 25
+  patrolArriveDist: 10
   patrolHeightRange: 250
   attackPassWeight: 0.7
   attackChaseWeight: 0.25
@@ -286,7 +288,7 @@ MonoBehaviour:
   minAttackDistance: 150
   passOffsetDir: 0
   passOffsetStartDist: 200
-  passHorizontalDist: 40
+  passHorizontalDist: 100
   passVerticalRange: 120
   evadeChance: 0.35
   evadeCoolTime: 5
@@ -334,7 +336,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   currentLockMode: 0
   maxMultiLockCount: 4
-  lockOnRange: 600
+  lockOnRange: 750
   lockOnRequiredTime: 1
   targetLayerMask:
     serializedVersion: 2

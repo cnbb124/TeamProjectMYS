@@ -195,6 +195,7 @@ public enum PoolCategory
 	Enemy,
 	Item,
 }
+
 /// <summary>
 /// 파츠종류
 /// </summary>
@@ -281,8 +282,8 @@ public enum EFFECT_TYPE
 	VFX_LASERHIT,
 	VFX_BULLET_MUZZLE,
 	VFX_MISSILE_MUZZLE,
-	// 쉴드 이펙트
-	VFX_SHIELD_PULSEWAVE,
+	// 쉴드 파괴 이펙트
+	VFX_SHIELD_DESTROY,
 
 
 
@@ -290,6 +291,11 @@ public enum EFFECT_TYPE
 }
 
 
+public enum SKILL_MSY_TYPE
+{
+	CLUSTER,
+	HOMING,
+}
 
 
 

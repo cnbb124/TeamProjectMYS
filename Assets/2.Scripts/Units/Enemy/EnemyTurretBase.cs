@@ -25,6 +25,16 @@ public class EnemyTurretBase : Enemy
 
     private float _stateTimer = 0f;
 
+    // 고정 포탑은 이동이 없어서 공회전/가속/부스트 엔진 루프 사운드가 필요 없음 —
+    // SoundManager의 SFX_IDLE/MOVING/BOOST maxConcurrent 슬롯을 낭비하던 버그 수정.
+    protected override bool HasEngineSound
+    {
+        get
+        {
+            return false;
+        }
+    }
+
     protected override void Start()
     {
         base.Start();

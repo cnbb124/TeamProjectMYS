@@ -32,6 +32,6 @@ public abstract class SkillData : ScriptableObject
 		return true;
 	}
 
-	/// <summary>이 데이터로 실제 동작하는 Skill 인스턴스를 만들어 반환. 구체 클래스에서 구현.</summary>
+	/// <summary>이 데이터로 실제 동작하는 Skill 인스턴스를 만들어 반환. 구체 클래스에서 override구현.</summary>
 	public abstract Skill CreateInstance(Unit owner);
 }
