@@ -88,7 +88,7 @@ MonoBehaviour:
   maxHpRemaining: 99999
   maxShieldCapacity: 0
   shieldRegainDelay: 0
-  shieldRegainRate: 0
+  shieldRegainRate: 6
   isShieldRegaining: 0
   shield: {fileID: 0}
   bodyHitboxRoot: {fileID: 0}
@@ -99,6 +99,10 @@ MonoBehaviour:
   baseMoveSpeed: 0
   boostSpeed: 0
   maxSpeed: 0
+  timeToMaxSpeed: 0.4
+  timeToStop: 0.4
+  brakeEnterSpeedRatio: 0.65
+  brakeExitSpeedRatio: 0.2
   maxBoostCapacity: 0
   minBoostRequired: 0
   boostConsumeAmont: 0
@@ -107,6 +111,7 @@ MonoBehaviour:
   dodgeDuration: 0.5
   dodgeInvincibleTime: 0.4
   dodgeCoolTime: 0
+  dodgeDistance: 40
   speedMultiPlier: 0
   curState: 0
   curHpRemaining: 0
@@ -128,18 +133,20 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   lockOnSystem: {fileID: 8724719605768936485}
-  fireBulletDelay: 0.2
+  bulletFireCooldown: 0.1
   curBulletData: {fileID: 0}
-  fireMissileDelay: 2
-  testBulletFirePositions:
-  - {fileID: 3946845775362763088}
-  - {fileID: 3738196860082287672}
-  - {fileID: 1957426800696394916}
-  - {fileID: 6086958663582872872}
-  - {fileID: 7770108418603138711}
-  - {fileID: 3151782218447031004}
-  - {fileID: 4789184332611862590}
-  testMissileFirePositions: []
+  _useBulletMuzzle: 1
+  _useBulletSound: 1
+  _useMissileMuzzle: 1
+  _useMissileSound: 1
+  _bulletMuzzleFlashVFXPlayTime: 0.2
+  _missileMuzzleFlashVFXPlayTime: 0.2
+  bulletFireMode: 0
+  missileFireMode: 0
+  autoDetectFirePositions: 0
+  _fixedBulletFirePositions: []
+  _fixedMissileFirePositions: []
+  missileFireCooldown: 2
   missileSlots: []
   curMissileType: 0
 --- !u!114 &8724719605768936485

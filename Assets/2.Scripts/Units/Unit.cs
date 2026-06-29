@@ -751,10 +751,13 @@ public abstract class Unit : MonoBehaviour, IDamageable
 		// 파츠 피격 — FRAME HP는 본체가 담당하므로 FRAME 제외한 파츠만 처리
 		if (_unitParts != null)
 		{
+
+			//범위딜일시
 			if (info.aoeRadius > 0f)
 			{
 				_unitParts.DamagePartsInRange(info.hitPosition, info.aoeRadius, damageAmount);
 			}
+			//단일딜일시
 			else
 			{
 				_unitParts.DamageNearestPart(info.hitPosition, damageAmount);
@@ -830,19 +833,19 @@ public abstract class Unit : MonoBehaviour, IDamageable
 
 	protected void calculTakeDamage(int damageAmount, bool ignoreArmor, float shieldDamageMultiplier)
 	{
-		// shieldDamageMultiplier 미지정(0)이면 1로 보정 — 기존 콜사이트(베이스 ApplyDamage)와 동일하게 동작
+		// shieldDamageMultiplier (실드뎀 추가비율) 미지정(0)이면 1로 보정 
 		float multiplier = shieldDamageMultiplier > 0f ? shieldDamageMultiplier : 1f;
 
 		if (curShieldRemaining > 0)
 		{
-			// A안: 배율은 "실드를 깎는 양"에만 적용, 통과 데미지는 원본 기준
-			// → 실드가 원본 데미지로 흡수 가능한 양(절단)만큼만 damageAmount에서 차감
+			
+			// 실드가 원본 데미지로 흡수 가능한 양만큼만 damageAmount에서 차감
 			int absorbedOriginal = Mathf.Min(damageAmount, Mathf.FloorToInt(curShieldRemaining / multiplier));
 			int shieldDamage = Mathf.Min(curShieldRemaining, Mathf.RoundToInt(absorbedOriginal * multiplier));//현지실드량보다 초과해서 -가되면 안됨
 			curShieldRemaining -= shieldDamage;//실드에 가해진 피해량만큼 현재실드량 깎기
 			damageAmount -= absorbedOriginal;//실드가 흡수한 원본 데미지만큼 데미지잔량도 깎기
 
-			// 쉴드 Overlay에 HP 비율 전달 (깜빡임/투명도 연출용)
+			// 쉴드 오버레이에 HP 비율 전달 (깜빡임/투명도 연출용)
 			if (shield != null && maxShieldCapacity > 0)
 			{
 				float hpRatio = (float)curShieldRemaining / maxShieldCapacity;
@@ -863,7 +866,10 @@ public abstract class Unit : MonoBehaviour, IDamageable
 			int reducedDamage = Mathf.Max(1, damageAmount - effectiveDefense);//아머가몇이건 최소 1이건 데미지들어감
 			int armorDamage = Mathf.Min(curArmorRemaining, reducedDamage);//아머로 경감한데미지만큼 현재아머량깎기 초과해서 -가되면안되므로
 			curArmorRemaining -= armorDamage;//아머에 가해진피해량만큼깎기
-			damageAmount -= armorDamage;//아머에 가해진 피해량만큼 데미지잔량도깎기
+
+			// 아머가 남아있던 동안의 피격은 이번 히트로 아머가 깨지더라도 초과분이 HP로 안 넘어감 —
+			// 아머가 "이미 0이었던" 다음 히트부터만 HP가 닳음(이번 호출에서 curArmorRemaining>0으로 들어왔으므로 통과데미지 0).
+			damageAmount = 0;
 
 		}
 		if (damageAmount > 0)
