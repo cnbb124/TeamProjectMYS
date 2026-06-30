@@ -16,12 +16,14 @@ public abstract class Skill
 
 	protected SoundManager _sound;
 	protected VFXManager _vfx;
+	protected PoolManager _pool;
 	protected Skill(Unit owner, SkillData skillData)
 	{
 		_owner = owner;
 		_skillData = skillData;
 		_vfx = VFXManager.Instance;
 		_sound = SoundManager.Instance;
+		_pool = PoolManager.Instance;
 	}
 
 	/// <summary>저장/로드용 ID. SkillSystem.CollectSaveData()에서 사용.</summary>

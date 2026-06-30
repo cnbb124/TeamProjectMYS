@@ -4,12 +4,12 @@ using UnityEngine;
 public class LockOnBox : MonoBehaviour
 {
     private BoxCollider _col;
-	
+
 	private void Awake()
 	{
 		_col = GetComponent<BoxCollider>();
 		gameObject.layer = LayerMask.NameToLayer("LockOnBox");
 		_col.isTrigger = true;
 	}
-	//¶ô¿ÂÇÊ¿äÇÑ ´ë»ó¿¡°Ô ´Ş°í Äİ¶óÀÌ´õ Æ®¸®°Åon
+	//ë½ì˜¨í•„ìš”í•œ ëŒ€ìƒì—ê²Œ ë‹¬ê³  ì½œë¼ì´ë” íŠ¸ë¦¬ê±°on
 }

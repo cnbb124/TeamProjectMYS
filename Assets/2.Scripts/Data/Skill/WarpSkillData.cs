@@ -16,7 +16,7 @@ public class WarpSkillData : ActiveSkillData
 	
 
 
-	public override Skill CreateInstance(Unit owner)
+	public override Skill CreateSkill(Unit owner)
 	{
 		return new WarpSkill(owner, this);
 	}

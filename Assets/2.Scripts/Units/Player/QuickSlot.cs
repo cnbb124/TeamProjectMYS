@@ -4,7 +4,7 @@ public class QuickSlot : MonoBehaviour
 {
     private const int SLOT_COUNT = 3;
 
-    [Header("¼Ò¸ðÇ° Äü½½·Ô")]
+    [Header("ì†Œëª¨í’ˆ í€µìŠ¬ë¡¯")]
     public ConsumableData[] slots = new ConsumableData[SLOT_COUNT];
 
     private float[] _cooldownTimers = new float[SLOT_COUNT];
