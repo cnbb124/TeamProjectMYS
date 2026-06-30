@@ -452,7 +452,7 @@ public class WeaponSystem : MonoBehaviour
 
 	/// <summary>
 	/// 지정 위치에서 미사일 1발 발사.
-	/// 풀에서 꺼낼 프리팹은 missileData.curMissilePoolType으로 결정(변형탄 대응).
+	/// 풀에서 꺼낼 프리팹은 missileData.curProjectilePoolType으로 결정(변형탄 대응).
 	/// missileData가 비어있으면(에디터 미설정) curMissileType 기준 기본 풀로 폴백.
 	/// 먼저 풀에서 꺼낸 뒤 그 missileData(프리팹에 미리 연결된 SO)에서 머즐/발사음을 가져와 재생
 	/// — WeaponSystem에 따로 등록 안 해도 프리팹 데이터만으로 일치되게 함.
@@ -521,14 +521,14 @@ public class WeaponSystem : MonoBehaviour
 	}
 
 	/// <summary>
-	/// 발사할 풀 종류 결정. missileData.curMissilePoolType 설정돼있으면 그 값 사용,
+	/// 발사할 풀 종류 결정. missileData.curProjectilePoolType 설정돼있으면 그 값 사용,
 	/// missileData가 null이면(에디터 작업 전 임시 상태) curMissileType 기준 기존 기본 풀로 폴백.
 	/// </summary>
 	private POOL_TYPE GetMissilePoolType(MissileSlot curSlot)
 	{
 		if (curSlot != null && curSlot.missileData != null)
 		{
-			return curSlot.missileData.curMissilePoolType;
+			return curSlot.missileData.curProjectilePoolType;
 		}
 
 		switch (curMissileType)

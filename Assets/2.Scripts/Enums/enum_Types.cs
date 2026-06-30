@@ -4,15 +4,19 @@
 //NONE을 0에넣을까?
 public enum ANIM_TYPE
 {
-	IDLE,
+	IDLE = 0,
 	MOVING,
 	BOOST,
 	//DODGE_N,  // 무적시간 및 롤, 좌우키입력없을때는 좌우랜덤으로 재생되게 코드에서 
 	DODGE_L,  // 좌입력
 	DODGE_R,  // 우입력
 	HIT,
-	DIE
+	DIE,
 	// 발사 관련 애니는 파츠 프리팹의 LauncherAnim에서 처리
+
+	SKILL_MYS_IDLE = 100,
+	SKILL_MYS_OPEN,
+	SKILL_MYS_CLOSE,
 }
 
 
@@ -115,7 +119,7 @@ public enum SOUND_TYPE
 	SFX_LASERHIT,       //레이저
 	SFX_BULLETHIT_SHIELD,//실드 도탄
 	SFX_EXPLOSION_SHIELD,//실드 폭발
-	
+
 	SFX_CONTACTSHIP_SHIELD,    //부딪혔을때. 실드
 	SFX_CONTACTGROUND_SHIELD,  //행성등 부딪혔을 때, 실드
 	SFX_LASERHIT_SHIELD,    //레이저맞았을때, 실드
@@ -181,12 +185,12 @@ public enum POOL_TYPE
 	PROJECTILE_MISSILE_DUMB,
 
 	// 적
-	ENEMY_GUNSHIP,
+	ENEMY_GUNSHIP=100,
 	ENEMY_DROPSHIP,
 	ENEMY_MISSILESHIP,
 
 	// 아이템 / 이펙트 (추후 세분화)
-	ITEM,
+	ITEM=200,
 	ITEM_ASTEROID,
 }
 

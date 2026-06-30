@@ -17,6 +17,12 @@ public class MYSSkillData : ActiveSkillData
 	[Tooltip("발사 지속 시간")]
 	public float fireDurationTime;
 
+	[Header("머즐/사운드 온오프")]
+	[Tooltip("발사 시 머즐플래시 이펙트 재생 여부")]
+	public bool useMuzzleEffect = true;
+	[Tooltip("발사 시 사운드 재생 여부")]
+	public bool useShootSound = true;
+
 	public override Skill CreateSkill(Unit owner)
 	{
 		return new MYSSkill(owner, this);

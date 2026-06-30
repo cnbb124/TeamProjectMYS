@@ -286,7 +286,7 @@ public class PoolManager : MonoBehaviour
 	}
 
 
-	/// <summary>POOL_TYPE으로 투사체 꺼내기. 변형탄(MissileData.curMissilePoolType) 등 직접 풀 지정용.</summary>
+	/// <summary>POOL_TYPE으로 투사체 꺼내기. 변형탄(ProjectileData.curProjectilePoolType) 등 직접 풀 지정용.</summary>
 	public Projectile GetProjectile(POOL_TYPE poolType)
 	{
 		return GetCachedProjectile(poolType);

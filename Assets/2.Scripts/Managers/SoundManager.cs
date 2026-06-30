@@ -413,7 +413,7 @@ public class SoundManager : MonoBehaviour
 			if (data.dropOldest)
 			{
 				// 가장 오래된 것(리스트 맨 앞) 중단
-				Debug.Log($"[SoundManager-DEBUG] dropOldest로 강제정지: type={type}, maxConcurrent={data.maxConcurrent}, 정지대상parent={active[0]?.transform.parent?.name}, 정지대상clip={active[0]?.clip?.name}, 새로요청한sourceUnit={sourceUnit?.name}");
+				//Debug.Log($"[SoundManager-DEBUG] dropOldest로 강제정지: type={type}, maxConcurrent={data.maxConcurrent}, 정지대상parent={active[0]?.transform.parent?.name}, 정지대상clip={active[0]?.clip?.name}, 새로요청한sourceUnit={sourceUnit?.name}");
 				active[0].Stop();
 				active.RemoveAt(0);
 			}
@@ -627,7 +627,7 @@ public class SoundManager : MonoBehaviour
             AudioSource source = AcquireSFX3DSource(type, data, unitTr);
             if (source == null)
             {
-                Debug.Log($"[SoundManager-DEBUG] PlaySFX3DAtUnit 스킵됨(소스확보 실패): type={type}, unit={unitTr?.name}, clipsCount={data.clips?.Length ?? 0}, maxConcurrent={data.maxConcurrent}, minPlayInterval={data.minPlayInterval}");
+                //Debug.Log($"[SoundManager-DEBUG] PlaySFX3DAtUnit 스킵됨(소스확보 실패): type={type}, unit={unitTr?.name}, clipsCount={data.clips?.Length ?? 0}, maxConcurrent={data.maxConcurrent}, minPlayInterval={data.minPlayInterval}");
                 return;
             }
             //좌표일치 (재생 위치 = 총구 등 playPos 기준)

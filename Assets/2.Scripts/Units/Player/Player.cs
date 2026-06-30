@@ -100,7 +100,7 @@ public class Player : Unit
 	private InputManager _input;
 
 	public QuickSlot quickSlot { get; private set; }
-	public SkillSystem skillSystem { get; private set; }
+	//public SkillSystem skillSystem { get; private set; }
 
 
 

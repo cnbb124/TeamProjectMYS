@@ -41,14 +41,27 @@ public class SkillSystem : MonoBehaviour
 	[SerializeField] private List<SkillData> startingSkills = new List<SkillData>();
 
 	[Header("MYSSkill(미사일 연발) 전용 고정 발사위치")]
-	[Tooltip("사일로 하드포인트 Transform. 장비 파츠(WeaponSystem 발사위치)와 무관한 고정 위치 — 유닛 프리팹에서 직접 연결.")]
+	[Tooltip("사일로 발사위치 Transform(좌표 전용, 컴포넌트 불필요). 장비 파츠(WeaponSystem 발사위치)와 무관한 고정 위치 — 유닛 프리팹에서 직접 연결.")]
 	[SerializeField] private List<Transform> mysSiloPositions = new List<Transform>();
+
+	// 인스펙터 수동연결 아님 — Start()에서 GetComponentInChildren로 자동 탐색.
+	[SerializeField]
+	[Tooltip("스킬전용 애니메이터")]
+	private AnimCtrl _skillAnimCtrl;
 
 	public IReadOnlyList<Transform> MysSiloPositions
 	{
 		get
 		{
 			return mysSiloPositions;
+		}
+	}
+
+	public AnimCtrl SkillAnimCtrl
+	{
+		get
+		{
+			return _skillAnimCtrl;
 		}
 	}
 
@@ -64,6 +77,7 @@ public class SkillSystem : MonoBehaviour
 
 	private void Start()
 	{
+		
 		for (int i = 0; i < startingSkills.Count; i++)
 		{
 			LearnSkill(startingSkills[i]);
@@ -117,6 +131,7 @@ public class SkillSystem : MonoBehaviour
 	public void SwitchSlot()
 	{
 		_currentSlotIndex = (_currentSlotIndex + 1) % SLOT_COUNT;
+		Debug.Log("[SkillSystem] Skill slot -> " + _currentSlotIndex + " : " + (slots[_currentSlotIndex] != null ? equippedSkillNames[_currentSlotIndex] : "없음"));
 	}
 
 	public bool UseCurrentSlot()

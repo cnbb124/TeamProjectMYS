@@ -4,13 +4,15 @@ using UnityEngine;
 // ================================================================
 // [외부 참조 가이드]
 // ================================================================
-// 미사일 연발(사일로) 스킬. UseSkill()에서 사일로 개방 애니메이션(LauncherAnim.PlayOpen())을
-// 트리거 → MYSSkillData.siloOpenTime만큼 대기(개방 연출) → fireDurationTime 동안
-// missileCount발을 균등 간격으로 발사. 코루틴 없이 Time.time 비교(WarpSkill과 동일 방식).
+// 미사일 연발(사일로) 스킬. UseSkill()에서 AnimCtrl.Play(ANIM_TYPE.SKILL_MYS_OPEN)을 트리거 →
+// MYSSkillData.siloOpenTime만큼 대기(개방 연출) → fireDurationTime 동안 missileCount발을
+// 균등 간격으로 발사 → 발사 끝나면 Play(ANIM_TYPE.SKILL_MYS_CLOSE).
+// 코루틴 없이 Time.time 비교(WarpSkill과 동일 방식).
 //
-// 발사위치(_siloPositions)는 SkillSystem.MysSiloPositions(고정, 장비 파츠와 무관한 사일로
-// 하드포인트)에서 생성 시점에 캐싱 — WeaponSystem의 미사일 발사위치(파츠 장착/해제로 변하는 값)는
-// 쓰지 않음(스킬이 무기 장비 상태에 의존하지 않게 하기 위함).
+// 발사위치(_siloPositions)는 좌표 전용(컴포넌트 없음, SkillSystem.MysSiloPositions에서 캐싱) —
+// 장비 파츠(WeaponSystem 발사위치)와 무관한 고정 위치. 애니메이션(_skillAnim)은 발사위치와
+// 분리된 단일 공용 오브젝트(SkillSystem.MysSkillAnim, 몸체와 별개의 AnimCtrl 인스턴스) —
+// 발사위치마다 따로 안 둠. 발사 자체엔 모션이 없어 Fire 트리거는 없음.
 // 타겟은 WeaponSystem.lockOnSystem.TargetsInLockonRange(거리순 정렬)에서 라운드로빈 배정.
 // ================================================================
 
@@ -35,7 +37,7 @@ public class MYSSkill : ActiveSkill
 	//private SKILL_MSY_TYPE msyType;
 
 	private List<Transform> _siloPositions;
-	private Dictionary<Transform, LauncherAnim> _siloAnims = new Dictionary<Transform, LauncherAnim>();
+	private AnimCtrl _skillAnim;
 	private int _fireIndex;
 	private int _targetIndex;
 
@@ -49,14 +51,7 @@ public class MYSSkill : ActiveSkill
 	public MYSSkill(Unit owner, MYSSkillData skillData) : base(owner, skillData)
 	{
 		_siloPositions = new List<Transform>(owner.skillSystem.MysSiloPositions);
-		foreach (Transform pos in _siloPositions)
-		{
-			LauncherAnim anim = pos.GetComponentInParent<LauncherAnim>();
-			if (anim != null)
-			{
-				_siloAnims[pos] = anim;
-			}
-		}
+		_skillAnim = owner.skillSystem.SkillAnimCtrl;
 	}
 
 	/// <summary>
@@ -66,10 +61,7 @@ public class MYSSkill : ActiveSkill
 	{
 		base.UseSkill();
 
-		foreach (LauncherAnim anim in _siloAnims.Values)
-		{
-			anim.PlayOpen();
-		}
+		_skillAnim?.Play(ANIM_TYPE.SKILL_MYS_OPEN);
 
 		_isOpening = true;
 		_openStartTime = Time.time;
@@ -116,6 +108,7 @@ public class MYSSkill : ActiveSkill
 		if (_firedCount >= totalCount)
 		{
 			_isFiring = false;
+			_skillAnim?.Play(ANIM_TYPE.SKILL_MYS_CLOSE);
 		}
 	}
 
@@ -138,20 +131,21 @@ public class MYSSkill : ActiveSkill
 		Transform firePos = _siloPositions[_fireIndex];
 		_fireIndex = (_fireIndex + 1) % _siloPositions.Count;
 
-		if (_siloAnims.TryGetValue(firePos, out LauncherAnim anim))
-		{
-			anim.PlayFire();
-		}
-
-		Projectile proj = _pool.GetProjectile(data.curMissilePoolType);
+		Projectile proj = _pool.GetProjectile(data.curProjectilePoolType);
 		Missile missile = proj as Missile;
 		if (missile == null)
 		{
 			return;
 		}
 
-		_vfx.PlayEffectAtUnit(data.muzzleEffectType, _owner.transform, firePos.position, firePos.rotation, 0.2f);
-		_sound.PlaySFX3DAtUnit(data.shootSoundType, _owner.transform, firePos);
+		if (MYSSkillData.useMuzzleEffect)
+		{
+			_vfx.PlayEffectAtUnit(data.muzzleEffectType, _owner.transform, firePos.position, firePos.rotation, 0.2f);
+		}
+		if (MYSSkillData.useShootSound)
+		{
+			_sound.PlaySFX3DAtUnit(data.shootSoundType, _owner.transform, firePos);
+		}
 
 		List<Transform> targets = _owner.weaponSystem.lockOnSystem.TargetsInLockonRange;
 

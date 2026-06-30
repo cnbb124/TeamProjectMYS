@@ -15,13 +15,13 @@ public abstract class ProjectileData : ItemData
 	[Header("<size=18>타입 설정</size>")]
 	[Tooltip("피격시 데미지의 종류")]
 	public DAMAGE_TYPE damageType;
-	[Tooltip("실제 발사될 총알 프리팹이 등록된 풀 종류. WeaponSystem이 이 값으로 PoolManager.GetProjectile(POOL_TYPE) 호출.")]
+	[Tooltip("실제 발사될 투사체(총알/미사일) 프리팹이 등록된 풀 종류. WeaponSystem/Skill이 이 값으로 PoolManager.GetProjectile(POOL_TYPE) 호출.")]
 	public POOL_TYPE curProjectilePoolType;
 	[Tooltip("피격시 VFX매니저에서 실행할 이펙트 종류")]
 	public EFFECT_TYPE hitEffectType;     // VFX_BULLETHIT 등
 	[Tooltip("발사 시 총구에서 재생할 머즐플래시 이펙트. 기본값은 일반 총알 머즐.")]
 	public EFFECT_TYPE muzzleEffectType = EFFECT_TYPE.VFX_BULLET_MUZZLE;
-	
+
 	[Header("<size=18>사운드 설정</size>")]
 	[Tooltip("발사 시 재생할 사운드. SFX_NONE(미등록)이면 무음")]
 	public SOUND_TYPE shootSoundType = SOUND_TYPE.SFX_NONE;

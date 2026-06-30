@@ -55,7 +55,7 @@ public class AnimDictionary
         return clip; 
 
 		/*
-        사용 예시 (UnitAnimCtrl.Play 내부):
+        사용 예시 (AnimCtrl.Play 내부):
 
         AnimationClip clip = animDict.Get(ANIM_TYPE.SHOOT_BULLET);
 

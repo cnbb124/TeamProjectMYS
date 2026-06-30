@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 [RequireComponent(typeof(Animator))]
-public class UnitAnimCtrl : MonoBehaviour
+public class AnimCtrl : MonoBehaviour
 {
 	[Header("애니메이션 타입,해당클립")]
 	public AnimTypeClip[] animTypeClips;

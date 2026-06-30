@@ -60,7 +60,7 @@ public abstract class Unit : MonoBehaviour, IDamageable
 
 	//=============기타 레퍼런스===============
 	//애니메이션 컨트롤러 할당용
-	protected UnitAnimCtrl _animCtrl;
+	protected AnimCtrl _animCtrl;
 	//리지드바디 할당용 레퍼런스
 	protected Rigidbody _rb;
 	//외부(Enemy AI 예측사격 등)에서 실제 이동 속도벡터 참조용
@@ -204,7 +204,7 @@ public abstract class Unit : MonoBehaviour, IDamageable
 		// SoundManager.Instance/PoolManager.Instance 최초 호출은 Start()에서만 — Awake/OnEnable은
 		// 다른 오브젝트와 실행순서가 보장 안 돼서 매니저 자신의 초기화보다 먼저 instance를 선점할 수 있음.
 		_rb = GetComponent<Rigidbody>();
-		_animCtrl = GetComponent<UnitAnimCtrl>();
+		_animCtrl = GetComponent<AnimCtrl>();
 		weaponSystem = GetComponent<WeaponSystem>();
 		skillSystem = GetComponent<SkillSystem>();
 		_unitParts = GetComponent<UnitParts>();
