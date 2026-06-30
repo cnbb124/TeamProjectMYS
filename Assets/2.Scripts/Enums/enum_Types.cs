@@ -115,9 +115,11 @@ public enum SOUND_TYPE
 	SFX_LASERHIT,       //레이저
 	SFX_BULLETHIT_SHIELD,//실드 도탄
 	SFX_EXPLOSION_SHIELD,//실드 폭발
+	
 	SFX_CONTACTSHIP_SHIELD,    //부딪혔을때. 실드
 	SFX_CONTACTGROUND_SHIELD,  //행성등 부딪혔을 때, 실드
 	SFX_LASERHIT_SHIELD,    //레이저맞았을때, 실드
+	SFX_SHIELD_DESTROY,   // 실드 파괴시
 
 	//이동음 500번대
 	SFX_IDLE = 500,

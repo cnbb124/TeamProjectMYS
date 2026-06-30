@@ -644,7 +644,7 @@ public class SoundManager : MonoBehaviour
             source.pitch = GetPitch(data);
             source.loop = false;
             source.Play();
-            Debug.Log($"[SoundManager-DEBUG] PlaySFX3DAtUnit 재생: type={type}, unit={unitTr?.name}, clip={source.clip?.name}, pitch={source.pitch:F2}, volume={source.volume:F2}, source={source.GetInstanceID()}");
+            //Debug.Log($"[SoundManager-DEBUG] PlaySFX3DAtUnit 재생: type={type}, unit={unitTr?.name}, clip={source.clip?.name}, pitch={source.pitch:F2}, volume={source.volume:F2}, source={source.GetInstanceID()}");
 
             //재생 끝나면 Update에서 매니저로 unparent 처리
             _pendingUnparentSources.Add(source);
@@ -670,7 +670,7 @@ public class SoundManager : MonoBehaviour
 		//이미 같은 조합으로 재생 중이면 기존 소스 그대로 반환
 		if (activeLoopSounds.TryGetValue(key, out AudioSource existing))
 		{
-			Debug.Log($"[SoundManager-DEBUG] PlaySFX3DLoop 기존소스 반환: type={type}, target={targetTr?.name}, existing!=null={existing != null}, existing.isPlaying={existing != null && existing.isPlaying}");
+			//Debug.Log($"[SoundManager-DEBUG] PlaySFX3DLoop 기존소스 반환: type={type}, target={targetTr?.name}, existing!=null={existing != null}, existing.isPlaying={existing != null && existing.isPlaying}");
 			return existing;
 		}
 
@@ -678,7 +678,7 @@ public class SoundManager : MonoBehaviour
 		SoundTypeClip data = GetSoundData(type);
 		if (data == null || data.type == SOUND_TYPE.SFX_NONE)
 		{
-			Debug.Log($"[SoundManager-DEBUG] PlaySFX3DLoop 등록실패(data없음/SFX_NONE): type={type}, target={targetTr?.name}, data==null={data == null}");
+			//Debug.Log($"[SoundManager-DEBUG] PlaySFX3DLoop 등록실패(data없음/SFX_NONE): type={type}, target={targetTr?.name}, data==null={data == null}");
 			return null;
 		}
 
@@ -687,7 +687,7 @@ public class SoundManager : MonoBehaviour
 		AudioSource source = AcquireSFX3DSource(type, data, targetTr, bypassPolyphony: true);
 		if (source == null)
 		{
-			Debug.Log($"[SoundManager-DEBUG] PlaySFX3DLoop 소스확보실패: type={type}, target={targetTr?.name}, clipsCount={data.clips?.Length ?? 0}");
+			//Debug.Log($"[SoundManager-DEBUG] PlaySFX3DLoop 소스확보실패: type={type}, target={targetTr?.name}, clipsCount={data.clips?.Length ?? 0}");
 			return null;
 		}
 		//좌표일치
@@ -703,7 +703,7 @@ public class SoundManager : MonoBehaviour
 
 		source.loop = true;
 		source.Play();
-		Debug.Log($"[SoundManager-DEBUG] PlaySFX3DLoop 신규생성: type={type}, target={targetTr?.name}, clip={source.clip?.name}, startVolume={source.volume:F3}, isPlaying={source.isPlaying}");
+		//Debug.Log($"[SoundManager-DEBUG] PlaySFX3DLoop 신규생성: type={type}, target={targetTr?.name}, clip={source.clip?.name}, startVolume={source.volume:F3}, isPlaying={source.isPlaying}");
 
 		activeLoopSounds.Add(key, source);
 		return source;
@@ -788,8 +788,10 @@ public class SoundManager : MonoBehaviour
 				//풀링 시스템 재사용 시 설정에러를 예방 루프 해제
 				source.loop = false;
 
-				//대상 오브젝트에서 떼어내어 다시 SoundManager의 자식으로 원상복구
-				source.transform.SetParent(this.transform);
+				// 여기서 SetParent로 즉시 원상복구하지 않음 — 이 함수는 대상 유닛의 OnDisable()에서
+				// 호출되는데, 그 유닛이 SetActive(false)로 비활성화되는 도중이면 Unity가 그 자식의
+				// reparent를 막아서 에러가 남. 실제 reparent는 GetAvailableSFX3DSource()가 이 소스를
+				// 다음에 재사용할 때 처리(이미 그쪽에 동일한 복귀 로직이 있음).
 			}
 
 			//루프 사운드 추적 딕셔너리에서 해당 항목 제거

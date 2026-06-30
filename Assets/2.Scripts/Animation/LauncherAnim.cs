@@ -28,4 +28,16 @@ public class LauncherAnim : MonoBehaviour
         }
         _animator.CrossFade("Fire", 0.1f);
     }
+
+    /// <summary>
+    /// 사일로 등 개방 연출 시 호출. MYSSkill처럼 발사 전 별도 채널링 단계가 있는 스킬용.
+    /// </summary>
+    public void PlayOpen()
+    {
+        if (_animator == null)
+        {
+            return;
+        }
+        _animator.CrossFade("Open", 0.1f);
+    }
 }

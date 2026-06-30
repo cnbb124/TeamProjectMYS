@@ -4,13 +4,13 @@ using UnityEngine;
 // ================================================================
 // [외부 참조 가이드]
 // ================================================================
-// WeaponSystem과 같은 자리(캐릭터 전용 컴포넌트, 싱글톤 아님)에 위치.
+// WeaponSystem과 같은 자리에 위치.
 // 이 캐릭터가 배운 스킬 전체(_ownedSkills) + 액티브 스킬 핫바(slots) + 사용을 전부 담당.
 // 스킬 자체(Skill/ActiveSkill)는 MonoBehaviour가 아닌 순수 객체라 GameObject에 붙일 필요 없음.
 // 매 프레임 Update()가 slots[]를 돌며 ActiveSkill.Tick()을 호출 — 코루틴 없이 Time.time 비교로
 // 지속시간 있는 스킬(워프 채널링 등)을 처리하기 위함.
 //
-//   LearnSkill(SkillData)            스킬 배움. CanLearnSkill 통과 시 SkillData.CreateInstance()로
+//   LearnSkill(SkillData)            스킬 배움. CanLearnSkill 통과 시 SkillData.CreateSkill()로
 //                                     인스턴스 생성 → 보유목록 추가 → 액티브면 빈 슬롯에 자동 배치.
 //   slots[i] / CurrentSlotIndex      슬롯 상태 (UI 참조용)
 //   SwitchSlot() / UseCurrentSlot()  슬롯 전환 / 현재 슬롯 사용
@@ -39,6 +39,18 @@ public class SkillSystem : MonoBehaviour
 	[Header("시작부터 보유한 스킬 (테스트/기본 지급용)")]
 	[Tooltip("Start() 시 전부 LearnSkill() 호출됨. 레벨업/상점 등 정식 트리거 생기면 그쪽에서 추가 호출.")]
 	[SerializeField] private List<SkillData> startingSkills = new List<SkillData>();
+
+	[Header("MYSSkill(미사일 연발) 전용 고정 발사위치")]
+	[Tooltip("사일로 하드포인트 Transform. 장비 파츠(WeaponSystem 발사위치)와 무관한 고정 위치 — 유닛 프리팹에서 직접 연결.")]
+	[SerializeField] private List<Transform> mysSiloPositions = new List<Transform>();
+
+	public IReadOnlyList<Transform> MysSiloPositions
+	{
+		get
+		{
+			return mysSiloPositions;
+		}
+	}
 
 	private List<Skill> _ownedSkills = new List<Skill>();
 	private int _currentSlotIndex = 0;
@@ -85,7 +97,7 @@ public class SkillSystem : MonoBehaviour
 			return;
 		}
 
-		Skill newSkill = data.CreateInstance(_unit);
+		Skill newSkill = data.CreateSkill(_unit);
 		_ownedSkills.Add(newSkill);
 
 		ActiveSkill activeSkill = newSkill as ActiveSkill;
@@ -173,7 +185,7 @@ public class SkillSystem : MonoBehaviour
 				continue;
 			}
 
-			Skill newSkill = data.CreateInstance(_unit);
+			Skill newSkill = data.CreateSkill(_unit);
 			_ownedSkills.Add(newSkill);
 
 			ActiveSkill activeSkill = newSkill as ActiveSkill;

@@ -70,6 +70,8 @@ public abstract class Unit : MonoBehaviour, IDamageable
 	protected PoolManager _pool;
 	[HideInInspector]
 	public WeaponSystem weaponSystem;
+	[HideInInspector]
+	public SkillSystem skillSystem;
 	protected UnitParts _unitParts;
 
 	//==================유닛데이터==================//
@@ -204,6 +206,7 @@ public abstract class Unit : MonoBehaviour, IDamageable
 		_rb = GetComponent<Rigidbody>();
 		_animCtrl = GetComponent<UnitAnimCtrl>();
 		weaponSystem = GetComponent<WeaponSystem>();
+		skillSystem = GetComponent<SkillSystem>();
 		_unitParts = GetComponent<UnitParts>();
 
 		if (shield != null)

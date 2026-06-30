@@ -6,16 +6,18 @@ using UnityEngine;
 
 public class MYSSkillData : ActiveSkillData
 {
-	[Tooltip("¹ß»çÇÒ ¹Ì»çÀÏ Å¸ÀÔ")]
+	[Tooltip("ë°œì‚¬í•  ë¯¸ì‚¬ì¼ íƒ€ì…")]
 	public SKILL_MSY_TYPE msyType;
-	[Tooltip("¹ß»çÇÒ ¹Ì»çÀÏ °¹¼ö")]
+	[Tooltip("ë¯¸ì‚¬ì¼ SO ë°ì´í„°")]
+	public MissileData missileData;
+	[Tooltip("ë°œì‚¬í•  ë¯¸ì‚¬ì¼ ê°¯ìˆ˜")]
 	public int missileCount;
-	[Tooltip("»çÀÏ·Î ¿ÀÇÂ ½Ã°£(¾Ö´Ï¸ŞÀÌ¼Çµî)")]
+	[Tooltip("ì‚¬ì¼ë¡œ ì˜¤í”ˆ ì‹œê°„(ì• ë‹ˆë©”ì´ì…˜ë“±)")]
 	public float siloOpenTime;
-	[Tooltip("¹ß»ç Áö¼Ó ½Ã°£")]
+	[Tooltip("ë°œì‚¬ ì§€ì† ì‹œê°„")]
 	public float fireDurationTime;
 
-	public override Skill CreateInstance(Unit owner)
+	public override Skill CreateSkill(Unit owner)
 	{
 		return new MYSSkill(owner, this);
 	}
