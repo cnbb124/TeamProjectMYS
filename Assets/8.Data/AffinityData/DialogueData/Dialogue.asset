@@ -1,0 +1,43 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f304ed153a86bba43ba4ab443c0c92e4, type: 3}
+  m_Name: Dialogue
+  m_EditorClassIdentifier: 
+  question: Welcome back to the Driftspire, pilot! The stars kept your seat warm
+    and so did I.
+  choices:
+  - choiceText: '"Hi, Could I take a look at the item?"'
+    affinityDelta: 0
+    mood: 0
+    responseLine: '"Yes, of course! By all means!"'
+    oneTime: 0
+  - choiceText: '"You are really kind. And you''re fun, too."'
+    affinityDelta: 0
+    mood: 1
+    responseLine: '"Ahem! Thanks for the compliment!"'
+    oneTime: 0
+  - choiceText: '"I missed you..."'
+    affinityDelta: 0
+    mood: 2
+    responseLine: '"Really? ...Thanks. I felt the same way."'
+    oneTime: 1
+  - choiceText: '"I just came to buy something..."'
+    affinityDelta: 0
+    mood: 3
+    responseLine: "\"...\uC544. \uADF8\uB798, \uC7A5\uC0AC\uD558\uB7EC \uC628 \uAC70\uC9C0.\""
+    oneTime: 0
+  - choiceText: '"I sold your secret to a bounty hunter."'
+    affinityDelta: 0
+    mood: 4
+    responseLine: "\"...What? I... I trusted you. Get out\u2014and don't ever come
+      back!!\""
+    oneTime: 1
