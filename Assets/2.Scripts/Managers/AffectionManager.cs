@@ -13,6 +13,16 @@ using UnityEngine;
 //   LoadAffections(SavedAffection[])   불러오기(SaveData)용 일괄 복원.
 //
 //   예시) AffectionManager.Instance.AddAffection(NPC_ID.XXX, 1);
+//
+// ── 변경 통지 이벤트 (UI팀 구독용) ─────────────────────────────
+//   OnAffectionChanged(NPC_ID, int)   호감도가 바뀔 때마다 (변경된 NPC, 변경 후 값)을 발행.
+//     대화/퀘스트/상점 등 어떤 경로로 바뀌든 여기 한 곳으로 통지되므로,
+//     UI는 이 이벤트만 구독하고 자기 관심 NPC일 때만 갱신하면 됨.
+//     AddAffection / LoadAffections(항목별) 에서 발행.
+//   구독 예시)
+//     void OnEnable()  { AffectionManager.Instance.OnAffectionChanged += OnChanged; Refresh(); }
+//     void OnDisable() { if (AffectionManager.Instance != null) AffectionManager.Instance.OnAffectionChanged -= OnChanged; }
+//     void OnChanged(NPC_ID changed, int value) { if (changed == npc) Refresh(); }
 // ================================================================
 
 public class AffectionManager : MonoBehaviour
@@ -59,6 +69,10 @@ public class AffectionManager : MonoBehaviour
 
 	private Dictionary<NPC_ID, int> _affectionByNpc = new Dictionary<NPC_ID, int>();
 
+	// 호감도 변경 통지 이벤트. (변경된 NPC, 변경 후 값). 어떤 경로로 바뀌든 변경의 단일 소스 역할.
+	// UI 등 구독자는 자기 관심 NPC일 때만 갱신하면 됨.
+	public event System.Action<NPC_ID, int> OnAffectionChanged;
+
 	/// <summary>현재 호감도 조회. 등록 안 된 NPC면 0.</summary>
 	public int GetAffection(NPC_ID npc)
 	{
@@ -74,7 +88,9 @@ public class AffectionManager : MonoBehaviour
 	public void AddAffection(NPC_ID npc, int amount)
 	{
 		int current = GetAffection(npc);
-		_affectionByNpc[npc] = Mathf.Max(0, current + amount);
+		int next = Mathf.Max(0, current + amount);
+		_affectionByNpc[npc] = next;
+		OnAffectionChanged?.Invoke(npc, next);
 	}
 
 	/// <summary>저장(SaveData)용 전체 스냅샷.</summary>
@@ -95,6 +111,8 @@ public class AffectionManager : MonoBehaviour
 		for (int i = 0; i < saved.Length; i++)
 		{
 			_affectionByNpc[saved[i].npc] = saved[i].value;
+			// 로드로 복원된 값도 UI에 통지 (세이브 불러오기 직후 상태 UI 자동 갱신)
+			OnAffectionChanged?.Invoke(saved[i].npc, saved[i].value);
 		}
 	}
 }

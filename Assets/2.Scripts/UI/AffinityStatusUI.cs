@@ -16,7 +16,8 @@
  * - markerImage / markerGradient : (선택) 진행도에 따른 마커 색 변화
  *
  * [갱신]
- * OnEnable + 외부에서 Refresh() 호출 (AffinityTalkUI.onAffinityChanged에 연결).
+ * OnEnable에서 AffectionManager.OnAffectionChanged 구독 + 최초 1회 Refresh().
+ * 호감도가 어떤 경로(대화/퀘스트/상점/세이브로드)로 바뀌든 매니저 이벤트로 통지받아 자동 갱신.
  */
 
 using UnityEngine;
@@ -44,7 +45,21 @@ public class AffinityStatusUI : MonoBehaviour
 
     private void OnEnable()
     {
+        if (AffectionManager.Instance != null)
+            AffectionManager.Instance.OnAffectionChanged += HandleAffectionChanged;
         Refresh();
+    }
+
+    private void OnDisable()
+    {
+        if (AffectionManager.Instance != null)
+            AffectionManager.Instance.OnAffectionChanged -= HandleAffectionChanged;
+    }
+
+    // 내가 표시하는 NPC의 호감도가 바뀐 경우에만 갱신
+    private void HandleAffectionChanged(NPC_ID changed, int value)
+    {
+        if (changed == npc) Refresh();
     }
 
     /// <summary>현재 호감도로 레벨/등급/게이지/마커 갱신.</summary>

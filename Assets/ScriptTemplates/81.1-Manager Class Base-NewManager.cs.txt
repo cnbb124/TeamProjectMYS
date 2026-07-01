@@ -35,7 +35,7 @@ public class #SCRIPTNAME# : MonoBehaviour
 			instance = this;
 			DontDestroyOnLoad(gameObject);
 		}
-		else
+		else if (instance != null)
 		{
 			Debug.LogWarning("[#SCRIPTNAME#] 중복 감지. 파괴 후 기존 유지");
 			Destroy(gameObject);

@@ -13,14 +13,14 @@
  * - questionText   : 질문/반응 대사 TMP (QuestionPanel)
  * - choiceButtons  : 선택지 버튼들 (AnswerPanel) — 각 항목에 Button + 라벨 TMP 연결
  *
- * [이벤트]
- * onAffinityChanged : 선택으로 호감도가 바뀐 직후 발행 → 레벨/마커 UI Refresh 연결용
+ * [호감도 변경 통지]
+ * AddAffection() 호출 시 AffectionManager.OnAffectionChanged가 발행되므로,
+ * 레벨/마커 UI(AffinityStatusUI)는 매니저 이벤트를 구독해 자동 갱신됨(여기서 별도 이벤트 발행 불필요).
  */
 
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.Events;
 using TMPro;
 
 public class AffinityTalkUI : MonoBehaviour
@@ -46,10 +46,6 @@ public class AffinityTalkUI : MonoBehaviour
 
     [Header("Choices (AnswerPanel)")]
     [SerializeField] private List<ChoiceButton> choiceButtons = new List<ChoiceButton>();
-
-    [Header("Events")]
-    [Tooltip("호감도 변동 직후 발행 — 레벨/마커 UI의 Refresh를 연결")]
-    public UnityEvent onAffinityChanged;
 
     private DialogueData _current;
 
@@ -104,7 +100,6 @@ public class AffinityTalkUI : MonoBehaviour
             if (AffectionManager.Instance != null && choice.affinityDelta != 0)
                 AffectionManager.Instance.AddAffection(npc, choice.affinityDelta);
             choice.consumed = true;
-            onAffinityChanged?.Invoke();
         }
 
         // ② 초상화 무드 교체

@@ -1,6 +1,6 @@
 using UnityEngine;
 
-[CreateAssetMenu(fileName = "New ShieldChargeSkillData", menuName = "Create Data/Skill/ShieldChargeSkillData")]
+[CreateAssetMenu(fileName = "New ShieldChargeSkillData", menuName = "Create Data/Skill/Shield Charge Skill Data")]
 public class ShieldChargeSkillData : ActiveSkillData
 {
 

@@ -1,6 +1,6 @@
 using UnityEngine;
 
-[CreateAssetMenu(fileName = "New DronSkillData", menuName = "Create Data/Skill/DronSkillData")]
+[CreateAssetMenu(fileName = "New DronSkillData", menuName = "Create Data/Skill/Drone Skill Data")]
 public class DroneSkillData : ActiveSkillData
 {
 
