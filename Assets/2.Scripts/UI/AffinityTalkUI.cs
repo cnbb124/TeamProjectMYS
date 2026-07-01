@@ -59,13 +59,14 @@ public class AffinityTalkUI : MonoBehaviour
     }
 
     /// <summary>대화 묶음 표시 (질문 + 선택지 세팅).</summary>
-    public void ShowDialogue(DialogueData dialogue)
+    /// <param name="resetMood">true면 초상화를 Normal로 리셋. 선택 후 분기 이동 시엔 방금 무드 유지하려고 false.</param>
+    public void ShowDialogue(DialogueData dialogue, bool resetMood = true)
     {
         _current = dialogue;
         if (dialogue == null) return;
 
         if (questionText != null) questionText.text = dialogue.question;
-        SetPortrait(AffinityMood.Normal);
+        if (resetMood) SetPortrait(AffinityMood.Normal);
 
         // 선택지 버튼 채우기 / 남는 버튼은 숨김
         for (int i = 0; i < choiceButtons.Count; i++)
@@ -109,9 +110,16 @@ public class AffinityTalkUI : MonoBehaviour
         // ② 초상화 무드 교체
         SetPortrait(choice.mood);
 
-        // ③ 반응 대사 출력
-        if (questionText != null && !string.IsNullOrEmpty(choice.responseLine))
+        // ③ 분기: 다음 대화가 있으면 이어가고, 없으면 반응 대사만 출력하고 종료
+        if (choice.nextDialogue != null)
+        {
+            // 방금 교체한 무드는 유지한 채 다음 질문/선택지로 전환
+            ShowDialogue(choice.nextDialogue, resetMood: false);
+        }
+        else if (questionText != null && !string.IsNullOrEmpty(choice.responseLine))
+        {
             questionText.text = choice.responseLine;
+        }
     }
 
     private void SetPortrait(AffinityMood mood)

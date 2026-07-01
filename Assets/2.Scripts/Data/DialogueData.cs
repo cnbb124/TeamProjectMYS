@@ -47,6 +47,9 @@ public class DialogueChoice
     [Tooltip("체크 시 호감도 증감이 처음 1회만 적용됨 (반복 파밍 방지)")]
     public bool oneTime = false;
 
+    [Tooltip("이 선택 후 이어질 다음 대화. 비워두면 responseLine만 출력하고 대화 종료(분기 끝).")]
+    public DialogueData nextDialogue;
+
     // 런타임: 이미 호감도 반영했는지 (oneTime용). SO 원본 오염 방지 위해 직렬화 안 함.
     [System.NonSerialized] public bool consumed = false;
 }
