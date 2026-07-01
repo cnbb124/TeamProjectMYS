@@ -54,8 +54,10 @@ public class TargettingRadarSystem : MonoBehaviour
     _activeDotCount = 0;
 
     // ★ TargetsInRadarRange = 360도 전방향 (각도 필터 없음)
-    foreach (Collider col in lockOnSystem.TargetsInRadarRange)
+    // NonAlloc 버퍼라 배열 뒤쪽엔 이전 프레임 잔여값이 남음 → 실제 감지 수(RadarHitCount)까지만 순회
+    for (int idx = 0; idx < lockOnSystem.RadarHitCount; idx++)
     {
+        Collider col = lockOnSystem.TargetsInRadarRange[idx];
         if (col == null) continue;
 
         Transform target = col.transform;

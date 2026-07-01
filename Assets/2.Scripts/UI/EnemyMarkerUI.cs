@@ -56,7 +56,8 @@ public class EnemyMarkerUI : MonoBehaviour
         if (lockOnSystem == null || mainCam == null) return;
 
         Collider[] targets = lockOnSystem.TargetsInRadarRange;
-        int count = targets == null ? 0 : targets.Length;
+        // NonAlloc 버퍼라 배열 뒤쪽엔 이전 프레임 잔여값이 남음 → 실제 감지 수(RadarHitCount)까지만 순회
+        int count = targets == null ? 0 : lockOnSystem.RadarHitCount;
 
         // 마커 풀 크기 조정
         while (_markers.Count < count) AddMarker();

@@ -148,8 +148,11 @@ public class MYSSkill : ActiveSkill
 		}
 
 		var targets = new List<Transform>();
-		foreach (Collider col in _owner.weaponSystem.lockOnSystem.TargetsInRadarRange)
+		// NonAlloc 버퍼라 배열 뒤쪽엔 이전 프레임 잔여값이 남음 → 실제 감지 수(RadarHitCount)까지만 순회
+		LockOnSystem lockOnSystem = _owner.weaponSystem.lockOnSystem;
+		for (int i = 0; i < lockOnSystem.RadarHitCount; i++)
 		{
+			Collider col = lockOnSystem.TargetsInRadarRange[i];
 			if (col == null || !col.gameObject.activeInHierarchy) continue;
 			if (col.GetComponent<LockOnBox>() == null) continue;
 			Unit unit = col.GetComponentInParent<Unit>();

@@ -51,7 +51,12 @@ public class LockOnSystem : MonoBehaviour
 	//[Header("멀티 락온 시 최대 동시 락온 개수")]
 	[HideInInspector]//현재 Missile So에서 받아옴(Cluster)
 	public int maxMultiLockCount = 4;
-
+	[SerializeField]
+	[Tooltip("유닛 동시감지 최대수(최적화용)")]
+	private int _targetInRadarRangeBufferSize = 64;
+	
+	private int _updateCount = 0;
+	private const int UPDATE_INTERVAL = 3; // 3프레임마다 탐색
 	[Header("락온 탐지 범위")]
 	
 	public float lockOnRange = 400f;
@@ -74,6 +79,8 @@ public class LockOnSystem : MonoBehaviour
 	public List<Transform> TargetsInLockonRange = new List<Transform>();
 	//레이더범위내의 상대
 	public Collider[] TargetsInRadarRange;
+	//TargetsInRadarRange 중 이번 프레임 실제 감지된 유효 개수 (뒤쪽 인덱스는 이전 프레임 잔여값이므로 이 수까지만 순회할 것)
+	public int RadarHitCount { get; private set; }
 
 
 	[Header("Single (단일타겟락온)모드 전용 변수")]
@@ -109,6 +116,7 @@ public class LockOnSystem : MonoBehaviour
 	{
 		_ownerUnit = GetComponent<Unit>();
 		_weaponSystem = GetComponent<WeaponSystem>();
+		TargetsInRadarRange = new Collider[_targetInRadarRangeBufferSize];
 		//락온박스만 쓸거면 이걸로
 		//targetLayerMask = 1 << LayerMask.NameToLayer("LockOnBox");
 	}
@@ -121,7 +129,13 @@ public class LockOnSystem : MonoBehaviour
 			_clusterSingleLockMode = !_clusterSingleLockMode;
 		}
 
-		FindAllTargets();
+
+		_updateCount++;
+		if (_updateCount >= UPDATE_INTERVAL)
+		{
+			FindAllTargets();
+			_updateCount = 0;
+		}
 
 		// 타겟 없으면 전부 초기화
 		if (TargetsInLockonRange.Count == 0)
@@ -246,30 +260,74 @@ public class LockOnSystem : MonoBehaviour
 
 	private void FindAllTargets()
 	{
-		//현재 유닛에서 락온사거리까지, 락온목표레이어를 저장
-		Collider[] hits = Physics.OverlapSphere(transform.position, lockOnRange, targetLayerMask);
-		TargetsInRadarRange = hits;
+		////현재 유닛에서 락온사거리까지, 락온목표레이어를 저장
+		//Collider[] hits = Physics.OverlapSphere(transform.position, lockOnRange, targetLayerMask);
+		//TargetsInRadarRange = hits;
 
-		foreach (Collider hit in hits)
+
+		//foreach (Collider hit in hits)
+		//{
+		//	if (_ownerUnit != null && hit.GetComponentInParent<Unit>() == _ownerUnit)
+		//	{
+		//		continue;
+		//	}
+
+		//	Vector3 dirToTarget = (hit.transform.position - transform.position).normalized;
+		//	float angle = Vector3.Angle(transform.forward, dirToTarget);
+		//	if (angle > lockOnAngle * 0.5f)
+		//	{
+		//		continue;
+		//	}
+
+		//	// 해당 객체가 HitBox 컴포넌트를 가지고 있는지 우선 확인
+		//	LockOnBox lockOnBox = hit.GetComponent<LockOnBox>();
+		//	if (lockOnBox == null)
+		//	{
+		//		continue;
+		//	}
+
+		//	//Unit에 소속된 것인지
+		//	Unit parentUnit = hit.GetComponentInParent<Unit>();
+		//	if (parentUnit == null || (_ownerUnit != null && parentUnit == _ownerUnit))
+		//	{
+		//		continue;
+		//	}
+		//	//같은팀인지 아닌지(태그로)
+		//	if (_ownerUnit != null && parentUnit.gameObject.tag == _ownerUnit.gameObject.tag)
+		//	{
+		//		continue;
+		//	}
+
+		//	// 검증이 완료되면 HitBox의 좌표를 락온 대상으로 등록
+		//	if (!TargetsInLockonRange.Contains(lockOnBox.transform))
+		//	{
+		//		TargetsInLockonRange.Add(lockOnBox.transform);
+		//	}
+		//}
+
+
+		int hitCount = Physics.OverlapSphereNonAlloc(transform.position, lockOnRange, TargetsInRadarRange, targetLayerMask);
+		RadarHitCount = hitCount;
+
+		for (int i = 0; i < hitCount; i++)
 		{
+
+			Collider hit = TargetsInRadarRange[i];
 			if (_ownerUnit != null && hit.GetComponentInParent<Unit>() == _ownerUnit)
 			{
 				continue;
 			}
 
+
+
 			Vector3 dirToTarget = (hit.transform.position - transform.position).normalized;
 			float angle = Vector3.Angle(transform.forward, dirToTarget);
-			if (angle > lockOnAngle * 0.5f)
-			{
-				continue;
-			}
+			if (angle > lockOnAngle * 0.5f) continue;
 
-			// 해당 객체가 HitBox 컴포넌트를 가지고 있는지 우선 확인
 			LockOnBox lockOnBox = hit.GetComponent<LockOnBox>();
-			if (lockOnBox == null)
-			{
-				continue;
-			}
+			if (lockOnBox == null) continue;
+
+			//기존 감지 로직 그대로 사용(hits[i] 를 _hitBuffer[i] 로 대체)
 
 			//Unit에 소속된 것인지
 			Unit parentUnit = hit.GetComponentInParent<Unit>();
@@ -277,6 +335,7 @@ public class LockOnSystem : MonoBehaviour
 			{
 				continue;
 			}
+
 			//같은팀인지 아닌지(태그로)
 			if (_ownerUnit != null && parentUnit.gameObject.tag == _ownerUnit.gameObject.tag)
 			{
