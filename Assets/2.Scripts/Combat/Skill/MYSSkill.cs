@@ -147,7 +147,16 @@ public class MYSSkill : ActiveSkill
 			_sound.PlaySFX3DAtUnit(data.shootSoundType, _owner.transform, firePos);
 		}
 
-		List<Transform> targets = _owner.weaponSystem.lockOnSystem.TargetsInLockonRange;
+		var targets = new List<Transform>();
+		foreach (Collider col in _owner.weaponSystem.lockOnSystem.TargetsInRadarRange)
+		{
+			if (col == null || !col.gameObject.activeInHierarchy) continue;
+			if (col.GetComponent<LockOnBox>() == null) continue;
+			Unit unit = col.GetComponentInParent<Unit>();
+			if (unit == null || unit == _owner) continue;
+			if (unit.tag == _owner.tag) continue;
+			targets.Add(col.transform);
+		}
 
 		switch (MYSSkillData.msyType)
 		{

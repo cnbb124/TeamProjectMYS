@@ -1,0 +1,35 @@
+using UnityEngine;
+
+// ================================================================
+// [외부 참조 가이드]
+// ================================================================
+
+// ================================================================
+
+public class #SCRIPTNAME# : ActiveSkill
+{
+	private #SCRIPTNAME#Data #SCRIPTNAME#Data
+	{
+		get
+		{
+			return _activeSkillData as #SCRIPTNAME#Data;
+		}
+	}
+
+	
+
+	public #SCRIPTNAME#(Unit owner, #SCRIPTNAME#Data skillData) : base(owner, skillData)
+	{
+	}
+
+	protected override void UseSkill()
+	{
+		base.UseSkill();
+
+	}
+
+	public override void UpdateSkill()
+	{
+		
+	}
+}

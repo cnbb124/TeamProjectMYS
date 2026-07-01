@@ -186,6 +186,16 @@ public class LockOnSystem : MonoBehaviour
 
 		LockOnCandidate = TargetsInLockonRange[_currentTargetIndex];
 
+		// locked target이 angle에서 벗어나면 즉시 해제 (다른 타겟이 남아있어도)
+		if (IsLocked && !TargetsInLockonRange.Contains(LockedTarget))
+		{
+			IsLocked = false;
+			LockedTarget = null;
+			_lockOnTimer = 0f;
+			LockOnProgress = 0f;
+			return;
+		}
+
 		_lockOnTimer += Time.deltaTime;
 		LockOnProgress = Mathf.Clamp01(_lockOnTimer / lockOnRequiredTime);
 

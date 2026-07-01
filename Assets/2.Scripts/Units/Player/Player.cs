@@ -172,7 +172,7 @@ public class Player : Unit
 		_rb.useGravity = false;
 		_rb.freezeRotation = true;
 		quickSlot = GetComponent<QuickSlot>();
-		skillSystem = GetComponent<SkillSystem>();
+		//skillSystem = GetComponent<SkillSystem>();
 	}
 	// Start is called before the first frame update
 	protected override void Start()
@@ -368,6 +368,7 @@ public class Player : Unit
 		{
 			case UNIT_STATE.DODGE:
 				foreach (var arr in _rcsRoll) StopAll(arr);
+				_wasThrusting = true; // 닷지 임펄스로 생긴 속도를 감속 스냅샷이 잡을 수 있게
 				break;
 
 			case UNIT_STATE.BRAKE:

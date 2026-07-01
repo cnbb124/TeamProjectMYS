@@ -185,6 +185,7 @@ public class SoundManager : MonoBehaviour
 	private AudioSource _sfxUISource; // UI/일반 효과음 전용 스피커 (2D)
 	[Header("현재 BGM소스에 입력된 사운드(출력 확인용)")]
 	public SOUND_TYPE curBGM;
+	private SoundTypeClip _curBgmData; // SetBGMVolume에서 GetVolume 적용하기 위한 캐시
 
 	[Space(10)]
 	[Header("<size=14>기본 볼륨 설정</size>")]
@@ -489,6 +490,7 @@ public class SoundManager : MonoBehaviour
 		if (data != null && data.type != SOUND_TYPE.SFX_NONE)
 		{
 			curBGM = type;
+			_curBgmData = data;
 			_bgmSource.volume = bgmVolume * GetVolume(data);
 			_bgmSource.clip = GetRandomClip(data);
 			_bgmSource.loop = true; // BGM은 무한반복
@@ -825,7 +827,8 @@ public class SoundManager : MonoBehaviour
 		bgmVolume = volume;//입력한 볼륨값 현재설정에 저장
 		if (_bgmSource != null && _bgmSource.clip != null)
 		{
-			_bgmSource.volume = bgmVolume; //현재설정을 실제로 반영
+			float volScale = _curBgmData != null ? GetVolume(_curBgmData) : 1f;
+			_bgmSource.volume = bgmVolume * volScale;
 		}
 	}
 

@@ -48,7 +48,7 @@ public class AffectionManager : MonoBehaviour
 			instance = this;
 			DontDestroyOnLoad(gameObject);
 		}
-		else
+		else if (instance != this)
 		{
 			Debug.LogWarning("[AffectionManager] 중복 감지. 파괴 후 기존 유지");
 			Destroy(gameObject);

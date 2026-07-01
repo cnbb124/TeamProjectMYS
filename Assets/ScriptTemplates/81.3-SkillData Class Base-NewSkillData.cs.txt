@@ -1,0 +1,12 @@
+using UnityEngine;
+
+[CreateAssetMenu(fileName = "New #SCRIPTNAME#", menuName = "Create Data/Skill/#SCRIPTNAME#")]
+public class #SCRIPTNAME# : ActiveSkillData
+{
+
+	public override Skill CreateSkill(Unit owner)
+	{
+		return new #SKILLNAME#(owner, this);
+	}
+
+}
