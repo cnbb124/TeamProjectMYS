@@ -46,7 +46,8 @@ public class LockOnUIManager : MonoBehaviour
         if (lockOnSystem.LockOnCandidate != null)
         {
             bool isLocked = lockOnSystem.IsLocked;
-            ShowIndicator(lockOnSystem.LockOnCandidate.position, lockOnSystem.LockOnProgress, isLocked);
+            float progress = lockOnSystem.GetLockOnProgress(lockOnSystem.LockOnCandidate);
+            ShowIndicator(lockOnSystem.LockOnCandidate.position, progress, isLocked);
         }
     }
 
@@ -57,7 +58,8 @@ public class LockOnUIManager : MonoBehaviour
         {
             if (target == null) continue;
             bool isLocked = lockOnSystem.MultiLockedTargets.Contains(target);
-            ShowIndicator(target.position, lockOnSystem.LockOnProgress, isLocked);
+            float progress = lockOnSystem.GetLockOnProgress(target);
+            ShowIndicator(target.position, progress, isLocked);
         }
     }
 

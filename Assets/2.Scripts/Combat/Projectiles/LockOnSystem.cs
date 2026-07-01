@@ -26,9 +26,10 @@ using UnityEngine;
 // ================================================================
 // Update()
 //   └── FindAllTargets()          OverlapSphere로 범위 내 LockOnBox 탐색 → 거리순 정렬
+//         UpdateDwellTimes()      타겟별 Angle 체류시간 갱신(벗어나면 리셋, 재진입 시 0부터)
 //         UpdateLockMode()        미사일 종류에 따라 SINGLE/MULTI/NONE 자동 전환
-//         UpdateSingleLockMode()  타이머 → lockOnRequiredTime 초과 시 IsLocked=true
-//         UpdateMultiLockMode()   최대 maxMultiLockCount 개 후보 등록 → 타이머 확정
+//         UpdateSingleLockMode()  현재 후보 체류시간 >= lockOnRequiredTime 시 LockedTarget 확정
+//         UpdateMultiLockMode()   후보별 체류시간 충족분을 MultiLockedTargets로 확정
 //
 // ================================================================
 // [외부 호출용 메서드]
@@ -105,9 +106,13 @@ public class LockOnSystem : MonoBehaviour
 	public bool IsLocked;
 
 
-	private float _lockOnTimer = 0f;
 	private int _currentTargetIndex = 0;
 	private Unit _ownerUnit;
+
+	// 타겟별 Angle 체류 누적시간. Angle 안에 머무는 동안 증가, 벗어나면 제거(재진입 시 0부터 다시 셈).
+	private Dictionary<Transform, float> _dwellTimes = new Dictionary<Transform, float>();
+	// 체류시간 제거 대상 임시 리스트(Dictionary 순회 중 제거 불가 회피 + 매프레임 new 방지)
+	private List<Transform> _dwellRemoveCache = new List<Transform>();
 
 	// 클러스터 미사일 락온 모드 (true = 단일타겟에 전탄 집중, false = 다중타겟 분산)
 	private bool _clusterSingleLockMode = false;
@@ -143,6 +148,9 @@ public class LockOnSystem : MonoBehaviour
 			ClearLock();
 			return;
 		}
+
+		// 타겟별 체류시간부터 갱신(락온 판정의 근거)
+		UpdateDwellTimes();
 		UpdateLockMode();
 
 		// 선택된 모드에 따라 처리 로직 분리
@@ -189,7 +197,76 @@ public class LockOnSystem : MonoBehaviour
 		ClearLock();
 	}
 	/// <summary>
-	/// 단일 락온 모드 업데이트 로직
+	/// 타겟별 Angle 체류시간 갱신.
+	/// Angle+Range 안(= TargetsInLockonRange)에 있는 타겟은 시간 누적, 벗어난 타겟은 제거해 재진입 시 0부터 다시 세게 함.
+	/// </summary>
+	private void UpdateDwellTimes()
+	{
+		// Angle 안에 머무는 타겟들 체류시간 증가
+		for (int i = 0; i < TargetsInLockonRange.Count; i++)
+		{
+			Transform t = TargetsInLockonRange[i];
+			if (t == null)
+			{
+				continue;
+			}
+
+			if (_dwellTimes.ContainsKey(t))
+			{
+				_dwellTimes[t] += Time.deltaTime;
+			}
+			else
+			{
+				_dwellTimes[t] = Time.deltaTime;
+			}
+		}
+
+		// Angle에서 벗어난(리스트에 없는) 타겟은 체류시간 제거 → 재진입 시 처음부터
+		_dwellRemoveCache.Clear();
+		foreach (KeyValuePair<Transform, float> kv in _dwellTimes)
+		{
+			if (kv.Key == null || !TargetsInLockonRange.Contains(kv.Key))
+			{
+				_dwellRemoveCache.Add(kv.Key);
+			}
+		}
+		for (int i = 0; i < _dwellRemoveCache.Count; i++)
+		{
+			_dwellTimes.Remove(_dwellRemoveCache[i]);
+		}
+	}
+
+	/// <summary>
+	/// 해당 타겟이 체류시간(lockOnRequiredTime)을 채워 락온 자격이 있는지
+	/// </summary>
+	private bool IsDwellComplete(Transform t)
+	{
+		return t != null && _dwellTimes.TryGetValue(t, out float d) && d >= lockOnRequiredTime;
+	}
+
+	/// <summary>
+	/// 해당 타겟의 락온 진행률 0~1 (UI 게이지용)
+	/// </summary>
+	private float GetDwellProgress(Transform t)
+	{
+		if (t != null && _dwellTimes.TryGetValue(t, out float d))
+		{
+			return Mathf.Clamp01(d / lockOnRequiredTime);
+		}
+		return 0f;
+	}
+
+	/// <summary>
+	/// 외부(UI팀) 참조용 — 특정 타겟의 락온 진행률 0~1. 후보마다 게이지를 개별 표시할 때 사용.
+	/// </summary>
+	public float GetLockOnProgress(Transform t)
+	{
+		return GetDwellProgress(t);
+	}
+
+	/// <summary>
+	/// 단일 락온 모드 업데이트 로직.
+	/// 현재 후보가 체류시간을 채우면 확정. 후보가 아직이면 기존 락온을 자격 유지되는 한 유지(switch로 후보만 옮긴 경우 대응).
 	/// </summary>
 	private void UpdateSingleLockMode()
 	{
@@ -197,37 +274,38 @@ public class LockOnSystem : MonoBehaviour
 		{
 			_currentTargetIndex = TargetsInLockonRange.Count - 1;
 		}
-
-		LockOnCandidate = TargetsInLockonRange[_currentTargetIndex];
-
-		// locked target이 angle에서 벗어나면 즉시 해제 (다른 타겟이 남아있어도)
-		if (IsLocked && !TargetsInLockonRange.Contains(LockedTarget))
+		if (_currentTargetIndex < 0)
 		{
-			IsLocked = false;
-			LockedTarget = null;
-			_lockOnTimer = 0f;
-			LockOnProgress = 0f;
-			return;
+			_currentTargetIndex = 0;
 		}
 
-		_lockOnTimer += Time.deltaTime;
-		LockOnProgress = Mathf.Clamp01(_lockOnTimer / lockOnRequiredTime);
+		LockOnCandidate = TargetsInLockonRange[_currentTargetIndex];
+		LockOnProgress = GetDwellProgress(LockOnCandidate);
 
-		if (!IsLocked && _lockOnTimer >= lockOnRequiredTime)
+		// 현재 후보가 체류시간을 다 채웠으면 그 후보로 락온 확정(대상 이동 포함)
+		if (IsDwellComplete(LockOnCandidate))
 		{
 			IsLocked = true;
 			LockedTarget = LockOnCandidate;
 			// SoundManager.Instance.PlaySFXUI(SOUND_TYPE.SFX_UI_LOCKON_COMPLETE);
+			return;
 		}
 
-		if (IsLocked)
+		// 현재 후보는 아직 미완성 — 기존 LockedTarget이 여전히 Angle 안+자격 유지면 그대로 유지(switch로 후보만 바뀐 상황)
+		if (LockedTarget != null && TargetsInLockonRange.Contains(LockedTarget) && IsDwellComplete(LockedTarget))
 		{
-			LockedTarget = LockOnCandidate;
+			IsLocked = true;
+			return;
 		}
+
+		// 유효한 락온 없음
+		IsLocked = false;
+		LockedTarget = null;
 	}
 
 	/// <summary>
-	/// 다중 락온 모드 업데이트 로직
+	/// 다중 락온 모드 업데이트 로직.
+	/// 후보별 체류시간을 독립적으로 판정 → 채운 것만 MultiLockedTargets에 확정. 벗어난 타겟은 자동 해제.
 	/// </summary>
 	private void UpdateMultiLockMode()
 	{
@@ -240,22 +318,19 @@ public class LockOnSystem : MonoBehaviour
 			MultiLockCandidates.Add(TargetsInLockonRange[i]);
 		}
 
-		_lockOnTimer += Time.deltaTime;
-		LockOnProgress = Mathf.Clamp01(_lockOnTimer / lockOnRequiredTime);
-
-		if (!IsLocked && _lockOnTimer >= lockOnRequiredTime)
+		// 후보별 체류시간 기준으로 확정 타겟 매프레임 재구성(Angle 벗어난 타겟은 dwell이 없으므로 자동 제외)
+		MultiLockedTargets.Clear();
+		for (int i = 0; i < MultiLockCandidates.Count; i++)
 		{
-			IsLocked = true;
-			MultiLockedTargets.Clear();
-			MultiLockedTargets.AddRange(MultiLockCandidates);
-			// SoundManager.Instance.PlaySFXUI(SOUND_TYPE.SFX_UI_LOCKON_COMPLETE);
+			if (IsDwellComplete(MultiLockCandidates[i]))
+			{
+				MultiLockedTargets.Add(MultiLockCandidates[i]);
+			}
 		}
+		IsLocked = MultiLockedTargets.Count > 0;
 
-		if (IsLocked)
-		{
-			MultiLockedTargets.Clear();
-			MultiLockedTargets.AddRange(MultiLockCandidates);
-		}
+		// 진행률은 가장 가까운 후보([0]) 기준 대표값(UI 게이지용)
+		LockOnProgress = MultiLockCandidates.Count > 0 ? GetDwellProgress(MultiLockCandidates[0]) : 0f;
 	}
 
 	private void FindAllTargets()
@@ -449,7 +524,7 @@ public class LockOnSystem : MonoBehaviour
 	public void ClearLock()
 	{
 		// 공통 초기화
-		_lockOnTimer = 0f;
+		_dwellTimes.Clear();
 		LockOnProgress = 0f;
 		IsLocked = false;
 		_currentTargetIndex = 0;
