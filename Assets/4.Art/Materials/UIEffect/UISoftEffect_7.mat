@@ -7,8 +7,8 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: MetalicEffect
-  m_Shader: {fileID: 4800000, guid: e9567cc4f5fdbb846ae48e34d789c5c2, type: 3}
+  m_Name: UISoftEffect_7
+  m_Shader: {fileID: 4800000, guid: 1382ae0425fc6f14ca496e5217114ec9, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
@@ -61,38 +61,33 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _BrushStrength: 0
-    - _BrushTiling: 1
     - _BumpScale: 1
     - _ColorMask: 15
     - _Cutoff: 0.5
     - _DetailNormalMapScale: 1
     - _DstBlend: 0
     - _GlossMapScale: 1
+    - _GlossPower: 0.69
     - _Glossiness: 0.5
     - _GlossyReflections: 1
+    - _Glow: 1
     - _Metallic: 0
     - _Mode: 0
     - _OcclusionStrength: 1
     - _Parallax: 0.02
-    - _ShadeStrength: 0
     - _SmoothnessTextureChannel: 0
+    - _Softness: 0
     - _SpecularHighlights: 1
     - _SrcBlend: 1
     - _Stencil: 0
     - _StencilComp: 8
     - _StencilOp: 0
-    - _StencilReadMask: 150
-    - _StencilWriteMask: 150
-    - _StreakPos: 0
-    - _StreakSpeed: 0
-    - _StreakWidth: 0.01
+    - _StencilReadMask: 255
+    - _StencilWriteMask: 255
     - _UVSec: 0
     - _ZWrite: 1
     m_Colors:
-    - _BaseColor: {r: 0.20572266, g: 0.20853727, b: 0.21698111, a: 1}
-    - _Color: {r: 1, g: 1, b: 1, a: 1}
+    - _Color: {r: 0.9578586, g: 0.9802585, b: 0.99056596, a: 0.5882353}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
-    - _LightColor: {r: 0.8301887, g: 0.8301887, b: 0.8301887, a: 0.09803922}
-    - _StreakColor: {r: 0.18867922, g: 0.18867922, b: 0.18867922, a: 0.078431375}
+    - _GlossTint: {r: 0.5283019, g: 0.5283019, b: 0.5283019, a: 0.09803922}
   m_BuildTextureStacks: []
