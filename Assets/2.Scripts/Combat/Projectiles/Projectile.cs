@@ -15,7 +15,7 @@ using UnityEngine;
 //         Update()                          매 프레임 이동거리 누적 → maxRange 도달 시 OnMaxRange()
 //         OnTriggerEnter(Collider other)    HitBox 레이어 충돌 감지 → OnHit() 호출
 //           └── OnHit(Collider other)       피격 처리 (자식에서 override)
-//                 └── ApplyDamage(...)      DamageInfo 생성 → target.TakeDamage()
+//                 └── ApplyDamage(...)      HitInfo 생성 → target.TakeDamage()
 //                       └── ReturnToPool() 투사체 풀 반납 (소멸은 항상 이걸로)
 //
 // ================================================================
@@ -55,7 +55,14 @@ public abstract class Projectile : MonoBehaviour
 	//피격(실드 없을때) 사운드. Bullet은 BulletData에서 복사, Missile은 미사용이라 항상 SFX_NONE 고정(Missile.Awake 참고). SFX_NONE(미등록)이면 무음
 	[HideInInspector]
 	public SOUND_TYPE hitSoundType;
-	// 실드 피격음은 여기 없음 — 탄종별로 안 나누고 Unit.GetPlaySoundTypeShield(DamageInfo)에서 DAMAGE_TYPE 기준으로 일괄 처리.
+	// 실드 피격음은 여기 없음 — 탄종별로 안 나누고 Unit.GetPlaySoundTypeShield(HitInfo)에서 DAMAGE_TYPE 기준으로 일괄 처리.
+
+	//피격 VFX. Bullet은 BulletData(hit/shieldHitEffectType)에서 복사. Missile은 미사용(Explode가 폭발VFX 처리)이라 기본값 유지.
+	//기본값은 총알 기본 히트 — bulletData가 null이어도 환경 피격 시 폭발이 아닌 총알히트가 나오게.
+	[HideInInspector]
+	public EFFECT_TYPE hitVfxType = EFFECT_TYPE.VFX_BULLET_HIT;
+	[HideInInspector]
+	public EFFECT_TYPE shieldHitVfxType = EFFECT_TYPE.VFX_BULLET_HIT_SHIELD;
 
 	//관통탄 여부, 실드 데미지 배율. Bullet은 BulletData, Missile은 MissileData에서 Init 시 복사됨.
 	[HideInInspector]
@@ -90,9 +97,9 @@ public abstract class Projectile : MonoBehaviour
     [HideInInspector]
     public PROJECTILE_TYPE projectileType;
 
-    // 크리티컬 여부. Init()에서 attacker의 criChance로 판정.
-    // 투사체가 크리 판정 담당 → DamageInfo.isCritical로 전달.
-    protected bool _critical;
+	// 크리티컬 여부. Init()에서 attacker의 criChance로 판정.
+	// 투사체가 크리 판정 담당 → HitInfo.isCritical로 전달.
+	protected bool _critical;
 
 
     protected virtual void Awake()
@@ -259,10 +266,10 @@ public abstract class Projectile : MonoBehaviour
             Debug.Log("ApplyDamage 상대가 같은팀");
             return;
         }
-        //Debug.Log("ApplyDamage 실제 데미지발생");
-        // 데미지 정보 생성 및 전달
-        DamageInfo damageInfo = new DamageInfo
-        {
+		//Debug.Log("ApplyDamage 실제 데미지발생");
+		// 데미지 정보 생성 및 전달
+		HitInfo hitInfo = new HitInfo
+		{
             type = currentDmgType,
             damageAmount = damage,
             isCritical = _critical,
@@ -270,11 +277,13 @@ public abstract class Projectile : MonoBehaviour
             hitDiriection = (targetCollider.ClosestPoint(transform.position) - transform.position).normalized,
             attacker = this.attacker != null ? this.attacker.gameObject : null,
             hitSoundType = this.hitSoundType,
+            hitVfxType = this.hitVfxType,
+            shieldHitVfxType = this.shieldHitVfxType,
             ignoreArmor = this.ignoreArmor,
             shieldDamageMultiplier = this.shieldDamageMultiplier
         };
 
-        target.TakeDamage(damageInfo);
+        target.TakeDamage(hitInfo);
     }
 
 
@@ -300,8 +309,8 @@ public abstract class Projectile : MonoBehaviour
             Debug.Log("ApplyDamage 상대가 같은팀");
             return;
         }
-        DamageInfo damageInfo = new DamageInfo
-        {
+		HitInfo hitInfo = new HitInfo
+		{
             type = currentDmgType,
             damageAmount = damage,
             isCritical = _critical,
@@ -309,10 +318,12 @@ public abstract class Projectile : MonoBehaviour
             hitDiriection = (targetCollider.ClosestPoint(transform.position) - transform.position).normalized,
             attacker = this.attacker != null ? this.attacker.gameObject : null,
             hitSoundType = this.hitSoundType,
+            hitVfxType = this.hitVfxType,
+            shieldHitVfxType = this.shieldHitVfxType,
             ignoreArmor = this.ignoreArmor,
             shieldDamageMultiplier = this.shieldDamageMultiplier
         };
-        target.TakeDamage(damageInfo);
+        target.TakeDamage(hitInfo);
     }
 
     /// <summary>
@@ -328,8 +339,8 @@ public abstract class Projectile : MonoBehaviour
         {
             return;
         }
-        DamageInfo damageInfo = new DamageInfo
-        {
+		HitInfo hitInfo = new HitInfo
+		{
             type = currentDmgType,
             damageAmount = damage,
             isCritical = _critical,
@@ -337,11 +348,13 @@ public abstract class Projectile : MonoBehaviour
             hitDiriection = (targetCollider.ClosestPoint(explosionCenter) - explosionCenter).normalized,  // 변경 260611
             attacker = this.attacker != null ? this.attacker.gameObject : null,
             hitSoundType = this.hitSoundType,
+            hitVfxType = this.hitVfxType,
+            shieldHitVfxType = this.shieldHitVfxType,
             ignoreArmor = this.ignoreArmor,
             shieldDamageMultiplier = this.shieldDamageMultiplier,
             aoeRadius = aoeRadius
         };
-        target.TakeDamage(damageInfo);
+        target.TakeDamage(hitInfo);
     }
 
 

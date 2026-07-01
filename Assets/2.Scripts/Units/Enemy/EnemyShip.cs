@@ -349,7 +349,7 @@ public class EnemyShip : Enemy
         }
     }
 
-    public override void TakeDamage(DamageInfo info)
+    public override void TakeDamage(HitInfo info)
     {
         if (IsInvincible)
         {

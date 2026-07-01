@@ -19,6 +19,16 @@ public class EffectAutoReturn : MonoBehaviour
 
     private void Awake()
     {
+        // 원샷 반납 전용 컴포넌트: 루트 포함 모든 하위 PS의 loop를 강제로 끔.
+        // 하나라도 loop면 종료 콜백(OnParticleSystemStopped)이 영원히 안 와서 반납이 안 됨(풀 손실).
+        // (true) = 비활성 자식도 포함해 나중에 켜져도 안전.
+        ParticleSystem[] allSystems = GetComponentsInChildren<ParticleSystem>(true);
+        foreach (ParticleSystem child in allSystems)
+        {
+            var childMain = child.main;
+            childMain.loop = false;
+        }
+
         ParticleSystem ps = GetComponent<ParticleSystem>();
 
         if (ps == null)

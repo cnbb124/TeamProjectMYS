@@ -32,7 +32,7 @@ using UnityEngine;
 //풀에서 꺼낸 인스턴스의 data 필드는 프리팹에 미리 박혀있는 값 (풀링해도 유지됨, Init에서 매번 복사하므로 풀 오염 걱정 없음)
 //발사 시점에 WeaponSystem이 데이터를 넘길 필요 없음 — 프리팹 자체가 자기 데이터를 알고 있음. WeaponSystem은 그냥 Init(pos, dir, attacker)만 호출
 //작업 순서 (세션25 합의 기준 그대로)
-//✅완료: DamageInfo에 ignoreArmor, shieldDamageMultiplier 추가 + calculTakeDamage 반영 (A안: 배율은 실드 차감량에만 적용)
+//✅완료: HitInfo에 ignoreArmor, shieldDamageMultiplier 추가 + calculTakeDamage 반영 (A안: 배율은 실드 차감량에만 적용)
 //ProjectileData/BulletData/MissileData SO 클래스 작성 + Create Data/Item/Projectile Data/... 메뉴 등록
 //Missile.Init()에 데이터 복사 로직 연동 (유도미사일부터)
 //ClusterMissile 분리유도 작업 시 MissileData 그대로 재사용 (자탄용 별도 에셋만 추가)
@@ -81,10 +81,9 @@ public class Missile : Projectile, IExplodable
 	[Space(5)]
 	[Header("<size=14>=====속도 설정=====</size>")]
 
-	[HideInInspector]
-	//자연스러운 미사일 연출을 위한 속도 미세조정. 시작속도, 최고속도, 가속시간
-	[Tooltip("발사 시작 속도. accelerateTime 동안 maxSpeed로 가속.")]
-	public float launchSpeed = 10f;
+	//자연스러운 미사일 연출을 위한 속도 미세조정. 최고속도, 가속시간
+	// 시작 속도는 발사 기체 curSpeed + MissileData.launchSpeedBonus로 런타임 계산 (Init 참고). 아래는 그 계산 결과 캐시.
+	private float _launchSpeed;
 	[HideInInspector]
 	//스피드설정
 	[Tooltip("최대 도달 속도")]
@@ -102,6 +101,10 @@ public class Missile : Projectile, IExplodable
 	//폭발음. Explode()에서 1번만 재생. SO에서 복사됨.
 	[HideInInspector]
 	public SOUND_TYPE explosionSoundType;
+
+	//폭발 VFX. Explode()에서 재생. SO(MissileData.explodeEffectType)에서 복사됨.
+	[HideInInspector]
+	public EFFECT_TYPE explodeEffectType = EFFECT_TYPE.VFX_EXPLOSION_MISSILE;
 
 	//발사후 경과시간
 	private float _aliveTime = 0f;
@@ -138,7 +141,9 @@ public class Missile : Projectile, IExplodable
 
 		if (missileData != null)
 		{
-			launchSpeed = missileData.launchSpeed;
+			// 발사 시작 속도 = 발사 기체의 현재 속도(curSpeed)를 물려받음.
+			// 0이면 발사 직후 안 움직이므로 하한 1, 상한은 maxSpeed로 clamp(기체가 더 빨라도 미사일이 maxSpeed 초과하지 않게).
+			_launchSpeed = (attacker != null) ? Mathf.Clamp(attacker.curSpeed + missileData.launchSpeedBonus, 1f, missileData.maxSpeed) : 1f;
 			maxSpeed = missileData.maxSpeed;
 			accelerateTime = missileData.accelerateTime;
 			turnRate = missileData.turnRate;
@@ -149,6 +154,7 @@ public class Missile : Projectile, IExplodable
 			baseDamage = missileData.damage;
 			maxRange = missileData.maxRange;
 			explosionSoundType = missileData.explosionSoundType;
+			explodeEffectType = missileData.explodeEffectType;
 			ignoreArmor = missileData.ignoreArmor;
 			shieldDamageMultiplier = missileData.shieldDamageMultiplier;
 		}
@@ -160,7 +166,7 @@ public class Missile : Projectile, IExplodable
 		//발사후경과시간
 		_aliveTime = 0f;
 		//현재 추진 스피드를 발사스피드로 입력
-		_thrustSpeed = launchSpeed;
+		_thrustSpeed = _launchSpeed;
 		curSpeed = 0f;
 
 		//타겟이 있을경우. 타겟의 전 좌표 초기화
@@ -198,7 +204,7 @@ public class Missile : Projectile, IExplodable
 		_aliveTime += Time.deltaTime;
 
 		// 속도 가속, 발사시간>최대속도
-		_thrustSpeed = Mathf.Lerp(launchSpeed, maxSpeed, Mathf.Clamp01(_aliveTime / accelerateTime));
+		_thrustSpeed = Mathf.Lerp(_launchSpeed, maxSpeed, Mathf.Clamp01(_aliveTime / accelerateTime));
 
 
 		// [추가수정]Steer() 진입 여부와 무관하게 매 프레임 타겟의 속도를 계산하고 이전 좌표를 갱신
@@ -288,7 +294,7 @@ public class Missile : Projectile, IExplodable
 		//이펙트 출력 로직 추가(사운드,파티클)
 		//폭발 반경(explosionRadius) 비율에 맞춰 VFX 크기 조절
 		float vfxRatio = explosionInfo.explosionRadius / vfxBaseRadius;
-		VFXManager.Instance.PlayEffectAtPosition(EFFECT_TYPE.VFX_EXPLOSION_MISSILE, transform.position, Quaternion.identity, 0f, Vector3.one * vfxRatio);
+		VFXManager.Instance.PlayEffectAtPosition(explodeEffectType, transform.position, Quaternion.identity, 0f, Vector3.one * vfxRatio);
 		SoundManager.Instance.PlaySFX3DAtPosition(explosionSoundType, transform.position);
 		//맞은것들의 충돌박스 갯수 카운트
 		int hitMask = LayerMask.GetMask("HitBox");

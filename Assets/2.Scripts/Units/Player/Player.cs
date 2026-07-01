@@ -17,7 +17,7 @@ using UnityEngine;
 //   maxFuelCapacity  : 최대 연료량
 //   (HP / 실드 / 부스트 등은 Unit.cs 참조)
 //
-//   onHitDirectionWorld : HitDirectionHandler — 피격 시 DamageInfo.hitDiriection 그대로 전달
+//   onHitDirectionWorld : HitDirectionHandler — 피격 시 HitInfo.hitDiriection 그대로 전달
 //                         (투사체→플레이어 방향. 화면 위치 계산 시 부호 반전 필요할 수 있음)
 //                         예) GameManager.Instance.playerRef.onHitDirectionWorld += ShowHitIndicator;
 //                             void ShowHitIndicator(Vector3 dir) { /* -dir 방향이 공격자 위치 */ }
@@ -389,8 +389,8 @@ public class Player : Unit
 	// 예) player.OnHitDirectionWorld += dir => hudManager.ShowHitIndicator(dir);
 	public HitDirectionHandler onHitDirectionWorld;
 
-	// 피격 반동 - 카메라 쉐이크, 넉백 등
-	protected override void OnHitReaction(DamageInfo info)
+	// 피격 반동 - 카메라 쉐이크, 넉백 등 (Unit.OnHitReaction public화에 맞춰 public override)
+	public override void OnHitReaction(HitInfo info)
 	{
 		base.OnHitReaction(info);
 

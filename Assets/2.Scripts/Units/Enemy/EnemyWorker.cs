@@ -30,7 +30,7 @@ public class EnemyWorker : Enemy
         FindNearestAsteroid();
     }
 
-    public override void TakeDamage(DamageInfo info)
+    public override void TakeDamage(HitInfo info)
     {
         base.TakeDamage(info);
         currentResource = Mathf.Min(maxResource, currentResource + info.damageAmount * resourcePerDamage);

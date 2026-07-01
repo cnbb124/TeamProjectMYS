@@ -29,7 +29,7 @@ using UnityEngine;
 //   float boostRatio  = unit.curBoostRemaining / unit.maxBoostCapacity;
 //
 // ▶ 이펙트/사운드팀 참조용
-//   OnHitReaction(DamageInfo info) : 피격 시 Player/Enemy에서 override → 여기서 VFXManager 호출
+//   OnHitReaction(HitInfo info) : 피격 시 Player/Enemy에서 override → 여기서 VFXManager 호출
 //   OnStateEnter(UNIT_STATE state) : IDLE/MOVING/BOOSTING 애니+루프사운드 재생, BRAKE는 MOVING 모션 재사용, DODGE 무적/타이머, DIE 애니
 //   OnStateExit(UNIT_STATE state)  : IDLE/MOVING/BOOSTING 루프사운드 정지
 //                                    Player는 DODGE(RCS버스트)/BRAKE(역추진 파티클)만 추가 override
@@ -124,14 +124,14 @@ public abstract class Unit : MonoBehaviour, IDamageable
 
 
 
-	// 크리여부 판정은 투사체가 담당 크확은 유닛이. → DamageInfo.isCritical로 전달받음
+	// 크리여부 판정은 투사체가 담당 크확은 유닛이. → HitInfo.isCritical로 전달받음
 	// criChance는 투사체 생성 시 attacker에서 복사해서 사용
 	//데미지 계산식
 	//shield>armor>hp순 실드없고 armor있을때는 경감수치만큼 데미지 경감
 	//damageAmount=
-	//(실드o,아머x)(Damageinfo.damage) * (크리시)criDamageMultiplier;
-	//(실드x,아머o)Damageinfo.damage-defense *(크리시)criDamageMultiplier;
-	//(실드x,아머x)Damageinfo.damage) * (크리시)criDamageMultiplier;
+	//(실드o,아머x)(HitInfo.damage) * (크리시)criDamageMultiplier;
+	//(실드x,아머o)(HitInfo.damage-defense *(크리시)criDamageMultiplier;
+	//(실드x,아머x)(HitInfo.damage) * (크리시)criDamageMultiplier;
 	//curHp-=damageAmount;
 	[Space(10)]
 	[Header("<size=14>===========터렛등 좌표고정유닛은 적용안됨============</size>")]
@@ -737,9 +737,9 @@ public abstract class Unit : MonoBehaviour, IDamageable
 
 
 
-	//(실드o,아머x)(Damageinfo.damage) * (크리시)criDamageMultiplier;
-	//(실드x,아머o)Damageinfo.damage-defense *(크리시)criDamageMultiplier;
-	//(실드x,아머x)Damageinfo.damage) * (크리시)criDamageMultiplier;
+	//(실드o,아머x)(HitInfo.damage) * (크리시)criDamageMultiplier;
+	//(실드x,아머o)(HitInfo.damage-defense *(크리시)criDamageMultiplier;
+	//(실드x,아머x)(HitInfo.damage) * (크리시)criDamageMultiplier;
 	//반올림할것. 0.5->1 0.4->0
 
 	//자식에서 오버라이드
@@ -766,7 +766,7 @@ public abstract class Unit : MonoBehaviour, IDamageable
 	/// Unit TakeDamage(IDamageable 상속시 필수구현하는 메서드) 
 	/// </summary>
 	/// <param name="info"> 데미지정보구조체 받음</param>
-	public virtual void TakeDamage(DamageInfo info)
+	public virtual void TakeDamage(HitInfo info)
 	{
 
 		if (IsInvincible)
@@ -826,7 +826,8 @@ public abstract class Unit : MonoBehaviour, IDamageable
 	/// 피격 반동(카메라 쉐이크, 넉백등 자식에서 override)
 	/// </summary>
 	/// <param name="info"></param>
-	protected virtual void OnHitReaction(DamageInfo info)
+	// IHittable 구현 — 데미지 대상은 TakeDamage 내부에서, 환경은 투사체가 직접 호출. 그래서 public.
+	public virtual void OnHitReaction(HitInfo info)
 	{
 		//피격 애니메이션재생 필요
 		//피격 사운드재생 필요 실드있을떄는 실드사운드, 아니면 타입맞춰서
@@ -853,6 +854,14 @@ public abstract class Unit : MonoBehaviour, IDamageable
 		}
 		//Debug.Log($"[OnHitReaction-DEBUG] curShieldRemaining={curShieldRemaining}, _playSoundType={_playSoundType}, dmgType={info.type}");
 		_sound.PlaySFX3DAtPosition(_playSoundType, info.hitPosition);
+
+		// 피격 VFX — 사운드와 동일한 curShieldRemaining 기준으로 실드/일반 분기(사운드·VFX 일관성 유지).
+		// 폭발(미사일)은 Missile.Explode()가 폭발 VFX를 이미 냈으므로 여기선 스킵(중복 방지).
+		if (info.type != DAMAGE_TYPE.EXPLOSION)
+		{
+			EFFECT_TYPE hitVfx = (curShieldRemaining > 0) ? info.shieldHitVfxType : info.hitVfxType;
+			VFXManager.Instance.PlayEffectAtPosition(hitVfx, info.hitPosition, Quaternion.identity);
+		}
 		//피격 카메라무빙필요
 
 		//크리면 데미지 배율, 아니면 그냥 데미지
@@ -939,7 +948,7 @@ public abstract class Unit : MonoBehaviour, IDamageable
 	///// </summary>
 	///// <param name="info">맞은 투사체 정보</param>
 	///// <returns></returns>
-	//protected SOUND_TYPE GetPlaySoundType(DamageInfo info)
+	//protected SOUND_TYPE GetPlaySoundType(HitInfo info)
 	//{
 
 
@@ -971,7 +980,7 @@ public abstract class Unit : MonoBehaviour, IDamageable
 	// BULLET/MISSILE은 풀에서 꺼낸 프리팹 자신의 bulletData/missileData(shootSoundType, muzzleEffectType)를 직접 사용. LASER만 고정값 유지.
 
 
-	protected SOUND_TYPE GetPlaySoundTypeShield(DamageInfo info)
+	protected SOUND_TYPE GetPlaySoundTypeShield(HitInfo info)
 	{
 		switch (info.type)
 		{

@@ -1848,6 +1848,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   weaponSystem: {fileID: 0}
+  skillSystem: {fileID: 0}
   maxHpRemaining: 250
   maxShieldCapacity: 0
   shieldRegainDelay: 0
@@ -1941,6 +1942,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   currentLockMode: 0
   maxMultiLockCount: 4
+  _targetInRadarRangeBufferSize: 64
   lockOnRange: 750
   lockOnRequiredTime: 1.2
   targetLayerMask:
@@ -4001,6 +4003,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   weaponSystem: {fileID: 0}
+  skillSystem: {fileID: 0}
   maxHpRemaining: 250
   maxShieldCapacity: 0
   shieldRegainDelay: 0
@@ -4090,6 +4093,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   currentLockMode: 0
   maxMultiLockCount: 4
+  _targetInRadarRangeBufferSize: 64
   lockOnRange: 750
   lockOnRequiredTime: 1.2
   targetLayerMask:
@@ -4946,6 +4950,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   weaponSystem: {fileID: 0}
+  skillSystem: {fileID: 0}
   maxHpRemaining: 150
   maxShieldCapacity: 100
   shieldRegainDelay: 5
@@ -4959,7 +4964,7 @@ MonoBehaviour:
   criDamageMultiplier: 0
   baseMoveSpeed: 75
   boostSpeed: 100
-  maxSpeed: 150
+  maxSpeed: 100
   timeToMaxSpeed: 0.4
   timeToStop: 0.4
   brakeEnterSpeedRatio: 0.65
@@ -5056,6 +5061,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   currentLockMode: 0
   maxMultiLockCount: 4
+  _targetInRadarRangeBufferSize: 64
   lockOnRange: 850
   lockOnRequiredTime: 1.2
   targetLayerMask:

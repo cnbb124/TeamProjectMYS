@@ -230,6 +230,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   weaponSystem: {fileID: 0}
+  skillSystem: {fileID: 0}
   maxHpRemaining: 30
   maxShieldCapacity: 25
   shieldRegainDelay: 3
@@ -241,9 +242,9 @@ MonoBehaviour:
   defense: 1
   criChance: 20
   criDamageMultiplier: 1.5
-  baseMoveSpeed: 125
-  boostSpeed: 200
-  maxSpeed: 250
+  baseMoveSpeed: 100
+  boostSpeed: 135
+  maxSpeed: 135
   timeToMaxSpeed: 0.4
   timeToStop: 0.4
   brakeEnterSpeedRatio: 0.65
@@ -336,6 +337,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   currentLockMode: 0
   maxMultiLockCount: 4
+  _targetInRadarRangeBufferSize: 64
   lockOnRange: 750
   lockOnRequiredTime: 1
   targetLayerMask:

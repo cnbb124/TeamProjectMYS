@@ -49,6 +49,8 @@ public class Bullet : Projectile
 			baseDamage = bulletData.damage;
 			maxRange = bulletData.maxRange;
 			hitSoundType = bulletData.hitSoundType;
+			hitVfxType = bulletData.hitEffectType;
+			shieldHitVfxType = bulletData.shieldHitEffectType;
 			ignoreArmor = bulletData.ignoreArmor;
 			shieldDamageMultiplier = bulletData.shieldDamageMultiplier;
 		}
@@ -64,14 +66,45 @@ public class Bullet : Projectile
 	protected override void OnHit(Collider other)
 	{
 		base.OnHit(other);
-		// 피격 VFX 출력 (Missile.Explode()와 동일하게 하드코딩 타입 사용). 사운드는 Unit.OnHitReaction이 담당.
-		VFXManager.Instance.PlayEffectAtPosition(EFFECT_TYPE.VFX_BULLETHIT, other.ClosestPoint(transform.position), Quaternion.identity);
+
+		IDamageable dmg = other.GetComponentInParent<IDamageable>();
+		if (dmg == null)
+		{
+			// 데미지를 안 받는 대상.
+			//  - IHittable(피격 반응 있는 환경)이면 그쪽에 위임(자기 피격 이펙트).
+			//  - 아무것도 없는 순수 대상(벽 등)이면 폴백으로 일반 히트 VFX.
+			IHittable hittable = other.GetComponentInParent<IHittable>();
+			if (hittable != null)
+			{
+				hittable.OnHitReaction(BuildHitInfo(other));
+			}
+			else
+			{
+				VFXManager.Instance.PlayEffectAtPosition(hitVfxType, other.ClosestPoint(transform.position), Quaternion.identity);
+			}
+		}
+		// 데미지 대상(dmg != null)의 피격 VFX/사운드는 아래 ApplyDamage → TakeDamage → OnHitReaction이 실드 분기까지 처리.
 
 		//공통 데미지 함수 호출 (단일 대상)
 		ApplyDamage(other, this.curDamage, this.dmgType);
 
 		// 이펙트 및 데미지 연산 후 투사체 소멸
 		ReturnToPool();
+	}
+
+	// 환경(IHittable, 데미지 안 받음) 대상에 넘길 피격 정보 구성. 데미지 관련 필드는 안 씀.
+	private HitInfo BuildHitInfo(Collider other)
+	{
+		Vector3 hitPos = other.ClosestPoint(transform.position);
+		return new HitInfo
+		{
+			type = dmgType,
+			hitPosition = hitPos,
+			hitDiriection = (hitPos - transform.position).normalized,
+			attacker = attacker != null ? attacker.gameObject : null,
+			hitVfxType = hitVfxType,
+			shieldHitVfxType = shieldHitVfxType,
+		};
 	}
 
 }
