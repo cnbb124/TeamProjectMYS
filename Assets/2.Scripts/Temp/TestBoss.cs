@@ -107,7 +107,7 @@ public class TestBoss : Enemy
             fireDir = transform.rotation * localOffset;
         }
 
-        Projectile proj = PoolManager.Instance.GetBullet();
+        Projectile proj = PoolManager.Instance.GetProjectile(POOL_TYPE.PROJECTILE_BULLET);
         if (proj != null)
             proj.Init(transform.position, fireDir, this);
     }

@@ -8,6 +8,9 @@ public class ClusterMisslleData : MissileData
 	[Header("분열 탄 갯수(락온 시스템에도 자동 등록됨. 다중 타겟될 갯수)")]
 	public int splitCount = 4;
 
+	[Header("분열 탄 종류")]
+	public MissileData childrenMissileData;
+
 	[Header("분열이 시작될 비행거리")]
 	public float splitDistance = 750f;
 

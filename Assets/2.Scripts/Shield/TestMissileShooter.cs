@@ -17,7 +17,7 @@ public class TestMissileShooter : MonoBehaviour
             // 타겟 방향으로 발사
             Vector3 dir = (target.position - transform.position).normalized;
             
-            Missile m = PoolManager.Instance.GetMissile();
+            Missile m = PoolManager.Instance.GetProjectile(POOL_TYPE.PROJECTILE_MISSILE) as Missile;
             if (m != null)
                 m.Init(transform.position, dir, attacker, target);
         }

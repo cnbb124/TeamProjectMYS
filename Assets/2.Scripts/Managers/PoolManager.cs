@@ -228,6 +228,13 @@ public class PoolManager : MonoBehaviour
 	// 기존 GetBullet/GetMissile 등과 호출 방법 동일.
 	// =====================================================================
 
+
+	/// <summary>POOL_TYPE으로 투사체 꺼내기. 변형탄(ProjectileData.curProjectilePoolType) 등 직접 풀 지정용.</summary>
+	public Projectile GetProjectile(POOL_TYPE poolType)
+	{
+		return GetCachedProjectile(poolType);
+	}
+
 	/// <summary>
 	/// 투사체 캐시에서 비활성 Projectile 반환.
 	/// 캐시 소진 시 Get()으로 자동 확장.
@@ -252,64 +259,30 @@ public class PoolManager : MonoBehaviour
 		return newObj.GetComponent<Projectile>();
 	}
 
-	// 기존 호출부 변경 없이 사용 가능
-	public Bullet GetBullet()
-	{
-		return GetCachedProjectile(POOL_TYPE.PROJECTILE_BULLET) as Bullet;
-	}
-
-	public Missile GetMissile()
-	{
-		return GetCachedProjectile(POOL_TYPE.PROJECTILE_MISSILE) as Missile;
-	}
-
-	/// <summary>
-	/// 클러스터 미사일. 꺼낸 후 반드시 Init() 호출.
-	/// </summary>
-	public ClusterMissile GetClusterMissile()
-	{
-		return GetCachedProjectile(POOL_TYPE.PROJECTILE_MISSILE_CLUSTER) as ClusterMissile;
-	}
-	/// <summary>
-	/// 클러스터 미사일 분열 자탄. 꺼낸 후 반드시 Init() 호출.
-	/// </summary>
-	public Missile GetClusterMissileChild()
-	{
-		return GetCachedProjectile(POOL_TYPE.PROJECTILE_MISSILE_CLUSTER_CHILD) as Missile;
-	}
-	/// <summary>
-	/// 유도없는 미사일. 꺼낸 후 반드시 Init() 호출.
-	/// </summary>
-	public DumbMissile GetDumbMissile()
-	{
-		return GetCachedProjectile(POOL_TYPE.PROJECTILE_MISSILE_DUMB) as DumbMissile;
-	}
-
-
-	/// <summary>POOL_TYPE으로 투사체 꺼내기. 변형탄(ProjectileData.curProjectilePoolType) 등 직접 풀 지정용.</summary>
-	public Projectile GetProjectile(POOL_TYPE poolType)
-	{
-		return GetCachedProjectile(poolType);
-	}
-
-	/// <summary>PROJECTILE_TYPE으로 투사체 꺼내기. Player/Enemy 공용.</summary>
-	public Projectile GetProjectile(PROJECTILE_TYPE shootType)
-	{
-		switch (shootType)
-		{
-			case PROJECTILE_TYPE.BULLET: return GetBullet();
-			case PROJECTILE_TYPE.MISSILE: return GetMissile();
-			default:
-				Debug.LogWarning($"[PoolManager] GetProjectile: 미지원 타입 {shootType}");
-				return null;
-		}
-	}
 
 	/// <summary>Projectile.ReturnToPool()에서 호출. 비활성화로 반납.</summary>
 	public void ReturnProjectile(Projectile projectile)
 	{
 		projectile.gameObject.SetActive(false);
 	}
+
+
+
+
+	//// 기존 호출부 변경 없이 사용 가능
+	//public Bullet GetBullet()
+	//{
+	//	return GetCachedProjectile(POOL_TYPE.PROJECTILE_BULLET) as Bullet;
+	//}
+
+	//public Missile GetMissile()
+	//{
+	//	return GetCachedProjectile(POOL_TYPE.PROJECTILE_MISSILE) as Missile;
+	//}
+
+
+
+
 
 	// =====================================================================
 	// 씬 전환 / 게임오버 시 투사체 전체 비활성화

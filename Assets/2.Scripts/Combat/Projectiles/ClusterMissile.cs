@@ -11,6 +11,7 @@ public class ClusterMissile : Missile
 	private float _splitDistance;
 	private int _splitCount;
 	private float _splitSpreadAngle;
+	private MissileData _childrenMissileData;
 
 	// 분열 시 자탄에게 배정할 타겟 목록 (WeaponSystem에서 전달, 없으면 전부 직진)
 	private List<Transform> _splitTargets;
@@ -26,6 +27,7 @@ public class ClusterMissile : Missile
 			_splitDistance = clusterData.splitDistance;
 			_splitCount = clusterData.splitCount;
 			_splitSpreadAngle = clusterData.splitSpreadAngle;
+			_childrenMissileData = clusterData.childrenMissileData;
 		}
 
 		_hasSplit = false;
@@ -53,14 +55,31 @@ public class ClusterMissile : Missile
 	// splitCount개의 HOMING 자탄을 부채꼴로 소환하고 본체는 소멸.
 	private void Split()
 	{
-		_hasSplit = true;
+		_hasSplit = true;   // 재호출/로그 스팸 방지를 위해 어떤 분기로 가든 먼저 세움
+
+		if (_childrenMissileData == null)
+		{
+			// 자탄 데이터 미설정 시 자탄 없이 분열 지점에서 바로 폭발 + 소멸(사거리 끝까지 안 날아가게)
+			Debug.LogWarning($"[ClusterMissile] childrenMissileData 미설정 — 자탄 없이 폭발");
+			Explode(explosionInfo);
+			ReturnToPool();
+			return;
+		}
 
 		float angleStep = _splitCount > 1 ? _splitSpreadAngle / (_splitCount - 1) : 0f;
 		float startAngle = -_splitSpreadAngle * 0.5f;
 
 		for (int i = 0; i < _splitCount; i++)
 		{
-			Missile child = PoolManager.Instance.GetClusterMissileChild();
+			
+			
+
+			Missile child = PoolManager.Instance.GetProjectile(_childrenMissileData.curProjectilePoolType) as Missile;
+
+			if (child == null)
+			{
+				continue;
+			}
 
 			// 부채꼴로 퍼지는 발사 방향 (가운데 기준 좌우대칭)
 			float angle = startAngle + angleStep * i;
