@@ -7,8 +7,8 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: UISoftEffect_1
-  m_Shader: {fileID: 4800000, guid: 1382ae0425fc6f14ca496e5217114ec9, type: 3}
+  m_Name: GlassMorphism_6
+  m_Shader: {fileID: 4800000, guid: 0c9ce77dddbdce24fac450811e9b07c0, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
@@ -61,33 +61,28 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
+    - _BlurSize: 8
     - _BumpScale: 1
-    - _ColorMask: 15
     - _Cutoff: 0.5
     - _DetailNormalMapScale: 1
     - _DstBlend: 0
+    - _EdgePower: 0.004
     - _GlossMapScale: 1
-    - _GlossPower: 0.01
     - _Glossiness: 0.5
     - _GlossyReflections: 1
-    - _Glow: 1.5
     - _Metallic: 0
     - _Mode: 0
     - _OcclusionStrength: 1
     - _Parallax: 0.02
     - _SmoothnessTextureChannel: 0
-    - _Softness: 0.1
     - _SpecularHighlights: 1
     - _SrcBlend: 1
-    - _Stencil: 0
-    - _StencilComp: 8
-    - _StencilOp: 0
-    - _StencilReadMask: 255
-    - _StencilWriteMask: 255
+    - _TopGlow: 0.16
     - _UVSec: 0
     - _ZWrite: 1
     m_Colors:
     - _Color: {r: 1, g: 1, b: 1, a: 1}
+    - _EdgeColor: {r: 1, g: 0.97311324, b: 0.7311321, a: 0.039215688}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
-    - _GlossTint: {r: 1, g: 1, b: 1, a: 0.39215687}
+    - _TintColor: {r: 0.2028302, g: 0.74553823, b: 1, a: 0.039215688}
   m_BuildTextureStacks: []
