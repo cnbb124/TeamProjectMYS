@@ -98,6 +98,7 @@ public class LaserSkill : ActiveSkill
 		// 빔 시각 두께 = 판정 반경 × 2(지름). 판정(SphereCast radius)과 눈에 보이는 두께를 일치시킴.
 		if (_beamVisual != null)
 		{
+			_beamVisual.ResetVisualRotation();
 			_beamVisual.SetWidth(Data.beamRadius * 2f);
 		}
 

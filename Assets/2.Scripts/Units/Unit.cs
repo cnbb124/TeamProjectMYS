@@ -92,10 +92,10 @@ public abstract class Unit : MonoBehaviour, IDamageable
 	public int maxShieldCapacity;//최대,현재실드수치
 
 	public float shieldRegainDelay;//피격후 회복까지딜레이시간
-	[Range(6.0f,100.0f)]
+	[Range(6.0f, 100.0f)]
 	[Tooltip("실드 초당 회복수치(최소 6)")]
 	public float shieldRegainRate; //실드회복수치
-										 //private float shieldRegainTimer = 0f;//딜레이 시간까지잴 타이머 >0516 코루틴으로변경
+								   //private float shieldRegainTimer = 0f;//딜레이 시간까지잴 타이머 >0516 코루틴으로변경
 	public bool isShieldRegaining = false; //회복중인지 여부
 	private Coroutine _shieldRegenCoroutine;//중간 정지등을 위한 코루틴변수 따로
 											//실드연결용
@@ -112,6 +112,7 @@ public abstract class Unit : MonoBehaviour, IDamageable
 
 	// 실드 오브젝트(자식 포함) 콜라이더 캐싱용
 	private Collider[] _shieldColliders;
+	private ProceduralForceField.ProceduralForceFieldOverlay _shieldOverlay;
 
 
 	[Header("<size=18>Armor - 자동회복 X</size>")]
@@ -157,13 +158,13 @@ public abstract class Unit : MonoBehaviour, IDamageable
 			 "정지 시 감속을 이 값으로 직접 제어함. 멈추기 시작한 시점의 속도를 기준으로 항상 이 시간 안에 0이 됨.")]
 	public float timeToStop = 0.4f;
 	[Tooltip("입력없이 감속 중일 때 BRAKE 상태로 진입하는 속도 기준(최대속도 대비 비율, 0~1).")]
-	[Range(0f,1f)]
+	[Range(0f, 1f)]
 	public float brakeEnterSpeedRatio = 0.65f;
 	[Tooltip("BRAKE 상태에서 빠져나가는 속도 기준(최대속도 대비 비율, 0~1).\n" +
 			 "진입 기준보다 낮게 둬서 65%/20% 사이를 오갈 때 BRAKE-MOVING이 매 프레임 깜빡이는 걸 방지(히스테리시스).")]
-	[Range(0f,1f)]
+	[Range(0f, 1f)]
 	public float brakeExitSpeedRatio = 0.2f;
-	
+
 	[Tooltip("부스트 최대치")]
 	public float maxBoostCapacity;
 	[Tooltip("부스트 사용 최소 요구치")]
@@ -218,6 +219,7 @@ public abstract class Unit : MonoBehaviour, IDamageable
 		if (shield != null)
 		{
 			_shieldColliders = shield.GetComponentsInChildren<Collider>();
+			_shieldOverlay = shield.GetComponentInChildren<ProceduralForceField.ProceduralForceFieldOverlay>(true);
 		}
 
 		if (bodyHitboxRoot != null)
@@ -636,11 +638,8 @@ public abstract class Unit : MonoBehaviour, IDamageable
 		yield return new WaitForSeconds(shieldRegainDelay);
 
 		// 회복 시작 시 Overlay 리셋 (파괴 상태 해제, 다시 피격 이펙트 보이게)
-		if (shield != null)
-		{
-			var overlay = shield.GetComponentInChildren<ProceduralForceField.ProceduralForceFieldOverlay>();
-			overlay?.TriggerReset();
-		}
+		_shieldOverlay?.TriggerReset();
+
 
 		isShieldRegaining = true;
 
@@ -666,11 +665,9 @@ public abstract class Unit : MonoBehaviour, IDamageable
 		_shieldRegenCoroutine = null;
 
 		// 쉴드 완전 회복 시 Overlay 리셋
-		if (shield != null)
-		{
-			var overlay = shield.GetComponentInChildren<ProceduralForceField.ProceduralForceFieldOverlay>();
-			overlay?.TriggerReset();
-		}
+
+		_shieldOverlay?.TriggerReset();
+
 	}
 
 	//0516 실드회복 코루틴으로변겨ㅑㅇ
@@ -847,8 +844,7 @@ public abstract class Unit : MonoBehaviour, IDamageable
 		{
 			_playSoundType = GetPlaySoundTypeShield(info);
 
-			if (shield != null)
-				shield.GetComponentInChildren<ProceduralForceField.ProceduralForceFieldOverlay>()?.Trigger(info.hitPosition);
+			_shieldOverlay?.Trigger(info.hitPosition);
 
 			// [실드팀 참조 - 실드 피격 비주얼 연동 위치]
 			// curShieldRemaining > 0 분기 = 이번 피격을 실드가 막아낸 경우.
@@ -895,7 +891,7 @@ public abstract class Unit : MonoBehaviour, IDamageable
 
 		if (curShieldRemaining > 0)
 		{
-			
+
 			// 실드가 원본 데미지로 흡수 가능한 양만큼만 damageAmount에서 차감
 			int absorbedOriginal = Mathf.Min(damageAmount, Mathf.FloorToInt(curShieldRemaining / multiplier));
 			int shieldDamage = Mathf.Min(curShieldRemaining, Mathf.RoundToInt(absorbedOriginal * multiplier));//현지실드량보다 초과해서 -가되면 안됨
@@ -906,13 +902,15 @@ public abstract class Unit : MonoBehaviour, IDamageable
 			if (shield != null && maxShieldCapacity > 0)
 			{
 				float hpRatio = (float)curShieldRemaining / maxShieldCapacity;
-				var overlay = shield.GetComponentInChildren<ProceduralForceField.ProceduralForceFieldOverlay>();
-				if (overlay != null)
+
+				if (_shieldOverlay != null)
 				{
-					overlay.UpdateShieldHP(hpRatio);
+					_shieldOverlay.UpdateShieldHP(hpRatio);
 					// 쉴드 완전 소진 시 파괴 이펙트
 					if (curShieldRemaining <= 0)
-						overlay.TriggerDestroy();
+					{
+						_shieldOverlay.TriggerDestroy();
+					}
 				}
 			}
 		}

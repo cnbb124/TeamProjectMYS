@@ -93,10 +93,10 @@ public class AffectionManager : MonoBehaviour
 		OnAffectionChanged?.Invoke(npc, next);
 	}
 
-	/// <summary>저장(SaveData)용 전체 스냅샷.</summary>
+	/// <summary>저장(SaveData)용 전체 스냅샷. 내부 딕셔너리 보호를 위해 복사본 반환(외부 수정이 내부 상태를 오염시키지 않게).</summary>
 	public Dictionary<NPC_ID, int> GetAllAffections()
 	{
-		return _affectionByNpc;
+		return new Dictionary<NPC_ID, int>(_affectionByNpc);
 	}
 
 	/// <summary>불러오기(SaveData)용 일괄 복원. 기존 데이터는 전부 덮어씀.</summary>
