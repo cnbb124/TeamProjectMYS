@@ -4,6 +4,9 @@ using UnityEngine;
 
 public class ShipLanding : MonoBehaviour
 {
+    /// <summary>이륙 연출이 완전히 끝났을 때 발생 (씬 전환 등에 사용)</summary>
+    public event System.Action OnTakeoffComplete;
+
     [Header("플레이어")]
     [SerializeField] private Transform target;
 
@@ -93,6 +96,7 @@ public class ShipLanding : MonoBehaviour
 
     public void PlayTakeoff()
     {
+        if (currentState != State.Landed) return; // 착지 완료 상태가 아니면 무시
         if (currentRoutine != null) StopCoroutine(currentRoutine);
         currentState = State.TakingOff;
         currentRoutine = StartCoroutine(TakeoffSequence());
@@ -114,6 +118,7 @@ public class ShipLanding : MonoBehaviour
             takeoffDuration, takeoffCurve);
 
         currentState = State.Gone;
+        OnTakeoffComplete?.Invoke();
     }
 
     // 착륙용: 위치/회전을 각각 다른 커브로 보간
