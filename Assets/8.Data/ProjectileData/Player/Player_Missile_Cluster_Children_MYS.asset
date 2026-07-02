@@ -9,8 +9,8 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2663467a31825fa4191d72faf43cf081, type: 3}
-  m_Name: Player_Missile_Cluster_Base_Default
+  m_Script: {fileID: 11500000, guid: 6dee536450bf5aa4ea1c9a16fa20cd84, type: 3}
+  m_Name: Player_Missile_Cluster_Children_MYS
   m_EditorClassIdentifier: 
   id: 0
   itemName: 
@@ -18,24 +18,20 @@ MonoBehaviour:
   description: 
   price: 0
   category: 3
-  damage: 12
-  maxRange: 1000
+  damage: 15
+  maxRange: 1700
   ignoreArmor: 0
   shieldDamageMultiplier: 1
   damageType: 2
-  curProjectilePoolType: 3
+  curProjectilePoolType: 4
   muzzleEffectType: 300
   shootSoundType: 302
   explosionSoundType: 402
   explodeEffectType: 0
-  turnRate: 120
-  straightFlightDistance: 20
-  launchSpeedBonus: 10
-  maxSpeed: 200
-  accelerateTime: 0.8
-  explosionRadius: 1
+  turnRate: 300
+  straightFlightDistance: 0
+  launchSpeedBonus: 0
+  maxSpeed: 250
+  accelerateTime: 1
+  explosionRadius: 2.5
   vfxBaseRadius: 20
-  splitCount: 12
-  childrenMissileData: {fileID: 11400000, guid: e053d2ba5c9a2db47a5e061327483910, type: 2}
-  splitDistance: 100
-  splitSpreadAngle: 120

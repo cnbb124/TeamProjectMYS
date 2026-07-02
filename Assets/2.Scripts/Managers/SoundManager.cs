@@ -215,7 +215,7 @@ public class SoundManager : MonoBehaviour
 	//루프 사운드를 추적하기 위한 딕셔너리 (어떤 오브젝트가 어떤 소스를 쓰고 있는지 기록)
 	// (Transform, SOUND_TYPE) 복합키 — 같은 유닛이라도 사운드 종류가 다르면 동시에 여러 루프 재생 가능
 	// (예: 엔진 공회전/가속/부스트 레이어를 한 유닛에서 동시에 크로스페이드)
-	private Dictionary<(Transform, SOUND_TYPE), AudioSource> activeLoopSounds = new Dictionary<(Transform, SOUND_TYPE), AudioSource>();
+	private Dictionary<(Transform, SOUND_TYPE), AudioSource> _activeLoopSounds = new Dictionary<(Transform, SOUND_TYPE), AudioSource>();
 	// 3D 효과음 재생을 위한 오디오 소스 풀(Pool)
 	private List<AudioSource> _sfx3DPool = new List<AudioSource>();
 	// PlaySFX3DAtUnit으로 유닛에 부착된 단발성 소스 추적 (재생 끝나면 매니저로 unparent)
@@ -376,7 +376,7 @@ public class SoundManager : MonoBehaviour
 
 	// 폴리포니 체크 후 재생 가능한 소스 반환. maxConcurrent 초과 + dropOldest=false이면 null 반환(재생 스킵).
 	// sourceUnit: 발사 주체(유닛). minPlayInterval 체크를 유닛별로 따로 적용하기 위함 — null이면(위치 기반 1회성 사운드 등) 체크 생략.
-	// bypassPolyphony: 루프 사운드(PlaySFX3DLoop)용 — 유닛당 1개라는 보장은 activeLoopSounds 딕셔너리가 이미 하고 있어서,
+	// bypassPolyphony: 루프 사운드(PlaySFX3DLoop)용 — 유닛당 1개라는 보장은 _activeLoopSounds 딕셔너리가 이미 하고 있어서,
 	// 1회성 사운드용 maxConcurrent/dropOldest를 또 거치면 유닛 구분 없이 "가장 오래된" 다른 유닛의 루프를 멋대로 꺼버리는 문제가 있었음.
 	private AudioSource AcquireSFX3DSource(SOUND_TYPE type, SoundTypeClip data, Transform sourceUnit = null, bool bypassPolyphony = false)
 	{
@@ -670,7 +670,7 @@ public class SoundManager : MonoBehaviour
 		var key = (targetTr, type);
 
 		//이미 같은 조합으로 재생 중이면 기존 소스 그대로 반환
-		if (activeLoopSounds.TryGetValue(key, out AudioSource existing))
+		if (_activeLoopSounds.TryGetValue(key, out AudioSource existing))
 		{
 			//Debug.Log($"[SoundManager-DEBUG] PlaySFX3DLoop 기존소스 반환: type={type}, target={targetTr?.name}, existing!=null={existing != null}, existing.isPlaying={existing != null && existing.isPlaying}");
 			return existing;
@@ -684,7 +684,7 @@ public class SoundManager : MonoBehaviour
 			return null;
 		}
 
-		//루프 사운드는 유닛당 1개 보장이 이미 activeLoopSounds로 돼있어 폴리포니 체크 생략(bypassPolyphony=true) —
+		//루프 사운드는 유닛당 1개 보장이 이미 _activeLoopSounds로 돼있어 폴리포니 체크 생략(bypassPolyphony=true) —
 		//안 그러면 maxConcurrent 초과 시 다른 유닛의 루프가 dropOldest로 멋대로 꺼지는 문제가 있었음.
 		AudioSource source = AcquireSFX3DSource(type, data, targetTr, bypassPolyphony: true);
 		if (source == null)
@@ -707,7 +707,7 @@ public class SoundManager : MonoBehaviour
 		source.Play();
 		//Debug.Log($"[SoundManager-DEBUG] PlaySFX3DLoop 신규생성: type={type}, target={targetTr?.name}, clip={source.clip?.name}, startVolume={source.volume:F3}, isPlaying={source.isPlaying}");
 
-		activeLoopSounds.Add(key, source);
+		_activeLoopSounds.Add(key, source);
 		return source;
 	}
 
@@ -716,21 +716,21 @@ public class SoundManager : MonoBehaviour
 	// 엔진 루프음(공회전/가속/부스트) 크로스페이드 갱신.
 	// Unit.cs가 매 프레임 speedRatio(0~1)/isBoosting/mute만 계산해서 넘기고,
 	// 실제 볼륨·피치 곡선은 engineSoundConfig 기준으로 여기서 전부 처리(RTPC 스타일 분리).
-	// 대상 AudioSource는 PlaySFX3DLoop()로 이미 걸어둔 activeLoopSounds에서 직접 조회.
+	// 대상 AudioSource는 PlaySFX3DLoop()로 이미 걸어둔 _activeLoopSounds에서 직접 조회.
 	// =====================================================================
 	private HashSet<Transform> _engineLoopMissingWarned = new HashSet<Transform>();
 
 	public void UpdateEngineLoopVolumes(Transform targetTr, float speedRatio, bool isBoosting, bool mute = false)
 	{
-		activeLoopSounds.TryGetValue((targetTr, SOUND_TYPE.SFX_IDLE), out AudioSource idle);
-		activeLoopSounds.TryGetValue((targetTr, SOUND_TYPE.SFX_MOVING), out AudioSource thrust);
-		activeLoopSounds.TryGetValue((targetTr, SOUND_TYPE.SFX_BOOST), out AudioSource boost);
+		_activeLoopSounds.TryGetValue((targetTr, SOUND_TYPE.SFX_IDLE), out AudioSource idle);
+		_activeLoopSounds.TryGetValue((targetTr, SOUND_TYPE.SFX_MOVING), out AudioSource thrust);
+		_activeLoopSounds.TryGetValue((targetTr, SOUND_TYPE.SFX_BOOST), out AudioSource boost);
 
 		// 셋 다 못 찾으면(루프가 애초에 등록 안 됐으면) 매 프레임 대신 유닛당 1번만 경고
 		if (idle == null && thrust == null && boost == null && !_engineLoopMissingWarned.Contains(targetTr))
 		{
 			_engineLoopMissingWarned.Add(targetTr);
-			Debug.Log($"[SoundManager-DEBUG] UpdateEngineLoopVolumes 루프없음: target={targetTr?.name} — activeLoopSounds에 이 유닛의 SFX_IDLE/MOVING/BOOST가 전혀 등록 안 돼있음");
+			Debug.Log($"[SoundManager-DEBUG] UpdateEngineLoopVolumes 루프없음: target={targetTr?.name} — _activeLoopSounds에 이 유닛의 SFX_IDLE/MOVING/BOOST가 전혀 등록 안 돼있음");
 		}
 
 		if (mute)
@@ -779,7 +779,7 @@ public class SoundManager : MonoBehaviour
 	{
 		var key = (targetTr, type);
 		//해당 (트랜스폼,타입) 조합으로 재생 중인 루프 사운드가 있는지 확인 및 가져오기
-		if (activeLoopSounds.TryGetValue(key, out AudioSource source))
+		if (_activeLoopSounds.TryGetValue(key, out AudioSource source))
 		{
 			//source가 이미 파괴된 상태일 수 있음(예외 시에도 키는 반드시 제거해야 캐스케이드 방지)
 			if (source != null)
@@ -797,7 +797,7 @@ public class SoundManager : MonoBehaviour
 			}
 
 			//루프 사운드 추적 딕셔너리에서 해당 항목 제거
-			activeLoopSounds.Remove(key);
+			_activeLoopSounds.Remove(key);
 		}
 	}
 	// 모든 사운드(BGM 및 2D SFX) 정지

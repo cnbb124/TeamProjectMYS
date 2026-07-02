@@ -7,7 +7,7 @@ using UnityEngine;
 // WeaponSystem과 같은 자리에 위치.
 // 이 캐릭터가 배운 스킬 전체(_ownedSkills) + 액티브 스킬 핫바(slots) + 사용을 전부 담당.
 // 스킬 자체(Skill/ActiveSkill)는 MonoBehaviour가 아닌 순수 객체라 GameObject에 붙일 필요 없음.
-// 매 프레임 Update()가 slots[]를 돌며 ActiveSkill.Tick()을 호출 — 코루틴 없이 Time.time 비교로
+// 매 프레임 Update()가 slots[]를 돌며 ActiveSkill.UpdateSkill()을 호출 — 코루틴 없이 Time.time 비교로
 // 지속시간 있는 스킬(워프 채널링 등)을 처리하기 위함.
 //
 //   LearnSkill(SkillData)            스킬 배움. CanLearnSkill 통과 시 SkillData.CreateSkill()로
@@ -34,16 +34,22 @@ public class SkillSystem : MonoBehaviour
 	public ActiveSkill[] slots = new ActiveSkill[SLOT_COUNT];
 
 	[Header("현재 장착된 스킬 (디버그 표시용, 읽기전용)")]
-	[SerializeField] private string[] equippedSkillNames = new string[SLOT_COUNT];
+	[SerializeField]
+	private string[] _equippedSkillNames = new string[SLOT_COUNT];
 
 	[Header("시작부터 보유한 스킬 (테스트/기본 지급용)")]
 	[Tooltip("Start() 시 전부 LearnSkill() 호출됨. 레벨업/상점 등 정식 트리거 생기면 그쪽에서 추가 호출.")]
-	[SerializeField] private List<SkillData> startingSkills = new List<SkillData>();
+	[SerializeField]
+	private List<SkillData> _startingSkills = new List<SkillData>();
 
-	[Header("MYSSkill(미사일 연발) 전용 고정 발사위치")]
+	[Header("스킬용 Positions")]
 	[Tooltip("사일로 발사위치 Transform(좌표 전용, 컴포넌트 불필요). 장비 파츠(WeaponSystem 발사위치)와 무관한 고정 위치 — 유닛 프리팹에서 직접 연결.")]
-	[SerializeField] private List<Transform> mysSiloPositions = new List<Transform>();
-
+	[SerializeField]
+	private List<Transform> _mysSiloPositions = new List<Transform>();
+	[SerializeField]
+	private Transform _laserFirePosition;
+	[SerializeField]
+	private Transform _laserChargePosition;
 	// 인스펙터 수동연결 아님 — Start()에서 GetComponentInChildren로 자동 탐색.
 	[SerializeField]
 	[Tooltip("스킬전용 애니메이터")]
@@ -53,7 +59,23 @@ public class SkillSystem : MonoBehaviour
 	{
 		get
 		{
-			return mysSiloPositions;
+			return _mysSiloPositions;
+		}
+	}
+
+	public Transform LaserFirePosition
+	{
+		get
+		{
+			return _laserFirePosition;
+		}
+	}
+
+	public Transform LaserChargePosition
+	{
+		get
+		{
+			return _laserChargePosition;
 		}
 	}
 
@@ -78,9 +100,9 @@ public class SkillSystem : MonoBehaviour
 	private void Start()
 	{
 		
-		for (int i = 0; i < startingSkills.Count; i++)
+		for (int i = 0; i < _startingSkills.Count; i++)
 		{
-			LearnSkill(startingSkills[i]);
+			LearnSkill(_startingSkills[i]);
 		}
 	}
 
@@ -121,7 +143,7 @@ public class SkillSystem : MonoBehaviour
 			if (freeIndex >= 0)
 			{
 				slots[freeIndex] = activeSkill;
-				equippedSkillNames[freeIndex] = activeSkill.GetType().Name;
+				_equippedSkillNames[freeIndex] = activeSkill.GetType().Name;
 			}
 		}
 
@@ -131,7 +153,7 @@ public class SkillSystem : MonoBehaviour
 	public void SwitchSlot()
 	{
 		_currentSlotIndex = (_currentSlotIndex + 1) % SLOT_COUNT;
-		Debug.Log("[SkillSystem] Skill slot -> " + _currentSlotIndex + " : " + (slots[_currentSlotIndex] != null ? equippedSkillNames[_currentSlotIndex] : "없음"));
+		Debug.Log("[SkillSystem] Skill slot -> " + _currentSlotIndex + " : " + (slots[_currentSlotIndex] != null ? _equippedSkillNames[_currentSlotIndex] : "없음"));
 	}
 
 	public bool UseCurrentSlot()
@@ -184,7 +206,7 @@ public class SkillSystem : MonoBehaviour
 		for (int i = 0; i < SLOT_COUNT; i++)
 		{
 			slots[i] = null;
-			equippedSkillNames[i] = null;
+			_equippedSkillNames[i] = null;
 		}
 
 		if (saved == null)
@@ -207,7 +229,7 @@ public class SkillSystem : MonoBehaviour
 			if (activeSkill != null && IsValidIndex(saved[i].slotIndex))
 			{
 				slots[saved[i].slotIndex] = activeSkill;
-				equippedSkillNames[saved[i].slotIndex] = activeSkill.GetType().Name;
+				_equippedSkillNames[saved[i].slotIndex] = activeSkill.GetType().Name;
 			}
 		}
 

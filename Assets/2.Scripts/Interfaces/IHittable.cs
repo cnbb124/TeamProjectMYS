@@ -5,6 +5,9 @@ using UnityEngine;
 public interface IHittable
 {
 	void OnHitReaction(HitInfo info);
+	// 레이저 등 관통 판정에서 이 대상이 빔을 막는지. true면 데미지를 준 뒤 관통을 중단(뒤 대상 보호).
+	// 벽/거대몹(보스·전함)/파괴가능 장애물 등. 일반 적은 false(관통됨).
+	bool BlocksBeam { get; }
 }
 
 

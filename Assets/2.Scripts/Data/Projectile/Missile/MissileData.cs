@@ -18,8 +18,6 @@ public class MissileData : ProjectileData
 	public float turnRate = 120f;
 	[Tooltip("발사 직후 직진 유지 거리. 이 거리 전엔 유도(Steer) 안 하고 직진만 함.")]
 	public float straightFlightDistance = 5.0f;
-	[Tooltip("비례항법 계수 (1~5). 클수록 예측 추적 강화. 3 권장.")]
-	public float navGain = 3f;
 	[Tooltip("발사 시 기체 속도(curSpeed)에 더해질 추가 시작 속도. 최종 시작속도 = clamp(curSpeed + 이 값, 1, maxSpeed).")]
 	public float launchSpeedBonus = 10f;
 	[Tooltip("최대 도달 속도")]

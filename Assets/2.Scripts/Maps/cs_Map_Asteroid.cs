@@ -49,6 +49,10 @@ public class cs_Map_Asteroid : MonoBehaviour, IDamageable
     {
         VFXManager.Instance.PlayEffectAtPosition(info.hitVfxType, info.hitPosition, Quaternion.identity);
     }
+
+
+    public bool BlocksBeam => true;
+
     public void TakeDamage(float dmg)
     {
         if (isDead) return;

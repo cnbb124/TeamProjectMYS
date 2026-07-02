@@ -58,6 +58,10 @@ public class Missile : Projectile, IExplodable
 	private Collider[] _explosionHits = new Collider[30]; //맞은것들 콜라이더 체크할배열 필요하면 스타트나 이닛쪽으로
 	private HashSet<IDamageable> _damagedTargets = new HashSet<IDamageable>(); //중복데미지를 방지하기위한 해쉬셋
 
+	// 폭발 판정 레이어마스크.
+
+	private int _hitBoxMask;
+
 	[Space(5)]
 	[HideInInspector]
 	//[Header("<size=14>=====유도 설정=====</size>")]
@@ -68,10 +72,6 @@ public class Missile : Projectile, IExplodable
 	[Tooltip("발사 직후 직진 유지 거리. 이 거리 전엔 유도(Steer) 안 하고 직진만 함.")]
 	public float straightFlightDistance = 5.0f;
 
-	[HideInInspector]
-	//[Tooltip("비례항법 계수 (1~5). 클수록 예측 추적 강화. 3 권장.")]
-	[Range(1f, 5f)]
-	public float navGain = 3f;
 
 	
 	[Header("락온되는 목표(확인용)")]
@@ -123,6 +123,11 @@ public class Missile : Projectile, IExplodable
 		dmgType = DAMAGE_TYPE.EXPLOSION;
 		projectileType = PROJECTILE_TYPE.MISSILE;
 
+		// 레이어마스크 첫 미사일 1회만 실제 계산,
+		
+		_hitBoxMask = LayerMask.GetMask("HitBox");
+		
+
 		// 미사일은 hitSoundType 미사용(폭발음은 explosionSoundType이 담당, 같이 쓰면 중복재생).
 		// Projectile.hitSoundType 기본값(enum 0번=BGM_LOBBY)이 그대로 남는 걸 막기 위해 명시적으로 고정.
 		hitSoundType = SOUND_TYPE.SFX_NONE;
@@ -148,7 +153,6 @@ public class Missile : Projectile, IExplodable
 			accelerateTime = missileData.accelerateTime;
 			turnRate = missileData.turnRate;
 			straightFlightDistance = missileData.straightFlightDistance;
-			navGain = missileData.navGain;
 			explosionRadius = missileData.explosionRadius;
 			vfxBaseRadius = missileData.vfxBaseRadius;
 			baseDamage = missileData.damage;
@@ -297,8 +301,7 @@ public class Missile : Projectile, IExplodable
 		VFXManager.Instance.PlayEffectAtPosition(explodeEffectType, transform.position, Quaternion.identity, 0f, Vector3.one * vfxRatio);
 		SoundManager.Instance.PlaySFX3DAtPosition(explosionSoundType, transform.position);
 		//맞은것들의 충돌박스 갯수 카운트
-		int hitMask = LayerMask.GetMask("HitBox");
-		int hitCount = Physics.OverlapSphereNonAlloc(transform.position, explosionInfo.explosionRadius, _explosionHits, hitMask);
+		int hitCount = Physics.OverlapSphereNonAlloc(transform.position, explosionInfo.explosionRadius, _explosionHits, _hitBoxMask);
 
 
 		//int hitCount = Physics.OverlapSphereNonAlloc(transform.position, explosionInfo.explosionRadius, explosionHits);
