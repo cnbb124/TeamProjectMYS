@@ -1163,7 +1163,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 2100000, guid: 579dd04ecd4abf14aa136886c4a7e26f, type: 2}
-  m_Color: {r: 1, g: 0.73333335, b: 0, a: 1}
+  m_Color: {r: 1, g: 0.16985261, b: 0.1462264, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -3236,15 +3236,16 @@ RectTransform:
   m_GameObject: {fileID: 4630524723508340984}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 1.5, y: 1.5, z: 1.5}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 1260526840764777540}
   m_Father: {fileID: 4022305889559465898}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0.5}
   m_AnchorMax: {x: 0, y: 0.5}
   m_AnchoredPosition: {x: 2.5, y: 0}
-  m_SizeDelta: {x: 5, y: 18}
+  m_SizeDelta: {x: 20, y: 18}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &6674035260883921910
 CanvasRenderer:
@@ -3274,7 +3275,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: f87dd1b8444594244a68b9cfe93adf7c, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 986a25617be747d47b9d0b2d0a97b76b, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -3689,6 +3690,81 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!1 &5695948302985947939
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1260526840764777540}
+  - component: {fileID: 185968403727248453}
+  - component: {fileID: 4635708008472619253}
+  m_Layer: 5
+  m_Name: Image
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &1260526840764777540
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5695948302985947939}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1175230168376452127}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 19, y: 17}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!222 &185968403727248453
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5695948302985947939}
+  m_CullTransparentMesh: 1
+--- !u!114 &4635708008472619253
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5695948302985947939}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: 21300000, guid: f255d0a906086b04886da84f34f94d6e, type: 3}
+  m_Type: 0
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 1
 --- !u!1 &5726119919707358204
 GameObject:
   m_ObjectHideFlags: 0
@@ -3840,21 +3916,6 @@ MonoBehaviour:
     label: {fileID: 6843626766079592643}
   - button: {fileID: 7172998879669923864}
     label: {fileID: 6244078600247791612}
-  onAffinityChanged:
-    m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 744426515558719344, guid: bc5586a2123a9804dab0fb0ad8b48ac6, type: 3}
-        m_TargetAssemblyTypeName: AffinityStatusUI, Assembly-CSharp
-        m_MethodName: Refresh
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
 --- !u!1 &5925651900389260707
 GameObject:
   m_ObjectHideFlags: 0
@@ -6005,8 +6066,8 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4278238207
-  m_fontColor: {r: 1, g: 0.73333335, b: 0, a: 1}
+    rgba: 4280626175
+  m_fontColor: {r: 1, g: 0.16862746, b: 0.14509805, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
@@ -7279,6 +7340,46 @@ PrefabInstance:
       propertyPath: tierNameText
       value: 
       objectReference: {fileID: 1908424900816432792}
+    - target: {fileID: 744426515558719344, guid: bc5586a2123a9804dab0fb0ad8b48ac6, type: 3}
+      propertyPath: markerGradient.key0.b
+      value: 0.8696964
+      objectReference: {fileID: 0}
+    - target: {fileID: 744426515558719344, guid: bc5586a2123a9804dab0fb0ad8b48ac6, type: 3}
+      propertyPath: markerGradient.key0.g
+      value: 0.7528302
+      objectReference: {fileID: 0}
+    - target: {fileID: 744426515558719344, guid: bc5586a2123a9804dab0fb0ad8b48ac6, type: 3}
+      propertyPath: markerGradient.key0.r
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 744426515558719344, guid: bc5586a2123a9804dab0fb0ad8b48ac6, type: 3}
+      propertyPath: markerGradient.key2.b
+      value: 0.34803572
+      objectReference: {fileID: 0}
+    - target: {fileID: 744426515558719344, guid: bc5586a2123a9804dab0fb0ad8b48ac6, type: 3}
+      propertyPath: markerGradient.key2.g
+      value: 0.11792451
+      objectReference: {fileID: 0}
+    - target: {fileID: 744426515558719344, guid: bc5586a2123a9804dab0fb0ad8b48ac6, type: 3}
+      propertyPath: markerGradient.key3.b
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 744426515558719344, guid: bc5586a2123a9804dab0fb0ad8b48ac6, type: 3}
+      propertyPath: markerGradient.key3.g
+      value: 0.008944723
+      objectReference: {fileID: 0}
+    - target: {fileID: 744426515558719344, guid: bc5586a2123a9804dab0fb0ad8b48ac6, type: 3}
+      propertyPath: markerGradient.key4.b
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 744426515558719344, guid: bc5586a2123a9804dab0fb0ad8b48ac6, type: 3}
+      propertyPath: markerGradient.key4.g
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 744426515558719344, guid: bc5586a2123a9804dab0fb0ad8b48ac6, type: 3}
+      propertyPath: markerGradient.key4.r
+      value: 0.6792453
+      objectReference: {fileID: 0}
     - target: {fileID: 2726552173765417236, guid: bc5586a2123a9804dab0fb0ad8b48ac6, type: 3}
       propertyPath: m_LocalScale.x
       value: 1920
