@@ -94,12 +94,14 @@ public class ShipLanding : MonoBehaviour
         currentState = State.Landed;
     }
 
-    public void PlayTakeoff()
+    /// <summary>착지 완료 상태일 때만 이륙을 시작함. 반환값: 이륙이 실제로 시작됐는지 여부</summary>
+    public bool PlayTakeoff()
     {
-        if (currentState != State.Landed) return; // 착지 완료 상태가 아니면 무시
+        if (currentState != State.Landed) return false; // 착지 완료 상태가 아니면 무시
         if (currentRoutine != null) StopCoroutine(currentRoutine);
         currentState = State.TakingOff;
         currentRoutine = StartCoroutine(TakeoffSequence());
+        return true;
     }
 
     // Phase 1: 가라앉았던 Y를 landedPose 높이로 되돌림 (착륙 settle의 역재생)

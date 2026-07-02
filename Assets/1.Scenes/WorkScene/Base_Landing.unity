@@ -582,7 +582,7 @@ Transform:
   m_GameObject: {fileID: 251658645}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: -0.99904823, z: 0, w: 0.043619502}
-  m_LocalPosition: {x: 4, y: 0, z: 7}
+  m_LocalPosition: {x: 4, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1117,7 +1117,7 @@ MonoBehaviour:
   landedPose: {fileID: 459230794}
   offscreenPoint: {fileID: 251658646}
   takeoffDistance: 60
-  landingDuration: 4
+  landingDuration: 3
   takeoffDuration: 1
   takeoffKey: 293
   landingPositionCurve:
@@ -1157,8 +1157,8 @@ MonoBehaviour:
       inWeight: 0
       outWeight: 0
     - serializedVersion: 3
-      time: 0.6625153
-      value: -0.0047138864
+      time: 0.49584353
+      value: -0.0023335153
       inSlope: 0
       outSlope: 0
       tangentMode: 0
@@ -1210,7 +1210,7 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
-  settleOffsetY: -0.3
+  settleOffsetY: -0.5
   descendDuration: 1.2
   descendCurve:
     serializedVersion: 2

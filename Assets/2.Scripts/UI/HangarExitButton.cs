@@ -45,8 +45,15 @@ public class HangarExitButton : MonoBehaviour
             return;
         }
 
-        exitTriggered = true;
-        shipLanding.PlayTakeoff(); // 착지 상태가 아니면 내부에서 자동으로 무시됨
+        bool started = shipLanding.PlayTakeoff();
+        if (started)
+        {
+            exitTriggered = true; // 실제로 이륙이 시작됐을 때만 잠금
+        }
+        else
+        {
+            Debug.Log("[HangarExitButton] 아직 착지 중이라 이륙할 수 없습니다. 착지 완료 후 다시 눌러주세요.");
+        }
     }
 
     /// <summary>이륙 연출이 끝나면 ShipLanding에서 호출됨.</summary>
