@@ -105,9 +105,11 @@ public class GameManager : MonoBehaviour
     public bool IsPaused   { get; private set; }
     public bool IsGameOver { get; private set; }
 
-    // =====================================================================
-    // Player 레퍼런스 (씬 로드 후 자동 캐싱)
-    // =====================================================================
+	// =====================================================================
+	// Player 레퍼런스 (씬 로드 후 자동 캐싱)
+	// =====================================================================
+	[Header("━━━━플레이어 연결상태(자동)━━━━")]
+	[Tooltip("씬 로드 후 자동캐싱")]
     public Player playerRef;
 
     // =====================================================================
@@ -133,7 +135,7 @@ public class GameManager : MonoBehaviour
     // 페이드 연출
     // =====================================================================
     [Header("━━━━━━ 페이드 설정 ━━━━━━")]
-    [Tooltip("페이드 연출용 CanvasGroup. GameManager 자식 Canvas에 부착. null이면 페이드 스킵.")]
+    [Tooltip("페이드 연출용 CanvasGroups. GameManager 자식 Canvas/Image 부착. null이면 페이드 스킵.")]
     [SerializeField] private UnityEngine.UI.Image _fadeImage;
     [Tooltip("페이드 인/아웃 시간 (초)")]
     public float fadeDuration = 0.5f;
@@ -273,6 +275,11 @@ public class GameManager : MonoBehaviour
 
     private IEnumerator FadeIn()
     {
+        // [임시 진단] 페이드인 안 되는 원인 확인 — 호출 여부/이미지 null/활성/알파 로그
+        //Debug.Log($"[GameManager] FadeIn 호출: _fadeImage null={_fadeImage == null}, " +
+        //    $"active={(_fadeImage != null && _fadeImage.gameObject.activeInHierarchy)}, " +
+        //    $"alpha={(_fadeImage != null ? _fadeImage.color.a : -1f)}");
+
         if (_fadeImage == null)
         {
             yield break;

@@ -231,12 +231,12 @@ public abstract class Projectile : MonoBehaviour
     protected virtual void OnHit(Collider other)
     {
         //디버그용
-        IDamageable target = other.GetComponentInParent<IDamageable>();
-        Unit unit = target as Unit;
-        string targetName = (target as MonoBehaviour)?.gameObject.name ?? other.gameObject.name;
-		string hp = unit != null ? unit.curHpRemaining.ToString() : "N/A";
-		string shield = unit != null ? unit.curShieldRemaining.ToString() : "N/A";
-		Debug.Log($"[OnHit] 피격 대상: {targetName} | 레이어: {LayerMask.LayerToName(other.gameObject.layer)} | HP: {hp} | SHIELD : {shield}");
+  //      IDamageable target = other.GetComponentInParent<IDamageable>();
+  //      Unit unit = target as Unit;
+  //      string targetName = (target as MonoBehaviour)?.gameObject.name ?? other.gameObject.name;
+		//string hp = unit != null ? unit.curHpRemaining.ToString() : "N/A";
+		//string shield = unit != null ? unit.curShieldRemaining.ToString() : "N/A";
+		//Debug.Log($"[OnHit] 피격 대상: {targetName} | 레이어: {LayerMask.LayerToName(other.gameObject.layer)} | HP: {hp} | SHIELD : {shield}");
     }
 
 
@@ -256,14 +256,14 @@ public abstract class Projectile : MonoBehaviour
         // 데미지를 받을 수 없는 대상(벽 등)이면 데미지 로직 생략
         if (target == null)
         {
-            Debug.Log("ApplyDamage 상대가 null");
+            Debug.Log("ApplyDamage : 피격 상대가 데미지 받지 않는 종류");
             return;
         }
 
         // 아군 타격 방지
         if (IsSameTeam(target as Unit))
         {
-            Debug.Log("ApplyDamage 상대가 같은팀");
+            //Debug.Log("ApplyDamage 상대가 같은팀");
             return;
         }
 		//Debug.Log("ApplyDamage 실제 데미지발생");
@@ -294,37 +294,37 @@ public abstract class Projectile : MonoBehaviour
     /// <param name="targetCollider"> 피격대상의 collider정보</param>
     /// <param name="damage"> 계산된 최종 데미지</param>
     /// <param name="currentDmgType"> 데미지 타입정보</param>
-    protected void ApplyDamage(IDamageable target, Collider targetCollider, int damage, DAMAGE_TYPE currentDmgType)
-    {
-        // 데미지를 받을 수 없는 대상(벽 등)이면 데미지 로직 생략
-        if (target == null)
-        {
-            Debug.Log("ApplyDamage 상대가 null");
-            return;
-        }
+  //  protected void ApplyDamage(IDamageable target, Collider targetCollider, int damage, DAMAGE_TYPE currentDmgType)
+  //  {
+  //      // 데미지를 받을 수 없는 대상(벽 등)이면 데미지 로직 생략
+  //      if (target == null)
+  //      {
+  //          Debug.Log("ApplyDamage 상대가 null");
+  //          return;
+  //      }
 
-        // 아군 타격 방지
-        if (IsSameTeam(target as Unit))
-        {
-            Debug.Log("ApplyDamage 상대가 같은팀");
-            return;
-        }
-		HitInfo hitInfo = new HitInfo
-		{
-            type = currentDmgType,
-            damageAmount = damage,
-            isCritical = _critical,
-            hitPosition = targetCollider.ClosestPoint(transform.position),
-            hitDiriection = (targetCollider.ClosestPoint(transform.position) - transform.position).normalized,
-            attacker = this.attacker != null ? this.attacker.gameObject : null,
-            hitSoundType = this.hitSoundType,
-            hitVfxType = this.hitVfxType,
-            shieldHitVfxType = this.shieldHitVfxType,
-            ignoreArmor = this.ignoreArmor,
-            shieldDamageMultiplier = this.shieldDamageMultiplier
-        };
-        target.TakeDamage(hitInfo);
-    }
+  //      // 아군 타격 방지
+  //      if (IsSameTeam(target as Unit))
+  //      {
+  //          Debug.Log("ApplyDamage 상대가 같은팀");
+  //          return;
+  //      }
+		//HitInfo hitInfo = new HitInfo
+		//{
+  //          type = currentDmgType,
+  //          damageAmount = damage,
+  //          isCritical = _critical,
+  //          hitPosition = targetCollider.ClosestPoint(transform.position),
+  //          hitDiriection = (targetCollider.ClosestPoint(transform.position) - transform.position).normalized,
+  //          attacker = this.attacker != null ? this.attacker.gameObject : null,
+  //          hitSoundType = this.hitSoundType,
+  //          hitVfxType = this.hitVfxType,
+  //          shieldHitVfxType = this.shieldHitVfxType,
+  //          ignoreArmor = this.ignoreArmor,
+  //          shieldDamageMultiplier = this.shieldDamageMultiplier
+  //      };
+  //      target.TakeDamage(hitInfo);
+  //  }
 
     /// <summary>
     /// AOE 스플뎀 전용. 폭발 중심 좌표와 반경을 함께 전달해 파츠 범위 피격 처리.

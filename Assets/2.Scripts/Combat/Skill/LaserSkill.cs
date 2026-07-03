@@ -130,6 +130,7 @@ public class LaserSkill : ActiveSkill
 		}
 
 		float beamEnd = Data.range;   // 막는 게 없으면 최대 사거리까지
+		bool blocked = false;         // BlocksBeam 대상에 실제로 막혔는지(허공 max range면 false → 빔끝 impact 끔)
 
 		for (int i = 0; i < count; i++)
 		{
@@ -191,18 +192,17 @@ public class LaserSkill : ActiveSkill
 			if (hittable.BlocksBeam)
 			{
 				beamEnd = hit.distance;
+				blocked = true;
 				break;
 			}
 		}
-
-		// [임시 진단] impact가 총구에 붙는 문제 원인 확인용 — beamEnd/첫히트/beamVisual 상태 로그
-		string firstHit = count > 0 ? $"{_hitBuffer[0].collider.name}(dist={_hitBuffer[0].distance:F2}, layer={LayerMask.LayerToName(_hitBuffer[0].collider.gameObject.layer)})" : "없음";
-		Debug.Log($"[LaserSkill-DEBUG] beamEnd={beamEnd:F1}, count={count}, firstHit={firstHit}, beamVisual={( _beamVisual != null )}");
 
 		// 빔 시각 길이 = 판정 끝점(막힌 지점 또는 최대 사거리) → 시각과 데미지 사거리 일치
 		if (_beamVisual != null)
 		{
 			_beamVisual.SetLength(beamEnd);
+			// 실제로 막힌 경우(BlocksBeam)만 빔끝 impact 표시. 허공 max range면 꺼서 공중에 안 뜨게.
+			_beamVisual.SetImpactActive(blocked);
 		}
 	}
 

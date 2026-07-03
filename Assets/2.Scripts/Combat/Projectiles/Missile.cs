@@ -110,6 +110,8 @@ public class Missile : Projectile, IExplodable
 	private float _aliveTime = 0f;
 	//락온타겟 이전좌표(추적용)
 	private Vector3 _prevTargetPos;
+	//락온 발사 여부. true인데 타겟이 사망/파괴/비활성되면 그 자리서 즉시 폭발(락온 안 한 미사일은 그대로 사거리 끝까지).
+	private bool _hadTarget;
 
 	//계산된 미사일의 추진 속도
 	private float _thrustSpeed;
@@ -174,6 +176,7 @@ public class Missile : Projectile, IExplodable
 		curSpeed = 0f;
 
 		//타겟이 있을경우. 타겟의 전 좌표 초기화
+		_hadTarget = (targetTr != null);   // 락온 발사 여부 기록(즉시폭발 판정용)
 		if (targetTr != null)
 		{
 			_prevTargetPos = targetTr.position;
@@ -201,6 +204,15 @@ public class Missile : Projectile, IExplodable
 		//프레임따른 튐현상방지
 		if (Time.deltaTime <= 0f)
 		{
+			return;
+		}
+
+		// 락온 발사 미사일인데 타겟이 사망/파괴/비활성 → 그 자리서 즉시 폭발.
+		// targetTr==null(파괴)을 단락평가로 먼저 봐서 .gameObject 접근 전 걸러짐(NRE 방지). 비활성(풀 사망)은 activeInHierarchy로 포착.
+		if (_hadTarget && (targetTr == null || !targetTr.gameObject.activeInHierarchy))
+		{
+			Explode(explosionInfo);
+			ReturnToPool();
 			return;
 		}
 

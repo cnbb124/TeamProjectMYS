@@ -102,8 +102,8 @@ public class Bullet : Projectile
 			hitPosition = hitPos,
 			hitDiriection = (hitPos - transform.position).normalized,
 			attacker = attacker != null ? attacker.gameObject : null,
-			hitVfxType = hitVfxType,
-			shieldHitVfxType = shieldHitVfxType,
+			hitVfxType = this.hitVfxType,
+			shieldHitVfxType = this.shieldHitVfxType,
 		};
 	}
 

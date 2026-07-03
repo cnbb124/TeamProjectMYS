@@ -77,6 +77,10 @@ public class LaserBeamVisual : MonoBehaviour
 		{
 			_muzzleBaseScale = _muzzlePoint.localScale;
 		}
+		if (_visual != null)
+		{
+			_visualBaseRotation = _visual.localRotation;
+		}
 	}
 
 	/// <summary>
@@ -109,6 +113,12 @@ public class LaserBeamVisual : MonoBehaviour
 		_width = width;
 		ApplyScale();
 
+		// 발사 시작마다 회전을 base로 리셋(풀 재사용 시 이전 발사의 누적 회전 제거).
+		if (_visual != null)
+		{
+			_visual.localRotation = _visualBaseRotation;
+		}
+
 		// flare/muzzle 크기도 두께 비례로 (base 폭 1 기준 authored 스케일 × width)
 		if (_scaleEndpointsWithWidth)
 		{
@@ -120,6 +130,19 @@ public class LaserBeamVisual : MonoBehaviour
 			{
 				_muzzlePoint.localScale = _muzzleBaseScale * width;
 			}
+		}
+	}
+
+	/// <summary>
+	/// 빔 끝(타격점) 이펙트 표시 여부. LaserSkill이 매 프레임 호출 —
+	/// BlocksBeam 대상에 실제로 막혔을 때만 true(허공 max range면 false로 공중에 안 뜨게).
+	/// 파티클 재시작을 막기 위해 상태가 바뀔 때만 SetActive.
+	/// </summary>
+	public void SetImpactActive(bool active)
+	{
+		if (_impactPoint != null && _impactPoint.gameObject.activeSelf != active)
+		{
+			_impactPoint.gameObject.SetActive(active);
 		}
 	}
 
@@ -141,10 +164,11 @@ public class LaserBeamVisual : MonoBehaviour
 			ApplyUV();
 			
 		}
-		if (_spinSpeed > 0)
+		// 빔 축(Z) 기준 회전 — 크로스 단면이 빙빙 돎. 음수면 반대방향. x=y(두께 균등)라 스큐 없음.
+		if (_spinSpeed != 0f && _visual != null)
 		{
-			_visual.Rotate(0, 0, _spinSpeed * Time.deltaTime, Space.Self);
-			}
+			_visual.Rotate(0f, 0f, _spinSpeed * Time.deltaTime, Space.Self);
+		}
 	}
 
 	// 길이비례 타일링 + 스크롤을 MaterialPropertyBlock으로 각 몸통 렌더러에 적용.
