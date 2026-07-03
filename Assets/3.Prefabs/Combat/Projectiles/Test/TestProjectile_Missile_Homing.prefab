@@ -116,22 +116,25 @@ MonoBehaviour:
   maxRange: 0
   dmgType: 0
   hitSoundType: 0
+  hitVfxType: 100
+  shieldHitVfxType: 101
+  ignoreArmor: 0
+  shieldDamageMultiplier: 1
   baseDamage: 0
   curDamage: 0
   attacker: {fileID: 0}
   projectileType: 0
-  missileData: {fileID: 11400000, guid: 2652fd978459f5a44aad1cc7fa6033a7, type: 2}
+  missileData: {fileID: 0}
   explosionRadius: 8
   vfxBaseRadius: 8
   turnRate: 120
-  armDistance: 5
-  navGain: 3
+  straightFlightDistance: 5
   targetTr: {fileID: 0}
-  launchSpeed: 10
   maxSpeed: 0
   curSpeed: 0
   accelerateTime: 0.8
   explosionSoundType: 0
+  explodeEffectType: 0
 --- !u!114 &4691003704483487009
 MonoBehaviour:
   m_ObjectHideFlags: 0

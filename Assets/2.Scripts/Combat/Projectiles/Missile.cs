@@ -44,7 +44,7 @@ public class Missile : Projectile, IExplodable
 	//[SerializeField]
 	//private int hitsArraySize = 30;
 	[Space(5)]
-	[Header("<size=22>[미사일 설정]</size>")]
+	[Header("<size=18>미사일 설정(출력용 인스펙터수정X)</size>")]
 	[Header("투사체 데이터(SO)")]
 	public MissileData missileData;
 	//[Header("폭발 범위 세팅")]
@@ -163,6 +163,13 @@ public class Missile : Projectile, IExplodable
 			explodeEffectType = missileData.explodeEffectType;
 			ignoreArmor = missileData.ignoreArmor;
 			shieldDamageMultiplier = missileData.shieldDamageMultiplier;
+		}
+		else
+		{
+			// missileData 없음 = 주입도 프리팹 폴백도 없음 → 스탯이 C# 기본값으로 발사됨.
+			// WeaponSystem/ClusterMissile.Split을 안 거치는 직접 Init 경로(MYSSkill/테스트 슈터 등)에서
+			// 데이터 주입이 빠지면 여기 걸림. 여기 뜨면 해당 호출부에서 missileData를 주입해야 함.
+			Debug.LogWarning($"[Missile] {name}: missileData 미주입(주입/프리팹 둘 다 없음) — 스탯 기본값으로 발사됨. 직접 Init 호출부에서 데이터 주입 필요.", this);
 		}
 
 

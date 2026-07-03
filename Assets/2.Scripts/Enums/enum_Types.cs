@@ -163,10 +163,13 @@ public enum SCENE_TYPE
 {
 	MAIN = 0,
 	STATION = 1,
-	LOADING_SEQUENCE = 2,   // ← 추가 (로딩 시퀀스 씬)
-	MAP_SELECT = 3,   // ← 추가 (맵 선택 화면)
-	STAGE1 = 4,   // ← 기존 인덱스 밀릴 수 있음
-	GAME_OVER = 5,   // ← 기존 인덱스 밀릴 수 있음
+	STATION_1F,
+	STATION_B2,
+	LOADING_SEQUENCE = 20,   // ← 추가 (로딩 시퀀스 씬)
+	MAP_SELECT = 30,   // ← 추가 (맵 선택 화면)
+	STAGE1 = 50,   // ← 기존 인덱스 밀릴 수 있음
+
+	GAME_OVER = 999,   // ← 기존 인덱스 밀릴 수 있음
 }
 public enum INPUT_CONTROL_TYPE
 {

@@ -138,6 +138,10 @@ public class MYSSkill : ActiveSkill
 			return;
 		}
 
+		// [데이터 주입] MYSSkillData.missileData를 미사일에 주입 → 프리팹 값 대신 스킬 데이터로 스탯 결정.
+		// WeaponSystem/ClusterMissile.Split과 동일 방식. HOMING/CLUSTER 둘 다 같은 proj라 여기서 한 번만 세팅.
+		missile.missileData = data;
+
 		if (MYSSkillData.useMuzzleEffect)
 		{
 			_vfx.PlayEffectAtUnit(data.muzzleEffectType, _owner.transform, firePos.position, firePos.rotation, 0.2f);

@@ -56,6 +56,24 @@ public class ItemStack
 // ▶ 퀵슬롯 등록 (드래그앤드롭 등)
 //   AssignToQuickSlot(ItemData data, int slotIndex) : 소모품만 가능 (파츠 넘기면 경고 후 무시)
 //   예시) InventoryManager.Instance.AssignToQuickSlot(consumableData, 0);
+//
+// ▶ 장착 (UI 장착 버튼 → 여기만 호출. UnitParts/WeaponSystem을 직접 부르지 말 것)
+//   장착은 전부 InventoryManager를 경유합니다. 내부에서 RegisterPlayer로 받은 Player의
+//   UnitParts / WeaponSystem / QuickSlot으로 위임하므로, UI는 InventoryManager만 알면 됩니다.
+//
+//   EquipPart(PartData part)                                       : 파츠 장착 (part.partType 슬롯에)
+//   EquipMissile(int slotIndex, MISSILE_TYPE type, int maxAmmo, MissileData data) : 미사일 슬롯 장착
+//   EquipBullet(BulletData data)                                   : 총알 데이터 장착 (무한탄, 슬롯 없음)
+//   AssignToQuickSlot(ItemData data, int slotIndex)                : 소모품 → 퀵슬롯 (위 참조)
+//
+//   예시)
+//     InventoryManager.Instance.EquipPart(partData);
+//     InventoryManager.Instance.EquipMissile(0, MISSILE_TYPE.HOMING, 10, missileData);
+//     InventoryManager.Instance.EquipBullet(bulletData);
+//
+//   ※ 이 메서드들은 "장착만" 합니다. 장착 시 가방(items)에서도 빼야 하면 RemoveItem을 따로 호출하세요.
+//     (AssignToQuickSlot과 동일 정책 — 저장 관리와 장착을 분리)
+//   ※ Player가 아직 씬에 없으면(RegisterPlayer 전) 경고만 뜨고 무시됩니다.
 // ================================================================
 
 // =====================================================================
@@ -64,12 +82,15 @@ public class ItemStack
 // 역할:
 //   1. 골드 보유량 관리 (AddGold / SpendGold)
 //   2. 아이템(파츠, 소모품 등) 보유 목록 관리 (추가/제거/수량조회)
-//   3. QuickSlot 연동 (소모품 등록)
+//   3. 장착 라우팅 (파츠/미사일/총알/소모품을 각 시스템에 위임 — UI는 InventoryManager만 호출)
+//   4. Player 참조 캐싱 (RegisterPlayer — 장착 위임 대상)
 //
 // 연관 스크립트:
-//   ItemPickup.cs : 월드 드랍 아이템/골드 획득 시 AddItem/AddGold 호출
-//   QuickSlot.cs  : AssignToQuickSlot(등록) / ConsumeOne(사용) 호출
-//   SaveData.cs   : 저장 데이터 (위치: 2.Scripts/Data)
+//   ItemPickup.cs   : 월드 드랍 아이템/골드 획득 시 AddItem/AddGold 호출
+//   QuickSlot.cs    : AssignToQuickSlot(등록) / ConsumeOne(사용) 호출
+//   UnitParts.cs    : EquipPart -> Equip() 위임
+//   WeaponSystem.cs : EquipMissile/EquipBullet -> 위임
+//   SaveData.cs     : 저장 데이터 (위치: 2.Scripts/Data)
 // =====================================================================
 public class InventoryManager : MonoBehaviour
 {
@@ -270,6 +291,53 @@ public class InventoryManager : MonoBehaviour
             return;
         }
         _player.quickSlot.AssignSlot(slotIndex, consumable);
+    }
+
+    // ==================== 장착 연결 (Inventory -> 각 시스템 단방향) ====================
+    // 소모품(AssignToQuickSlot)과 동일하게, 장착은 InventoryManager를 경유해 각 시스템으로 라우팅.
+    // 인벤 UI는 InventoryManager만 알면 됨. (인벤 저장 add/remove는 별개 — 여기선 장착만 위임)
+
+    /// <summary>파츠 장착. part.partType 슬롯으로 Player의 UnitParts에 위임.</summary>
+    public void EquipPart(PartData part)
+    {
+        if (part == null)
+        {
+            return;
+        }
+        if (_player == null)
+        {
+            Debug.LogWarning("[Inventory] Player 참조 없음");
+            return;
+        }
+        UnitParts parts = _player.GetComponent<UnitParts>();
+        if (parts == null)
+        {
+            Debug.LogWarning("[Inventory] UnitParts 없음");
+            return;
+        }
+        parts.Equip(part.partType, part);
+    }
+
+    /// <summary>미사일 장착. Player의 WeaponSystem에 위임.</summary>
+    public void EquipMissile(int slotIndex, MISSILE_TYPE type, int maxAmmo, MissileData data)
+    {
+        if (_player == null || _player.weaponSystem == null)
+        {
+            Debug.LogWarning("[Inventory] Player 또는 WeaponSystem 참조 없음");
+            return;
+        }
+        _player.weaponSystem.EquipMissile(slotIndex, type, maxAmmo, data);
+    }
+
+    /// <summary>총알 데이터 장착. Player의 WeaponSystem에 위임(무한탄이라 슬롯/잔탄 없음).</summary>
+    public void EquipBullet(BulletData data)
+    {
+        if (_player == null || _player.weaponSystem == null)
+        {
+            Debug.LogWarning("[Inventory] Player 또는 WeaponSystem 참조 없음");
+            return;
+        }
+        _player.weaponSystem.EquipBullet(data);
     }
 
     // ==================== 내부 ====================

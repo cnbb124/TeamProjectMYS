@@ -92,6 +92,9 @@ public class ClusterMissile : Missile
 				target = _splitTargets[i % _splitTargets.Count];
 			}
 
+			// [데이터 주입] 자탄에 childrenMissileData 주입 → 자탄이 프리팹 박힌 값 대신 이 데이터로 스탯 결정.
+			// (WeaponSystem이 발사 미사일에 슬롯 데이터 주입하는 것과 동일한 일관성. _childrenMissileData는 위에서 null 체크됨.)
+			child.missileData = _childrenMissileData;
 			child.Init(transform.position, spreadDir, attacker, target);
 		}
 

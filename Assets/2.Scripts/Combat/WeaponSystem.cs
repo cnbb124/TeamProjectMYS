@@ -373,6 +373,14 @@ public class WeaponSystem : MonoBehaviour
 		}
 
 		Bullet newBullet = _pool.GetProjectile(GetBulletPoolType()) as Bullet;
+
+		// [데이터 주입] 장착한 curBulletData를 총알에 주입 → 프리팹 박힌 값 대신 이 데이터로 스탯/머즐/사운드 결정.
+		// (미사일 주입과 동일. curBulletData가 없으면(미장착) 프리팹 값 유지.)
+		if (newBullet != null && curBulletData != null)
+		{
+			newBullet.bulletData = curBulletData;
+		}
+
 		BulletData data = newBullet.bulletData;
 
 		if (_useBulletMuzzle)
@@ -465,6 +473,15 @@ public class WeaponSystem : MonoBehaviour
 		}
 
 		Projectile proj = _pool.GetProjectile(GetMissilePoolType(CurMissileSlot));
+
+		// [데이터 주입] 발사 슬롯의 MissileData를 미사일에 주입 → 미사일이 프리팹 박힌 값 대신 이 데이터로
+		// 스탯/이펙트/사운드를 결정(발사 주체별로 다른 데이터 적용 가능). 슬롯 데이터가 없으면(미설정) 프리팹 값 유지.
+		// 자탄(ClusterMissile.Split이 소환)은 WeaponSystem을 안 거치므로 여기 영향 없음 — 각자 childrenMissileData 사용.
+		if (proj is Missile injectMissile && CurMissileSlot != null && CurMissileSlot.missileData != null)
+		{
+			injectMissile.missileData = CurMissileSlot.missileData;
+		}
+
 		MissileData data = (proj as Missile)?.missileData;
 
 		if (_useMissileMuzzle)

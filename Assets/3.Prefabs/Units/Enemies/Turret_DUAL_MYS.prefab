@@ -1293,7 +1293,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 17525639c4cedab4493e2bc9391876ca, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _blocksBeam: 0
   weaponSystem: {fileID: 0}
+  skillSystem: {fileID: 0}
   maxHpRemaining: 999
   maxShieldCapacity: 0
   shieldRegainDelay: 0
@@ -1310,6 +1312,8 @@ MonoBehaviour:
   maxSpeed: 0
   timeToMaxSpeed: 0.4
   timeToStop: 0.4
+  brakeEnterSpeedRatio: 0.65
+  brakeExitSpeedRatio: 0.2
   maxBoostCapacity: 0
   minBoostRequired: 0
   boostConsumeAmont: 0
@@ -1333,11 +1337,11 @@ MonoBehaviour:
   aiState: 1
   rearAttackAngleThreshold: 110
   rearAttackSkipChance: 0.9
-  leadAccuracy: 0.8
+  leadAccuracy: 1
   swivelTransform: {fileID: 4177762561641812126}
   mountTransform: {fileID: 9141556630602784414}
-  attackHoldDuration: 10
-  reloadDuration: 2
+  attackHoldDuration: 7
+  reloadDuration: 3
 --- !u!114 &3205087385195567410
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1388,6 +1392,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   currentLockMode: 0
   maxMultiLockCount: 4
+  _targetInRadarRangeBufferSize: 64
   lockOnRange: 400
   lockOnRequiredTime: 1.2
   targetLayerMask:

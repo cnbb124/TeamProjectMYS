@@ -214,7 +214,12 @@ public class VFXManager : MonoBehaviour
         }
 
         obj.transform.SetPositionAndRotation(pos, rot);
-        obj.transform.localScale = (scale == Vector3.zero) ? Vector3.one : scale;
+        // scale은 넘겨줄 때(폭발 등 크기 변경 이펙트)만 세팅. 안 넘기면 안 건드림 → 프리팹 스케일 그대로.
+        // (풀이 EFFECT_TYPE별로 분리라, 크기 안 바꾸는 이펙트의 오브젝트는 남이 안 깎음 → 리셋 불필요)
+        if (scale != Vector3.zero)
+        {
+            obj.transform.localScale = scale;
+        }
 
         // 파티클 콜백 반납용 컴포넌트에 type 주입 (캐시에서 조회)
         if (_autoReturnCache.TryGetValue(obj, out EffectAutoReturn autoReturn) && autoReturn != null)

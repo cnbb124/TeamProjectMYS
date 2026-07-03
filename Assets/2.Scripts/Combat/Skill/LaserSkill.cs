@@ -173,6 +173,12 @@ public class LaserSkill : ActiveSkill
 					shieldHitVfxType = Data.shieldHitEffectType,
 				};
 
+				//// [임시 진단] LaserHit 안 뜨는 원인 확인 — 위치(hit.point)/실드상태/선택 vfx 로그
+				//Unit dbgUnit = hittable as Unit;
+				//Debug.Log($"[LaserHit-DEBUG] collider={hit.collider.name}, hitPoint={hit.point}, dist={hit.distance:F2}, " +
+				//	$"isDamageable={hittable is IDamageable}, shield={(dbgUnit != null ? dbgUnit.curShieldRemaining : -1)}, " +
+				//	$"hitVfx={Data.hitEffectType}, shieldHitVfx={Data.shieldHitEffectType}");
+
 				if (hittable is IDamageable damageable)
 				{
 					// 데미지 받는 대상(유닛/소행성): 틱당 같은 대상 중복 방지 후 데미지(내부에서 OnHitReaction 호출됨)

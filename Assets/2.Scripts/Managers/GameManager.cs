@@ -77,24 +77,28 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    // =====================================================================
-    // 씬-BGM 매핑 (씬 추가 시 여기에 한 줄만 추가)
-    // =====================================================================
-    private static Dictionary<string, SOUND_TYPE> _sceneBGMMap = new Dictionary<string, SOUND_TYPE>
-    {
-        { "MAIN",             SOUND_TYPE.BGM_MAIN      },
-        { "STATION",          SOUND_TYPE.BGM_STATION   },
-        { "STAGE1",           SOUND_TYPE.BGM_STAGE1    },
-        { "GAME_OVER",        SOUND_TYPE.BGM_GAMEOVER  },
-        { "1F",               SOUND_TYPE.BGM_1F        },
-        { "B2",               SOUND_TYPE.BGM_B2        },
-        // LOADING_SEQUENCE, MAP_SELECT 등도 추가해야함.
-    };
+	// =====================================================================
+	// 씬-BGM 매핑 
+	//  ※ SCENE_TYPE 이름 = 실제 씬 파일 이름이어야 조회됨(scene.name 기준)
+	// =====================================================================
+	[System.Serializable]
+	public struct SceneBGM
+	{
+		public SCENE_TYPE scene;
+		public SOUND_TYPE bgm;
+	}
 
-    // =====================================================================
-    // 게임 상태
-    // =====================================================================
-    public GAME_STATE curState;
+	[Header("<size=22>━━━━━━ 씬-BGM 매핑 ━━━━━━</size>")]
+	[Header("씬 추가 시 여기서 SCENE_TYPE + BGM 드롭다운으로 추가\n" +
+		"SCENE_TYPE 이름 = 실제 씬 파일 이름이어야 조회됨(scene.name 기준)")]
+	[SerializeField] private List<SceneBGM> _sceneBGMList = new List<SceneBGM>();
+
+	// 런타임 조회용. Awake에서 _sceneBGMList로 구성 (key = scene.ToString())
+	private Dictionary<string, SOUND_TYPE> _sceneBGMMap = new Dictionary<string, SOUND_TYPE>();
+
+
+
+	public GAME_STATE curState;
 
     // 상태 변화 시 UI에서 구독 (패널 전환 등)
     public GameStateHandler onGameStateChanged;
@@ -173,8 +177,14 @@ public class GameManager : MonoBehaviour
             instance = this;
             DontDestroyOnLoad(gameObject);
             SceneManager.sceneLoaded += OnSceneLoaded;
+			// 씬-BGM 매핑을 인스펙터 리스트에서 구성
+			_sceneBGMMap.Clear();
+			foreach (SceneBGM entry in _sceneBGMList)
+			{
+				_sceneBGMMap[entry.scene.ToString()] = entry.bgm;
+			}
 
-            if (itemDatabase != null)
+			if (itemDatabase != null)
             {
                 itemDatabase.Init();
             }

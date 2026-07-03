@@ -13,8 +13,9 @@ public class Bullet : Projectile
 	/// 총알 속도.
 	/// </summary>
 	private float _speed;
-	[Header("<size=22>총알 설정</size>")]
+	[Header("<size=18>총알 설정(출력용 인스펙터수정X)</size>")]
 	[Header("투사체 데이터(SO)")]
+	//[HideInInspector]
 	public BulletData bulletData;
 
 
