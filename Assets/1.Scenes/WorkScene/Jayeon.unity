@@ -331,6 +331,18 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 5459510668745863230, guid: a7897ad853ae9d6458830c653646215c, type: 3}
+      propertyPath: maxArmor
+      value: 150
+      objectReference: {fileID: 0}
+    - target: {fileID: 5459510668745863230, guid: a7897ad853ae9d6458830c653646215c, type: 3}
+      propertyPath: maxHpRemaining
+      value: 350
+      objectReference: {fileID: 0}
+    - target: {fileID: 5459510668745863230, guid: a7897ad853ae9d6458830c653646215c, type: 3}
+      propertyPath: maxShieldCapacity
+      value: 200
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -996,6 +1008,14 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 8014826492725034353, guid: b6e739d74b36d7e4b991318bcb2d7f2d, type: 3}
+      propertyPath: _soundList.Array.data[6].maxDistance
+      value: 1500
+      objectReference: {fileID: 0}
+    - target: {fileID: 8014826492725034353, guid: b6e739d74b36d7e4b991318bcb2d7f2d, type: 3}
+      propertyPath: _soundList.Array.data[6].minDistance
+      value: 250
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -1159,6 +1179,10 @@ PrefabInstance:
     - target: {fileID: 8508547545565869303, guid: 5b6492615b4931a40b442946ade11288, type: 3}
       propertyPath: m_Name
       value: TestUnit_EnemyAI_MissileShip
+      objectReference: {fileID: 0}
+    - target: {fileID: 8508547545565869303, guid: 5b6492615b4931a40b442946ade11288, type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -5385,6 +5409,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: CameraShaker
       objectReference: {fileID: 0}
+    - target: {fileID: 1845967230494935228, guid: cfb5c957834c0ad4ba3779580a49557c, type: 3}
+      propertyPath: m_ImpulseDefinition.m_DissipationDistance
+      value: 1500
+      objectReference: {fileID: 0}
     - target: {fileID: 4321892122216033281, guid: cfb5c957834c0ad4ba3779580a49557c, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -5424,6 +5452,26 @@ PrefabInstance:
     - target: {fileID: 4321892122216033281, guid: cfb5c957834c0ad4ba3779580a49557c, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5262910009230215975, guid: cfb5c957834c0ad4ba3779580a49557c, type: 3}
+      propertyPath: _damageStrengthPerHp
+      value: 0.0015
+      objectReference: {fileID: 0}
+    - target: {fileID: 5262910009230215975, guid: cfb5c957834c0ad4ba3779580a49557c, type: 3}
+      propertyPath: _explosionRadiusToStrength.m_Curve.Array.data[1].time
+      value: 2.3913007
+      objectReference: {fileID: 0}
+    - target: {fileID: 5262910009230215975, guid: cfb5c957834c0ad4ba3779580a49557c, type: 3}
+      propertyPath: _explosionRadiusToStrength.m_Curve.Array.data[2].time
+      value: 3.8260803
+      objectReference: {fileID: 0}
+    - target: {fileID: 5262910009230215975, guid: cfb5c957834c0ad4ba3779580a49557c, type: 3}
+      propertyPath: _explosionRadiusToStrength.m_Curve.Array.data[1].value
+      value: 0.45736596
+      objectReference: {fileID: 0}
+    - target: {fileID: 5262910009230215975, guid: cfb5c957834c0ad4ba3779580a49557c, type: 3}
+      propertyPath: _explosionRadiusToStrength.m_Curve.Array.data[2].value
+      value: 1.0011749
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

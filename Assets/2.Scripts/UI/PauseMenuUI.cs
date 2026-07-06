@@ -33,6 +33,8 @@ public class PauseMenuUI : MonoBehaviour
     [SerializeField] private GameObject optionsPanel;
     [Tooltip("전체지도 패널. 아직 없으면 비워둬도 됨.")]
     [SerializeField] private GameObject mapPanel;
+    [Tooltip("목표(퀘스트) 패널. QuestHUD가 붙은 패널 연결. 없으면 비워둬도 됨.")]
+    [SerializeField] private GameObject questPanel;
 
     private void Start()
     {
@@ -127,5 +129,11 @@ public class PauseMenuUI : MonoBehaviour
     public void OnMap()
     {
         if (mapPanel != null) mapPanel.SetActive(true);
+    }
+
+    /// <summary>목표(퀘스트) 버튼 — 목표 패널 표시(일시정지 유지). QuestUI가 GameManager 상태를 읽어 표시.</summary>
+    public void OnQuest()
+    {
+        if (questPanel != null) questPanel.SetActive(true);
     }
 }

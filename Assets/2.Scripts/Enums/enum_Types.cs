@@ -194,6 +194,7 @@ public enum POOL_TYPE
 	ENEMY_GUNSHIP = 100,
 	ENEMY_DROPSHIP,
 	ENEMY_MISSILESHIP,
+	ENEMY_WORKER,
 
 	// 아이템 / 이펙트 (추후 세분화)
 	ITEM = 200,

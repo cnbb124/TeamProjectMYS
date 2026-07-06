@@ -99,13 +99,30 @@ public class Enemy : Unit
         _spawnPosition = transform.position;
     }
 
+    // 사망 후 풀 반납까지 남은 시간. Die()에서 세팅, OnDying()에서 카운트다운.
+    // ※ Die()를 오버라이드하는 서브클래스는 반드시 base.Die()를 호출할 것 — 그래야 이 반납 타이머가 세팅됨.
+    private float _deathReturnTimer;
+
     protected override void Die()
     {
-        GameManager.Instance?.OnEnemyKilled();
-        // 풀 등록 여부와 무관하게 SetActive(false)로 정리 — 죽은 적이 씬에 계속 남아있던 문제 해결.
-        // (SetActive(false) → OnDisable() → UnitManager.UnregisterEnemy 자동 호출됨)
-        PoolManager.Instance?.Return(gameObject);
+        GameManager.Instance?.OnEnemyKilled();   // 킬카운트는 즉시 반영
+        // 풀 반납(SetActive(false))은 사망 애니가 재생되도록 지연 — OnDying()의 타이머로 처리.
+        // 즉시 반납하면 죽는 모션 재생 전에 비활성화되던 문제 해결.
+        _deathReturnTimer = _deathSequenceDuration;
         base.Die();
+    }
+
+    // DIE 상태 동안 매 프레임 호출(Unit.UpdateFSM). 사망 애니 시간만큼 지난 뒤 풀에 반납.
+    // Update(FSM) 기반이라 일시정지(ShouldPause) 중엔 자동으로 멈춤 —
+    // 코루틴 WaitForSeconds는 timeScale 기준이라 우리의 플래그 방식 일시정지를 무시해 부적합했음.
+    protected override void OnDying()
+    {
+        _deathReturnTimer -= Time.deltaTime;
+        if (_deathReturnTimer <= 0f)
+        {
+            // (SetActive(false) → OnDisable() → UnitManager.UnregisterEnemy 자동 호출됨)
+            PoolManager.Instance?.Return(gameObject);
+        }
     }
 
     protected override void Update()

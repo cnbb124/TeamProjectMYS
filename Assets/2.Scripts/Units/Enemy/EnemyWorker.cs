@@ -45,8 +45,8 @@ public class EnemyWorker : Enemy
             if (pickup != null)
                 pickup.Init(Mathf.RoundToInt(currentResource));
         }
-        GameManager.Instance.OnEnemyKilled();
-        Destroy(gameObject);
+        // 킬카운트 + 사망 애니 후 풀 반납은 base(Enemy.Die)가 처리 — 다른 적과 동일하게 반납.
+        base.Die();
     }
 
     protected override void Update()

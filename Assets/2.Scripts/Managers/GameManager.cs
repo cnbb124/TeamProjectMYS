@@ -16,9 +16,10 @@ using UnityEngine.SceneManagement;
 // ▶ 적 / 스폰 참조용
 //   OnEnemyKilled()     : 적 사망 시 Enemy.Die()에서 호출
 //   OnBossKilled()      : 보스 사망 시 보스 오브젝트에서 호출
-//   OnObjectDestroyed() : 파괴 오브젝트 파괴 시 호출
+//   (파괴 목표는 오브젝트에 BossSpawnTarget 컴포넌트를 붙이면 자동 등록/파괴통지됨 — 킬 AND 목표파괴 시 보스 스폰)
 //   onBossSpawn         : 보스 스폰 조건 달성 시 발행 이벤트
 //   onBossKilled        : 보스 처치 시 발행 이벤트
+//   onObjectiveChanged  : 목표 진행도 변경 시 발행 (Quest UI 구독용)
 //   예시) GameManager.Instance.onBossSpawn += 내스폰함수;
 //
 // ▶ UI 참조용
@@ -124,20 +125,31 @@ public class GameManager : MonoBehaviour
     // 보스 스폰 조건
     // =====================================================================
     [Header("━━━━━━ 보스 스폰 조건 ━━━━━━")]
-    [Tooltip("이 수만큼 적을 처치하면 보스 스폰 (0이면 킬카운트 조건 미사용)")]
+    [Tooltip("이 수만큼 적을 처치하면 킬 조건 충족 (0이면 킬 조건 미사용)")]
     public int killCountToSpawnBoss = 20;
 
-    [Tooltip("이 수만큼 오브젝트를 파괴하면 보스 스폰 (0이면 파괴 조건 미사용)")]
-    public int destroyCountToSpawnBoss = 0;
-
+    // 특정 '파괴 목표'(중간보스/기지 등)는 그 오브젝트에 BossSpawnTarget 컴포넌트를 붙이면 자동 등록됨.
+    // 목표가 하나도 없으면 파괴 목표 조건 미사용. 킬 조건 + 파괴 목표 조건을 둘 다 충족해야 보스 스폰(AND, 순서 무관).
     [HideInInspector] public int  killCount;
-    [HideInInspector] public int  destroyedObjectCount;
     [HideInInspector] public bool bossSpawned;
+
+    // 파괴 목표(특정 오브젝트) 추적. BossSpawnTarget이 활성 시 등록, 파괴(비활성) 시 통지.
+    private readonly HashSet<GameObject> _bossTargets = new HashSet<GameObject>();
+    private int _bossTargetsTotal;
+    private int _bossTargetsDestroyed;
+
+    // Quest UI 참조용 진행도
+    public int KillProgress => killCount;
+    public int KillGoal => killCountToSpawnBoss;
+    public int BossTargetsDestroyed => _bossTargetsDestroyed;
+    public int BossTargetsTotal => _bossTargetsTotal;
 
     // 보스 스폰 조건 달성 시 발행 (SpawnManager 등이 구독)
     public BossSpawnHandler onBossSpawn;
     // 보스 처치 시 발행
     public event System.Action onBossKilled;
+    // 목표 진행도(킬/파괴 목표) 변경 시 발행. Quest UI 등이 구독해 갱신.
+    public event System.Action onObjectiveChanged;
 
     // =====================================================================
     // 페이드 연출
@@ -530,6 +542,7 @@ public class GameManager : MonoBehaviour
 	public void OnEnemyKilled()
     {
         killCount++;
+        onObjectiveChanged?.Invoke();
         CheckBossSpawnCondition();
     }
 
@@ -543,14 +556,27 @@ public class GameManager : MonoBehaviour
         onBossKilled?.Invoke();
     }
 
-    /// <summary>
-    /// 파괴 가능 오브젝트 파괴 시 해당 오브젝트에서 호출.
-    /// 파괴 카운트 누적 후 보스 스폰 조건 체크.
-    /// </summary>
-    public void OnObjectDestroyed()
+    /// <summary>BossSpawnTarget이 활성 시 자기 등록. 보스 스폰 '파괴 목표' 수에 포함.</summary>
+    public void RegisterBossTarget(GameObject target)
     {
-        destroyedObjectCount++;
-        CheckBossSpawnCondition();
+        if (target == null) return;
+        if (_bossTargets.Add(target))
+        {
+            _bossTargetsTotal++;
+            onObjectiveChanged?.Invoke();
+        }
+    }
+
+    /// <summary>BossSpawnTarget이 파괴(비활성) 시 통지. 남은 목표에서 제거 후 조건 체크.</summary>
+    public void NotifyBossTargetDestroyed(GameObject target)
+    {
+        if (target == null) return;
+        if (_bossTargets.Remove(target))
+        {
+            _bossTargetsDestroyed++;
+            onObjectiveChanged?.Invoke();
+            CheckBossSpawnCondition();
+        }
     }
 
     // =====================================================================
@@ -568,13 +594,17 @@ public class GameManager : MonoBehaviour
     {
         if (bossSpawned) return;
 
-        bool killCondition    = killCountToSpawnBoss    > 0 && killCount             >= killCountToSpawnBoss;
-        bool destroyCondition = destroyCountToSpawnBoss > 0 && destroyedObjectCount  >= destroyCountToSpawnBoss;
+        // 각 조건: 미설정(임계값 0 / 목표 없음)이면 '충족'으로 간주 → 킬만/목표만 단독 사용도 가능.
+        bool killDone    = killCountToSpawnBoss <= 0 || killCount             >= killCountToSpawnBoss;
+        bool targetsDone = _bossTargetsTotal    <= 0 || _bossTargetsDestroyed >= _bossTargetsTotal;
+        // 조건이 하나도 없으면(둘 다 미설정) 스폰 안 함.
+        bool hasAnyCondition = killCountToSpawnBoss > 0 || _bossTargetsTotal > 0;
 
-        if (killCondition || destroyCondition)
+        // 순서 무관 — 킬/파괴 어느 쪽이 나중에 채워지든, 채워지는 순간 둘 다 충족되면 스폰(AND).
+        if (hasAnyCondition && killDone && targetsDone)
         {
             bossSpawned = true;
-            Debug.Log($"[GameManager] 보스 스폰 조건 달성 (킬: {killCount}, 파괴: {destroyedObjectCount})");
+            Debug.Log($"[GameManager] 보스 스폰 조건 달성 (킬 {killCount}/{killCountToSpawnBoss}, 목표파괴 {_bossTargetsDestroyed}/{_bossTargetsTotal})");
             onBossSpawn?.Invoke();
         }
     }
@@ -582,9 +612,12 @@ public class GameManager : MonoBehaviour
     /// <summary>전투 씬 진입 시 전투 관련 카운터 초기화.</summary>
     private void ResetBattleData()
     {
-        killCount            = 0;
-        destroyedObjectCount = 0;
-        bossSpawned          = false;
+        killCount = 0;
+        bossSpawned = false;
+        _bossTargets.Clear();
+        _bossTargetsTotal = 0;
+        _bossTargetsDestroyed = 0;
+        onObjectiveChanged?.Invoke();
     }
 
     // =====================================================================

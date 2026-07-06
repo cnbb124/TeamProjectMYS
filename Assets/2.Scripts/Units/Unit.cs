@@ -513,6 +513,13 @@ public abstract class Unit : MonoBehaviour, IDamageable
 	//   Player는 AI_STATE 없이 입력으로 UNIT_STATE 직접 제어
 	// =====================================================================
 
+	// =====================================================================
+	// 사망 시퀀스
+	// =====================================================================
+	[Header("━━━━━━ 사망 ━━━━━━")]
+	[Tooltip("사망 애니 재생 후 정리(풀 반납 등)까지 대기 시간(초). 이 시간 동안 죽는 모션이 재생됨.")]
+	[SerializeField] protected float _deathSequenceDuration = 1.5f;
+
 	public UNIT_STATE CurState
 	{
 		get
@@ -614,6 +621,9 @@ public abstract class Unit : MonoBehaviour, IDamageable
 
 			case UNIT_STATE.DIE:
 				PlayAnim(ANIM_TYPE.DIE);
+				// DIE 상태 진입 시 사망 정리 1회 실행 (어느 경로로 죽든 여기로 일원화).
+				// 풀 반납 등 "즉시 하면 사망 애니가 안 보이는" 처리는 Die() 구현부에서 _deathSequenceDuration만큼 지연.
+				Die();
 				break;
 
 		}
@@ -809,6 +819,12 @@ public abstract class Unit : MonoBehaviour, IDamageable
 			return;
 		}
 
+		// 이미 사망 처리 중이면 추가 피격 무시 (사망 애니 재생 동안 중복 사망/피격 방지)
+		if (CurState == UNIT_STATE.DIE)
+		{
+			return;
+		}
+
 		//info.isCritical = Random.Range(0f, 100f) < criChance; //크리판정은 투사체에서 직접담당.
 		int damageAmount = info.isCritical ? Mathf.RoundToInt(info.damageAmount * criDamageMultiplier) : info.damageAmount;
 		//실드회복중지, 타이머 초기화
@@ -846,8 +862,8 @@ public abstract class Unit : MonoBehaviour, IDamageable
 
 		if (curHpRemaining <= 0)
 		{
+			// 사망 트리거는 상태 전환만. 실제 정리(Die)는 OnStateEnter(DIE)에서 1회 호출됨(FSM 일원화).
 			CurState = UNIT_STATE.DIE;
-			Die();
 		}
 		else//실드 배터리?엔진?이 파츠가 말짱할경우 조건추가
 		{
