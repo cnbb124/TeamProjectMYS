@@ -83,24 +83,24 @@ public enum WEAPON_POS_TYPE
 
 public enum SOUND_TYPE
 {
-
+	//필요한 사운드는 규칙에 맞춰 추가후 매칭시켜주세요. 이름 변경원하면 변경하시되 해당 코드찾아서 수정해야함.
 
 	//BGM관련 100번대
 	BGM_LOBBY = 100,          // 정거장(상점) 배경음
 	BGM_BATTLE,         // 우주 전투 배경음
 	BGM_1F,             // 1층 배경음
 	BGM_B2,             // 지하2층배경음
-	BGM_MAIN,
-	BGM_STAGE1,
-	BGM_STATION,
-	BGM_GAMEOVER,
+	BGM_MAIN,			// 메인화면
+	BGM_STAGE1,			// 스테이지1 현재로선 배틀맵이 하나이므로 배틀맵에 사용
+	BGM_STATION,		// 스테이션	
+	BGM_GAMEOVER,		// 게임오버
 
 
 	//UI관련 200번대
 
 	SFX_DICE_ROLL = 200,      // 주사위 굴리는 소리
 	SFX_UI_CLICK,       // 버튼 클릭음
-	SFX_UI_LOCKON_COMPLETE,
+	SFX_UI_LOCKON_COMPLETE, // 락온 완료 사운드
 
 
 	//전투 효과음관련
@@ -114,16 +114,16 @@ public enum SOUND_TYPE
 	SFX_BULLET_VULCAN_HIT = 400,
 	SFX_BULLET_IMPULSE_HIT,//탄
 	SFX_EXPLOSION,      // 미사일등 폭발음
-	SFX_CONTACTSHIP,    //부딪혔을때.
-	SFX_CONTACTGROUND,  //행성등 부딪혔을떄. 차후 필드명 수정할수있음
-	SFX_LASERHIT,       //레이저
-	SFX_BULLETHIT_SHIELD,//실드 도탄
+	SFX_CONTACTSHIP,    // 유닛끼리 부딪혔을때.
+	SFX_CONTACTGROUND,  //유닛이 행성등에 부딪혔을떄. 차후 필드명 수정할수있음
+	//SFX_LASERHIT,       //레거시 사용안함
+	SFX_BULLETHIT_SHIELD = 406,//실드 도탄
 	SFX_EXPLOSION_SHIELD,//실드 폭발
 
-	SFX_CONTACTSHIP_SHIELD,    //부딪혔을때. 실드
-	SFX_CONTACTGROUND_SHIELD,  //행성등 부딪혔을 때, 실드
-	SFX_LASERHIT_SHIELD,    //레이저맞았을때, 실드
-	SFX_SHIELD_DESTROY,   // 실드 파괴시
+	SFX_CONTACTSHIP_SHIELD,    //유닛끼리부딪혔을때. 실드
+	SFX_CONTACTGROUND_SHIELD,  //유닛이 행성등에 부딪혔을 때, 실드
+	//SFX_LASERHIT_SHIELD,    //레거시 사용안함
+	SFX_SHIELD_DESTROY = 411,   // 실드 파괴시
 
 	//이동음 500번대
 	SFX_IDLE = 500,
@@ -134,6 +134,9 @@ public enum SOUND_TYPE
 
 	//스킬음 600번대
 	SFX_SKILL_WARP = 600,
+	SFX_SKILL_LASER_CHARGE,
+	SFX_SKILL_LASER_SHOOT,
+	SFX_SKILL_LASER_HIT,
 
 
 	SFX_NONE = 9999,//빈거설정용
