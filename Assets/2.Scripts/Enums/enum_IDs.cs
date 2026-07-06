@@ -49,7 +49,8 @@ public enum ITEM_ID
 
 	// ── 재료 (4000번대) ───────────────────────────────────────────
 	__ID_MATERIAL_Do_not_select_ = 4000,
-	MATERIAL_NICKEL = 4001,//MATERIAL_END           = 4099,
+	MATERIAL_NICKEL = 4001,
+	MATERIAL_MAGNETSTONE,//MATERIAL_END           = 4099,
 }
 
 /// <summary>
