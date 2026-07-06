@@ -4,7 +4,7 @@
  * GAME_STATE.GAME_OVER가 되면 패널 표시. (플레이어 사망 → GameManager.GameOver() → 이벤트 발행)
  *
  * [버튼]
- * - Restart  : 현재 전투 씬을 다시 로드 (재시작)
+ * - Restart  : GameManager.RestartStage() 호출 — 현재 스테이지를 처음부터 재시작 (A안)
  * - QuitGame : 로비 씬으로 복귀
  *
  * [부착 / 연결]
@@ -15,8 +15,7 @@
  * 5. lobbySceneName : 로비 씬 이름 입력
  *
  * ※ 테스트 씬에서 패널만 확인할 땐 panel을 켜두면 됨 (이벤트 없이도 버튼 동작 확인 가능)
- * ※ 주의: GameManager.IsGameOver/curState 리셋은 씬 전환 시 GameManager 쪽 처리에 따름 —
- *   Restart 후에도 GAME_OVER 상태가 남아있으면 팀장과 리셋 지점 협의 필요.
+ * ※ IsGameOver/curState 리셋은 RestartStage()가 처리 (IsGameOver=false, 상태 PLAYING 복귀).
  */
 
 using UnityEngine;
@@ -69,10 +68,19 @@ public class GameOverUI : MonoBehaviour
         Cursor.visible = true;
     }
 
-    /// <summary>Restart 버튼 — 현재 씬 재시작.</summary>
+    /// <summary>Restart 버튼 — 현재 스테이지를 처음부터 재시작 (A안).</summary>
     public void OnRestart()
     {
-        LoadScene(SceneManager.GetActiveScene().name);
+        if (GameManager.Instance != null)
+        {
+            if (panel != null) panel.SetActive(false);
+            GameManager.Instance.RestartStage();
+        }
+        else
+        {
+            // GameManager 없는 테스트 씬 폴백
+            LoadScene(SceneManager.GetActiveScene().name);
+        }
     }
 
     /// <summary>QuitGame 버튼 — 로비로 복귀.</summary>

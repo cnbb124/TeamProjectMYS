@@ -156,10 +156,15 @@ public class GameManager : MonoBehaviour
     public SkillDatabase skillDatabase;
 
     // =====================================================================
-    // 저장 경로
+    // 저장 경로 / 재시작 상태
     // =====================================================================
     private string SavePath(int slot) =>
         Path.Combine(Application.persistentDataPath, $"save{slot}.json");
+
+    // 마지막으로 저장/로드한 슬롯. 사망 재시작 시 이 슬롯을 복원 대상으로 사용.
+    private int _lastSaveSlot = 0;
+    // 다음 씬 로드 완료 시 세이브를 복원할지 여부 (사망 재시작 전용).
+    private bool _restoreOnNextLoad = false;
 
     // =====================================================================
     // 저장 가능 여부 (STATION 씬에서만 true)
@@ -223,10 +228,16 @@ public class GameManager : MonoBehaviour
         // BGM 재생
         PlaySceneBGM(scene.name);
 
-        // 전투 씬 진입 시 킬카운트 초기화
-        if (scene.name == SCENE_TYPE.STAGE1.ToString())
+        // 씬 진입 시 전투 카운터 초기화.
+        // 킬카운트/파괴수/보스플래그는 스테이지 단위 값이라 씬을 넘어가면 항상 리셋한다.
+        // (특정 스테이지 씬 이름에 의존하지 않음 — 어느 씬에서 리셋돼도 부작용 없음)
+        ResetBattleData();
+
+        // 사망 후 재시작(A안): 씬 로드로 새 Player가 생성된 뒤 마지막 세이브를 복원
+        if (_restoreOnNextLoad)
         {
-            ResetBattleData();
+            _restoreOnNextLoad = false;
+            LoadData(_lastSaveSlot);
         }
 
         StartCoroutine(FadeIn());
@@ -249,6 +260,9 @@ public class GameManager : MonoBehaviour
     private IEnumerator LoadSceneRoutine(string sceneName)
     {
         // 전환 전 정리
+        // 메뉴(일시정지/인벤토리)가 열린 채 씬이 전환돼도 다음 씬은 정상 진행되도록 초기화
+        _pauseRequests = 0;
+        IsPaused = false;
         Time.timeScale = 1f;
         PoolManager.Instance.DisableAllProjectiles();
         SoundManager.Instance.StopSFXAll();
@@ -378,24 +392,38 @@ public class GameManager : MonoBehaviour
         SaveData(saveSlotNum);
     }
 
+    // 일시정지를 요청한 UI 개수. 인벤토리 + ESC 메뉴처럼 여러 창이 동시에 열려도
+    // 마지막 창이 닫힐 때까지 일시정지가 유지되도록 참조 카운트로 관리.
+    private int _pauseRequests = 0;
+
     /// <summary>
-    /// 일시정지. PLAYING 상태에서만 동작.
+    /// 일시정지 요청. PLAYING 상태(또는 이미 일시정지 중)에서만 동작.
     /// Time.timeScale을 건드리지 않으므로 UI / 음악 / 연출은 그대로 동작.
-    /// Player, Enemy 등 게임 로직은 IsPaused를 체크해서 스스로 멈춰야 함.
+    /// Player, Enemy 등 게임 로직은 IsPaused를 체크해서 스스로 멈춤.
+    /// 여러 UI가 각각 호출할 수 있으며, 호출한 만큼 ResumeGame으로 해제해야 재개됨.
     /// </summary>
     public void PauseGame()
     {
-        if (curState != GAME_STATE.PLAYING) return;
-        IsPaused = true;
-        ChangeState(GAME_STATE.PAUSED);
+        if (!IsPaused && curState != GAME_STATE.PLAYING) return;
+        _pauseRequests++;
+        if (!IsPaused)
+        {
+            IsPaused = true;
+            ChangeState(GAME_STATE.PAUSED);
+        }
     }
 
-    /// <summary>일시정지 해제.</summary>
+    /// <summary>일시정지 해제 요청. 모든 요청이 해제되면 게임 재개.</summary>
     public void ResumeGame()
     {
-        if (curState != GAME_STATE.PAUSED) return;
-        IsPaused = false;
-        ChangeState(GAME_STATE.PLAYING);
+        if (!IsPaused) return;
+        _pauseRequests--;
+        if (_pauseRequests <= 0)
+        {
+            _pauseRequests = 0;
+            IsPaused = false;
+            ChangeState(GAME_STATE.PLAYING);
+        }
     }
 
     // =====================================================================
@@ -418,6 +446,19 @@ public class GameManager : MonoBehaviour
         PoolManager.Instance.DisableAllProjectiles();//현재 투사체 모두 비활성화
         SoundManager.Instance.StopSFXAll();//모든 나고있던 효과음 중지
         //기타 필요한 ui연출이나 사운드, 이펙트연출은 추가로 작성필요
+    }
+
+    /// <summary>
+    /// 사망 후 현재 스테이지를 처음부터 재시작
+    /// 게임오버 상태를 풀고 현재 씬을 리로드. 마지막 세이브(STATION 저장 시점)가
+    /// 있으면 씬 로드 완료 후 영구 진행도를 복원하고, 없으면 프리팹 기본값으로 시작.
+    /// </summary>
+    public void RestartStage()
+    {
+        IsGameOver = false;
+        _restoreOnNextLoad = File.Exists(SavePath(_lastSaveSlot));
+        ChangeState(GAME_STATE.PLAYING);
+        LoadScene(SceneManager.GetActiveScene().name);
     }
 
     /// <summary>스테이지 클리어 조건 달성 시 호출. (게임 전체 클리어와는 별개 — 그건 별도 로직 필요, 아직 미구현)</summary>
@@ -502,6 +543,7 @@ public class GameManager : MonoBehaviour
     /// <summary>Player 등에서 현재 상태를 수집해 JSON 파일로 저장.</summary>
     private void SaveData(int saveSlot)
     {
+        _lastSaveSlot = saveSlot;
         SaveData data = CollectSaveData();
         string json  = JsonUtility.ToJson(data, prettyPrint: true);
         File.WriteAllText(SavePath(saveSlot), json);
@@ -511,6 +553,7 @@ public class GameManager : MonoBehaviour
     /// <summary>JSON 파일에서 데이터를 읽어 Player 등에 분배.</summary>
     private void LoadData(int saveSlot)
     {
+        _lastSaveSlot = saveSlot;
         string path = SavePath(saveSlot);
         if (!File.Exists(path))
         {
@@ -623,12 +666,16 @@ public class GameManager : MonoBehaviour
             playerRef.curArmorRemaining  = data.curArmor;
             playerRef.curBoostRemaining  = data.curBoost;
 
-            // 파츠 슬롯 복원 (id int → SO 참조)
+            // 파츠 슬롯 복원 (id int → SO 참조).
+            // 좌우 런처처럼 같은 타입 슬롯이 여러 개여도 저장 순서대로 각 슬롯에 배정되도록
+            // 파츠 목록을 모아 ReloadLoadout으로 일괄 재구성한다.
+            // (타입 기준 Equip은 첫 슬롯만 잡아 L/R이 충돌하므로 사용하지 않음)
             if (data.partSlots != null && itemDatabase != null)
             {
                 UnitParts unitParts = playerRef.GetComponent<UnitParts>();
                 if (unitParts != null)
                 {
+                    List<PartData> savedParts = new List<PartData>();
                     for (int i = 0; i < data.partSlots.Length; i++)
                     {
                         SavedPartSlot saved = data.partSlots[i];
@@ -639,8 +686,9 @@ public class GameManager : MonoBehaviour
                             Debug.LogWarning($"[GameManager] 파츠 복원 실패: id={saved.partId}");
                             continue;
                         }
-                        unitParts.Equip(saved.slotType, partData);
+                        savedParts.Add(partData);
                     }
+                    unitParts.ReloadLoadout(savedParts);
                 }
             }
 

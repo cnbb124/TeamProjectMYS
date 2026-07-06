@@ -91,6 +91,7 @@ public class KeyboardMouseConfig
     [Header("UI 패널 토글")]
     public KeyCode fuelGaugeToggle  = KeyCode.G; // 연료 게이지 패널
     public KeyCode inventoryToggle  = KeyCode.I; // 인벤토리 패널
+    public KeyCode pauseMenu        = KeyCode.Escape; // 일시정지 메뉴
 
 	//[Header("모드 전환")]
  //   public KeyCode switchFireMode = KeyCode.C;      // 발사 모드 전환 (교차/동시) 미사용 레거시
@@ -292,6 +293,9 @@ public class InputManager : MonoBehaviour
     [Tooltip("인벤토리 패널 토글 - 누른 순간 한 프레임만 true")]
     public bool inventoryToggle;
 
+    [Tooltip("일시정지 메뉴 토글(ESC) - 누른 순간 한 프레임만 true")]
+    public bool pauseMenu;
+
     // D-패드 이전 프레임값 (게임패드 "누른 순간" 감지용)
     private float _prevDPadX = 0f;
     private float _prevDPadY = 0f;
@@ -340,9 +344,11 @@ public class InputManager : MonoBehaviour
     private bool IsUIRequestingCursor()
     {
         bool noPlayerInScene = GameManager.Instance == null || GameManager.Instance.playerRef == null;
+        bool isPaused = GameManager.Instance != null && GameManager.Instance.IsPaused;
         return noPlayerInScene
             || Input.GetKey(KeyCode.LeftAlt) || Input.GetKey(KeyCode.RightAlt)
-            || InventoryPanelUI.IsOpen;
+            || InventoryPanelUI.IsOpen
+            || isPaused;
     }
 
     private void UpdateCursorLock()
@@ -421,6 +427,7 @@ public class InputManager : MonoBehaviour
         dicePanelToggle = Input.GetKeyDown(km.dicePanelToggle);
         fuelGaugeToggle = Input.GetKeyDown(km.fuelGaugeToggle);
         inventoryToggle = Input.GetKeyDown(km.inventoryToggle);
+        pauseMenu       = Input.GetKeyDown(km.pauseMenu);
     }
 
     // =====================================================================
@@ -486,6 +493,7 @@ public class InputManager : MonoBehaviour
         dicePanelToggle = Input.GetKeyDown(gp.dicePanelToggle);
         fuelGaugeToggle = false; // 게임패드 미지원 (키 없음)
         inventoryToggle = false; // 게임패드 미지원 (키 없음)
+        pauseMenu       = false; // 게임패드 미지원 (전용 버튼 배정 시 gamepadConfig에 추가)
         _prevDPadX = dpadX;
         _prevDPadY = dpadY;
     }

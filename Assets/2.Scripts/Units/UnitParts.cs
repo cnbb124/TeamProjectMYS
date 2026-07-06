@@ -132,12 +132,36 @@ public class UnitParts : MonoBehaviour
     /// </summary>
     private void ApplyDefaultLoadout()
     {
+        // 최초 로드아웃 — 아직 프리팹/스탯보너스가 적용되기 전(Start)이라 정리 없이 재생성.
         // 인스펙터 슬롯 전체 제거 후 기본 슬롯만 재생성 (이전 슬롯 구조 완전 무시)
         partSlots.Clear();
         EnsureBaseSlots();
+        EquipPartsList(_defaultLoadout.defaultParts);
 
-        // FRAME 먼저 처리 — RebuildSlotsFromFrame으로 런처 슬롯 생성
-        foreach (PartData part in _defaultLoadout.defaultParts)
+        // Unit.Start()와의 실행순서가 보장되지 않아 cur=max 초기화가 위 보너스 적용 전에 끝났을 수 있음.
+        // 파츠 적용이 끝난 지금 시점 기준으로 cur을 다시 max로 동기화.
+        _unit.RefillToMax();
+    }
+
+    /// <summary>
+    /// 런타임 로드아웃 재구성 (세이브 복원 등). 이미 장착된 파츠의 프리팹/스탯보너스를
+    /// 먼저 정리한 뒤, 주어진 목록으로 다시 장착한다.
+    /// 같은 타입 슬롯이 여러 개(좌우 런처 등)면 목록 순서대로 빈 슬롯에 채워진다.
+    /// </summary>
+    public void ReloadLoadout(IEnumerable<PartData> parts)
+    {
+        ClearEquippedParts();
+        partSlots.Clear();
+        EnsureBaseSlots();
+        EquipPartsList(parts);
+        _unit.RefillToMax();
+    }
+
+    // FRAME을 먼저 장착해야 providedSlots 기반 런처 슬롯이 생성되므로 FRAME → 나머지 순으로 처리.
+    // 같은 타입 슬롯이 여러 개면 EquipFromDefault의 GetFirstEmptySlot이 목록 순서대로 채운다.
+    private void EquipPartsList(IEnumerable<PartData> parts)
+    {
+        foreach (PartData part in parts)
         {
             if (part == null || part.partType != PART_TYPE.FRAME)
             {
@@ -147,8 +171,7 @@ public class UnitParts : MonoBehaviour
             break;
         }
 
-        // 나머지 파츠
-        foreach (PartData part in _defaultLoadout.defaultParts)
+        foreach (PartData part in parts)
         {
             if (part == null || part.partType == PART_TYPE.FRAME)
             {
@@ -156,10 +179,20 @@ public class UnitParts : MonoBehaviour
             }
             EquipFromDefault(part);
         }
+    }
 
-        // Unit.Start()와의 실행순서가 보장되지 않아 cur=max 초기화가 위 보너스 적용 전에 끝났을 수 있음.
-        // 파츠 적용이 끝난 지금 시점 기준으로 cur을 다시 max로 동기화.
-        _unit.RefillToMax();
+    // 현재 장착된 모든 파츠의 프리팹 파괴 + 스탯보너스 해제. 런타임 재장착 전 정리용.
+    private void ClearEquippedParts()
+    {
+        foreach (PartSlotEntry slot in partSlots)
+        {
+            if (slot.equippedPart != null)
+            {
+                DestroyPartPrefab(slot);
+                ApplyStatBonuses(slot.equippedPart, -1);
+                slot.equippedPart = null;
+            }
+        }
     }
 
     // DefaultLoadout 전용 장착. 빈 슬롯에 순서대로 채움.
