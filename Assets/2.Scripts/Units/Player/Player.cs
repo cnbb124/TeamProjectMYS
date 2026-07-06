@@ -403,8 +403,8 @@ public class Player : Unit
 			onHitDirectionWorld?.Invoke(info.hitDiriection);
 		}
 
-		// 크리티컬이면 강한 쉐이크
-		// ex. if (info.isCritical) CameraShake.Strong(); else CameraShake.Light();
+		// 피격 카메라 흔들림 — 받은 데미지 비례(크리면 증폭). 플레이어가 맞았을 때만.
+		CameraShaker.Instance?.ShakeDamage(info.hitPosition, info.damageAmount, info.isCritical);
 	}
 
 	// 사망처리
