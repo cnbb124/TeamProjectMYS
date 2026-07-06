@@ -208,6 +208,9 @@ public class Missile : Projectile, IExplodable
 	// Update is called once per frame
 	protected override void Update()
 	{
+		// 일시정지/게임오버 중엔 이동·유도·수명 전부 정지 (재개 시 그 자리서 계속)
+		if (GameManager.Instance != null && GameManager.Instance.IsGameplayFrozen) return;
+
 		//프레임따른 튐현상방지
 		if (Time.deltaTime <= 0f)
 		{

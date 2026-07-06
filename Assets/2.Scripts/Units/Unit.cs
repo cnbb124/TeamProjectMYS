@@ -238,6 +238,10 @@ public abstract class Unit : MonoBehaviour, IDamageable
 		_shieldOverlay?.TriggerReset();
 		CurState = UNIT_STATE.IDLE;
 
+		// 풀 재사용 시, 이전 생애에 일시정지로 걸어둔 물리 프리즈가 남아있지 않도록 초기화.
+		_physFrozen = false;
+		if (_rb != null) _rb.isKinematic = false;
+
 		// 이전 생애에 실드회복 코루틴이 돌다가 SetActive(false)로 강제종료됐을 수 있음 —
 		// 그 경우 코루틴 자체는 유니티가 자동으로 멈추지만 이 두 필드는 안 지워지고 남아있었음.
 		isShieldRegaining = false;
@@ -386,9 +390,36 @@ public abstract class Unit : MonoBehaviour, IDamageable
 		UpdateEngineAudio();
 	}
 
+	// 일시정지/게임오버 시 Rigidbody 물리 정지용. 스크립트가 return해도 물리엔진은 기존 속도를
+	// 계속 적분해 관성으로 미끄러지므로, 속도를 저장 후 isKinematic으로 완전히 멈추고 재개 시 복원한다.
+	private bool _physFrozen;
+	private Vector3 _savedVelocity;
+	private Vector3 _savedAngularVelocity;
+
 	protected virtual void FixedUpdate()
 	{
+		// 자식 클래스는 FixedUpdate 최상단에서 base.FixedUpdate()를 호출해 이 프리즈 처리를 태울 것.
+		if (_rb == null) return;
 
+		if (ShouldPause)
+		{
+			if (!_physFrozen)
+			{
+				_savedVelocity = _rb.velocity;
+				_savedAngularVelocity = _rb.angularVelocity;
+				_rb.isKinematic = true; // 물리 적분 자체를 멈춤 (관성/충돌 정지)
+				_physFrozen = true;
+			}
+			return;
+		}
+
+		if (_physFrozen)
+		{
+			_rb.isKinematic = false;
+			_rb.velocity = _savedVelocity;               // 멈추기 직전 속도 그대로 복원
+			_rb.angularVelocity = _savedAngularVelocity;
+			_physFrozen = false;
+		}
 	}
 
 	// 매 프레임 실제 속도(_rb.velocity, 0.5초 캐시인 curSpeed 말고 즉시값 사용) 기준으로 speedRatio만 계산해서

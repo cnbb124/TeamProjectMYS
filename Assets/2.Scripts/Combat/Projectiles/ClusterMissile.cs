@@ -44,6 +44,9 @@ public class ClusterMissile : Missile
 
 	protected override void Update()
 	{
+		// 일시정지/게임오버 중엔 이동·분열 판정 정지 (base.Update도 내부에서 정지하지만 Split 판정까지 확실히 차단)
+		if (GameManager.Instance != null && GameManager.Instance.IsGameplayFrozen) return;
+
 		base.Update();
 
 		if (!_hasSplit && _traveledDistance >= _splitDistance)

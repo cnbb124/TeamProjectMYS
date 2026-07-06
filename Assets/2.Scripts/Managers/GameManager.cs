@@ -109,6 +109,10 @@ public class GameManager : MonoBehaviour
     public bool IsPaused   { get; private set; }
     public bool IsGameOver { get; private set; }
 
+    // 게임플레이가 멈춰야 하는 상태(일시정지 또는 게임오버). Unit이 아닌 투사체 등이 이동 정지 판정에 참조.
+    // (Unit은 자체 ShouldPause 사용 — 같은 조건)
+    public bool IsGameplayFrozen => IsPaused || IsGameOver;
+
 	// =====================================================================
 	// Player 레퍼런스 (씬 로드 후 자동 캐싱)
 	// =====================================================================
@@ -233,14 +237,25 @@ public class GameManager : MonoBehaviour
         // (특정 스테이지 씬 이름에 의존하지 않음 — 어느 씬에서 리셋돼도 부작용 없음)
         ResetBattleData();
 
-        // 사망 후 재시작(A안): 씬 로드로 새 Player가 생성된 뒤 마지막 세이브를 복원
+        // 사망 후 재시작(A안): 마지막 세이브를 복원.
+        // 단, 이 시점(sceneLoaded)은 새 Player의 Start()(기본 로드아웃 장착)보다 먼저 실행되므로,
+        // 여기서 바로 복원하면 직후 Start()의 기본 로드아웃에 덮어써진다.
+        // → 한 프레임 기다렸다가(모든 Start 완료 후) 복원한다.
         if (_restoreOnNextLoad)
         {
             _restoreOnNextLoad = false;
-            LoadData(_lastSaveSlot);
+            StartCoroutine(RestoreAfterLoad(_lastSaveSlot));
         }
 
         StartCoroutine(FadeIn());
+    }
+
+    // 씬 내 모든 오브젝트의 Start()가 끝난 뒤 세이브를 복원 (기본 로드아웃 덮어쓰기 방지).
+    private IEnumerator RestoreAfterLoad(int slot)
+    {
+        yield return null; // Start() 단계 통과 대기
+        playerRef = FindObjectOfType<Player>();
+        LoadData(slot);
     }
 
     // =====================================================================
@@ -397,19 +412,21 @@ public class GameManager : MonoBehaviour
     private int _pauseRequests = 0;
 
     /// <summary>
-    /// 일시정지 요청. PLAYING 상태(또는 이미 일시정지 중)에서만 동작.
+    /// 일시정지 요청. 게임오버/스테이지클리어가 아니면 동작(테스트 씬 직접 실행 포함).
     /// Time.timeScale을 건드리지 않으므로 UI / 음악 / 연출은 그대로 동작.
     /// Player, Enemy 등 게임 로직은 IsPaused를 체크해서 스스로 멈춤.
     /// 여러 UI가 각각 호출할 수 있으며, 호출한 만큼 ResumeGame으로 해제해야 재개됨.
     /// </summary>
     public void PauseGame()
     {
-        if (!IsPaused && curState != GAME_STATE.PLAYING) return;
+        // 게임오버/클리어 상태에선 일시정지 불가. 그 외(PLAYING, 메뉴, 테스트 씬 등)는 허용.
+        if (curState == GAME_STATE.GAME_OVER || curState == GAME_STATE.STAGE_CLEAR) return;
         _pauseRequests++;
         if (!IsPaused)
         {
             IsPaused = true;
             ChangeState(GAME_STATE.PAUSED);
+            FreezeParticles(); // 폭발/트레일 등 파티클도 정지
         }
     }
 
@@ -423,7 +440,41 @@ public class GameManager : MonoBehaviour
             _pauseRequests = 0;
             IsPaused = false;
             ChangeState(GAME_STATE.PLAYING);
+            UnfreezeParticles(); // 정지했던 파티클 재개
         }
+    }
+
+    // =====================================================================
+    // 파티클 정지/재개 (일시정지 전용)
+    // Time.timeScale을 안 쓰므로 파티클은 자동으로 안 멈춤 → 일시정지 시 재생 중인 것만
+    // 골라 Pause, 재개 시 그것만 다시 Play. (게임오버 땐 폭발 연출이 재생돼야 하므로 미적용)
+    // =====================================================================
+    private readonly List<ParticleSystem> _pausedParticles = new List<ParticleSystem>();
+
+    private void FreezeParticles()
+    {
+        _pausedParticles.Clear();
+        ParticleSystem[] all = FindObjectsOfType<ParticleSystem>();
+        foreach (ParticleSystem ps in all)
+        {
+            if (ps.isPlaying)
+            {
+                ps.Pause();
+                _pausedParticles.Add(ps);
+            }
+        }
+    }
+
+    private void UnfreezeParticles()
+    {
+        foreach (ParticleSystem ps in _pausedParticles)
+        {
+            if (ps != null)
+            {
+                ps.Play();
+            }
+        }
+        _pausedParticles.Clear();
     }
 
     // =====================================================================
@@ -661,10 +712,6 @@ public class GameManager : MonoBehaviour
             playerRef.level             = data.level;
             playerRef.exp               = data.exp;
             playerRef.expToNextLevel    = data.expToNextLevel;
-            playerRef.curHpRemaining    = data.curHp;
-            playerRef.curShieldRemaining = data.curShield;
-            playerRef.curArmorRemaining  = data.curArmor;
-            playerRef.curBoostRemaining  = data.curBoost;
 
             // 파츠 슬롯 복원 (id int → SO 참조).
             // 좌우 런처처럼 같은 타입 슬롯이 여러 개여도 저장 순서대로 각 슬롯에 배정되도록
@@ -691,6 +738,13 @@ public class GameManager : MonoBehaviour
                     unitParts.ReloadLoadout(savedParts);
                 }
             }
+
+            // 현재 HP/실드/아머/부스트 복원.
+            // ReloadLoadout이 RefillToMax로 max를 채우므로, 파츠 복원 뒤에 세팅해야 저장값이 유지된다.
+            playerRef.curHpRemaining     = data.curHp;
+            playerRef.curShieldRemaining = data.curShield;
+            playerRef.curArmorRemaining  = data.curArmor;
+            playerRef.curBoostRemaining  = data.curBoost;
 
             // 미사일 슬롯 복원 (id int → SO 참조)
             if (data.missileSlots != null)

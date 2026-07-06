@@ -245,6 +245,7 @@ public class Player : Unit
 
 	protected override void FixedUpdate()
 	{
+		base.FixedUpdate(); // 일시정지 시 Rigidbody 프리즈/복원 처리
 		if (ShouldPause)
 		{
 			return;

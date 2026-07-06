@@ -1,6 +1,5 @@
 using System.Collections;
 using System.Collections.Generic;
-using UnityEditor;
 using UnityEngine;
 
 
@@ -34,11 +33,13 @@ public class Bullet : Projectile
 	
 	protected override void Update()
 	{
+		// 일시정지/게임오버 중엔 이동·사거리 판정 정지 (재개 시 그 자리서 계속)
+		if (GameManager.Instance != null && GameManager.Instance.IsGameplayFrozen) return;
 		//이동 로직
 		transform.Translate(Vector3.forward * _speed * Time.deltaTime);
 		//기본 업데이트 실행(사거리 업뎃)
 		base.Update();
-		
+
 	}
 
 	public override void Init(Vector3 startPos, Vector3 dir, Unit attacker)
