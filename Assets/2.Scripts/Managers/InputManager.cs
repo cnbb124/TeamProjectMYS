@@ -37,9 +37,10 @@ using UnityEngine;
 // useConsumable          : bool   소모품 사용
 // switchSkillSlot        : bool   스킬 슬롯 전환
 // useSkill               : bool   스킬 사용
-// dicePanelToggle        : bool   다이스 패널 토글
 // fuelGaugeToggle        : bool   연료 게이지 패널 토글
 // inventoryToggle        : bool   인벤토리 패널 토글
+// pauseMenu              : bool   일시정지 메뉴 토글(ESC)
+// mapToggle              : bool   전체맵 토글(M)
 //
 // ================================================================
 // [키 설정 변경]
@@ -85,13 +86,11 @@ public class KeyboardMouseConfig
     public KeyCode switchSkillSlot = KeyCode.B;     // 스킬 슬롯 전환
     public KeyCode useSkill        = KeyCode.H;     // 스킬 사용
 
-	[Header("다이스 패널 (토글)")]
-	public KeyCode dicePanelToggle = KeyCode.Tab;
-
     [Header("UI 패널 토글")]
     public KeyCode fuelGaugeToggle  = KeyCode.G; // 연료 게이지 패널
     public KeyCode inventoryToggle  = KeyCode.I; // 인벤토리 패널
     public KeyCode pauseMenu        = KeyCode.Escape; // 일시정지 메뉴
+    public KeyCode mapToggle        = KeyCode.M; // 전체맵
 
 	//[Header("모드 전환")]
  //   public KeyCode switchFireMode = KeyCode.C;      // 발사 모드 전환 (교차/동시) 미사용 레거시
@@ -141,9 +140,6 @@ public class GamepadConfig
     public KeyCode switchSkillSlot = KeyCode.JoystickButton11;  // 스킬 슬롯 전환
     public KeyCode useSkill        = KeyCode.JoystickButton12; // 스킬 사용
 
-    [Header("다이스 패널(토글)")]
-    public KeyCode dicePanelToggle = KeyCode.JoystickButton1;
-
     //[Header("모드 전환")]
     //public KeyCode switchFireMode  = KeyCode.JoystickButton10; 미사용 레거시
 
@@ -178,9 +174,10 @@ public class GamepadConfig
 // useConsumable      : bool     누른 순간 한 프레임 (소모품 사용)
 // switchSkillSlot    : bool     누른 순간 한 프레임 (스킬 슬롯 전환)
 // useSkill           : bool     누른 순간 한 프레임 (스킬 사용)
-// dicePanelToggle    : bool     누른 순간 한 프레임 (다이스 패널 토글)
 // fuelGaugeToggle    : bool     누른 순간 한 프레임 (연료 게이지 패널 토글)
 // inventoryToggle    : bool     누른 순간 한 프레임 (인벤토리 패널 토글)
+// pauseMenu          : bool     누른 순간 한 프레임 (일시정지 메뉴 토글 ESC)
+// mapToggle          : bool     누른 순간 한 프레임 (전체맵 토글 M)
 // =====================================================================
 public class InputManager : MonoBehaviour
 {
@@ -284,7 +281,6 @@ public class InputManager : MonoBehaviour
 
     [Tooltip("스킬 사용 - 누른 순간 한 프레임만 true")]
     public bool useSkill;
-    public bool dicePanelToggle;
 
     [Header("UI 패널 토글")]
     [Tooltip("연료 게이지 패널 토글 - 누른 순간 한 프레임만 true")]
@@ -295,6 +291,9 @@ public class InputManager : MonoBehaviour
 
     [Tooltip("일시정지 메뉴 토글(ESC) - 누른 순간 한 프레임만 true")]
     public bool pauseMenu;
+
+    [Tooltip("전체맵 토글(M) - 누른 순간 한 프레임만 true")]
+    public bool mapToggle;
 
     // D-패드 이전 프레임값 (게임패드 "누른 순간" 감지용)
     private float _prevDPadX = 0f;
@@ -424,10 +423,10 @@ public class InputManager : MonoBehaviour
         switchSkillSlot = Input.GetKeyDown(km.switchSkillSlot);
         useSkill        = Input.GetKeyDown(km.useSkill);
 
-        dicePanelToggle = Input.GetKeyDown(km.dicePanelToggle);
         fuelGaugeToggle = Input.GetKeyDown(km.fuelGaugeToggle);
         inventoryToggle = Input.GetKeyDown(km.inventoryToggle);
         pauseMenu       = Input.GetKeyDown(km.pauseMenu);
+        mapToggle       = Input.GetKeyDown(km.mapToggle);
     }
 
     // =====================================================================
@@ -490,10 +489,10 @@ public class InputManager : MonoBehaviour
         switchSkillSlot = Input.GetKeyDown(gp.switchSkillSlot);
         useSkill        = Input.GetKeyDown(gp.useSkill);
 
-        dicePanelToggle = Input.GetKeyDown(gp.dicePanelToggle);
         fuelGaugeToggle = false; // 게임패드 미지원 (키 없음)
         inventoryToggle = false; // 게임패드 미지원 (키 없음)
         pauseMenu       = false; // 게임패드 미지원 (전용 버튼 배정 시 gamepadConfig에 추가)
+        mapToggle       = false; // 게임패드 미지원 (키 없음)
         _prevDPadX = dpadX;
         _prevDPadY = dpadY;
     }

@@ -14,7 +14,7 @@ public class DicePanelToggle : MonoBehaviour
 
     void Update()
     {
-        if (InputManager.Instance.dicePanelToggle)
+        //if (InputManager.Instance.dicePanelToggle)
             Toggle();
     }
 
