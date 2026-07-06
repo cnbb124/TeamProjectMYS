@@ -47,14 +47,21 @@ public class CameraShaker : MonoBehaviour
     [SerializeField] private CinemachineImpulseSource _impulseSource;
 
     [Header("세기 튜닝")]
-    [Tooltip("폭발 반경 1당 임펄스 세기")]
-    [SerializeField] private float _explosionStrengthPerRadius = 0.06f;
+    [Tooltip("폭발 반경(x축) → 흔들림 세기(y축) 곡선. 실제 반경대는 대략 클러스터 1~2.5 / 유도 4 / 덤·핵 150.\n" +
+        "작은 반경은 낮게, 큰 반경(핵 등)은 급상승하게 그리면 '핵은 확, 잔챙이는 약하게'가 됨.\n" +
+        "인스펙터에서 곡선을 직접 조절해 튜닝.")]
+    [SerializeField] private AnimationCurve _explosionRadiusToStrength =
+        new AnimationCurve(
+            new Keyframe(0f, 0f),
+            new Keyframe(5f, 0.08f),
+            new Keyframe(50f, 0.5f),
+            new Keyframe(150f, 2.5f));
     [Tooltip("받은 데미지 1당 임펄스 세기")]
     [SerializeField] private float _damageStrengthPerHp = 0.012f;
     [Tooltip("크리티컬 피격 시 세기 배율")]
     [SerializeField] private float _critMultiplier = 1.6f;
-    [Tooltip("임펄스 세기 상한 (과도한 흔들림 방지)")]
-    [SerializeField] private float _maxStrength = 1.5f;
+    [Tooltip("임펄스 세기 상한 (과도한 흔들림 방지). 곡선 최고값이 안 잘리게 그보다 높게.")]
+    [SerializeField] private float _maxStrength = 3f;
     [Tooltip("이 값 미만 세기는 무시 (미세 흔들림/먼 폭발 컷)")]
     [SerializeField] private float _minStrength = 0.02f;
 
@@ -91,10 +98,11 @@ public class CameraShaker : MonoBehaviour
         _impulseSource.GenerateImpulseAt(worldPos, velocity);
     }
 
-    // 폭발 — 반경 비례. 근처 폭발이면 데미지 없어도 흔들림.
+    // 폭발 — 반경→세기 곡선으로 결정(비선형). 근처 폭발이면 데미지 없어도 흔들림.
+    // 곡선을 급상승형으로 그리면 큰 폭발(핵)은 확 세지고 작은 폭발은 약해짐.
     public void ShakeExplosion(Vector3 worldPos, float radius)
     {
-        ShakeAt(worldPos, radius * _explosionStrengthPerRadius);
+        ShakeAt(worldPos, _explosionRadiusToStrength.Evaluate(radius));
     }
 
     // 피격 — 받은 데미지 비례(크리면 증폭). 카메라 근처(플레이어)에서 발생해 거의 그대로 전달됨.

@@ -42,6 +42,10 @@ public class LaserSkillData : ActiveSkillData
 	[Tooltip("빔 발사 사운드. SFX_NONE이면 무음")]
 	public SOUND_TYPE fireSoundType = SOUND_TYPE.SFX_NONE;
 
+	[Header("<size=16>타격감</size>")]
+	[Tooltip("발사 중 데미지 틱마다 주는 카메라 흔들림 세기(주포 지속 진동). 0이면 없음. 폭발보다 훨씬 작게 권장(0.1~0.3)")]
+	public float cameraShakeStrength = 0.15f;
+
 	public override Skill CreateSkill(Unit owner)
 	{
 		return new LaserSkill(owner, this);

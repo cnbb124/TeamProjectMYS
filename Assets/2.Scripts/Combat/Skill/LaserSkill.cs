@@ -127,6 +127,8 @@ public class LaserSkill : ActiveSkill
 		{
 			_lastDamageTime = Time.time;
 			_damagedThisTick.Clear();
+			// 주포 지속 떨림 — 데미지 틱마다 약한 카메라 흔들림(플레이어 위치 기준, 거리 감쇠 거의 없음)
+			CameraShaker.Instance?.ShakeAt(_owner.transform.position, Data.cameraShakeStrength);
 		}
 
 		float beamEnd = Data.range;   // 막는 게 없으면 최대 사거리까지
