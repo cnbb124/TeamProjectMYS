@@ -107,8 +107,9 @@ public class cs_Map_AsteroidSpawner : MonoBehaviour
             if (asteroidMaterial != null)
                 mr.sharedMaterial = asteroidMaterial;
 
-            Destroy(asteroid.GetComponent<SphereCollider>());
-            asteroid.AddComponent<MeshCollider>().sharedMesh = mf.mesh;
+
+            SphereCollider col = asteroid.GetComponent<SphereCollider>();
+            col.radius = 0.55f;
             cs_Map_Asteroid asteroidScript = asteroid.AddComponent<cs_Map_Asteroid>();
             asteroidScript.resourceData = resourceData;
 
