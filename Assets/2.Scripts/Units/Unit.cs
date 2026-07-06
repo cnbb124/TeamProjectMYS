@@ -227,7 +227,7 @@ public abstract class Unit : MonoBehaviour, IDamageable
 			_bodyHitboxColliders = bodyHitboxRoot.GetComponentsInChildren<Collider>();
 		}
 	}
-	
+
 	// 풀에서 재사용(SetActive(true))될 때마다 호출 — Start()는 오브젝트 생애 단 한 번만 실행되므로,
 	// 죽었을 때의 상태(curHpRemaining=0, CurState=DIE 등)가 재사용 시 그대로 남는 문제를 막기 위함.
 	// 최초 활성화 시에도 Start()보다 먼저 호출되는데, 그 시점엔 RefillToMax()가 인스펙터 기본값 기준으로 한 번 돌고
@@ -301,7 +301,7 @@ public abstract class Unit : MonoBehaviour, IDamageable
 		}
 	}
 
-	
+
 
 	// cur을 max로 채움. UnitParts가 파츠 스탯보너스로 max를 바꾼 직후에도 호출해서 동기화.
 	// 새 STAT_TYPE이 max와 별도의 cur 스냅샷을 갖는 스탯이라면 여기에도 추가할 것.
@@ -992,8 +992,8 @@ public abstract class Unit : MonoBehaviour, IDamageable
 			case DAMAGE_TYPE.BULLET:
 				return SOUND_TYPE.SFX_BULLETHIT_SHIELD;
 
-			case DAMAGE_TYPE.LASER:
-				return SOUND_TYPE.SFX_LASERHIT_SHIELD;
+			//case DAMAGE_TYPE.LASER:
+			//	return SOUND_TYPE.SFX_LASERHIT_SHIELD;
 
 			case DAMAGE_TYPE.EXPLOSION:
 				return SOUND_TYPE.SFX_EXPLOSION_SHIELD;
