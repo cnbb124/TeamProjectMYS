@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   entries:
   - method: 1
-    poolType: 6
+    poolType: 100
     spawnPoint: {fileID: 0}
     count: 10
     interval: 0.2
@@ -22,11 +22,19 @@ MonoBehaviour:
     - {fileID: 0}
     delay: 1
   - method: 1
-    poolType: 8
+    poolType: 101
     spawnPoint: {fileID: 0}
     count: 2
     interval: 0.2
     scenePlacedEnemies:
     - {fileID: 0}
-    delay: 1
+    delay: 1.5
+  - method: 1
+    poolType: 102
+    spawnPoint: {fileID: 0}
+    count: 2
+    interval: 0.2
+    scenePlacedEnemies:
+    - {fileID: 0}
+    delay: 1.5
   nextWaveDelay: 15
