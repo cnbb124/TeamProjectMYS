@@ -82,26 +82,29 @@ public abstract class Unit : MonoBehaviour, IDamageable
 
 	//==================유닛데이터==================//
 
-	[Header("<size=22>유닛 공통 기본 스탯 설정창</size>")]
+	[Header("<size=18>파츠 추가 스탯 제외한 유닛의 기본 스탯 설정</size>")]
 
-	[Header("<size=18>HP</size>")]
+	[Header("<size=14>1. HP")]
+	[Tooltip("체력 최대치")]
 	public int maxHpRemaining = 150; //최대,현재HP수치
 
-
-	[Header("<size=18>Shield - 피격 후 일정 딜레이 후 자동회복</size>")]
+	[Header("<size=14>2.Shield </size>")]
+	[Tooltip("실드(방어막) 최대치")]
 	public int maxShieldCapacity;//최대,현재실드수치
-
+	[Tooltip("피격후 회복 딜레이")]
 	public float shieldRegainDelay;//피격후 회복까지딜레이시간
-	[Range(6.0f, 100.0f)]
 	[Tooltip("실드 초당 회복수치(최소 6)")]
+	[Range(6.0f, 100.0f)]
 	public float shieldRegainRate; //실드회복수치
-								   //private float shieldRegainTimer = 0f;//딜레이 시간까지잴 타이머 >0516 코루틴으로변경
+	[HideInInspector]							   //private float shieldRegainTimer = 0f;//딜레이 시간까지잴 타이머 >0516 코루틴으로변경
 	public bool isShieldRegaining = false; //회복중인지 여부
 	private Coroutine _shieldRegenCoroutine;//중간 정지등을 위한 코루틴변수 따로
 											//실드연결용
 											// [실드팀 참조] 실드 비주얼 오브젝트(ProceduralForceFieldOverlay 등 부착된 자식) 연결용.
 											// curShieldRemaining > 0 ↔ SetActive(true), <= 0 ↔ SetActive(false) 로 표시 여부 제어 권장.
-											// 피격 이펙트(Trigger) 호출은 OnHitReaction()에서 처리.
+
+	// 피격 이펙트(Trigger) 호출은 OnHitReaction()에서 처리.
+	[Tooltip("유닛에 있는 실드 오브젝트 직접 연결")]
 	public GameObject shield;
 
 	[Tooltip("실드가 있을때 OFF, 없을때 ON 되는 본체 HitBox 연결. 실드 콜라이더와 상호토글됨.")]
@@ -115,16 +118,16 @@ public abstract class Unit : MonoBehaviour, IDamageable
 	private ProceduralForceField.ProceduralForceFieldOverlay _shieldOverlay;
 
 
-	[Header("<size=18>Armor - 자동회복 X</size>")]
+	[Header("<size=14>3. Armor</size>")]
+	[Tooltip("최대 아머 수치")]
 	public int maxArmor;//최대,현재아머수치
 
-
-	[Tooltip("Armor보유시 데미지 경감되는 수치.")]
+	[Tooltip("아머 보유시 데미지 경감되는 수치.")]
 	public int defense;//아머 있을시 데미지 경감수치(damageAmount=damage-defense)
 
 
 
-	[Header("<size=18>Critical</size>")]
+	[Header("<size=14>4. Critical</size>")]
 	public float criChance;
 	public float criDamageMultiplier;
 
@@ -143,7 +146,7 @@ public abstract class Unit : MonoBehaviour, IDamageable
 	[Space(10)]
 	[Header("<size=14>===========터렛등 좌표고정유닛은 적용안됨============</size>")]
 	[Space(5)]
-	[Header("<size=18>이동 관련</size>")]
+	[Header("<size=18>이동 관련 설정</size>")]
 	[Tooltip("기본 이동속도 (초당 이동 거리, unit/s). 예: 350이면 초당 350유닛 이동.")]
 	public float baseMoveSpeed;//기본이동속ㄷ
 	[Tooltip("부스트 사용시 이동속도 (초당 이동 거리, unit/s)")]
@@ -183,7 +186,7 @@ public abstract class Unit : MonoBehaviour, IDamageable
 
 
 
-	[Header("<size=18>회피 & 무적</size>")]
+	[Header("<size=18>회피 관련 설정</size>")]
 	[Tooltip("회피 지속시간")]
 	public float dodgeDuration = 0.5f;
 	[Tooltip("무적 지속시간")]
@@ -519,6 +522,10 @@ public abstract class Unit : MonoBehaviour, IDamageable
 	[Header("━━━━━━ 사망 ━━━━━━")]
 	[Tooltip("사망 애니 재생 후 정리(풀 반납 등)까지 대기 시간(초). 이 시간 동안 죽는 모션이 재생됨.")]
 	[SerializeField] protected float _deathSequenceDuration = 1.5f;
+
+	// 마지막으로 치명타(사망)를 입힌 공격자. 멀티에서 킬 보상을 '죽인 사람'에게 귀속시키기 위해 기록.
+	// (싱글에선 유일한 플레이어라 결과는 같지만, 이 구조로 잡아두면 MP 전환 시 킬러 구분이 자동으로 맞음)
+	protected GameObject _lastAttacker;
 
 	public UNIT_STATE CurState
 	{
@@ -862,6 +869,8 @@ public abstract class Unit : MonoBehaviour, IDamageable
 
 		if (curHpRemaining <= 0)
 		{
+			// 킬러 기록 — 사망 직전 마지막 타격의 공격자. 킬 보상 귀속용(멀티 대비).
+			_lastAttacker = info.attacker;
 			// 사망 트리거는 상태 전환만. 실제 정리(Die)는 OnStateEnter(DIE)에서 1회 호출됨(FSM 일원화).
 			CurState = UNIT_STATE.DIE;
 		}

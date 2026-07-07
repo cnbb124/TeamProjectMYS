@@ -199,6 +199,7 @@ public enum POOL_TYPE
 	// 아이템 / 이펙트 (추후 세분화)
 	ITEM = 200,
 	ITEM_ASTEROID,
+	ITEM_CONSUMABLE_HPKIT_DEFAULT,
 }
 
 // PoolEntry.category — DisableByCategory(PoolCategory)에서 poolConfigs 필터링용.

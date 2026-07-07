@@ -45,7 +45,8 @@ public enum PassOffsetDir { Random, Right, Left }
 [RequireComponent(typeof(Rigidbody))]
 public class EnemyShip : Enemy
 {
-    [Header("<size=18>순찰 설정</size>")]
+    [Header("<size=18>EnemyShip 전용 설정(이동하는 적 기체)</size>")]
+    [Header("<size=14>1. 순찰 설정</size>")]
     [Tooltip("스폰 위치 기준 수평 순찰 반경")]
     public float patrolRadius = 500f;
     [Tooltip("순찰 지점 도착 판정 거리")]
@@ -53,19 +54,35 @@ public class EnemyShip : Enemy
     [Tooltip("스폰 위치 기준 수직 순찰 범위 (±). 0이면 수평면 고정.")]
     public float patrolHeightRange = 100f;
 
-    [Header("<size=18>기동 패턴</size>")]
-    [Header("<size=14>가중치  (합계 기반 확률 / 모두 0이면 기본 ATTACK_CHASE)</size>")]
-    [Tooltip("돌진 후 타겟을 지나쳐 재배치하는 패턴")]
+    [Header("<size=14>2. AI 패턴 기본 설정</size>\n" +
+		"<size=5>\n</size>공격 패턴 비율 설정(상대비율)\n" +
+        "<size=10>ex)1:1:1=균등,0.5:1:1=Pass절반 모두 0이면 ATTACK_CHASE</size>")]
+    
+    [Tooltip("공격하며 타겟을 지나쳐 재배치하는 패턴")]
     [Range(0f, 1f)]
     public float attackPassWeight = 1f;
-    [Tooltip("타겟을 추적하며 사격하는 패턴 (ATTACK_CHASE)")]
+    [Tooltip("타겟을 추적하며 사격하는 패턴")]
     [Range(0f, 1f)]
     public float attackChaseWeight = 1f;
     [Tooltip("제자리 정지 후 타겟을 공격하는 패턴")]
     [Range(0f, 1f)]
     public float attackHoldWeight = 1f;
 
-    [Header("<size=14>지속 시간 (초)</size>")]
+	[Header("Evade(도주) 패턴 설정")]
+	[Tooltip("피격 시 EVADE 진입 확률 (0~1)")]
+	[Range(0f, 1f)]
+	public float evadeChance = 0.4f;
+	[Tooltip("EVADE 쿨타임 (초).")]
+	public float evadeCoolTime = 5f;
+
+
+	[Header("Dodge(피격시 회피) 설정\n" +
+        "<size=5>\n</size>(피격 시 순간 무적 / 쿨타임·무적시간은 Unit.dodgeCoolTime 공용)")]
+	[Tooltip("피격 시 DODGE 발동 확률 (0~1)")]
+	[Range(0f, 1f)]
+	public float dodgeProbability = 0.1f;
+
+	[Header("패턴 지속 시간 (초)")]
     [Tooltip("ATTACK_CHASE 지속 시간. 0이면 범위 이탈 전까지 유지.")]
     public float attackChaseDuration = 2f;
     [Tooltip("ATTACK_HOLD 지속 시간. 0이면 범위 이탈 전까지 유지.")]
@@ -81,12 +98,12 @@ public class EnemyShip : Enemy
     [Tooltip("발사 후 재장전 대기 시간 (초). 0이면 비활성화.")]
     public float reloadDuration = 0f;
 
-    [Header("<size=18>전투 설정</size>")]
-    [Header("<size=14>ATTACK_CHASE 최소 접근 거리</size>")]
+    [Header("<size=14>3. AI 전투 설정</size>")]
+    [Header("ATTACK_CHASE(추적하며 공격) 최소 접근 거리")]
     [Tooltip("타겟과 이 거리 이하로 좁혀지면 전진 멈춤. 0이면 비활성화.")]
     public float minAttackDistance = 200f;
 
-    [Header("<size=14>ATTACK_PASS 궤도 오프셋</size>")]
+    [Header("ATTACK_PASS(공격하면서 지나감) 궤도 오프셋")]
     [Tooltip("ATTACK_PASS 진입 시 타겟 기준 어느 쪽으로 비껴갈지 결정.\n" +
              "· Random : 진입마다 좌/우 랜덤 선택\n" +
              "· Right  : 항상 Enemy 기준 오른쪽으로 통과\n" +
@@ -111,18 +128,8 @@ public class EnemyShip : Enemy
              "0이면 상하 변화 없이 수평으로만 비껴감.")]
     public float passVerticalRange = 40f;
 
-    [Header("<size=18>특수 기동</size>")]
-    [Header("<size=14>EVADE 설정</size>")]
-    [Tooltip("피격 시 EVADE 진입 확률 (0~1)")]
-    [Range(0f, 1f)]
-    public float evadeChance = 0.4f;
-    [Tooltip("EVADE 쿨타임 (초).")]
-    public float evadeCoolTime = 5f;
+    
 
-    [Header("<size=14>DODGE 설정 (피격 시 순간 무적 / 쿨타임·무적시간은 Unit.dodgeCoolTime 공용)</size>")]
-    [Tooltip("피격 시 DODGE 발동 확률 (0~1)")]
-    [Range(0f, 1f)]
-    public float dodgeProbability = 0.1f;
 
     // 서브클래스에서 false로 override하면 해당 반응 비활성화
     protected virtual bool CanDodge => true;

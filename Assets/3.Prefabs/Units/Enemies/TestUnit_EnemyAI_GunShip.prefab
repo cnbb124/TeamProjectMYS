@@ -243,9 +243,9 @@ MonoBehaviour:
   defense: 1
   criChance: 20
   criDamageMultiplier: 1.5
-  baseMoveSpeed: 50
-  boostSpeed: 90
-  maxSpeed: 90
+  baseMoveSpeed: 75
+  boostSpeed: 100
+  maxSpeed: 100
   timeToMaxSpeed: 0.2
   timeToStop: 0.2
   brakeEnterSpeedRatio: 0.65
@@ -268,19 +268,27 @@ MonoBehaviour:
   curBoostRemaining: 0
   _playSoundType: 0
   _deathSequenceDuration: 1.5
+  expRewardMin: 3
+  expRewardMax: 7
+  goldRewardMin: 100
+  goldRewardMax: 150
+  dropPoolTypes: 
   detectRange: 2000
   rotateSpeed: 210
   rotateDeadZone: 0
   aiState: 0
+  leadAccuracy: 0.85
   rearAttackAngleThreshold: 110
   rearAttackSkipChance: 0.9
-  leadAccuracy: 0.85
   patrolRadius: 1000
   patrolArriveDist: 10
   patrolHeightRange: 250
   attackPassWeight: 0.7
   attackChaseWeight: 0.25
   attackHoldWeight: 0.05
+  evadeChance: 0.35
+  evadeCoolTime: 5
+  dodgeProbability: 0.2
   attackChaseDuration: 3
   attackHoldDuration: 1
   attackPassDuration: 5
@@ -293,9 +301,6 @@ MonoBehaviour:
   passOffsetStartDist: 200
   passHorizontalDist: 100
   passVerticalRange: 120
-  evadeChance: 0.35
-  evadeCoolTime: 5
-  dodgeProbability: 0.2
 --- !u!114 &1803401708122000012
 MonoBehaviour:
   m_ObjectHideFlags: 0

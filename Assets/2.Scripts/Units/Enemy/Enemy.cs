@@ -13,7 +13,7 @@ using UnityEngine;
 // ================================================================
 // OnEnable()                             aiState=STANDBY 리셋 + UnitManager.RegisterEnemy 호출 (풀 재사용 시도 매번 실행)
 // OnDisable()                            UnitManager.UnregisterEnemy 호출 (자기 사망이든 부모 cascade든 항상 호출됨)
-// Die()                                  GameManager.OnEnemyKilled() 호출 + base.Die() (Unregister는 OnDisable이 처리)
+// Die()                                  OnEnemyKilled(killer, exp, gold) 위임(킬카운트+보상) + 아이템 드랍 + base.Die() (Unregister는 OnDisable이 처리)
 // IsTargetInRange(float range)           단순 거리 비교
 // HasTargetInAttackRange()               LockOnSystem.TargetsInLockonRange 수 체크
 // ShootWeapons()                         virtual — 자식이 override해 발사 종류 지정
@@ -25,7 +25,25 @@ using UnityEngine;
 
 public class Enemy : Unit
 {
-    [Header("<size=22>Enemy AI 설정</size>")]
+    [Header("<size=18>Enemy 보상 설정</size>")]
+    [Tooltip("경험치 보상 최소치")]
+    public int expRewardMin;
+    [Tooltip("경험치 보상 최대치 (최소~최대 사이에서 랜덤 지급)")]
+    public int expRewardMax;
+    [Tooltip("골드 보상 최소치")]
+    public int goldRewardMin;
+    [Tooltip("골드 보상 최대치 (최소~최대 사이에서 랜덤 지급)")]
+    public int goldRewardMax;
+    [Tooltip("드랍 후보 아이템의 풀 타입 목록. 죽을 때 이 중 랜덤 하나를 풀에서 꺼내 드랍.\n" +
+             "각 픽업 프리팹에 ItemData가 직렬화돼 있어 Init 없이 자동 세팅됨. PoolManager.poolConfigs에 등록 필요.")]
+    public POOL_TYPE[] dropPoolTypes;
+    [Tooltip("아이템이 드랍될 확률 (0~1). 1=항상 드랍, 0.3=30% 확률. 실패하면 아무것도 안 나옴.\n" +
+             "드랍이 결정되면 위 목록 중 랜덤 하나가 나옴.")]
+    [Range(0f, 1f)]
+    public float dropChance = 1f;
+    [Header("<size=18>Enemy AI 공통 설정</size>")]
+   
+    [Header("<size=14>1. 탐지 관련 설정</size>")]
     [Tooltip("이 범위 안에 타겟이 들어오면 추격 시작. 공격 진입은 LockOnSystem의 lockOnRange 기준.")]
     public float detectRange = 500f;
     [Tooltip("선회 속도 (도/초). 90 = 2초에 180도 회전.")]
@@ -33,24 +51,28 @@ public class Enemy : Unit
     [Tooltip("이 각도(도) 이내에 타겟이 있으면 회전하지 않음. 0이면 비활성화.\n" +
              "전함/대형 유닛처럼 세밀한 조준을 안 하는 느낌에 적합.")]
     public float rotateDeadZone = 0f;
+	[Header("AI 상태 (참고용, 입력X)")]
+	public AI_STATE aiState = AI_STATE.STANDBY;
 
-    [Header("<size=18>AI 상태 (참고용, 입력X)</size>")]
-    public AI_STATE aiState = AI_STATE.STANDBY;
+	[Header("<size=14>2. 공격 관련 설정</size>")]
+    [Header("예측 사격 (Bullet 전용 — 미사일은 락온이라 영향 없음)")]
+	[Tooltip("0 = 예측 안 함(타겟 현재 위치 그대로 조준), 1 = 완전 예측(타겟 속도 기준 정확히 선조준).\n" +
+			 "weaponSystem.curBulletData가 없으면(미사일 전용 함선 등) 값과 무관하게 예측 안 함.")]
+	[Range(0f, 1f)]
+	public float leadAccuracy = 0f;
+	[Header("후방 공격 빈도 설정")]
+	[Tooltip("타겟(_target.forward) 기준 이 각도(도) 이상 등 뒤에 있으면 후방으로 판정.\n" +
+			 "180=정반대(완전 후방), 90=측면, 0=정면.")]
+	[Range(0f, 180f)]
+	public float rearAttackAngleThreshold = 110f;
+	[Tooltip("후방 판정 시 발사를 건너뛸 확률 (0~1). 0이면 후방 페널티 없음.")]
+	[Range(0f, 1f)]
+	public float rearAttackSkipChance = 0.7f;
+	
 
-    [Header("<size=18>후방 공격 빈도 감소</size>")]
-    [Tooltip("타겟(_target.forward) 기준 이 각도(도) 이상 등 뒤에 있으면 후방으로 판정.\n" +
-             "180=정반대(완전 후방), 90=측면, 0=정면.")]
-    [Range(0f, 180f)]
-    public float rearAttackAngleThreshold = 110f;
-    [Tooltip("후방 판정 시 발사를 건너뛸 확률 (0~1). 0이면 후방 페널티 없음.")]
-    [Range(0f, 1f)]
-    public float rearAttackSkipChance = 0.7f;
+    
 
-    [Header("<size=18>예측 사격 (Bullet 전용 — 미사일은 락온이라 영향 없음)</size>")]
-    [Tooltip("0 = 예측 안 함(타겟 현재 위치 그대로 조준), 1 = 완전 예측(타겟 속도 기준 정확히 선조준).\n" +
-             "weaponSystem.curBulletData가 없으면(미사일 전용 함선 등) 값과 무관하게 예측 안 함.")]
-    [Range(0f, 1f)]
-    public float leadAccuracy = 0f;
+    
 
     protected Transform _target;
     // _target의 Velocity(Rigidbody.velocity) 참조용. UpdateTarget()에서 _target과 함께 갱신.
@@ -105,9 +127,26 @@ public class Enemy : Unit
 
     protected override void Die()
     {
-        GameManager.Instance?.OnEnemyKilled();   // 킬카운트는 즉시 반영
+        // 보상은 min~max 범위에서 랜덤 (같은 적이라도 매번 조금씩 다르게). Random.Range(int)는 max 미포함이라 +1.
+        int exp  = Random.Range(expRewardMin,  expRewardMax  + 1);
+        int gold = Random.Range(goldRewardMin, goldRewardMax + 1);
+        // 킬카운트 + 보상(경험치/골드)은 GameManager가 killer(_lastAttacker) 기준으로 분배.
+        GameManager.Instance?.OnEnemyKilled(_lastAttacker, exp, gold);
+
+        // 아이템 드랍 — dropChance 확률로 발생. 성공 시 후보 풀 타입 중 랜덤 하나를 꺼내 죽은 자리에 배치.
+        // (Random.value는 0~1이라 dropChance=1이면 사실상 항상, 0이면 절대 안 나옴)
+        // 픽업은 프리팹에 직렬화된 ItemData로 OnEnable에서 자기 초기화하므로 여기선 Init 불필요.
+        if (dropPoolTypes != null && dropPoolTypes.Length > 0 && Random.value < dropChance)
+        {
+            POOL_TYPE dropType = dropPoolTypes[Random.Range(0, dropPoolTypes.Length)];
+            GameObject drop = PoolManager.Instance?.Get(dropType);
+            if (drop != null)
+            {
+                drop.transform.SetPositionAndRotation(transform.position, Quaternion.identity);
+            }
+        }
+
         // 풀 반납(SetActive(false))은 사망 애니가 재생되도록 지연 — OnDying()의 타이머로 처리.
-        // 즉시 반납하면 죽는 모션 재생 전에 비활성화되던 문제 해결.
         _deathReturnTimer = _deathSequenceDuration;
         base.Die();
     }

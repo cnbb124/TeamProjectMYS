@@ -57,7 +57,7 @@ public class CameraShaker : MonoBehaviour
             new Keyframe(50f, 0.5f),
             new Keyframe(150f, 2.5f));
     [Tooltip("받은 데미지 1당 임펄스 세기")]
-    [SerializeField] private float _damageStrengthPerHp = 0.012f;
+    [SerializeField] private float _damageStrengthPerDamage1Point = 0.012f;
     [Tooltip("크리티컬 피격 시 세기 배율")]
     [SerializeField] private float _critMultiplier = 1.6f;
     [Tooltip("임펄스 세기 상한 (과도한 흔들림 방지). 곡선 최고값이 안 잘리게 그보다 높게.")]
@@ -108,7 +108,7 @@ public class CameraShaker : MonoBehaviour
     // 피격 — 받은 데미지 비례(크리면 증폭). 카메라 근처(플레이어)에서 발생해 거의 그대로 전달됨.
     public void ShakeDamage(Vector3 worldPos, int damage, bool isCritical)
     {
-        float strength = damage * _damageStrengthPerHp;
+        float strength = damage * _damageStrengthPerDamage1Point;
         if (isCritical)
         {
             strength *= _critMultiplier;

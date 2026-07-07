@@ -1886,13 +1886,18 @@ MonoBehaviour:
   curBoostRemaining: 0
   _playSoundType: 0
   _deathSequenceDuration: 1.5
+  expRewardMin: 0
+  expRewardMax: 0
+  goldRewardMin: 0
+  goldRewardMax: 0
+  dropPoolTypes: 
   detectRange: 1000
   rotateSpeed: 270
   rotateDeadZone: 0
   aiState: 0
+  leadAccuracy: 0.032
   rearAttackAngleThreshold: 110
   rearAttackSkipChance: 0.7
-  leadAccuracy: 0.032
   swivelTransform: {fileID: 7145560331607051016}
   mountTransform: {fileID: 180614108866721536}
   attackHoldDuration: 10
@@ -4043,13 +4048,18 @@ MonoBehaviour:
   curBoostRemaining: 0
   _playSoundType: 0
   _deathSequenceDuration: 1.5
+  expRewardMin: 0
+  expRewardMax: 0
+  goldRewardMin: 0
+  goldRewardMax: 0
+  dropPoolTypes: 
   detectRange: 1000
   rotateSpeed: 270
   rotateDeadZone: 0
   aiState: 0
+  leadAccuracy: 0.032
   rearAttackAngleThreshold: 110
   rearAttackSkipChance: 0.7
-  leadAccuracy: 0.032
   swivelTransform: {fileID: 1369506015172160707}
   mountTransform: {fileID: 632415001306415416}
   attackHoldDuration: 10
@@ -4967,9 +4977,9 @@ MonoBehaviour:
   defense: 3
   criChance: 0
   criDamageMultiplier: 0
-  baseMoveSpeed: 35
-  boostSpeed: 65
-  maxSpeed: 65
+  baseMoveSpeed: 50
+  boostSpeed: 80
+  maxSpeed: 80
   timeToMaxSpeed: 0.4
   timeToStop: 0.4
   brakeEnterSpeedRatio: 0.65
@@ -4992,19 +5002,27 @@ MonoBehaviour:
   curBoostRemaining: 0
   _playSoundType: 0
   _deathSequenceDuration: 1.5
+  expRewardMin: 0
+  expRewardMax: 0
+  goldRewardMin: 0
+  goldRewardMax: 0
+  dropPoolTypes: 
   detectRange: 2000
   rotateSpeed: 90
   rotateDeadZone: 20
   aiState: 0
+  leadAccuracy: 0
   rearAttackAngleThreshold: 110
   rearAttackSkipChance: 0.95
-  leadAccuracy: 0
   patrolRadius: 750
   patrolArriveDist: 10
   patrolHeightRange: 100
   attackPassWeight: 0
   attackChaseWeight: 0.2
   attackHoldWeight: 0.8
+  evadeChance: 0.1
+  evadeCoolTime: 5
+  dodgeProbability: 0
   attackChaseDuration: 2
   attackHoldDuration: 7
   attackPassDuration: 4
@@ -5017,9 +5035,6 @@ MonoBehaviour:
   passOffsetStartDist: 200
   passHorizontalDist: 60
   passVerticalRange: 40
-  evadeChance: 0.1
-  evadeCoolTime: 5
-  dodgeProbability: 0
 --- !u!114 &6892535802448861962
 MonoBehaviour:
   m_ObjectHideFlags: 0

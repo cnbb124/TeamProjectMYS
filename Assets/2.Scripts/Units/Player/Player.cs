@@ -946,8 +946,9 @@ public class Player : Unit
 		// 음수 방지
 		exp += Mathf.Max(0, amount);
 
-		// 레벨업 체크
-		if (exp >= expToNextLevel)
+		// 레벨업 체크 — while이라 한 번에 여러 레벨치 경험치를 받아도 연속 레벨업 처리됨.
+		// (expToNextLevel은 항상 양수라 무한루프 없음)
+		while (exp >= expToNextLevel)
 			LevelUp();
 	}
 
@@ -969,8 +970,12 @@ public class Player : Unit
 
 		Debug.Log($"[Player] 레벨업! 현재 레벨: {level}");
 
-		// 레벨업 시 스탯 증가 예정
-		// OnLevelUp();
+		// 레벨업 효과는 여기에 추가 예정:
+		//  - 최대 HP 증가 (maxHpRemaining ↑ + RefillToMax 등)
+		//  - 인벤토리 사용 가능 슬롯 증가
+		//  - 장착 가능한 미사일 슬롯 증가
+		//  - Dodge 쿨다운 감소 (dodgeCoolTime ↓)
+		// (레벨업 연출/HUD 갱신이 필요하면 이벤트 훅을 여기서 발행)
 	}
 }
 

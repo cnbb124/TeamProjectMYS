@@ -14,7 +14,7 @@ using UnityEngine.SceneManagement;
 //   playerRef  : Player 레퍼런스. 씬 로드 후 자동 갱신.
 //
 // ▶ 적 / 스폰 참조용
-//   OnEnemyKilled()     : 적 사망 시 Enemy.Die()에서 호출
+//   OnEnemyKilled(killer, exp, gold) : 적 사망 시 Enemy.Die()에서 호출 (킬카운트 + 킬러에게 보상 지급)
 //   OnBossKilled()      : 보스 사망 시 보스 오브젝트에서 호출
 //   (파괴 목표는 오브젝트에 BossSpawnTarget 컴포넌트를 붙이면 자동 등록/파괴통지됨 — 킬 AND 목표파괴 시 보스 스폰)
 //   onBossSpawn         : 보스 스폰 조건 달성 시 발행 이벤트
@@ -539,11 +539,35 @@ public class GameManager : MonoBehaviour
 	/// 적 처치 시 Enemy.Die()에서 호출.
 	/// 킬카운트 누적 후 보스 스폰 조건 체크.
 	/// </summary>
-	public void OnEnemyKilled()
+	public void OnEnemyKilled(GameObject killer, int exp, int gold)
     {
         killCount++;
         onObjectiveChanged?.Invoke();
+        GiveRewardToPlayer(killer, exp, gold);  
         CheckBossSpawnCondition();
+    }
+
+    /// <summary>
+    /// 킬 보상을 '죽인 사람'에게 지급. killer의 Player를 찾아 경험치/골드 지급.
+    /// killer가 플레이어가 아니면(환경 사망 등) 지급 없음. 멀티 땐 killer 기준으로 각자에게 귀속됨
+    /// (단, 골드 인벤토리는 아직 전역 싱글톤이라 멀티에선 플레이어별로 분리 필요).
+    /// </summary>
+    private void GiveRewardToPlayer(GameObject killer, int exp, int gold)
+    {
+        if (killer == null)
+        {
+            return;
+        }
+        Player player = killer.GetComponentInParent<Player>();
+        if (player == null)
+        {
+            return;   // 플레이어가 죽인 게 아니면 보상 없음
+        }
+        player.GainExp(exp);
+        if (InventoryManager.Instance != null)
+        {
+            InventoryManager.Instance.gold += gold;
+        }
     }
 
     /// <summary>

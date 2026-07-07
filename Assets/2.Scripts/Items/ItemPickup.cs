@@ -19,9 +19,26 @@ using UnityEngine;
 // ======================================================
 public class ItemPickup : MonoBehaviour
 {
+    [Header("고정 아이템 드랍용 (프리팹에서 설정)")]
+    [Tooltip("이 픽업이 주는 아이템. 설정 시 풀에서 꺼낼 때 자동 초기화됨")]
+    [SerializeField] private ItemData itemData;
+    [SerializeField] private int amount = 1;
+
     private ItemData _data;
     private int _amount;
     private int _goldAmount;
+
+    // 풀에서 꺼낼 때(SetActive true)마다 프리팹에 설정된 itemData로 자기 초기화.
+    // itemData 미설정(골드 픽업 등)이면 스킵 — 그 경우 외부에서 Init(gold)로 세팅.
+    private void OnEnable()
+    {
+        if (itemData != null)
+        {
+            _data = itemData;
+            _amount = amount;
+            _goldAmount = 0;
+        }
+    }
 
     // 아이템 드랍용 초기화
     public void Init(ItemData data, int amount)
