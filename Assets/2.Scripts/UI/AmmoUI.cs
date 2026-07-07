@@ -28,11 +28,21 @@ public class AmmoUI : MonoBehaviour
 
 	private void Awake()
 	{
-        weaponSystem = player.GetComponent<WeaponSystem>();
+        // player가 인스펙터에 연결된 경우만 즉시 캐싱 (비어있으면 Update 폴백에서 처리)
+        if (player != null)
+            weaponSystem = player.GetComponent<WeaponSystem>();
 	}
 	private void Update()
     {
-        if (player == null)
+        // 인스펙터 연결 우선, 비어있으면 GameManager.playerRef에서 자동 폴백
+        if (player == null && GameManager.Instance != null)
+        {
+            player = GameManager.Instance.playerRef;
+            if (player != null)
+                weaponSystem = player.GetComponent<WeaponSystem>();
+        }
+
+        if (player == null || weaponSystem == null)
         {
             return;
         }

@@ -66,6 +66,11 @@ public class CrosshairUI : MonoBehaviour
 
     private void UpdatePosition()
     {
+        // 인스펙터 연결 우선, 비어있으면 자동 폴백 (playerRef / Camera.main)
+        if (player == null && GameManager.Instance != null && GameManager.Instance.playerRef != null)
+            player = GameManager.Instance.playerRef.transform;
+        if (mainCam == null) mainCam = Camera.main;
+
         if (player == null || mainCam == null || _canvas == null) return;
 
         // 기수(forward)에 피치 보정을 적용한 조준 방향

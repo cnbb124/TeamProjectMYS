@@ -41,6 +41,14 @@ public class TargettingRadarSystem : MonoBehaviour
 
     void Update()
 {
+    // 인스펙터 연결 우선, 비어있으면 GameManager.playerRef에서 자동 폴백
+    if (GameManager.Instance != null && GameManager.Instance.playerRef != null)
+    {
+        Player p = GameManager.Instance.playerRef;
+        if (lockOnSystem == null) lockOnSystem = p.GetComponent<LockOnSystem>();
+        if (player == null)       player       = p.transform;
+    }
+
     if (lockOnSystem == null || player == null) return;
 
     if (playerArrow != null)

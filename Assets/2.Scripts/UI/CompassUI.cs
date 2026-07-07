@@ -48,6 +48,10 @@ public class CompassUI : MonoBehaviour
 
     private void Update()
     {
+        // 인스펙터 연결 우선, 비어있으면 GameManager.playerRef에서 자동 폴백
+        if (player == null && GameManager.Instance != null && GameManager.Instance.playerRef != null)
+            player = GameManager.Instance.playerRef.transform;
+
         if (player == null) return;
 
         UpdateCompass();

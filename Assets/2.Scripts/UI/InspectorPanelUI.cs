@@ -68,6 +68,10 @@ public class InspectorPanelUI : MonoBehaviour
 
     private void Refresh()
     {
+        // 인스펙터 연결 우선, 비어있으면 GameManager.playerRef에서 자동 폴백
+        if (player == null && GameManager.Instance != null)
+            player = GameManager.Instance.playerRef;
+
         if (player == null) return;
 
         UpdatePartImages();
