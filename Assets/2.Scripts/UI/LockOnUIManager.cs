@@ -27,6 +27,12 @@ public class LockOnUIManager : MonoBehaviour
 
     private void Update()
     {
+        // 인스펙터 연결 우선, 비어있으면 자동 폴백
+        // (DontDestroyOnLoad라 씬 전환 시 씬 오브젝트 참조가 끊기므로 매번 확인 필수)
+        if (lockOnSystem == null && GameManager.Instance != null && GameManager.Instance.playerRef != null)
+            lockOnSystem = GameManager.Instance.playerRef.GetComponent<LockOnSystem>();
+        if (_mainCamera == null) _mainCamera = Camera.main;
+
         if (lockOnSystem == null || _mainCamera == null) return;
 
         _activeCount = 0;
