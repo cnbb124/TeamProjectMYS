@@ -88,8 +88,8 @@ public abstract class Unit : MonoBehaviour, IDamageable
 	[Tooltip("체력 최대치")]
 	public int maxHpRemaining = 150; //최대,현재HP수치
 
-	[Header("<size=14>2.Shield </size>")]
-	[Tooltip("실드(방어막) 최대치")]
+	[Header("<size=14>2. 실드</size>")]
+	[Tooltip("실드(보호막) 최대치")]
 	public int maxShieldCapacity;//최대,현재실드수치
 	[Tooltip("피격후 회복 딜레이")]
 	public float shieldRegainDelay;//피격후 회복까지딜레이시간
@@ -118,7 +118,7 @@ public abstract class Unit : MonoBehaviour, IDamageable
 	private ProceduralForceField.ProceduralForceFieldOverlay _shieldOverlay;
 
 
-	[Header("<size=14>3. Armor</size>")]
+	[Header("<size=14>3. 장갑(아머)</size>")]
 	[Tooltip("최대 아머 수치")]
 	public int maxArmor;//최대,현재아머수치
 
@@ -127,11 +127,69 @@ public abstract class Unit : MonoBehaviour, IDamageable
 
 
 
-	[Header("<size=14>4. Critical</size>")]
+	[Header("<size=14>4. 크리티컬</size>")]
 	public float criChance;
 	public float criDamageMultiplier;
 
 
+	// =====================================================================
+	// 사망 시퀀스
+	// =====================================================================
+	[Header("<size=14>5. 사망 처리 시간</size>")]
+	[Tooltip("사망 애니 재생 후 정리(풀 반납 등)까지 대기 시간(초). 이 시간 동안 죽는 모션이 재생됨.")]
+	[SerializeField] protected float _deathSequenceDuration = 1.5f;
+
+	//[HideInInspector]
+	//public Transform curFirePos;//밑에서 총구스위칭용 
+	//필요없음.
+
+	[Header("===============<size=14>현재 상태(참고용 입력x )</size>================")]
+	[Tooltip("UNIT_STATE — \"지금 어떤 상태인가\" (표현/물리 레이어)")]
+	public UNIT_STATE curState = UNIT_STATE.IDLE;
+	// 직전 상태. 전환별로 다른 애니메이션 블렌드(CrossFade duration)를 적용할 때 참조
+	protected UNIT_STATE _previousState = UNIT_STATE.IDLE;
+	public int curHpRemaining;
+	public int CurHp => curHpRemaining;//인터페이스 프로퍼티용
+									   //public int CurShiled => curShieldRemaining;//인터페이스 프로퍼티용
+	public int curShieldRemaining;
+	public int curArmorRemaining;
+	public float curSpeed;
+	public float curBoostRemaining;//부스트잔량
+								   //잔탄도추가예정
+
+	private float _updateTimer = 0f;
+
+	//// ==================레이어==================
+	//[HideInInspector]
+	//public int playerLayer;
+	//[HideInInspector]
+	//public int enemyLayer;
+	//[HideInInspector]
+	//public int groundLayer;//행성등 지형지물, 차후 수정필요
+	//[HideInInspector]
+	//public int ItemLayer;//아이템레이어 추가필요
+	//[HideInInspector]
+	//public int playerProjectileLayer;
+	//[HideInInspector]
+	//public int enemyProjectileLayer;
+
+
+	[HideInInspector]
+	public SOUND_TYPE _playSoundType;
+
+	// 엔진 사운드(공회전/가속/부스트) 볼륨·피치 튜닝값은 SoundManager.engineSoundConfig로 이전됨.
+	// Unit은 speedRatio/isBoosting/mute만 계산해서 SoundManager.UpdateEngineLoopVolumes()에 넘김 (RTPC 스타일 분리).
+
+
+
+	// =====================================================================
+	// 일시정지 / 게임오버 체크
+	// Player, Enemy 등 자식 클래스의 Update/FixedUpdate 첫 줄에서 사용.
+	// Unit.Update() 에도 적용 - 자식이 base.Update() 호출 시 이중 안전망.
+	// =====================================================================
+	protected bool ShouldPause =>
+		GameManager.Instance != null &&
+		(GameManager.Instance.IsPaused || GameManager.Instance.IsGameOver);
 
 
 	// 크리여부 판정은 투사체가 담당 크확은 유닛이. → HitInfo.isCritical로 전달받음
@@ -436,58 +494,7 @@ public abstract class Unit : MonoBehaviour, IDamageable
 	// GetFirePos / GetBoostPos 제거 — WeaponSystem이 직접 _bulletFirePositions 등을 보유
 
 
-	//[HideInInspector]
-	//public Transform curFirePos;//밑에서 총구스위칭용 
-	//필요없음.
-
-	[Header("===============<size=14>현재 상태(참고용 입력x )</size>================")]
-	[Tooltip("UNIT_STATE — \"지금 어떤 상태인가\" (표현/물리 레이어)")]
-	public UNIT_STATE curState = UNIT_STATE.IDLE;
-	// 직전 상태. 전환별로 다른 애니메이션 블렌드(CrossFade duration)를 적용할 때 참조
-	protected UNIT_STATE _previousState = UNIT_STATE.IDLE;
-	public int curHpRemaining;
-	public int CurHp => curHpRemaining;//인터페이스 프로퍼티용
-									   //public int CurShiled => curShieldRemaining;//인터페이스 프로퍼티용
-	public int curShieldRemaining;
-	public int curArmorRemaining;
-	public float curSpeed;
-	public float curBoostRemaining;//부스트잔량
-								   //잔탄도추가예정
-
-	private float _updateTimer = 0f;
-
-	//// ==================레이어==================
-	//[HideInInspector]
-	//public int playerLayer;
-	//[HideInInspector]
-	//public int enemyLayer;
-	//[HideInInspector]
-	//public int groundLayer;//행성등 지형지물, 차후 수정필요
-	//[HideInInspector]
-	//public int ItemLayer;//아이템레이어 추가필요
-	//[HideInInspector]
-	//public int playerProjectileLayer;
-	//[HideInInspector]
-	//public int enemyProjectileLayer;
-
-
-	[HideInInspector]
-	public SOUND_TYPE _playSoundType;
-
-	// 엔진 사운드(공회전/가속/부스트) 볼륨·피치 튜닝값은 SoundManager.engineSoundConfig로 이전됨.
-	// Unit은 speedRatio/isBoosting/mute만 계산해서 SoundManager.UpdateEngineLoopVolumes()에 넘김 (RTPC 스타일 분리).
-
-
-
-	// =====================================================================
-	// 일시정지 / 게임오버 체크
-	// Player, Enemy 등 자식 클래스의 Update/FixedUpdate 첫 줄에서 사용.
-	// Unit.Update() 에도 적용 - 자식이 base.Update() 호출 시 이중 안전망.
-	// =====================================================================
-	protected bool ShouldPause =>
-		GameManager.Instance != null &&
-		(GameManager.Instance.IsPaused || GameManager.Instance.IsGameOver);
-
+	
 
 
 
@@ -516,12 +523,7 @@ public abstract class Unit : MonoBehaviour, IDamageable
 	//   Player는 AI_STATE 없이 입력으로 UNIT_STATE 직접 제어
 	// =====================================================================
 
-	// =====================================================================
-	// 사망 시퀀스
-	// =====================================================================
-	[Header("━━━━━━ 사망 ━━━━━━")]
-	[Tooltip("사망 애니 재생 후 정리(풀 반납 등)까지 대기 시간(초). 이 시간 동안 죽는 모션이 재생됨.")]
-	[SerializeField] protected float _deathSequenceDuration = 1.5f;
+	
 
 	// 마지막으로 치명타(사망)를 입힌 공격자. 멀티에서 킬 보상을 '죽인 사람'에게 귀속시키기 위해 기록.
 	// (싱글에선 유일한 플레이어라 결과는 같지만, 이 구조로 잡아두면 MP 전환 시 킬러 구분이 자동으로 맞음)

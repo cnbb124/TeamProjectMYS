@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Diagnostics.Tracing;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 
@@ -236,6 +237,11 @@ public class SoundManager : MonoBehaviour
 			InitializeDictionary(); // 시작할 때 딕셔너리 세팅
 			InitializeSFXPool();    // 시작할 때 3D 사운드 풀링 세팅
 
+			// 씬 언로드 시 죽은 오디오 참조 정리(해결책①). SoundManager는 DontDestroyOnLoad라
+			// 씬이 바뀌어도 풀/딕셔너리를 계속 들고 있는데, 풀 스피커가 유닛에 SetParent된 채로
+			// 그 유닛이 씬 언로드로 파괴되면 스피커도 같이 파괴되고 참조만 남아 이후 접근 시 예외가 남.
+			// 새 씬 유닛들의 Start(엔진음 등록 등)보다 먼저 도는 이 시점에 죽은 참조를 걷어낸다.
+			SceneManager.sceneUnloaded += OnSceneUnloaded;
 		}
 		else if (instance != this)
 		{
@@ -245,12 +251,35 @@ public class SoundManager : MonoBehaviour
 		}
 	}
 
+	private void OnDestroy()
+	{
+		// 실제 인스턴스만 구독했으므로 그 경우에만 해제(중복 인스턴스는 구독 안 함).
+		if (instance == this)
+		{
+			SceneManager.sceneUnloaded -= OnSceneUnloaded;
+		}
+	}
+
+	// 씬 언로드 콜백 — 파괴된 오디오 참조를 걷어낸다(해결책①).
+	private void OnSceneUnloaded(Scene scene)
+	{
+		PurgeDeadAudioReferences($"씬 언로드('{scene.name}')");
+	}
+
 	private void Update()
 	{
 		// PlaySFX3DAtUnit으로 유닛에 부착됐던 단발성 소스 중 재생이 끝난 것을 매니저로 회수
 		for (int i = _pendingUnparentSources.Count - 1; i >= 0; i--)
 		{
 			AudioSource source = _pendingUnparentSources[i];
+
+			// 부착됐던 유닛이 파괴되면 이 소스도 같이 파괴됨 — .isPlaying 접근 전에 걸러야 예외가 안 남(해결책②).
+			if (source == null)
+			{
+				Debug.LogWarning($"[SoundManager] 파괴된 AudioSource 감지 @Update(_pendingUnparentSources 인덱스 {i}) — 접근 전 제거함. (원인: 부착 유닛이 파괴되며 같이 파괴됨)");
+				_pendingUnparentSources.RemoveAt(i);
+				continue;
+			}
 
 			//재생중이면 아직 처리 안함
 			if (source.isPlaying)
@@ -313,8 +342,16 @@ public class SoundManager : MonoBehaviour
 	// 풀에서 사용 가능한(현재 재생 중이 아닌) 스피커를 찾아 반환
 	private AudioSource GetAvailableSFX3DSource()
 	{
-		for (int i = 0; i < _sfx3DPool.Count; i++)
+		// 뒤에서부터 순회 — 파괴된(유닛과 함께 destroy된) 슬롯을 접근 전에 제거하기 위함(해결책②).
+		for (int i = _sfx3DPool.Count - 1; i >= 0; i--)
 		{
+			// Unity의 == null은 destroy된 오브젝트도 true로 잡음. .isPlaying 접근 전에 먼저 걸러야 예외가 안 남.
+			if (_sfx3DPool[i] == null)
+			{
+				Debug.LogWarning($"[SoundManager] 파괴된 AudioSource 감지 @GetAvailableSFX3DSource (풀 인덱스 {i}) — 접근 전 제거함. (원인: 스피커가 SetParent된 유닛이 파괴되며 같이 파괴됨)");
+				_sfx3DPool.RemoveAt(i);
+				continue;
+			}
 			if (!_sfx3DPool[i].isPlaying)
 			{
 				// dropOldest로 강제 Stop된 소스가 유닛 자식에 남아있을 수 있으므로 복귀 보장
@@ -325,6 +362,84 @@ public class SoundManager : MonoBehaviour
 
 		//모든 스피커가 사용 중일 경우, 새롭게 하나를 더 생성하여 반환
 		return CreateNewAudioSourceToPool();
+	}
+
+	// =====================================================================
+	// 파괴된 오디오 참조 일괄 정리(해결책①의 실체).
+	// 풀 스피커가 유닛에 SetParent된 채 그 유닛이 씬 언로드로 파괴되면 스피커도 같이 파괴되는데,
+	// SoundManager(DontDestroyOnLoad)의 풀/딕셔너리엔 그 죽은 참조가 그대로 남아 이후 접근 시 예외가 남.
+	// 씬 언로드 시점에 죽은 참조만 골라 제거한다. (살아있는 항목은 건드리지 않아 재생 중인 소리 유지)
+	// =====================================================================
+	private void PurgeDeadAudioReferences(string context)
+	{
+		int removed = 0;
+
+		// 1) 스피커 풀 — 파괴된 슬롯 제거(뒤에서부터).
+		for (int i = _sfx3DPool.Count - 1; i >= 0; i--)
+		{
+			if (_sfx3DPool[i] == null)
+			{
+				_sfx3DPool.RemoveAt(i);
+				removed++;
+			}
+		}
+
+		// 2) 루프음 추적 딕셔너리 — 키(대상 유닛 Transform)나 값(AudioSource)이 파괴된 항목 제거.
+		List<(Transform, SOUND_TYPE)> deadLoopKeys = new List<(Transform, SOUND_TYPE)>();
+		foreach (var kv in _activeLoopSounds)
+		{
+			if (kv.Key.Item1 == null || kv.Value == null)
+			{
+				deadLoopKeys.Add(kv.Key);
+			}
+		}
+		foreach (var key in deadLoopKeys)
+		{
+			_activeLoopSounds.Remove(key);
+			removed++;
+		}
+
+		// 3) 단발성 부착 소스 추적 리스트 — 파괴된 것 제거(SoundManager.Update가 매 프레임 접근하는 지점).
+		for (int i = _pendingUnparentSources.Count - 1; i >= 0; i--)
+		{
+			if (_pendingUnparentSources[i] == null)
+			{
+				_pendingUnparentSources.RemoveAt(i);
+				removed++;
+			}
+		}
+
+		// 4) 폴리포니 추적 맵 — 각 타입 리스트에서 파괴된 소스 제거.
+		foreach (var list in _activeTypeSourceMap.Values)
+		{
+			for (int i = list.Count - 1; i >= 0; i--)
+			{
+				if (list[i] == null)
+				{
+					list.RemoveAt(i);
+					removed++;
+				}
+			}
+		}
+
+		// 5) 최소 재생 간격 맵 — 발사 주체(Transform)가 파괴된 항목 제거.
+		List<(SOUND_TYPE, Transform)> deadThrottleKeys = new List<(SOUND_TYPE, Transform)>();
+		foreach (var kv in _lastPlayTimeMap)
+		{
+			if (kv.Key.Item2 == null)
+			{
+				deadThrottleKeys.Add(kv.Key);
+			}
+		}
+		foreach (var key in deadThrottleKeys)
+		{
+			_lastPlayTimeMap.Remove(key);
+		}
+
+		// 6) 엔진음 경고 중복방지 집합 — 초기화(새 씬 유닛이 다시 경고할 수 있게).
+		_engineLoopMissingWarned.Clear();
+
+		Debug.Log($"[SoundManager] 파괴된 오디오 참조 정리 완료 @{context} — 제거 {removed}건, 남은 풀 {_sfx3DPool.Count}개.");
 	}
 
 
@@ -400,10 +515,16 @@ public class SoundManager : MonoBehaviour
 		}
 		List<AudioSource> active = _activeTypeSourceMap[type];
 
-		// 재생 완료된 소스 정리
+		// 재생 완료된 소스 정리 (파괴된 소스도 == null로 함께 걸러짐 — 해결책②)
 		for (int i = active.Count - 1; i >= 0; i--)
 		{
-			if (active[i] == null || !active[i].isPlaying)
+			if (active[i] == null)
+			{
+				Debug.LogWarning($"[SoundManager] 파괴된 AudioSource 감지 @AcquireSFX3DSource (type={type}, active 인덱스 {i}) — 접근 전 제거함. (원인: 부착 유닛이 파괴되며 같이 파괴됨)");
+				active.RemoveAt(i);
+				continue;
+			}
+			if (!active[i].isPlaying)
 			{
 				active.RemoveAt(i);
 			}
@@ -808,8 +929,15 @@ public class SoundManager : MonoBehaviour
 		_sfxUISource.Stop();
 
 		// 풀링된 3D 스피커들도 모두 재생 정지
-		for (int i = 0; i < _sfx3DPool.Count; i++)
+		// 뒤에서부터 순회 — 파괴된(유닛과 함께 destroy된) 슬롯을 접근 전에 제거하기 위함(해결책②).
+		for (int i = _sfx3DPool.Count - 1; i >= 0; i--)
 		{
+			if (_sfx3DPool[i] == null)
+			{
+				Debug.LogWarning($"[SoundManager] 파괴된 AudioSource 감지 @StopSFXAll (풀 인덱스 {i}) — 접근 전 제거함. (원인: 스피커가 SetParent된 유닛이 파괴되며 같이 파괴됨)");
+				_sfx3DPool.RemoveAt(i);
+				continue;
+			}
 			if (_sfx3DPool[i].isPlaying)
 			{
 				_sfx3DPool[i].Stop();
@@ -844,8 +972,16 @@ public class SoundManager : MonoBehaviour
 	public void SetSFX3DVolume(float volume)
 	{
 		sfx3DVolume = volume;//입력한 볼륨값 현재설정에 저장
-		foreach (var source in _sfx3DPool)
+		// 뒤에서부터 순회 — 파괴된 슬롯을 접근 전에 제거하기 위함(해결책②).
+		for (int i = _sfx3DPool.Count - 1; i >= 0; i--)
 		{
+			AudioSource source = _sfx3DPool[i];
+			if (source == null)
+			{
+				Debug.LogWarning($"[SoundManager] 파괴된 AudioSource 감지 @SetSFX3DVolume (풀 인덱스 {i}) — 접근 전 제거함. (원인: 스피커가 SetParent된 유닛이 파괴되며 같이 파괴됨)");
+				_sfx3DPool.RemoveAt(i);
+				continue;
+			}
 			if (source.isPlaying)//혹여나 실행되고있는게있따면
 			{
 				source.volume = sfx3DVolume;

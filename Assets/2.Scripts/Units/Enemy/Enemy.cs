@@ -25,7 +25,8 @@ using UnityEngine;
 
 public class Enemy : Unit
 {
-    [Header("<size=18>Enemy 보상 설정</size>")]
+	[Header("<size=14>==========================================</size>")]
+	[Header("<size=18>Enemy 보상 설정</size>")]
     [Tooltip("경험치 보상 최소치")]
     public int expRewardMin;
     [Tooltip("경험치 보상 최대치 (최소~최대 사이에서 랜덤 지급)")]

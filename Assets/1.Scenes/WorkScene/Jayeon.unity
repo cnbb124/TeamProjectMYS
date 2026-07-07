@@ -391,7 +391,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6706981218406096366, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8780441365474338247, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
       propertyPath: shieldRegainRate
@@ -456,7 +456,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6428153736698038514, guid: b043e4959cc079943be1c844c5e57168, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -533,26 +533,6 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: 75285212269006569, guid: 6c496b1493a584e4db5940e2753f9917, type: 3}
-      propertyPath: poolConfigs.Array.size
-      value: 10
-      objectReference: {fileID: 0}
-    - target: {fileID: 75285212269006569, guid: 6c496b1493a584e4db5940e2753f9917, type: 3}
-      propertyPath: poolConfigs.Array.data[9].prefab
-      value: 
-      objectReference: {fileID: 5370120471822735445, guid: f5decec55188b7b4c9026b9a8941a64c, type: 3}
-    - target: {fileID: 75285212269006569, guid: 6c496b1493a584e4db5940e2753f9917, type: 3}
-      propertyPath: poolConfigs.Array.data[9].category
-      value: 2
-      objectReference: {fileID: 0}
-    - target: {fileID: 75285212269006569, guid: 6c496b1493a584e4db5940e2753f9917, type: 3}
-      propertyPath: poolConfigs.Array.data[9].poolType
-      value: 202
-      objectReference: {fileID: 0}
-    - target: {fileID: 75285212269006569, guid: 6c496b1493a584e4db5940e2753f9917, type: 3}
-      propertyPath: poolConfigs.Array.data[9].initialSize
-      value: 5
-      objectReference: {fileID: 0}
     - target: {fileID: 4353218582667052855, guid: 6c496b1493a584e4db5940e2753f9917, type: 3}
       propertyPath: m_Name
       value: PoolManager
@@ -750,7 +730,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6428153736698038514, guid: b043e4959cc079943be1c844c5e57168, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -948,7 +928,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6428153736698038514, guid: b043e4959cc079943be1c844c5e57168, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -1183,7 +1163,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8508547545565869303, guid: 5b6492615b4931a40b442946ade11288, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -1363,11 +1343,27 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 1174679257422973203, guid: b043e4959cc079943be1c844c5e57168, type: 3}
+      propertyPath: dropChance
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1174679257422973203, guid: b043e4959cc079943be1c844c5e57168, type: 3}
       propertyPath: dropPoolTypes.Array.size
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 1174679257422973203, guid: b043e4959cc079943be1c844c5e57168, type: 3}
       propertyPath: dropPoolTypes.Array.data[0]
+      value: 202
+      objectReference: {fileID: 0}
+    - target: {fileID: 1174679257422973203, guid: b043e4959cc079943be1c844c5e57168, type: 3}
+      propertyPath: dropPoolTypes.Array.data[1]
+      value: 202
+      objectReference: {fileID: 0}
+    - target: {fileID: 1174679257422973203, guid: b043e4959cc079943be1c844c5e57168, type: 3}
+      propertyPath: dropPoolTypes.Array.data[2]
+      value: 202
+      objectReference: {fileID: 0}
+    - target: {fileID: 1174679257422973203, guid: b043e4959cc079943be1c844c5e57168, type: 3}
+      propertyPath: dropPoolTypes.Array.data[3]
       value: 202
       objectReference: {fileID: 0}
     - target: {fileID: 6428153736698038514, guid: b043e4959cc079943be1c844c5e57168, type: 3}
@@ -1689,7 +1685,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6428153736698038514, guid: b043e4959cc079943be1c844c5e57168, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -4556,7 +4552,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6428153736698038514, guid: b043e4959cc079943be1c844c5e57168, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -4622,7 +4618,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6428153736698038514, guid: b043e4959cc079943be1c844c5e57168, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -4688,7 +4684,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6428153736698038514, guid: b043e4959cc079943be1c844c5e57168, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -4822,7 +4818,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6428153736698038514, guid: b043e4959cc079943be1c844c5e57168, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -4920,7 +4916,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6428153736698038514, guid: b043e4959cc079943be1c844c5e57168, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -5204,7 +5200,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 9127277378237319991, guid: de05701f7f60baf47824a8a546651d04, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
