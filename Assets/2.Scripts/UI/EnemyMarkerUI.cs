@@ -53,6 +53,15 @@ public class EnemyMarkerUI : MonoBehaviour
 
     private void Update()
     {
+        // 인스펙터 연결 우선, 비어있으면 자동 폴백 (playerRef의 LockOnSystem / Camera.main)
+        if (GameManager.Instance != null && GameManager.Instance.playerRef != null)
+        {
+            Player p = GameManager.Instance.playerRef;
+            if (lockOnSystem == null)    lockOnSystem    = p.GetComponent<LockOnSystem>();
+            if (playerTransform == null) playerTransform = p.transform;
+        }
+        if (mainCam == null) mainCam = Camera.main;
+
         if (lockOnSystem == null || mainCam == null) return;
 
         Collider[] targets = lockOnSystem.TargetsInRadarRange;

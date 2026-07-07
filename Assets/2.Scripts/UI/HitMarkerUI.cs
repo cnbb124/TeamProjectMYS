@@ -52,21 +52,41 @@ public class HitMarkerUI : MonoBehaviour
         }
     }
 
+    // 이벤트 구독 여부 (플레이어가 늦게 잡히는 경우 LateUpdate에서 재시도)
+    private bool _subscribed;
+
     private void OnEnable()
     {
-        if (player != null)
-            player.onHitDirectionWorld += OnHit;
+        TrySubscribe();
     }
 
     private void OnDisable()
     {
-        if (player != null)
+        if (player != null && _subscribed)
             player.onHitDirectionWorld -= OnHit;
+        _subscribed = false;
+    }
+
+    // 인스펙터 연결 우선, 비어있으면 GameManager.playerRef 자동 폴백 + 이벤트 구독
+    private void TrySubscribe()
+    {
+        if (player == null && GameManager.Instance != null)
+            player = GameManager.Instance.playerRef;
+        if (mainCam == null) mainCam = Camera.main;
+
+        if (player != null && !_subscribed)
+        {
+            player.onHitDirectionWorld += OnHit;
+            _subscribed = true;
+        }
     }
 
     private void LateUpdate()
     {
+        // 플레이어가 씬 로드 후 늦게 등록되는 경우 대비 — 잡힐 때까지 재시도
+        if (player == null || !_subscribed) TrySubscribe();
         if (player == null) return;
+
         _prevShield = player.curShieldRemaining;
         _prevHp     = player.curHpRemaining;
     }

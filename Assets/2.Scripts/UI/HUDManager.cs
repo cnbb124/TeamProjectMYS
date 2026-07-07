@@ -49,9 +49,17 @@ public class HUDManager : MonoBehaviour
         DontDestroyOnLoad(gameObject);
     }
 
+    // 인스펙터 연결 우선, 비어있으면 GameManager.playerRef에서 자동 폴백 (찾으면 캐싱)
+    private Player GetPlayer()
+    {
+        if (player == null && GameManager.Instance != null)
+            player = GameManager.Instance.playerRef;
+        return player;
+    }
+
     void Update()
     {
-        if (player == null) return;
+        if (GetPlayer() == null) return;
 
         UpdateBar(hpFill,     hpText,     player.curHpRemaining,     player.maxHpRemaining);
         UpdateBar(shieldFill, shieldText, player.curShieldRemaining, player.maxShieldCapacity);
