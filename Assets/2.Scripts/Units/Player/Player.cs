@@ -191,6 +191,22 @@ public class Player : Unit
 	}
 
 
+	[Header("<size=14>엔진 쓰로틀(엔진음 반응)</size>")]
+	[Tooltip("가속 입력에 따라 엔진음이 차오르고/잦아드는 속도(초당). 클수록 빠릿하게 반응.\n" +
+			 "엔진음이 실제 속도가 아니라 '가속 입력(쓰로틀)'을 따라감 — 닷지로 순간 빨라져도 엔진음은 입력 기준.")]
+	[SerializeField] private float throttleResponseSpeed = 3f;
+	private float _throttle;              // 현재 쓰로틀(0~1). 매 프레임 목표로 램프.
+	private float _engineThrottleTarget;  // 목표 쓰로틀 = 방향 가중 입력 크기(MovingByInput에서 매 FixedUpdate 갱신).
+	                                       // 전진=풀(1), 좌우/후진=strafeSpeedRatio 배 → 실제 속도 가중과 동일.
+
+	// 엔진음을 실제 속도가 아니라 '쓰로틀'(방향 가중 입력)에 연동 (Unit.GetEngineIntensity override).
+	// 입력이 있으면 서서히 목표로 차오르고, 없으면 0으로 잦아든다.
+	protected override float GetEngineIntensity()
+	{
+		_throttle = Mathf.MoveTowards(_throttle, _engineThrottleTarget, throttleResponseSpeed * Time.deltaTime);
+		return _throttle;
+	}
+
 	// Update is called once per frame
 	protected override void Update()
 	{
@@ -551,6 +567,9 @@ public class Player : Unit
 
 		//  전진 벡터 + (전진 외 벡터 * strafeSpeedRatio)
 		Vector3 dir = forwardDir + nonForwardDir * strafeSpeedRatio;
+
+		// 엔진음 쓰로틀 목표 = 방향 가중 입력 크기(normalize 전 값). 전진=1, 좌우/후진=strafeSpeedRatio 배.
+		_engineThrottleTarget = Mathf.Clamp01(dir.magnitude);
 
 		if (dir.magnitude > 1f)
 		{

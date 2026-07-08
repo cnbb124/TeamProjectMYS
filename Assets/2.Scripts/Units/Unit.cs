@@ -212,11 +212,9 @@ public abstract class Unit : MonoBehaviour, IDamageable
 	[Tooltip("최대속도velocity가 넘어갈시 고정시킬속도")]
 	public float maxSpeed;
 	[Tooltip("목표 속도(baseMoveSpeed/boostSpeed)까지 도달하는 데 걸리는 시간(초).\n" +
-			 "작을수록 빠릿하게 반응함. base든 boost든 목표속도가 달라도 항상 이 시간만큼 걸림(내부에서 목표속도÷이 시간으로 가속력 계산).")]
+			 "작을수록 빠릿하게 반응함. base든 boost든 목표속도가 달라도 항상 이 시간만큼 걸림")]
 	public float timeToMaxSpeed = 0.4f;
-	[Tooltip("입력을 떼고 완전히 멈추는 데 걸리는 시간(초).\n" +
-			 "Rigidbody.drag를 0으로 빼서(가속 시 목표속도까지 정확히 도달하게 하려고) 자연 감속이 없어졌으므로,\n" +
-			 "정지 시 감속을 이 값으로 직접 제어함. 멈추기 시작한 시점의 속도를 기준으로 항상 이 시간 안에 0이 됨.")]
+	[Tooltip("입력을 떼고 완전히 멈추는 데 걸리는 시간(초)")]
 	public float timeToStop = 0.4f;
 	[Tooltip("입력없이 감속 중일 때 BRAKE 상태로 진입하는 속도 기준(최대속도 대비 비율, 0~1).")]
 	[Range(0f, 1f)]
@@ -488,8 +486,15 @@ public abstract class Unit : MonoBehaviour, IDamageable
 	private void UpdateEngineAudio()
 	{
 		bool mute = CurState == UNIT_STATE.DIE || _rb == null;
-		float speedRatio = (!mute && maxSpeed > 0f) ? Mathf.Clamp01(_rb.velocity.magnitude / maxSpeed) : 0f;
-		_sound?.UpdateEngineLoopVolumes(transform, speedRatio, _isBoosting, mute);
+		float intensity = mute ? 0f : GetEngineIntensity();
+		_sound?.UpdateEngineLoopVolumes(transform, intensity, _isBoosting, mute);
+	}
+
+	// 엔진 루프음 강도(0~1). 기본은 '현재 속도 비율' — 적 등은 이걸 그대로 사용.
+	// Player는 '쓰로틀'(가속 입력)로 override해서 실제 속도가 아니라 입력에 반응하게 함.
+	protected virtual float GetEngineIntensity()
+	{
+		return (_rb != null && maxSpeed > 0f) ? Mathf.Clamp01(_rb.velocity.magnitude / maxSpeed) : 0f;
 	}
 	// GetFirePos / GetBoostPos 제거 — WeaponSystem이 직접 _bulletFirePositions 등을 보유
 

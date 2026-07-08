@@ -63,7 +63,7 @@ MonoBehaviour:
   weaponSystem: {fileID: 0}
   skillSystem: {fileID: 0}
   maxHpRemaining: 999999
-  maxShieldCapacity: 200
+  maxShieldCapacity: 1500
   shieldRegainDelay: 3
   shieldRegainRate: 100
   isShieldRegaining: 0
@@ -73,11 +73,19 @@ MonoBehaviour:
   defense: 3
   criChance: 20
   criDamageMultiplier: 1.5
+  _deathSequenceDuration: 1.5
+  curState: 0
+  curHpRemaining: 0
+  curShieldRemaining: 0
+  curArmorRemaining: 0
+  curSpeed: 0
+  curBoostRemaining: 0
+  _playSoundType: 0
   baseMoveSpeed: 100
   boostSpeed: 150
   maxSpeed: 150
   timeToMaxSpeed: 1.2
-  timeToStop: 1
+  timeToStop: 1.5
   brakeEnterSpeedRatio: 0.65
   brakeExitSpeedRatio: 0.2
   maxBoostCapacity: 75
@@ -90,14 +98,6 @@ MonoBehaviour:
   dodgeCoolTime: 2
   dodgeDistance: 40
   speedMultiPlier: 0
-  curState: 0
-  curHpRemaining: 0
-  curShieldRemaining: 0
-  curArmorRemaining: 0
-  curSpeed: 0
-  curBoostRemaining: 0
-  _playSoundType: 0
-  _deathSequenceDuration: 1.5
   xSensitivity: 200
   ySensitivity: 250
   rollSensitivity: 120
@@ -109,6 +109,7 @@ MonoBehaviour:
   maxFuelCapacity: 0
   curFuelRemaining: 0
   strafeSpeedRatio: 0.3
+  throttleResponseSpeed: 1
 --- !u!114 &7863336485977377780
 MonoBehaviour:
   m_ObjectHideFlags: 0
