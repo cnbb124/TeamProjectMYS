@@ -218,8 +218,11 @@ public abstract class Projectile : MonoBehaviour
         // 맞은 대상이 데미지를 받을 수 있는지 (Unit 한정 아님 - IDamageable 전부)
         IDamageable target = other.GetComponentInParent<IDamageable>();
 
+        // attacker는 풀 투사체(DDOL)가 쏜 유닛보다 오래 살아 이미 파괴됐을 수 있음.
+        GameObject attackerGo = attacker != null ? attacker.gameObject : null;
+
         //대상이 존재하고, 발사자 본인이 아닐 경우에만 OnHit 발생
-        if (target != null && (target as MonoBehaviour)?.gameObject != attacker?.gameObject)
+        if (target != null && (target as MonoBehaviour)?.gameObject != attackerGo)
         {
             OnHit(other);
         }

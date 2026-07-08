@@ -686,7 +686,7 @@ public abstract class Unit : MonoBehaviour, IDamageable
 	protected IEnumerator ShieldRegenerationRoutine()
 	{
 		//피격 후 설정된 딜레이(초)만큼 대기합니다. (Update의 타이머 연산을 완벽히 대체)
-		yield return new WaitForSeconds(shieldRegainDelay);
+		yield return GameManager.WaitGameplaySeconds(shieldRegainDelay);
 
 		// 회복 시작 시 Overlay 리셋 (파괴 상태 해제, 다시 피격 이펙트 보이게)
 		_shieldOverlay?.TriggerReset();
@@ -700,12 +700,17 @@ public abstract class Unit : MonoBehaviour, IDamageable
 		//  실드가 꽉 차지 않았고, 유닛이 살아있는 동안 반복해서 회복
 		while (curShieldRemaining < maxShieldCapacity && curState != UNIT_STATE.DIE)
 		{
-			// 초당 회복량(shieldRegainRate)을 0.1초 기준 단위로 계산하여 더함
-			curShieldRemaining += Mathf.RoundToInt(shieldRegainRate * 0.1f);
-			curShieldRemaining = Mathf.Min(curShieldRemaining, maxShieldCapacity);
+			// 일시정지/게임오버 중엔 회복하지 않음 — 코루틴 tick(WaitForSeconds)은 플래그 방식 정지를
+			// 무시하므로, 프리즈 동안은 회복 연산을 스킵한다(대기는 그대로 흘려보냄).
+			if (!ShouldPause)
+			{
+				// 초당 회복량(shieldRegainRate)을 0.1초 기준 단위로 계산하여 더함
+				curShieldRemaining += Mathf.RoundToInt(shieldRegainRate * 0.1f);
+				curShieldRemaining = Mathf.Min(curShieldRemaining, maxShieldCapacity);
 
-			// 0 -> 양수로 회복된 시점에 콜라이더 상태 갱신
-			UpdateShieldHitboxState();
+				// 0 -> 양수로 회복된 시점에 콜라이더 상태 갱신
+				UpdateShieldHitboxState();
+			}
 
 			// 다음 0.1초까지 대기
 			yield return tick;

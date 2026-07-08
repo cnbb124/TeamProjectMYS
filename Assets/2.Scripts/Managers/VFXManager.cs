@@ -180,6 +180,13 @@ public class VFXManager : MonoBehaviour
 
         for (int i = _timedEffects.Count - 1; i >= 0; i--)
         {
+            // 부착됐던 유닛이 파괴되면 이 이펙트도 같이 파괴됨 — 접근 전에 걸러야 예외가 안 남(해결책②).
+            if (_timedEffects[i].obj == null)
+            {
+                Debug.LogWarning($"[VFXManager] 파괴된 이펙트 감지 @Update(_timedEffects 인덱스 {i}, type={_timedEffects[i].type}) — 접근 전 제거함. (원인: 부착 유닛이 파괴되며 같이 파괴됨)");
+                _timedEffects.RemoveAt(i);
+                continue;
+            }
             if (Time.time >= _timedEffects[i].returnAt)
             {
                 ReturnEffect(_timedEffects[i].type, _timedEffects[i].obj);
@@ -287,6 +294,13 @@ public class VFXManager : MonoBehaviour
 	// =====================================================================
 	public void ReturnEffect(EFFECT_TYPE type, GameObject obj)
     {
+        // 부착 유닛이 파괴되면 이펙트도 같이 파괴됨 — activeInHierarchy 접근 전에 걸러야 예외가 안 남(해결책②).
+        if (obj == null)
+        {
+            Debug.LogWarning($"[VFXManager] 파괴된 이펙트 감지 @ReturnEffect(type={type}) — 접근 전 무시함. (원인: 부착 유닛이 파괴되며 같이 파괴됨)");
+            return;
+        }
+
         if (!obj.activeInHierarchy)
         {
             return;
@@ -323,9 +337,16 @@ public class VFXManager : MonoBehaviour
             return null;
         }
 
-        if (queue.Count > 0)
+        // 파괴된 오브젝트가 큐에 섞여 있을 수 있으므로(씬 리로드 잔재) 살아있는 것을 만날 때까지 건너뜀(해결책②).
+        while (queue.Count > 0)
         {
-            return queue.Dequeue();
+            GameObject pooled = queue.Dequeue();
+            if (pooled == null)
+            {
+                Debug.LogWarning($"[VFXManager] 파괴된 이펙트 감지 @GetFromPool(type={type}) — 큐에서 건너뜀. (원인: 부착 유닛이 파괴되며 같이 파괴됨)");
+                continue;
+            }
+            return pooled;
         }
 
         // 풀 부족 → 자동 확장 (lambda 없이 foreach 탐색)
@@ -367,7 +388,16 @@ public class VFXManager : MonoBehaviour
         // _allObjects 기준으로 전체 비활성화 후 큐 재등록
         foreach (var pair in _allObjects)
         {
+            // 이미 파괴된 오브젝트는 건너뜀(널가드) — 씬 리로드 도중 호출되면 있을 수 있음.
+            if (pair.Key == null)
+            {
+                continue;
+            }
+
             pair.Key.SetActive(false);
+            // PlayEffectAtUnit으로 유닛에 부착된 이펙트는 매니저 자식으로 복귀시켜야
+            // 이후 그 유닛이 씬 언로드로 파괴될 때 같이 파괴되지 않는다(ReturnEffect와 동일 처리).
+            pair.Key.transform.SetParent(this.transform);
 
             if (_pools.TryGetValue(pair.Value, out var queue))
             {

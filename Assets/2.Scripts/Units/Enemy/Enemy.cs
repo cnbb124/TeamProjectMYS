@@ -179,8 +179,10 @@ public class Enemy : Unit
     protected override void FixedUpdate()
     {
         base.FixedUpdate();
-        // 물리 스핀 방지 — 상태 무관 항상 리셋
-        if (_rb != null) _rb.angularVelocity = Vector3.zero;
+        // 물리 스핀 방지 — 프리즈(일시정지/게임오버) 중이 아닐 때만.
+        // base.FixedUpdate()가 ShouldPause 시 isKinematic=true로 얼리는데, kinematic 바디엔
+        // angularVelocity 설정이 불가(에러)하고, 어차피 프리즈 중엔 물리 스핀도 안 생겨 리셋이 불필요.
+        if (_rb != null && !_rb.isKinematic) _rb.angularVelocity = Vector3.zero;
         if (ShouldPause || CurState == UNIT_STATE.DIE || !UseGenericAI)
         {
             return;

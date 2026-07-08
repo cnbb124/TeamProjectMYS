@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.Diagnostics.Tracing;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 
@@ -236,12 +235,6 @@ public class SoundManager : MonoBehaviour
 			DontDestroyOnLoad(gameObject);
 			InitializeDictionary(); // 시작할 때 딕셔너리 세팅
 			InitializeSFXPool();    // 시작할 때 3D 사운드 풀링 세팅
-
-			// 씬 언로드 시 죽은 오디오 참조 정리(해결책①). SoundManager는 DontDestroyOnLoad라
-			// 씬이 바뀌어도 풀/딕셔너리를 계속 들고 있는데, 풀 스피커가 유닛에 SetParent된 채로
-			// 그 유닛이 씬 언로드로 파괴되면 스피커도 같이 파괴되고 참조만 남아 이후 접근 시 예외가 남.
-			// 새 씬 유닛들의 Start(엔진음 등록 등)보다 먼저 도는 이 시점에 죽은 참조를 걷어낸다.
-			SceneManager.sceneUnloaded += OnSceneUnloaded;
 		}
 		else if (instance != this)
 		{
@@ -249,21 +242,6 @@ public class SoundManager : MonoBehaviour
 			Debug.LogWarning("중복된 SoundManager 발견. 파괴 후 실행");
 			Destroy(gameObject);
 		}
-	}
-
-	private void OnDestroy()
-	{
-		// 실제 인스턴스만 구독했으므로 그 경우에만 해제(중복 인스턴스는 구독 안 함).
-		if (instance == this)
-		{
-			SceneManager.sceneUnloaded -= OnSceneUnloaded;
-		}
-	}
-
-	// 씬 언로드 콜백 — 파괴된 오디오 참조를 걷어낸다(해결책①).
-	private void OnSceneUnloaded(Scene scene)
-	{
-		PurgeDeadAudioReferences($"씬 언로드('{scene.name}')");
 	}
 
 	private void Update()
@@ -362,84 +340,6 @@ public class SoundManager : MonoBehaviour
 
 		//모든 스피커가 사용 중일 경우, 새롭게 하나를 더 생성하여 반환
 		return CreateNewAudioSourceToPool();
-	}
-
-	// =====================================================================
-	// 파괴된 오디오 참조 일괄 정리(해결책①의 실체).
-	// 풀 스피커가 유닛에 SetParent된 채 그 유닛이 씬 언로드로 파괴되면 스피커도 같이 파괴되는데,
-	// SoundManager(DontDestroyOnLoad)의 풀/딕셔너리엔 그 죽은 참조가 그대로 남아 이후 접근 시 예외가 남.
-	// 씬 언로드 시점에 죽은 참조만 골라 제거한다. (살아있는 항목은 건드리지 않아 재생 중인 소리 유지)
-	// =====================================================================
-	private void PurgeDeadAudioReferences(string context)
-	{
-		int removed = 0;
-
-		// 1) 스피커 풀 — 파괴된 슬롯 제거(뒤에서부터).
-		for (int i = _sfx3DPool.Count - 1; i >= 0; i--)
-		{
-			if (_sfx3DPool[i] == null)
-			{
-				_sfx3DPool.RemoveAt(i);
-				removed++;
-			}
-		}
-
-		// 2) 루프음 추적 딕셔너리 — 키(대상 유닛 Transform)나 값(AudioSource)이 파괴된 항목 제거.
-		List<(Transform, SOUND_TYPE)> deadLoopKeys = new List<(Transform, SOUND_TYPE)>();
-		foreach (var kv in _activeLoopSounds)
-		{
-			if (kv.Key.Item1 == null || kv.Value == null)
-			{
-				deadLoopKeys.Add(kv.Key);
-			}
-		}
-		foreach (var key in deadLoopKeys)
-		{
-			_activeLoopSounds.Remove(key);
-			removed++;
-		}
-
-		// 3) 단발성 부착 소스 추적 리스트 — 파괴된 것 제거(SoundManager.Update가 매 프레임 접근하는 지점).
-		for (int i = _pendingUnparentSources.Count - 1; i >= 0; i--)
-		{
-			if (_pendingUnparentSources[i] == null)
-			{
-				_pendingUnparentSources.RemoveAt(i);
-				removed++;
-			}
-		}
-
-		// 4) 폴리포니 추적 맵 — 각 타입 리스트에서 파괴된 소스 제거.
-		foreach (var list in _activeTypeSourceMap.Values)
-		{
-			for (int i = list.Count - 1; i >= 0; i--)
-			{
-				if (list[i] == null)
-				{
-					list.RemoveAt(i);
-					removed++;
-				}
-			}
-		}
-
-		// 5) 최소 재생 간격 맵 — 발사 주체(Transform)가 파괴된 항목 제거.
-		List<(SOUND_TYPE, Transform)> deadThrottleKeys = new List<(SOUND_TYPE, Transform)>();
-		foreach (var kv in _lastPlayTimeMap)
-		{
-			if (kv.Key.Item2 == null)
-			{
-				deadThrottleKeys.Add(kv.Key);
-			}
-		}
-		foreach (var key in deadThrottleKeys)
-		{
-			_lastPlayTimeMap.Remove(key);
-		}
-
-		// 6) 엔진음 경고 중복방지 집합 — 초기화(새 씬 유닛이 다시 경고할 수 있게).
-		_engineLoopMissingWarned.Clear();
-
-		Debug.Log($"[SoundManager] 파괴된 오디오 참조 정리 완료 @{context} — 제거 {removed}건, 남은 풀 {_sfx3DPool.Count}개.");
 	}
 
 
@@ -923,26 +823,39 @@ public class SoundManager : MonoBehaviour
 	}
 	// 모든 사운드(BGM 및 2D SFX) 정지
 
+	// StopSFXAll은 씬 전환/게임오버 등 teardown에서만 호출됨(GameManager.LoadSceneRoutine/GameOver).
+	// 여기서 풀 스피커를 전부 정지 + 매니저 자식으로 '회수(reparent home)'한다 — 이게 예방(옵션①)의 핵심:
+	// 회수해두면 직후 씬 언로드로 유닛이 파괴돼도 스피커가 자식으로 딸려 죽지 않아, DDOL 매니저에
+	// 파괴된 참조가 남는 문제 자체가 안 생긴다. 유닛에 매여있던 추적 정보도 같이 초기화(다음 씬에서 새로 등록).
 	public void StopSFXAll()
 	{
 		_bgmSource.Stop();
 		_sfxUISource.Stop();
 
-		// 풀링된 3D 스피커들도 모두 재생 정지
-		// 뒤에서부터 순회 — 파괴된(유닛과 함께 destroy된) 슬롯을 접근 전에 제거하기 위함(해결책②).
+		// 풀링된 3D 스피커 전부 정지 + 회수. 뒤에서부터 순회 — 파괴된 슬롯은 접근 전에 제거(값싼 안전망②).
 		for (int i = _sfx3DPool.Count - 1; i >= 0; i--)
 		{
-			if (_sfx3DPool[i] == null)
+			AudioSource speaker = _sfx3DPool[i];
+			if (speaker == null)
 			{
 				Debug.LogWarning($"[SoundManager] 파괴된 AudioSource 감지 @StopSFXAll (풀 인덱스 {i}) — 접근 전 제거함. (원인: 스피커가 SetParent된 유닛이 파괴되며 같이 파괴됨)");
 				_sfx3DPool.RemoveAt(i);
 				continue;
 			}
-			if (_sfx3DPool[i].isPlaying)
+			if (speaker.isPlaying)
 			{
-				_sfx3DPool[i].Stop();
+				speaker.Stop();
 			}
+			speaker.loop = false;
+			speaker.transform.SetParent(this.transform); // 유닛에서 떼어 매니저(DDOL)로 회수 → 씬 언로드 때 안 죽음
 		}
+
+		// 유닛에 매여있던 추적 정보 초기화 — 다음 씬 유닛들이 새로 등록함.
+		_activeLoopSounds.Clear();
+		_pendingUnparentSources.Clear();
+		_activeTypeSourceMap.Clear();
+		_lastPlayTimeMap.Clear();
+		_engineLoopMissingWarned.Clear();
 	}
 
 	// ================== [실시간 볼륨 조절 함수 (UI 옵션 창 연동용)] ==================
@@ -958,6 +871,19 @@ public class SoundManager : MonoBehaviour
 			float volScale = _curBgmData != null ? GetVolume(_curBgmData) : 1f;
 			_bgmSource.volume = bgmVolume * volScale;
 		}
+	}
+
+	// 씬 전환 페이드 연출용 — 저장된 볼륨 설정(bgmVolume)은 건드리지 않고 일시적으로 배율(fadeFactor)만 곱해 적용.
+	// GameManager의 FadeOut/FadeIn 루프가 화면 알파와 같은 진행도로 이걸 호출해 BGM을 같이 줄였다/늘렸다 함.
+	// fadeFactor: 0(무음) ~ 1(설정 볼륨 그대로). 상태를 저장하지 않으므로(매 호출 재계산) PlayBGM 이후엔 자동으로 1 기준으로 복귀.
+	public void SetBGMFadeFactor(float fadeFactor)
+	{
+		if (_bgmSource == null)
+		{
+			return;
+		}
+		float configuredVolume = bgmVolume * (_curBgmData != null ? GetVolume(_curBgmData) : 1f);
+		_bgmSource.volume = configuredVolume * Mathf.Clamp01(fadeFactor);
 	}
 
 	public void SetSFXUIVolume(float volume)

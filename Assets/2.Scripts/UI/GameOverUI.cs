@@ -96,6 +96,23 @@ public class GameOverUI : MonoBehaviour
 
     private void LoadScene(string sceneName)
     {
+        // 씬 전환은 GameManager 경유 — 전환 직전 정리(풀/사운드/이펙트 회수)가 실행되어야
+        // DontDestroyOnLoad 매니저가 파괴된 유닛 참조를 들고 가는 문제가 안 생김.
+        if (GameManager.Instance != null)
+        {
+            if (useLoading)
+            {
+                LoadingManager.NextScene = sceneName;
+                GameManager.Instance.LoadScene(loadingSceneName);
+            }
+            else
+            {
+                GameManager.Instance.LoadScene(sceneName);
+            }
+            return;
+        }
+
+        // GameManager 없는 테스트 씬 대비 폴백(직접 로드)
         if (useLoading)
         {
             LoadingManager.NextScene = sceneName;

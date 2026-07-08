@@ -80,7 +80,7 @@ public class PoolManager : MonoBehaviour
 				instance = FindObjectOfType<PoolManager>();
 				if (instance == null)
 				{
-					Debug.LogError("[PoolManager] 씬에 PoolManager 없음! 하이어라키에 추가 필요"); 
+					Debug.LogError("[PoolManager] 씬에 PoolManager 없음! 하이어라키에 추가 필요");
 				}
 				else
 				{
@@ -257,7 +257,10 @@ public class PoolManager : MonoBehaviour
 
 		// 캐시 소진 → Get()으로 확장 (내부에서 캐시도 같이 추가됨)
 		GameObject newObj = Get(poolType);
-		if (newObj == null) return null;
+		if (newObj == null)
+		{
+			return null;
+		}
 		return newObj.GetComponent<Projectile>();
 	}
 

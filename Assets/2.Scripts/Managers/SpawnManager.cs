@@ -126,7 +126,8 @@ public class SpawnManager : MonoBehaviour
 		{
 			if (entry.delay > 0f)
 			{
-				yield return new WaitForSeconds(entry.delay);
+				// 일시정지 인지 대기 — 프리즈 동안 시간이 안 흐름(WaitForSeconds는 플래그 정지 무시).
+				yield return GameManager.WaitGameplaySeconds(entry.delay);
 			}
 
 			if (entry.method == SpawnMethod.ScenePlaced)
@@ -190,6 +191,12 @@ public class SpawnManager : MonoBehaviour
 
 		for (int i = 0; i < entry.count; i++)
 		{
+			// 일시정지 중엔 스폰하지 않음 — 프리즈가 풀릴 때까지 대기(프리즈 중 스폰/풀 확장 방지).
+			while (GameManager.Instance != null && GameManager.Instance.IsGameplayFrozen)
+			{
+				yield return null;
+			}
+
 			Vector3 pos = (entry.spawnPoint == null && _shuffleBuffer != null)
 				? _shuffleBuffer[i % _shuffleBuffer.Length].position
 				: GetSpawnPosition(entry.spawnPoint);
@@ -210,7 +217,7 @@ public class SpawnManager : MonoBehaviour
 			}
 			if (i < entry.count - 1 && entry.interval > 0f)
 			{
-				yield return new WaitForSeconds(entry.interval);
+				yield return GameManager.WaitGameplaySeconds(entry.interval);
 			}
 		}
 	}
@@ -222,7 +229,7 @@ public class SpawnManager : MonoBehaviour
 		// 등록된 적이 없으면 즉시 클리어
 		if (_waveEnemies.Count == 0)
 		{
-			yield return new WaitForSeconds(wave.nextWaveDelay);
+			yield return GameManager.WaitGameplaySeconds(wave.nextWaveDelay);
 			AdvanceWave(wave);
 			yield break;
 		}
@@ -251,7 +258,7 @@ public class SpawnManager : MonoBehaviour
 			}
 		}
 
-		yield return new WaitForSeconds(wave.nextWaveDelay);
+		yield return GameManager.WaitGameplaySeconds(wave.nextWaveDelay);
 		AdvanceWave(wave);
 	}
 

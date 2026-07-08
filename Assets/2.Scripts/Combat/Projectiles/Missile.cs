@@ -72,6 +72,9 @@ public class Missile : Projectile, IExplodable
 	[Tooltip("발사 직후 직진 유지 거리. 이 거리 전엔 유도(Steer) 안 하고 직진만 함.")]
 	public float straightFlightDistance = 5.0f;
 
+	[Tooltip("락온 타겟을 잃었을 때(파괴/비활성) 즉시 폭발하지 않고 그 순간 방향으로 직진하는 시간(초). 이 시간이 지나면 폭발. 그 전에 사거리(maxRange)에 닿으면 거기서 폭발.")]
+	public float loseTargetLifetime = 2.0f;
+
 
 	
 	[Header("락온되는 목표(확인용)")]
@@ -110,8 +113,12 @@ public class Missile : Projectile, IExplodable
 	private float _aliveTime = 0f;
 	//락온타겟 이전좌표(추적용)
 	private Vector3 _prevTargetPos;
-	//락온 발사 여부. true인데 타겟이 사망/파괴/비활성되면 그 자리서 즉시 폭발(락온 안 한 미사일은 그대로 사거리 끝까지).
+	//락온 발사 여부. true인데 타겟이 사망/파괴/비활성되면 직진 코스팅 시작(락온 안 한 미사일은 그대로 사거리 끝까지).
 	private bool _hadTarget;
+
+	//타겟 소실 후 유도 없이 직진 코스팅 중인지 여부 + 코스팅 경과시간(loseTargetLifetime까지 누적).
+	private bool _coasting;
+	private float _coastTimer;
 
 	//계산된 미사일의 추진 속도
 	private float _thrustSpeed;
@@ -217,13 +224,25 @@ public class Missile : Projectile, IExplodable
 			return;
 		}
 
-		// 락온 발사 미사일인데 타겟이 사망/파괴/비활성 → 그 자리서 즉시 폭발.
-		// targetTr==null(파괴)을 단락평가로 먼저 봐서 .gameObject 접근 전 걸러짐(NRE 방지). 비활성(풀 사망)은 activeInHierarchy로 포착.
-		if (_hadTarget && (targetTr == null || !targetTr.gameObject.activeInHierarchy))
+		// 락온 발사 미사일인데 타겟이 사망/파괴/비활성시
+		if (_hadTarget && !_coasting && (targetTr == null || !targetTr.gameObject.activeInHierarchy))
 		{
-			Explode(explosionInfo);
-			ReturnToPool();
-			return;
+			_coasting = true;
+			_coastTimer = 0f;
+			targetTr = null; // 유도 대상 해제 → 아래 이동 로직이 직진을 타게 함
+		}
+
+		// 코스팅 중이면 시간 누적 → loseTargetLifetime 만료 시 폭발.
+		// (그 전에 사거리 maxRange에 닿으면 base.Update()→OnMaxRange()에서 먼저 폭발함)
+		if (_coasting)
+		{
+			_coastTimer += Time.deltaTime;
+			if (_coastTimer >= loseTargetLifetime)
+			{
+				Explode(explosionInfo);
+				ReturnToPool();
+				return;
+			}
 		}
 
 		// 발사후 경과시간 업데이트
@@ -366,5 +385,7 @@ public class Missile : Projectile, IExplodable
 		base.OnDisable();
 		targetTr = null;
 		_aliveTime = 0f;
+		_coasting = false;
+		_coastTimer = 0f;
 	}
 }

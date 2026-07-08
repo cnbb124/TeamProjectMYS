@@ -114,6 +114,23 @@ public class GameManager : MonoBehaviour
     // (Unit은 자체 ShouldPause 사용 — 같은 조건)
     public bool IsGameplayFrozen => IsPaused || IsGameOver;
 
+    // 게임플레이 코루틴용 "일시정지 인지" 대기.
+    // WaitForSeconds는 timeScale 기준이라 이 프로젝트의 플래그 방식 일시정지(IsGameplayFrozen)를 무시함.
+    // 스폰/실드회복 등 게임플레이 코루틴의 WaitForSeconds를 이걸로 대체하면 프리즈 동안 시간이 안 흐름.
+    // (instance가 없으면(테스트 씬 등) 프리즈 개념이 없으므로 일반 시간처럼 흐름)
+    public static IEnumerator WaitGameplaySeconds(float seconds)
+    {
+        float elapsed = 0f;
+        while (elapsed < seconds)
+        {
+            if (instance == null || !instance.IsGameplayFrozen)
+            {
+                elapsed += Time.deltaTime;
+            }
+            yield return null;
+        }
+    }
+
 	// =====================================================================
 	// Player 레퍼런스 (씬 로드 후 자동 캐싱)
 	// =====================================================================
@@ -286,18 +303,25 @@ public class GameManager : MonoBehaviour
 
     private IEnumerator LoadSceneRoutine(string sceneName)
     {
-        // 전환 전 정리
+        // 전환 전 초기화
         // 메뉴(일시정지/인벤토리)가 열린 채 씬이 전환돼도 다음 씬은 정상 진행되도록 초기화
         _pauseRequests = 0;
         IsPaused = false;
         Time.timeScale = 1f;
+        // 남아있는 투사체는 미리 정지(페이드 동안 날아다니거나 데미지 주지 않게).
+        // BGM은 여기서 끊지 않는다 — FadeOut이 화면과 함께 BGM 볼륨을 페이드다운한다.
         PoolManager.Instance.DisableAllProjectiles();
-        SoundManager.Instance.StopSFXAll();
-        VFXManager.Instance.ReturnAll();
 
         yield return StartCoroutine(FadeOut());
 
+        // 완전한 검은 화면을 한 프레임 렌더한 뒤(로드 히치 동안 검은 화면 유지),
         yield return null;
+
+        // 언로드 직전에 사운드/이펙트 정리 — 페이드 동안 적/터렛이 재생·재대여한 스피커/이펙트까지
+        // 이 시점에 회수해야 DontDestroyOnLoad 매니저가 파괴된 참조를 들고 가는 문제(재시작 직후 경고)를 막는다.
+        SoundManager.Instance.StopSFXAll();
+        VFXManager.Instance.ReturnAll();
+
         SceneManager.LoadScene(sceneName);
     }
 
@@ -307,21 +331,24 @@ public class GameManager : MonoBehaviour
         {
             yield break;
         }
-        Color c = _fadeImage.color;
-        c.a = 0f;
-        _fadeImage.color = c;
+        Color fadeColor = _fadeImage.color;
+        fadeColor.a = 0f;
+        _fadeImage.color = fadeColor;
         _fadeImage.gameObject.SetActive(true);
 
         float elapsed = 0f;
         while (elapsed < fadeDuration)
         {
             elapsed += Time.unscaledDeltaTime;
-            c.a = Mathf.Clamp01(elapsed / fadeDuration);
-            _fadeImage.color = c;
+            float fadeProgress = Mathf.Clamp01(elapsed / fadeDuration);
+            fadeColor.a = fadeProgress;                                  // 화면: 투명 → 검정
+            _fadeImage.color = fadeColor;
+            SoundManager.Instance.SetBGMFadeFactor(1f - fadeProgress);   // BGM: 설정 볼륨 → 0 (같이 줄어듦)
             yield return null;
         }
-        c.a = 1f;
-        _fadeImage.color = c;
+        fadeColor.a = 1f;
+        _fadeImage.color = fadeColor;
+        SoundManager.Instance.SetBGMFadeFactor(0f);
     }
 
     private IEnumerator FadeIn()
@@ -335,22 +362,27 @@ public class GameManager : MonoBehaviour
         {
             yield break;
         }
-        Color c = _fadeImage.color;
-        c.a = 1f;
-        _fadeImage.color = c;
+        Color fadeColor = _fadeImage.color;
+        fadeColor.a = 1f;
+        _fadeImage.color = fadeColor;
         _fadeImage.gameObject.SetActive(true);
+        // 새 씬 BGM은 PlaySceneBGM이 이미 설정 볼륨으로 재생 중 — 페이드인 시작 시점에 0으로 낮춰두고 올린다.
+        SoundManager.Instance.SetBGMFadeFactor(0f);
 
         float elapsed = 0f;
         while (elapsed < fadeDuration)
         {
             elapsed += Time.unscaledDeltaTime;
-            c.a = Mathf.Clamp01(1f - elapsed / fadeDuration);
-            _fadeImage.color = c;
+            float fadeProgress = Mathf.Clamp01(elapsed / fadeDuration);
+            fadeColor.a = 1f - fadeProgress;                          // 화면: 검정 → 투명
+            _fadeImage.color = fadeColor;
+            SoundManager.Instance.SetBGMFadeFactor(fadeProgress);     // BGM: 0 → 설정 볼륨 (같이 커짐)
             yield return null;
         }
-        c.a = 0f;
-        _fadeImage.color = c;
+        fadeColor.a = 0f;
+        _fadeImage.color = fadeColor;
         _fadeImage.gameObject.SetActive(false);
+        SoundManager.Instance.SetBGMFadeFactor(1f);
     }
 
     private void PlaySceneBGM(string sceneName)

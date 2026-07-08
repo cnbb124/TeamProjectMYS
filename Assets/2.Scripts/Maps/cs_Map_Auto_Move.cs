@@ -64,6 +64,16 @@ public class cs_Map_Auto_Move : MonoBehaviour
     IEnumerator nextScene()
     {
         yield return new WaitForSeconds(1.0f);
-        UnityEngine.SceneManagement.SceneManager.LoadScene(nextSceneName);
+        // 씬 전환은 반드시 GameManager 경유 — 전환 직전 정리(풀/사운드/이펙트 회수)가 실행되어야
+        // DontDestroyOnLoad 매니저가 파괴된 유닛 참조를 들고 가는 문제가 안 생김.
+        // (GameManager 없는 테스트 씬 대비 폴백만 직접 로드)
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.LoadScene(nextSceneName);
+        }
+        else
+        {
+            UnityEngine.SceneManagement.SceneManager.LoadScene(nextSceneName);
+        }
     }
 }

@@ -243,6 +243,14 @@ MonoBehaviour:
   defense: 1
   criChance: 20
   criDamageMultiplier: 1.5
+  _deathSequenceDuration: 1.5
+  curState: 0
+  curHpRemaining: 0
+  curShieldRemaining: 0
+  curArmorRemaining: 0
+  curSpeed: 0
+  curBoostRemaining: 0
+  _playSoundType: 0
   baseMoveSpeed: 85
   boostSpeed: 130
   maxSpeed: 130
@@ -260,14 +268,6 @@ MonoBehaviour:
   dodgeCoolTime: 5
   dodgeDistance: 40
   speedMultiPlier: 0
-  curState: 0
-  curHpRemaining: 0
-  curShieldRemaining: 0
-  curArmorRemaining: 0
-  curSpeed: 0
-  curBoostRemaining: 0
-  _playSoundType: 0
-  _deathSequenceDuration: 1.5
   expRewardMin: 3
   expRewardMax: 7
   goldRewardMin: 100
@@ -315,13 +315,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   lockOnSystem: {fileID: 3033844199734762928}
-  bulletFireCooldown: 0.05
+  bulletFireCooldown: 0.1
   curBulletData: {fileID: 11400000, guid: f24cca7fba8ef164aa78249e4e93e164, type: 2}
   _useBulletMuzzle: 1
   _useBulletSound: 1
-  _useMissileMuzzle: 1
-  _useMissileSound: 1
-  _bulletMuzzleFlashVFXPlayTime: 0.03
+  _useMissileMuzzle: 0
+  _useMissileSound: 0
+  _bulletMuzzleFlashVFXPlayTime: 0.5
   _missileMuzzleFlashVFXPlayTime: 0.2
   bulletFireMode: 0
   missileFireMode: 0
@@ -746,21 +746,17 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 673522139347252847}
     m_Modifications:
-    - target: {fileID: 1220959983750552006, guid: 7ae37ae0e309f5544904bfc066e06c4e, type: 3}
-      propertyPath: _localRevealRadius
-      value: 2.5
-      objectReference: {fileID: 0}
     - target: {fileID: 5776847615673391110, guid: 7ae37ae0e309f5544904bfc066e06c4e, type: 3}
       propertyPath: m_LocalScale.x
-      value: 14.4
+      value: 12.79
       objectReference: {fileID: 0}
     - target: {fileID: 5776847615673391110, guid: 7ae37ae0e309f5544904bfc066e06c4e, type: 3}
       propertyPath: m_LocalScale.y
-      value: 7.87
+      value: 9.5
       objectReference: {fileID: 0}
     - target: {fileID: 5776847615673391110, guid: 7ae37ae0e309f5544904bfc066e06c4e, type: 3}
       propertyPath: m_LocalScale.z
-      value: 8.72
+      value: 4.99
       objectReference: {fileID: 0}
     - target: {fileID: 5776847615673391110, guid: 7ae37ae0e309f5544904bfc066e06c4e, type: 3}
       propertyPath: m_LocalPosition.x
@@ -806,12 +802,7 @@ PrefabInstance:
       propertyPath: m_Name
       value: Force Field
       objectReference: {fileID: 0}
-    - target: {fileID: 7989039363316996127, guid: 7ae37ae0e309f5544904bfc066e06c4e, type: 3}
-      propertyPath: m_IsActive
-      value: 1
-      objectReference: {fileID: 0}
-    m_RemovedComponents:
-    - {fileID: 9196044372120797739, guid: 7ae37ae0e309f5544904bfc066e06c4e, type: 3}
+    m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
