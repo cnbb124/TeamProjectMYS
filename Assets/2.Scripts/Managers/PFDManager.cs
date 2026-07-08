@@ -32,6 +32,17 @@ public class PFDManager : MonoBehaviour
 
     private void Update()
     {
+        // 인스펙터 연결 우선, 비어있으면 GameManager.playerRef에서 자동 폴백
+        if (player == null || playerRb == null)
+        {
+            Player p = GameManager.Instance != null ? GameManager.Instance.playerRef : null;
+            if (p != null)
+            {
+                if (player == null)   player   = p;
+                if (playerRb == null) playerRb = p.GetComponent<Rigidbody>();
+            }
+        }
+
         if (player == null || playerRb == null) return;
 
         _updateTimer += Time.deltaTime;
