@@ -1,7 +1,7 @@
+using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics.Tracing;
 using UnityEngine;
-using UnityEngine.UI;
+
 
 
 // ================================================================
@@ -187,10 +187,20 @@ public class SoundManager : MonoBehaviour
 	public SOUND_TYPE curBGM;
 	private SoundTypeClip _curBgmData; // SetBGMVolume에서 GetVolume 적용하기 위한 캐시
 
+	// BGM 볼륨 합성용 내부 상태 (실제 볼륨 = bgmVolume × 클립볼륨 × _bgmFadeFactor × 일시정지배율)
+	private float _bgmFadeFactor = 1f;    // 씬 전환/보스 전환 페이드용 배율(0~1)
+	private bool _bgmPaused = false;       // 일시정지 중 볼륨 감쇠 적용 여부
+	private bool _bgmRotating = false;     // 여러 클립 순환(플레이리스트) 재생 중인지
+	private int _lastBgmClipIndex = -1;    // 직전 재생 클립 인덱스(랜덤 중복 방지)
+	private Coroutine _bgmFadeRoutine;     // 진행 중인 BGM 페이드 전환 코루틴
+
 	[Space(10)]
 	[Header("<size=14>기본 볼륨 설정</size>")]
 	[Range(0f, 1f)]
 	public float bgmVolume = 1.0f;
+	[Range(0f, 1f)]
+	[Tooltip("일시정지 중 BGM 볼륨 배율. 예: 0.5 = 절반으로 줄임. 1이면 그대로 유지.")]
+	public float pauseBGMVolumeScale = 0.5f;
 	[Range(0f, 1f)]
 	public float sfxUIVolume = 1.0f;
 	[Range(0f, 1f)]
@@ -246,6 +256,13 @@ public class SoundManager : MonoBehaviour
 
 	private void Update()
 	{
+		// BGM 플레이리스트 순환: 여러 곡 BGM에서 현재 곡이 끝나면 다음 곡(직전 곡 제외 랜덤) 재생.
+		// (일시정지 중엔 BGM이 볼륨만 줄고 계속 재생되므로 isPlaying=true라 여기서 잘못 넘어가지 않음)
+		if (_bgmRotating && _bgmSource != null && _bgmSource.clip != null && !_bgmSource.isPlaying)
+		{
+			PlayNextBGMClip();
+		}
+
 		// PlaySFX3DAtUnit으로 유닛에 부착됐던 단발성 소스 중 재생이 끝난 것을 매니저로 회수
 		for (int i = _pendingUnparentSources.Count - 1; i >= 0; i--)
 		{
@@ -512,11 +529,99 @@ public class SoundManager : MonoBehaviour
 		{
 			curBGM = type;
 			_curBgmData = data;
-			_bgmSource.volume = bgmVolume * GetVolume(data);
-			_bgmSource.clip = GetRandomClip(data);
-			_bgmSource.loop = true; // BGM은 무한반복
+			// 클립이 여러 개면 '플레이리스트 순환'(loop=false → Update가 곡 끝나면 다음 곡). 1개면 무한루프.
+			_bgmRotating = data.clips != null && data.clips.Length > 1;
+			_lastBgmClipIndex = -1;
+			_bgmSource.clip = PickBGMClip(data);
+			_bgmSource.loop = !_bgmRotating;
 			_bgmSource.Play();
+			ApplyBGMVolume();
 		}
+	}
+
+	// clips에서 다음 재생 클립 선택. 여러 개면 직전 곡(_lastBgmClipIndex)을 제외한 랜덤(연속 중복 방지).
+	private AudioClip PickBGMClip(SoundTypeClip data)
+	{
+		if (data.clips == null || data.clips.Length == 0)
+		{
+			return null;
+		}
+		if (data.clips.Length == 1)
+		{
+			_lastBgmClipIndex = 0;
+			return data.clips[0];
+		}
+		int index;
+		do
+		{
+			index = Random.Range(0, data.clips.Length);
+		}
+		while (index == _lastBgmClipIndex);
+		_lastBgmClipIndex = index;
+		return data.clips[index];
+	}
+
+	// 플레이리스트 순환 — 현재 BGM 세트에서 다음 곡으로 교체. Update가 곡 종료를 감지해 호출.
+	private void PlayNextBGMClip()
+	{
+		if (_curBgmData == null)
+		{
+			return;
+		}
+		_bgmSource.clip = PickBGMClip(_curBgmData);
+		_bgmSource.Play();
+		ApplyBGMVolume();
+	}
+
+	// BGM 실제 볼륨 = 설정볼륨 × 클립볼륨 × 페이드배율 × (일시정지면 pauseBGMVolumeScale).
+	// 볼륨을 바꾸는 모든 경로(설정/페이드/일시정지/곡교체)가 이 한 곳을 거치게 해 합성 일관성 유지.
+	private void ApplyBGMVolume()
+	{
+		if (_bgmSource == null)
+		{
+			return;
+		}
+		float clipVol = _curBgmData != null ? GetVolume(_curBgmData) : 1f;
+		float pauseScale = _bgmPaused ? pauseBGMVolumeScale : 1f;
+		_bgmSource.volume = bgmVolume * clipVol * _bgmFadeFactor * pauseScale;
+	}
+
+	// 일시정지 볼륨 감쇠 적용/해제. GameManager.PauseGame/ResumeGame에서 호출.
+	public void SetBGMPaused(bool paused)
+	{
+		_bgmPaused = paused;
+		ApplyBGMVolume();
+	}
+
+	// 보스 등장 등 상태 전환 시 BGM 교체(현재 곡 페이드아웃 → 새 BGM → 페이드인).
+	public void ChangeBGMWithFade(SOUND_TYPE newType, float duration)
+	{
+		if (_bgmFadeRoutine != null)
+		{
+			StopCoroutine(_bgmFadeRoutine);
+		}
+		_bgmFadeRoutine = StartCoroutine(ChangeBGMRoutine(newType, duration));
+	}
+
+	private IEnumerator ChangeBGMRoutine(SOUND_TYPE newType, float duration)
+	{
+		float half = Mathf.Max(0.01f, duration * 0.5f);
+		yield return FadeBGMFactorRoutine(_bgmFadeFactor, 0f, half); // 현재 곡 페이드아웃
+		PlayBGM(newType);                                            // 새 BGM 교체(_bgmFadeFactor=0이라 무음 시작)
+		yield return FadeBGMFactorRoutine(0f, 1f, half);             // 새 곡 페이드인
+		_bgmFadeRoutine = null;
+	}
+
+	private IEnumerator FadeBGMFactorRoutine(float from, float to, float duration)
+	{
+		float elapsed = 0f;
+		while (elapsed < duration)
+		{
+			elapsed += Time.unscaledDeltaTime;
+			SetBGMFadeFactor(Mathf.Lerp(from, to, elapsed / duration));
+			yield return null;
+		}
+		SetBGMFadeFactor(to);
 	}
 	// 사용예
 	//private void Start()
@@ -787,6 +892,7 @@ public class SoundManager : MonoBehaviour
 
 	public void StopBGM()
 	{
+		_bgmRotating = false; // 순환 중지(Update가 다시 재생하지 않게)
 		if (_bgmSource.isPlaying)
 		{
 			_bgmSource.Stop();
@@ -829,6 +935,13 @@ public class SoundManager : MonoBehaviour
 	// 파괴된 참조가 남는 문제 자체가 안 생긴다. 유닛에 매여있던 추적 정보도 같이 초기화(다음 씬에서 새로 등록).
 	public void StopSFXAll()
 	{
+		_bgmRotating = false; // BGM 순환 중지(Update가 다시 재생하지 않게)
+		// 진행 중인 보스 BGM 페이드 전환이 있으면 취소(씬 전환과 겹쳐 새 씬에서 엉키지 않게)
+		if (_bgmFadeRoutine != null)
+		{
+			StopCoroutine(_bgmFadeRoutine);
+			_bgmFadeRoutine = null;
+		}
 		_bgmSource.Stop();
 		_sfxUISource.Stop();
 
@@ -866,11 +979,7 @@ public class SoundManager : MonoBehaviour
 	public void SetBGMVolume(float volume)
 	{
 		bgmVolume = volume;//입력한 볼륨값 현재설정에 저장
-		if (_bgmSource != null && _bgmSource.clip != null)
-		{
-			float volScale = _curBgmData != null ? GetVolume(_curBgmData) : 1f;
-			_bgmSource.volume = bgmVolume * volScale;
-		}
+		ApplyBGMVolume();
 	}
 
 	// 씬 전환 페이드 연출용 — 저장된 볼륨 설정(bgmVolume)은 건드리지 않고 일시적으로 배율(fadeFactor)만 곱해 적용.
@@ -878,12 +987,8 @@ public class SoundManager : MonoBehaviour
 	// fadeFactor: 0(무음) ~ 1(설정 볼륨 그대로). 상태를 저장하지 않으므로(매 호출 재계산) PlayBGM 이후엔 자동으로 1 기준으로 복귀.
 	public void SetBGMFadeFactor(float fadeFactor)
 	{
-		if (_bgmSource == null)
-		{
-			return;
-		}
-		float configuredVolume = bgmVolume * (_curBgmData != null ? GetVolume(_curBgmData) : 1f);
-		_bgmSource.volume = configuredVolume * Mathf.Clamp01(fadeFactor);
+		_bgmFadeFactor = Mathf.Clamp01(fadeFactor);
+		ApplyBGMVolume();
 	}
 
 	public void SetSFXUIVolume(float volume)

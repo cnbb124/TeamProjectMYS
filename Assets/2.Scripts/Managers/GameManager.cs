@@ -97,6 +97,15 @@ public class GameManager : MonoBehaviour
 	// 런타임 조회용. Awake에서 _sceneBGMList로 구성 (key = scene.ToString())
 	private Dictionary<string, SOUND_TYPE> _sceneBGMMap = new Dictionary<string, SOUND_TYPE>();
 
+	[Header("보스 BGM 전환")]
+	[Tooltip("보스 등장 시 전환할 BGM. 보스 처치 시 현재 씬 BGM으로 복귀.")]
+	[SerializeField] private SOUND_TYPE _bossBGM = SOUND_TYPE.BGM_BOSS;
+	[Tooltip("보스 BGM 전환(페이드아웃→새BGM→페이드인) 총 시간(초).")]
+	[SerializeField] private float _bossBGMFadeDuration = 1.5f;
+	// 현재 씬의 BGM(보스 처치 후 복귀용). PlaySceneBGM에서 저장.
+	private SOUND_TYPE _currentSceneBGM;
+	private bool _hasCurrentSceneBGM = false;
+
 
 
 	public GAME_STATE curState;
@@ -388,7 +397,16 @@ public class GameManager : MonoBehaviour
     private void PlaySceneBGM(string sceneName)
     {
         if (_sceneBGMMap.TryGetValue(sceneName, out SOUND_TYPE bgm))
+        {
+            // 보스 처치 후 이 씬 BGM으로 복귀하기 위해 기억
+            _currentSceneBGM = bgm;
+            _hasCurrentSceneBGM = true;
             SoundManager.Instance.PlayBGM(bgm);
+        }
+        else
+        {
+            _hasCurrentSceneBGM = false;
+        }
         // 매핑 없는 씬(로딩, 맵선택 등)은 BGM 유지 or 중지 선택
         // SoundManager.Instance.StopBGM(); // 중지 원할 시 주석 해제
 
@@ -471,6 +489,7 @@ public class GameManager : MonoBehaviour
             IsPaused = true;
             ChangeState(GAME_STATE.PAUSED);
             FreezeParticles(); // 폭발/트레일 등 파티클도 정지
+            SoundManager.Instance.SetBGMPaused(true); // 일시정지 중 BGM 볼륨 감쇠(pauseBGMVolumeScale)
         }
     }
 
@@ -485,6 +504,7 @@ public class GameManager : MonoBehaviour
             IsPaused = false;
             ChangeState(GAME_STATE.PLAYING);
             UnfreezeParticles(); // 정지했던 파티클 재개
+            SoundManager.Instance.SetBGMPaused(false); // BGM 볼륨 원복
         }
     }
 
@@ -609,6 +629,11 @@ public class GameManager : MonoBehaviour
     public void OnBossKilled()
     {
         killCount++;
+        // 보스 처치 → 현재 씬 BGM으로 페이드 복귀(매핑 있을 때만)
+        if (_hasCurrentSceneBGM)
+        {
+            SoundManager.Instance.ChangeBGMWithFade(_currentSceneBGM, _bossBGMFadeDuration);
+        }
         onBossKilled?.Invoke();
     }
 
@@ -661,6 +686,8 @@ public class GameManager : MonoBehaviour
         {
             bossSpawned = true;
             Debug.Log($"[GameManager] 보스 스폰 조건 달성 (킬 {killCount}/{killCountToSpawnBoss}, 목표파괴 {_bossTargetsDestroyed}/{_bossTargetsTotal})");
+            // 보스 등장 → 보스 BGM으로 페이드 전환
+            SoundManager.Instance.ChangeBGMWithFade(_bossBGM, _bossBGMFadeDuration);
             onBossSpawn?.Invoke();
         }
     }

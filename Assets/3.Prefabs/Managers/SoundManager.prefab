@@ -49,7 +49,7 @@ MonoBehaviour:
   _soundList:
   - type: 100
     clips:
-    - {fileID: 8300000, guid: 6273a8bf5e7514848aa2b6871cb327ad, type: 3}
+    - {fileID: 8300000, guid: dacbb4af6194c2d469139f7701cf5f85, type: 3}
     volumeScale: 0.355
     volumeMin: 1
     volumeMax: 1
@@ -227,10 +227,25 @@ MonoBehaviour:
     dropOldest: 1
     minDistance: 15
     maxDistance: 100
+  - type: 105
+    clips:
+    - {fileID: 8300000, guid: 6273a8bf5e7514848aa2b6871cb327ad, type: 3}
+    - {fileID: 8300000, guid: d136e1a1e33b07047a7703fa53252c3b, type: 3}
+    volumeScale: 1
+    volumeMin: 0.642
+    volumeMax: 0.781
+    pitchMin: 0.907
+    pitchMax: 1
+    minPlayInterval: 0.1
+    maxConcurrent: 12
+    dropOldest: 1
+    minDistance: 15
+    maxDistance: 100
   _bgmSource: {fileID: 3570786864977759437}
   _sfxUISource: {fileID: 4715387980489473752}
   curBGM: 0
   bgmVolume: 1
+  pauseBGMVolumeScale: 0.5
   sfxUIVolume: 1
   sfx3DVolume: 1
   engineSoundConfig:
