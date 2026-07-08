@@ -38,8 +38,11 @@ public class PauseMenuUI : MonoBehaviour
 
     private void Start()
     {
-        if (panel != null)
-            panel.SetActive(false);
+        // 시작 시 메뉴/연동 패널 전부 꺼두기 (씬에서 켜둔 채 저장해도 안전)
+        if (panel != null)        panel.SetActive(false);
+        if (optionsPanel != null) optionsPanel.SetActive(false);
+        if (mapPanel != null)     mapPanel.SetActive(false);
+        if (questPanel != null)   questPanel.SetActive(false);
     }
 
     private void Update()
@@ -119,10 +122,24 @@ public class PauseMenuUI : MonoBehaviour
         inventory.Open();
     }
 
-    /// <summary>옵션 버튼 — 옵션 패널 표시(일시정지 유지). 패널 미연결 시 훅만.</summary>
+    /// <summary>옵션 버튼 — 일시정지 메뉴를 숨기고 옵션 패널 표시(일시정지는 유지).
+    /// optionsPanel이 비어있으면 SettingMenuUI.Instance로 자동 연결 (씬마다 수동 연결 불필요).</summary>
     public void OnOptions()
     {
-        if (optionsPanel != null) optionsPanel.SetActive(true);
+        if (panel != null) panel.SetActive(false); // 메뉴는 뒤로 (일시정지 상태는 그대로)
+
+        if (optionsPanel != null)                     optionsPanel.SetActive(true);
+        else if (SettingMenuUI.Instance != null)      SettingMenuUI.Instance.Show();
+        else                                          Debug.LogWarning("[PauseMenuUI] 세팅 창 없음 — 씬에 SettingMenuUI를 배치할 것");
+    }
+
+    /// <summary>옵션 닫기 — 옵션 패널을 닫고 일시정지 메뉴로 복귀. 세팅 창의 닫기(X/Back) 버튼에 연결.</summary>
+    public void CloseOptions()
+    {
+        if (optionsPanel != null)                     optionsPanel.SetActive(false);
+        else if (SettingMenuUI.Instance != null)      SettingMenuUI.Instance.Hide();
+
+        if (panel != null) panel.SetActive(true); // 일시정지 메뉴로 복귀
     }
 
     /// <summary>전체지도 버튼 — 지도 패널 표시(일시정지 유지). 패널 미연결 시 훅만.</summary>
