@@ -49,14 +49,24 @@ public class PauseMenuUI : MonoBehaviour
     {
         if (InputManager.Instance != null && InputManager.Instance.pauseMenu)
         {
-            if (IsShown()) CloseMenu();
-            else           OpenMenu();
+            // ESC = 한 단계씩 뒤로: 세팅 창 → 메뉴 → 게임
+            if (IsOptionsShown()) CloseOptions();   // 세팅 창 열려있으면 세팅만 닫고 메뉴 복귀
+            else if (IsShown())   CloseMenu();      // 메뉴 열려있으면 메뉴 닫고 재개
+            else                  OpenMenu();       // 아무것도 없으면 메뉴 열기
         }
     }
 
     private bool IsShown()
     {
         return panel != null && panel.activeSelf;
+    }
+
+    // 세팅 창 표시 여부 (수동 연결 우선, 없으면 SettingMenuUI.Instance)
+    private bool IsOptionsShown()
+    {
+        if (optionsPanel != null) return optionsPanel.activeSelf;
+        if (SettingMenuUI.Instance != null) return SettingMenuUI.Instance.IsShown;
+        return false;
     }
 
     // 메뉴 열기 — 전투 중(PLAYING)에만 열림. 일시정지 요청 후 실제로 걸렸을 때만 패널 표시.
