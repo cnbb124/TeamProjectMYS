@@ -123,6 +123,9 @@ public class Missile : Projectile, IExplodable
 	//계산된 미사일의 추진 속도
 	private float _thrustSpeed;
 
+	// 트레일 색상(아군/적군) 담당 컴포넌트 — 자식에서 캐시해두고 발사마다 색 재적용
+	private MissileTrailTint _trailTint;
+
 
 
 
@@ -140,6 +143,8 @@ public class Missile : Projectile, IExplodable
 		// 미사일은 hitSoundType 미사용(폭발음은 explosionSoundType이 담당, 같이 쓰면 중복재생).
 		// Projectile.hitSoundType 기본값(enum 0번=BGM_LOBBY)이 그대로 남는 걸 막기 위해 명시적으로 고정.
 		hitSoundType = SOUND_TYPE.SFX_NONE;
+
+		_trailTint = GetComponentInChildren<MissileTrailTint>(true);
 	}
 
 	/// <summary>
@@ -151,6 +156,8 @@ public class Missile : Projectile, IExplodable
 	public override void Init(Vector3 startPos, Vector3 dir, Unit attacker)
 	{
 		base.Init(startPos, dir, attacker);
+
+		_trailTint?.ApplyTeamColor(gameObject.layer == (int)LAYER_TYPE.Projectile_Enemy);
 
 
 		if (missileData != null)
