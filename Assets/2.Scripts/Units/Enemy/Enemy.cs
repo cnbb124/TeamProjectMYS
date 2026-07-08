@@ -47,7 +47,7 @@ public class Enemy : Unit
     [Header("<size=14>1. 탐지 관련 설정</size>")]
     [Tooltip("이 범위 안에 타겟이 들어오면 추격 시작. 공격 진입은 LockOnSystem의 lockOnRange 기준.")]
     public float detectRange = 500f;
-    [Tooltip("선회 속도 (도/초). 90 = 2초에 180도 회전.")]
+    [Tooltip("선회 속도 (도/초). 90 = 1초에 90도 회전.")]
     public float rotateSpeed = 180f;
     [Tooltip("이 각도(도) 이내에 타겟이 있으면 회전하지 않음. 0이면 비활성화.\n" +
              "전함/대형 유닛처럼 세밀한 조준을 안 하는 느낌에 적합.")]

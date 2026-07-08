@@ -65,7 +65,7 @@ public class LockOnSystem : MonoBehaviour
 	[Header("락온 확정까지 필요한 시간초")]
 	public float lockOnRequiredTime = 1.2f;
 
-	[Header("락온 대상이될 레이어 마스크")]
+	[Header("락온 대상이될 레이어 마스크. 기본적으로 LockOnBox선택하고 필요")]
 	//[HideInInspector] //Awake에서 할시
 	public LayerMask targetLayerMask;
 
@@ -122,8 +122,12 @@ public class LockOnSystem : MonoBehaviour
 		_ownerUnit = GetComponent<Unit>();
 		_weaponSystem = GetComponent<WeaponSystem>();
 		TargetsInRadarRange = new Collider[_targetInRadarRangeBufferSize];
-		//락온박스만 쓸거면 이걸로
-		//targetLayerMask = 1 << LayerMask.NameToLayer("LockOnBox");
+		// 설정 안할시 기본값
+		if (targetLayerMask == 0)
+		{
+			targetLayerMask = 1 << LayerMask.NameToLayer("LockOnBox");
+		}
+	
 	}
 
 	private void Update()
