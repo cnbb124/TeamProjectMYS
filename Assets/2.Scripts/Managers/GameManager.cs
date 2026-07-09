@@ -748,7 +748,7 @@ public class GameManager : MonoBehaviour
             {
                 data.ownedItems[i] = new SavedItemStack
                 {
-                    itemId = items[i].data != null ? (int)items[i].data.id : 0,
+                    itemId = items[i].data != null ? items[i].data.id : 0,
                     count  = items[i].count
                 };
             }

@@ -192,7 +192,7 @@ public class SkillSystem : MonoBehaviour
 			Skill skill = _ownedSkills[i];
 			result[i] = new SavedSkill
 			{
-				skillId   = (int)skill.SkillId,
+				skillId   = skill.SkillId,
 				slotIndex = FindSlotIndexOf(skill as ActiveSkill)
 			};
 		}

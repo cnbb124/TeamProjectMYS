@@ -74,15 +74,15 @@ public class KeyboardMouseConfig
     public KeyCode fireMissile = KeyCode.Mouse1;  // 미사일 (순간)
     //public KeyCode fireAll     = KeyCode.V;       // 전체 발사 (순간) 미사용레거시
 
-    [Header("미사일 슬롯 전환")]
+    [Header("미사일/슬롯전환")]
     public KeyCode missilePrev = KeyCode.Z;         // 이전 슬롯
     public KeyCode missileNext = KeyCode.X;         // 다음 슬롯
 
-    [Header("소모품")]
+    [Header("소모품/슬롯전환")]
     public KeyCode switchConsumable = KeyCode.R;    // 소모품 슬롯 전환
     public KeyCode useConsumable    = KeyCode.T;    // 소모품 사용
 
-    [Header("스킬")]
+    [Header("스킬/슬롯전환")]
     public KeyCode switchSkillSlot = KeyCode.B;     // 스킬 슬롯 전환
     public KeyCode useSkill        = KeyCode.H;     // 스킬 사용
 
@@ -92,6 +92,8 @@ public class KeyboardMouseConfig
     public KeyCode pauseMenu        = KeyCode.Escape; // 일시정지 메뉴
     public KeyCode mapToggle        = KeyCode.M; // 전체맵
 
+    [Header("상호작용(STATION에서)")]
+    public KeyCode interAct         = KeyCode.E; // 상호작용(맵에서만)
 	//[Header("모드 전환")]
  //   public KeyCode switchFireMode = KeyCode.C;      // 발사 모드 전환 (교차/동시) 미사용 레거시
 
@@ -289,11 +291,14 @@ public class InputManager : MonoBehaviour
     [Tooltip("인벤토리 패널 토글 - 누른 순간 한 프레임만 true")]
     public bool inventoryToggle;
 
-    [Tooltip("일시정지 메뉴 토글(ESC) - 누른 순간 한 프레임만 true")]
+    [Tooltip("일시정지 메뉴 토글 - 누른 순간 한 프레임만 true")]
     public bool pauseMenu;
 
-    [Tooltip("전체맵 토글(M) - 누른 순간 한 프레임만 true")]
+    [Tooltip("전체맵 토글 - 누른 순간 한 프레임만 true")]
     public bool mapToggle;
+
+    [Tooltip("상호작용 - 누른 순간 한 프레임만 true ")]
+    public bool interAct;
 
     // D-패드 이전 프레임값 (게임패드 "누른 순간" 감지용)
     private float _prevDPadX = 0f;
@@ -376,7 +381,8 @@ public class InputManager : MonoBehaviour
         // 이동
         // WASD: Unity 기본 축(Horizontal/Vertical) 사용
         // 상하: Mouse4(상승) / Mouse3(하강)
-        moveInput = new Vector3(
+        moveInput = new Vector3
+        (
             Input.GetAxisRaw(km.axisHorizontal),
             (Input.GetKey(km.moveUp)   ? 1f : 0f)
           + (Input.GetKey(km.moveDown) ? -1f : 0f),
@@ -388,12 +394,8 @@ public class InputManager : MonoBehaviour
                   + (Input.GetKey(km.rollLeft)  ? -1f : 0f);
 
         // 시야 (마우스 이동량) — 커서가 풀려있는 동안(UI/Alt)은 카메라 조종 안 함
-        lookInput = IsUIRequestingCursor()
-            ? Vector2.zero
-            : new Vector2(
-                Input.GetAxisRaw(km.axisMouseX),
-                Input.GetAxisRaw(km.axisMouseY)
-            );
+        lookInput = IsUIRequestingCursor()? Vector2.zero
+            : new Vector2(Input.GetAxisRaw(km.axisMouseX),Input.GetAxisRaw(km.axisMouseY));
 
         // 부스트 / 회피
         isBoosting = Input.GetKey(km.boost);
@@ -427,6 +429,7 @@ public class InputManager : MonoBehaviour
         inventoryToggle = Input.GetKeyDown(km.inventoryToggle);
         pauseMenu       = Input.GetKeyDown(km.pauseMenu);
         mapToggle       = Input.GetKeyDown(km.mapToggle);
+        interAct        = Input.GetKeyDown(km.interAct);
     }
 
     // =====================================================================
@@ -439,7 +442,8 @@ public class InputManager : MonoBehaviour
         var gp = gamepadConfig;
 
         // 이동 (왼쪽 스틱)
-        moveInput = new Vector3(
+        moveInput = new Vector3
+        (
             Input.GetAxisRaw(gp.axisLeftStickX),
             Input.GetAxisRaw(gp.axisVerticalMove),
             Input.GetAxisRaw(gp.axisLeftStickY)
@@ -450,7 +454,8 @@ public class InputManager : MonoBehaviour
                   + (Input.GetKey(gp.rollLeft)  ? -1f : 0f);
 
         // 시야 (오른쪽 스틱)
-        lookInput = new Vector2(
+        lookInput = new Vector2
+        (
             Input.GetAxisRaw(gp.axisRightStickX),
             Input.GetAxisRaw(gp.axisRightStickY)
         );

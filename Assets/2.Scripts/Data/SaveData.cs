@@ -21,18 +21,18 @@ public class SavedPartSlot
     public int       partId;  // (int)ITEM_ID
 }
 
-// 미사일 슬롯 하나를 JSON-safe 하게 저장하는 구조체.
+// 미사일 슬롯 하나를 JSON-safe 하게 저장하는 클래스.
 // MissileSlot.missileData(SO 참조) → missileDataId(int)로 변환.
 [System.Serializable]
 public class SavedMissileSlot
 {
     public MISSILE_TYPE type;
-    public int          missileDataId; // (int)ITEM_ID
+    public int          missileDataId;
     public int          curAmmo;
     public int          maxAmmo;
 }
 
-// NPC 한 명의 호감도를 JSON-safe 하게 저장하는 구조체.
+// NPC 한 명의 호감도를 JSON-safe 하게 저장하는 클래스.
 [System.Serializable]
 public class SavedAffection
 {
@@ -40,21 +40,21 @@ public class SavedAffection
     public int    value;
 }
 
-// 보유 스킬 하나를 JSON-safe 하게 저장하는 구조체.
+// 보유 스킬 하나를 JSON-safe 하게 저장하는 클래스.
 // SkillData(SO 참조) → skillId(int)로 변환. slotIndex == -1이면 핫바에 없음(보유만).
 [System.Serializable]
 public class SavedSkill
 {
-    public int skillId;   // (int)SKILL_ID
+    public SKILL_ID skillId;
     public int slotIndex;
 }
 
-// 인벤토리(가방) 아이템 하나를 JSON-safe 하게 저장하는 구조체.
+// 인벤토리(가방) 아이템 하나를 JSON-safe 하게 저장하는 클래스.
 // ItemStack.data(SO 참조) → itemId(int)로 변환. 복원 시 ItemDatabase.Get(id)로 역참조.
 [System.Serializable]
 public class SavedItemStack
 {
-    public int itemId;  // (int)ITEM_ID
+    public ITEM_ID itemId; 
     public int count;
 }
 
