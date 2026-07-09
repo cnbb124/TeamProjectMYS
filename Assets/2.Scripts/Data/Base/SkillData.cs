@@ -6,6 +6,12 @@ public abstract class SkillData : ScriptableObject
 	[Tooltip("저장/로드용 고유 ID. SkillDatabase가 이 값으로 역참조.")]
 	public SKILL_ID id;
 
+	[Tooltip("UI 표시용 스킬 이름 (퀵슬롯/스킬창 등).")]
+	public string skillName;
+
+	[Tooltip("UI 표시용 스킬 아이콘 (퀵슬롯/스킬창 등).")]
+	public Sprite icon;
+
 	[Tooltip("스킬 배움에 필요한 레벨. 0 이하면 레벨 조건 없음.")]
 	public int requiredLevel;
 
