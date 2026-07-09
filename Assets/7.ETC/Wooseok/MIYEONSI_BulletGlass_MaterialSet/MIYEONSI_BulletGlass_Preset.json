@@ -1,0 +1,24 @@
+{
+  "pipeline": "Unity Built-in Render Pipeline",
+  "outerMaterial": {
+    "shader": "MIYEONSI/EnergyBullet/GlossyGlass",
+    "alpha": 0.36,
+    "smoothness": 0.94,
+    "emissionIntensity": 2.7,
+    "fresnelPower": 2.1,
+    "fresnelIntensity": 3.4,
+    "normalStrength": 0.65
+  },
+  "innerMaterial": {
+    "shader": "MIYEONSI/EnergyBullet/AdditiveCore",
+    "intensity": 4.0,
+    "alpha": 0.85
+  },
+  "recommendedPrefab": {
+    "outerSphereScale": 1.0,
+    "innerCoreScale": 0.68,
+    "ringParticleScale": "1.1-1.35",
+    "castShadows": false,
+    "receiveShadows": false
+  }
+}
