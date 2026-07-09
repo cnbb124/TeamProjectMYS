@@ -49,19 +49,32 @@ public class SavedSkill
     public int slotIndex;
 }
 
+// 인벤토리(가방) 아이템 하나를 JSON-safe 하게 저장하는 구조체.
+// ItemStack.data(SO 참조) → itemId(int)로 변환. 복원 시 ItemDatabase.Get(id)로 역참조.
+[System.Serializable]
+public class SavedItemStack
+{
+    public int itemId;  // (int)ITEM_ID
+    public int count;
+}
+
 [System.Serializable]
 public class SaveData
 {
+    public const int CURRENT_VERSION = 1;
+    public int version = CURRENT_VERSION;
+
     [Header("플레이어 스탯")]
     public int   level;
     public int   exp;
     public int   expToNextLevel;
 
-    [Header("현재 HP / 실드 / 아머 / 부스트")]
+    [Header("현재 HP / 실드 / 아머 / 부스트 / 연료")]
     public int   curHp;
     public int   curShield;
     public int   curArmor;
     public float curBoost;
+    public float curFuel;
 
     [Header("재화")]
     public int gold;
@@ -78,10 +91,12 @@ public class SaveData
     [Header("미사일 슬롯")]
     public SavedMissileSlot[] missileSlots;
 
-    // =====================================================================
-    // 아래 항목은 PlayerLoadout.cs 구현 후 추가 예정
-    // =====================================================================
-    // public List<int> ownedItemIds;       // 보유 아이템 (ITEM_ID int)
-    // public List<int> equippedItemIds;    // 착용 장비
-    // public List<ConsumableSaveData> consumables; // 소모품 슬롯
+    [Header("보유 아이템 (가방) — InventoryManager.items")]
+    public SavedItemStack[] ownedItems;
+
+    [Header("소모품 퀵슬롯 — QuickSlot.slots (id, 0=빈칸)")]
+    public int[] quickSlotItemIds;
+
+    // '착용 장비'는 별도 필드 없이 partSlots(장비파츠) / missileSlots(장착 미사일)가 곧 착용 상태임.
+    
 }

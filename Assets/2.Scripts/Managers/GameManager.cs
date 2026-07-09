@@ -739,6 +739,21 @@ public class GameManager : MonoBehaviour
         SaveData data = new SaveData();
         data.gold = InventoryManager.Instance != null ? InventoryManager.Instance.gold : 0;
 
+        // 보유 아이템(가방) 저장 (ItemStack.data(SO) → id int)
+        if (InventoryManager.Instance != null && InventoryManager.Instance.items != null)
+        {
+            List<ItemStack> items = InventoryManager.Instance.items;
+            data.ownedItems = new SavedItemStack[items.Count];
+            for (int i = 0; i < items.Count; i++)
+            {
+                data.ownedItems[i] = new SavedItemStack
+                {
+                    itemId = items[i].data != null ? (int)items[i].data.id : 0,
+                    count  = items[i].count
+                };
+            }
+        }
+
         // 호감도 저장 (Dictionary → 배열)
         if (AffectionManager.Instance != null)
         {
@@ -765,6 +780,7 @@ public class GameManager : MonoBehaviour
             data.curShield = playerRef.curShieldRemaining;
             data.curArmor = playerRef.curArmorRemaining;
             data.curBoost = playerRef.curBoostRemaining;
+            data.curFuel = playerRef.curFuelRemaining;
 
             // 파츠 슬롯 저장 (SO 참조 → id int)
             UnitParts unitParts = playerRef.GetComponent<UnitParts>();
@@ -805,7 +821,16 @@ public class GameManager : MonoBehaviour
                 data.skills = playerRef.skillSystem.CollectSaveData();
             }
 
-            // TODO: PlayerLoadout 구현 후 착용 장비 / 소모품 / 인벤토리 추가
+            // 소모품 퀵슬롯 저장 (ConsumableData(SO) → id int, 빈칸은 0)
+            QuickSlot quickSlot = playerRef.GetComponent<QuickSlot>();
+            if (quickSlot != null && quickSlot.slots != null)
+            {
+                data.quickSlotItemIds = new int[quickSlot.slots.Length];
+                for (int i = 0; i < quickSlot.slots.Length; i++)
+                {
+                    data.quickSlotItemIds[i] = quickSlot.slots[i] != null ? (int)quickSlot.slots[i].id : 0;
+                }
+            }
         }
         return data;
     }
@@ -816,6 +841,24 @@ public class GameManager : MonoBehaviour
         if (InventoryManager.Instance != null)
         {
             InventoryManager.Instance.gold = data.gold;
+
+            // 보유 아이템(가방) 복원 (id int → SO 참조). 기존 목록 비우고 재구성.
+            if (data.ownedItems != null && itemDatabase != null)
+            {
+                InventoryManager.Instance.items.Clear();
+                for (int i = 0; i < data.ownedItems.Length; i++)
+                {
+                    SavedItemStack saved = data.ownedItems[i];
+                    if (saved.itemId == 0) continue;
+                    ItemData itemData = itemDatabase.Get((ITEM_ID)saved.itemId);
+                    if (itemData == null)
+                    {
+                        Debug.LogWarning($"[GameManager] 아이템 복원 실패: id={saved.itemId}");
+                        continue;
+                    }
+                    InventoryManager.Instance.items.Add(new ItemStack { data = itemData, count = saved.count });
+                }
+            }
         }
 
         if (AffectionManager.Instance != null)
@@ -861,6 +904,7 @@ public class GameManager : MonoBehaviour
             playerRef.curShieldRemaining = data.curShield;
             playerRef.curArmorRemaining  = data.curArmor;
             playerRef.curBoostRemaining  = data.curBoost;
+            playerRef.curFuelRemaining   = data.curFuel;
 
             // 미사일 슬롯 복원 (id int → SO 참조)
             if (data.missileSlots != null)
@@ -888,7 +932,19 @@ public class GameManager : MonoBehaviour
                 playerRef.skillSystem.LoadSaveData(data.skills);
             }
 
-            // TODO: PlayerLoadout 구현 후 착용 장비 / 소모품 / 인벤토리 적용
+            // 소모품 퀵슬롯 복원 (id int → ConsumableData 참조, 0이면 빈칸)
+            QuickSlot quickSlot = playerRef.GetComponent<QuickSlot>();
+            if (quickSlot != null && data.quickSlotItemIds != null && itemDatabase != null)
+            {
+                for (int i = 0; i < data.quickSlotItemIds.Length; i++)
+                {
+                    int id = data.quickSlotItemIds[i];
+                    ConsumableData consumable = id != 0
+                        ? itemDatabase.Get<ConsumableData>((ITEM_ID)id)
+                        : null;
+                    quickSlot.AssignSlot(i, consumable);
+                }
+            }
         }
     }
 
@@ -898,14 +954,30 @@ public class GameManager : MonoBehaviour
         if (InventoryManager.Instance != null)
         {
             InventoryManager.Instance.gold = 0;
+            if (InventoryManager.Instance.items != null)
+            {
+                InventoryManager.Instance.items.Clear();
+            }
         }
         if (AffectionManager.Instance != null)
         {
             AffectionManager.Instance.LoadAffections(null);
         }
-        if (playerRef != null && playerRef.skillSystem != null)
+        if (playerRef != null)
         {
-            playerRef.skillSystem.LoadSaveData(null);
+            if (playerRef.skillSystem != null)
+            {
+                playerRef.skillSystem.LoadSaveData(null);
+            }
+            // 퀵슬롯 소모품 비우기
+            QuickSlot quickSlot = playerRef.GetComponent<QuickSlot>();
+            if (quickSlot != null && quickSlot.slots != null)
+            {
+                for (int i = 0; i < quickSlot.slots.Length; i++)
+                {
+                    quickSlot.AssignSlot(i, null);
+                }
+            }
         }
         ResetBattleData();
     }
