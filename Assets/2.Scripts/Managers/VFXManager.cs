@@ -180,7 +180,7 @@ public class VFXManager : MonoBehaviour
 
         for (int i = _timedEffects.Count - 1; i >= 0; i--)
         {
-            // 부착됐던 유닛이 파괴되면 이 이펙트도 같이 파괴됨 — 접근 전에 걸러야 예외가 안 남(해결책②).
+            // 부착됐던 유닛이 파괴되면 이 이펙트도 같이 파괴됨 — 접근 전에 걸러야 예외가 안 남
             if (_timedEffects[i].obj == null)
             {
                 Debug.LogWarning($"[VFXManager] 파괴된 이펙트 감지 @Update(_timedEffects 인덱스 {i}, type={_timedEffects[i].type}) — 접근 전 제거함. (원인: 부착 유닛이 파괴되며 같이 파괴됨)");

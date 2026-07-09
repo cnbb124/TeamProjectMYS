@@ -64,38 +64,38 @@ public class SaveData
     public const int CURRENT_VERSION = 1;
     public int version = CURRENT_VERSION;
 
-    [Header("플레이어 스탯")]
+    //플레이어 스탯
     public int   level;
     public int   exp;
     public int   expToNextLevel;
 
-    [Header("현재 HP / 실드 / 아머 / 부스트 / 연료")]
+    //현재 상태  HP / 실드 / 아머 / 부스트 / 연료
     public int   curHp;
     public int   curShield;
     public int   curArmor;
     public float curBoost;
     public float curFuel;
 
-    [Header("재화")]
+    //골드
     public int gold;
 
-    [Header("호감도 (NPC별)")]
+   //호감도 (NPC별)
     public SavedAffection[] affections;
 
-    [Header("보유 스킬")]
+   //보유 스킬
     public SavedSkill[] skills;
 
-    [Header("파츠 슬롯")]
+    //파츠 슬롯 갯수 및 내용저장
     public SavedPartSlot[] partSlots;
 
-    [Header("미사일 슬롯")]
+    //미사일 슬롯 갯수 및 내용 저장
     public SavedMissileSlot[] missileSlots;
 
-    [Header("보유 아이템 (가방) — InventoryManager.items")]
+    //보유 아이템 (가방) — InventoryManager.items
     public SavedItemStack[] ownedItems;
 
-    [Header("소모품 퀵슬롯 — QuickSlot.slots (id, 0=빈칸)")]
-    public int[] quickSlotItemIds;
+    //소모품 퀵슬롯 — QuickSlot.slots
+    public ITEM_ID[] quickSlotItemIds;
 
     // '착용 장비'는 별도 필드 없이 partSlots(장비파츠) / missileSlots(장착 미사일)가 곧 착용 상태임.
     

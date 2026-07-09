@@ -227,8 +227,8 @@ namespace ProceduralForceField
             // Pulsewave 스폰 — VFXManager 풀 사용 (자동반납은 EffectAutoReturn이 처리, PoolManager에는 미등록이라 작동 안 했었음)
             if (_usePulsewave && VFXManager.Instance != null)
             {
-                GameObject wave = VFXManager.Instance.PlayEffectAtUnit(
-                    EFFECT_TYPE.VFX_SHIELD_DESTROY, transform, transform.position, Quaternion.identity);
+                GameObject wave = VFXManager.Instance.PlayEffectAtUnit
+                    (EFFECT_TYPE.VFX_SHIELD_DESTROY, transform, transform.position, Quaternion.identity);
                 if (wave != null)
                 {
                     // Halo / Halo_Glow 파티클 색상을 쉴드 색상(아군/적군)에 맞춰 동기화

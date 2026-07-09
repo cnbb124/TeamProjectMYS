@@ -423,7 +423,7 @@ public class InputManager : MonoBehaviour
 
         // 스킬
         switchSkillSlot = Input.GetKeyDown(km.switchSkillSlot);
-        useSkill        = Input.GetKeyDown(km.useSkill);
+        useSkill        = Input.GetKeyDown(km.useSkill); 
 
         fuelGaugeToggle = Input.GetKeyDown(km.fuelGaugeToggle);
         inventoryToggle = Input.GetKeyDown(km.inventoryToggle);

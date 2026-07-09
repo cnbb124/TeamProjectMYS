@@ -293,7 +293,7 @@ public class GameManager : MonoBehaviour
     {
         yield return null; // Start() 단계 통과 대기
         playerRef = FindObjectOfType<Player>();
-        LoadData(slot);
+        yield return LoadDataRoutine(slot, null); // 서버/로컬 로드(비동기) 완료까지 대기
     }
 
     // =====================================================================
@@ -436,7 +436,13 @@ public class GameManager : MonoBehaviour
     /// <summary>저장된 게임 불러오기. 세이브 슬롯 번호로 호출.</summary>
     public void LoadGame(int saveSlotNum)
     {
-        LoadData(saveSlotNum);
+        StartCoroutine(LoadGameRoutine(saveSlotNum));
+    }
+
+    // 서버/로컬 로드가 비동기라, 로드 완료 후 상태 전환 + 씬 이동.
+    private IEnumerator LoadGameRoutine(int saveSlotNum)
+    {
+        yield return LoadDataRoutine(saveSlotNum, null);
         ChangeState(GAME_STATE.PLAYING);
         LoadScene(SCENE_TYPE.LOADING_SEQUENCE);
     }
@@ -707,20 +713,65 @@ public class GameManager : MonoBehaviour
     // 세이브 / 로드
     // =====================================================================
 
-    /// <summary>Player 등에서 현재 상태를 수집해 JSON 파일로 저장.</summary>
+    /// <summary>Player 등에서 현재 상태를 수집해 저장. 로컬 파일(항상) + 로그인 시 서버에도.</summary>
     private void SaveData(int saveSlot)
     {
         _lastSaveSlot = saveSlot;
         SaveData data = CollectSaveData();
+
+        // 로컬 저장 — 항상 수행(오프라인/서버다운 시 폴백 겸함).
         string json  = JsonUtility.ToJson(data, prettyPrint: true);
         File.WriteAllText(SavePath(saveSlot), json);
-        Debug.Log($"[GameManager] 저장 완료: {SavePath(saveSlot)}");
+        Debug.Log($"[GameManager] 로컬 저장 완료: {SavePath(saveSlot)}");
+
+        // 로그인 상태면 서버에도 저장(비동기, 실패해도 로컬은 남음).
+        if (ServerApi.Instance != null && ServerApi.Instance.IsLoggedIn)
+        {
+            ServerApi.Instance.StartCoroutine(ServerApi.Instance.SaveCo(data,
+                () => Debug.Log("[GameManager] 서버 저장 성공"),
+                err => Debug.LogWarning($"[GameManager] 서버 저장 실패(로컬은 저장됨): {err}")));
+        }
     }
 
-    /// <summary>JSON 파일에서 데이터를 읽어 Player 등에 분배.</summary>
-    private void LoadData(int saveSlot)
+    /// <summary>
+    /// 데이터 로드 → Player 등에 적용. 로그인 상태면 서버에서 먼저 시도하고, 실패/미로그인 시 로컬 파일.
+    /// 서버 통신이 비동기라 코루틴. 완료 후 onDone 콜백(있으면) 호출.
+    /// </summary>
+    private IEnumerator LoadDataRoutine(int saveSlot, System.Action onDone)
     {
         _lastSaveSlot = saveSlot;
+
+        if (ServerApi.Instance != null && ServerApi.Instance.IsLoggedIn)
+        {
+            bool serverOk = false;
+            yield return ServerApi.Instance.LoadCo(
+                data =>
+                {
+                    if (data != null)
+                    {
+                        ApplySaveData(data);
+                        serverOk = true;
+                        Debug.Log("[GameManager] 서버 로드 완료");
+                    }
+                },
+                err => Debug.LogWarning($"[GameManager] 서버 로드 실패, 로컬 시도: {err}"));
+
+            if (!serverOk)
+            {
+                LoadLocal(saveSlot);   // 서버 실패 → 로컬 폴백
+            }
+        }
+        else
+        {
+            LoadLocal(saveSlot);
+        }
+
+        onDone?.Invoke();
+    }
+
+    /// <summary>로컬 JSON 파일에서 데이터를 읽어 Player 등에 분배.</summary>
+    private void LoadLocal(int saveSlot)
+    {
         string path = SavePath(saveSlot);
         if (!File.Exists(path))
         {
@@ -730,7 +781,7 @@ public class GameManager : MonoBehaviour
         string json = File.ReadAllText(path);
         SaveData data = JsonUtility.FromJson<SaveData>(json);
         ApplySaveData(data);
-        Debug.Log($"[GameManager] 로드 완료: {path}");
+        Debug.Log($"[GameManager] 로컬 로드 완료: {path}");
     }
 
     /// <summary>Player / Loadout 등에서 저장할 데이터 수집.</summary>
@@ -825,10 +876,10 @@ public class GameManager : MonoBehaviour
             QuickSlot quickSlot = playerRef.GetComponent<QuickSlot>();
             if (quickSlot != null && quickSlot.slots != null)
             {
-                data.quickSlotItemIds = new int[quickSlot.slots.Length];
+                data.quickSlotItemIds = new ITEM_ID[quickSlot.slots.Length];
                 for (int i = 0; i < quickSlot.slots.Length; i++)
                 {
-                    data.quickSlotItemIds[i] = quickSlot.slots[i] != null ? (int)quickSlot.slots[i].id : 0;
+                    data.quickSlotItemIds[i] = quickSlot.slots[i] != null ? quickSlot.slots[i].id : 0;
                 }
             }
         }
@@ -938,9 +989,9 @@ public class GameManager : MonoBehaviour
             {
                 for (int i = 0; i < data.quickSlotItemIds.Length; i++)
                 {
-                    int id = data.quickSlotItemIds[i];
+                    ITEM_ID id = data.quickSlotItemIds[i];
                     ConsumableData consumable = id != 0
-                        ? itemDatabase.Get<ConsumableData>((ITEM_ID)id)
+                        ? itemDatabase.Get<ConsumableData>(id)
                         : null;
                     quickSlot.AssignSlot(i, consumable);
                 }

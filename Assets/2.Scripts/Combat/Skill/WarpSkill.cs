@@ -35,8 +35,17 @@ public class WarpSkill : ActiveSkill
 	protected override void UseSkill()
 	{
 		base.UseSkill();
-
-		_vfx.PlayEffectAtUnit(WarpSkillData.warpEffectType, _owner.transform, _owner.transform.position, _owner.transform.rotation, WarpSkillData.warpSequenceTime);
+		//워프인
+		_vfx.PlayEffectAtUnit(WarpSkillData.warpInEffectType, _owner.transform, _owner.transform.position, _owner.transform.rotation, WarpSkillData.warpSequenceTime);
+		//워프아웃
+		_vfx.PlayEffectAtUnit
+			(
+				WarpSkillData.warpOutEffectType,
+				_owner.transform,
+				_owner.transform.position + _owner.transform.forward * WarpSkillData.warpDistance,
+				_owner.transform.rotation,
+				WarpSkillData.warpSequenceTime
+			);
 		_sound.PlaySFX3DAtUnit(WarpSkillData.warpSoundType, _owner.transform);
 
 		_isWarping = true;

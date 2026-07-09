@@ -91,7 +91,7 @@ Shader "FORGE3D/WarpJumpTunnel_New"
         ENDCG
     }
     Fallback "Diffuse"
-    CustomEditor "ASEMaterialInspector"
+    // CustomEditor "ASEMaterialInspector"  // ASE(Amplify Shader Editor) 미설치 → 커스텀 인스펙터 경고 방지 위해 비활성화
 }
 /*ASEBEGIN
 Version=15600

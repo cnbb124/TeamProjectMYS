@@ -933,10 +933,7 @@ public abstract class Unit : MonoBehaviour, IDamageable
 			EFFECT_TYPE hitVfx = (curShieldRemaining > 0) ? info.shieldHitVfxType : info.hitVfxType;
 			VFXManager.Instance.PlayEffectAtPosition(hitVfx, info.hitPosition, Quaternion.identity);
 		}
-		//피격 카메라무빙필요
-
-		//크리면 데미지 배율, 아니면 그냥 데미지
-		//데미지인포에서 총알인지 폭발인지 레이저인지에 따라서
+		
 	}
 
 
@@ -979,6 +976,9 @@ public abstract class Unit : MonoBehaviour, IDamageable
 					if (curShieldRemaining <= 0)
 					{
 						_shieldOverlay.TriggerDestroy();
+							// 실드가 이번 히트로 완전 소진된 순간 파괴음 1회 재생.
+							// (바깥 if가 curShieldRemaining>0 진입 조건이라 깨지는 그 히트에서만 <=0 → 중복 없음)
+							_sound?.PlaySFX3DAtPosition(SOUND_TYPE.SFX_SHIELD_DESTROY, transform.position);
 					}
 				}
 			}
