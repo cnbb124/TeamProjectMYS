@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 
+using Photon.Pun;
 using UnityEngine;
 
 
@@ -99,6 +100,11 @@ public class Player : Unit
 	//매니저 할당용 레퍼런스
 	private InputManager _input;
 
+	// 멀티플레이 소유권 판정용. 씬 배치 싱글플레이(=PhotonView 없음)면 항상 내 것으로 취급 → 기존 동작 그대로.
+	// PhotonNetwork.Instantiate로 스폰된 함선만 PhotonView를 가지며, 남의 함선은 IsMine=false가 되어 입력이 차단된다.
+	private PhotonView _photonView;
+	private bool IsMine => _photonView == null || _photonView.IsMine;
+
 	public QuickSlot quickSlot { get; private set; }
 	//public SkillSystem skillSystem { get; private set; }
 
@@ -171,6 +177,7 @@ public class Player : Unit
 		// 우주 공간 = 중력 없음. 회전은 직접 제어하므로 물리 회전 고정
 		_rb.useGravity = false;
 		_rb.freezeRotation = true;
+		_photonView = GetComponent<PhotonView>();
 		quickSlot = GetComponent<QuickSlot>();
 		//skillSystem = GetComponent<SkillSystem>();
 	}
@@ -179,6 +186,14 @@ public class Player : Unit
 	{
 		base.Start(); //유닛 초기화 호출 (RefillToMax 포함, Player override로 연료까지 채워짐)
 		UnitManager.Instance.RegisterPlayer(this);
+
+		// 로컬 플레이어(내 함선)만 GameManager의 대표 참조로 등록.
+		// 멀티에선 Player가 씬 로드 후 PhotonNetwork.Instantiate로 스폰돼 OnSceneLoaded의 FindObjectOfType가 놓치므로,
+		// 여기서 자기 자신을 등록한다. 남의 함선(IsMine=false)은 등록하지 않는다. 싱글은 IsMine=true라 동일 동작.
+		if (IsMine && GameManager.Instance != null)
+		{
+			GameManager.Instance.playerRef = this;
+		}
 		_input = InputManager.Instance;
 		// 게임 시작 시 1번 슬롯 무기로 초기화
 		weaponSystem.Init();
@@ -214,6 +229,12 @@ public class Player : Unit
 		base.Update(); //FSM, 실드/부스트 회복 호출
 					   // 입력처리 - InputManager 구현 뒤 여기서 호출
 					   // ex. InputManager.Instance.HandleInput(this);
+
+		// 남의 함선(멀티)이면 입력을 읽지 않는다. 위치/상태는 PhotonView 동기화로만 갱신됨.
+		if (!IsMine)
+		{
+			return;
+		}
 
 		if (_input == null)
 		{
@@ -263,6 +284,11 @@ public class Player : Unit
 	{
 		base.FixedUpdate(); // 일시정지 시 Rigidbody 프리즈/복원 처리
 		if (ShouldPause)
+		{
+			return;
+		}
+		// 남의 함선(멀티)이면 입력 기반 이동/회전을 돌리지 않는다. 위치는 PhotonView 동기화로만.
+		if (!IsMine)
 		{
 			return;
 		}

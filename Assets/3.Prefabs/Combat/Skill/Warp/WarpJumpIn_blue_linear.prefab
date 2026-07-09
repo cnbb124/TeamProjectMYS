@@ -44,7 +44,7 @@ ParticleSystem:
   lengthInSec: 1
   simulationSpeed: 1
   stopAction: 0
-  cullingMode: 3
+  cullingMode: 1
   ringBufferMode: 0
   ringBufferLoopRange: {x: 0, y: 1}
   emitterVelocityMode: 0
@@ -4920,7 +4920,6 @@ GameObject:
   - component: {fileID: 1320830893074993519}
   - component: {fileID: 8859120271937737155}
   - component: {fileID: 3019834526647170171}
-  - component: {fileID: 7246418048976037386}
   - component: {fileID: 1507670417943917683}
   m_Layer: 0
   m_Name: WarpJumpTunnel_01
@@ -4939,7 +4938,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 3, y: 3, z: 75}
+  m_LocalScale: {x: 3, y: 3, z: 45}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 3314793122856299099}
@@ -4994,25 +4993,6 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!114 &7246418048976037386
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1090286273859532625}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 579b0f7f37f7a0f4ea9b8ecc4c9dca5d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  StartDelay: 2.3
-  FadeDelay: 2.6
-  ScaleTo: {x: 2, y: 2, z: 75}
-  ScaleTime: 10
-  ColorTime: 10
-  ColorFadeTime: 4
-  RotationSpeed: -2
 --- !u!114 &1507670417943917683
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5025,12 +5005,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 51cb70dc45c962f4fa746e0013aab5b8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  startDelay: 2.3
-  fadeDelay: 2.6
-  scaleTo: {x: 2, y: 2, z: 75}
-  scaleTime: 10
-  colorTime: 10
-  colorFadeTime: 4
+  startDelay: 0.5
+  fadeDelay: 2
+  scaleTo: {x: 2, y: 2, z: 45}
+  scaleTime: 3
+  colorTime: 3
+  colorFadeTime: 3
   rotationSpeed: -2
 --- !u!1 &1140559119098961696
 GameObject:
@@ -5076,7 +5056,7 @@ ParticleSystem:
   lengthInSec: 1
   simulationSpeed: 1
   stopAction: 0
-  cullingMode: 3
+  cullingMode: 1
   ringBufferMode: 0
   ringBufferLoopRange: {x: 0, y: 1}
   emitterVelocityMode: 0
@@ -9761,7 +9741,7 @@ ParticleSystemRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
-  m_RenderMode: 1
+  m_RenderMode: 0
   m_MeshDistribution: 0
   m_SortMode: 0
   m_MinParticleSize: 0
@@ -9837,7 +9817,7 @@ ParticleSystem:
   lengthInSec: 1
   simulationSpeed: 1
   stopAction: 0
-  cullingMode: 3
+  cullingMode: 1
   ringBufferMode: 0
   ringBufferLoopRange: {x: 0, y: 1}
   emitterVelocityMode: 0
@@ -15079,7 +15059,7 @@ ParticleSystem:
   lengthInSec: 3
   simulationSpeed: 1
   stopAction: 0
-  cullingMode: 3
+  cullingMode: 1
   ringBufferMode: 0
   ringBufferLoopRange: {x: 0, y: 1}
   emitterVelocityMode: 0
@@ -19879,8 +19859,8 @@ Transform:
   m_GameObject: {fileID: 4813536343386795369}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0.22}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 64.6}
+  m_LocalScale: {x: 3, y: 3, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 3314793122856299099}
@@ -19893,10 +19873,10 @@ ParticleSystem:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4813536343386795369}
   serializedVersion: 8
-  lengthInSec: 4
+  lengthInSec: 1.5
   simulationSpeed: 1
   stopAction: 0
-  cullingMode: 3
+  cullingMode: 1
   ringBufferMode: 0
   ringBufferLoopRange: {x: 0, y: 1}
   emitterVelocityMode: 0
@@ -20121,8 +20101,8 @@ ParticleSystem:
     startSize:
       serializedVersion: 2
       minMaxState: 3
-      scalar: 40
-      minScalar: 25
+      scalar: 20
+      minScalar: 10
       maxCurve:
         serializedVersion: 2
         m_Curve:
@@ -20480,9 +20460,9 @@ ParticleSystem:
   ShapeModule:
     serializedVersion: 6
     enabled: 1
-    type: 8
+    type: 17
     angle: 6.4
-    length: 133.73
+    length: 89.5
     boxThickness: {x: 0, y: 0, z: 0}
     radiusThickness: 1
     donutRadius: 0.2
@@ -24629,7 +24609,7 @@ Transform:
   m_GameObject: {fileID: 4882571504798084040}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 1, z: 0, w: 0}
-  m_LocalPosition: {x: 0, y: 0, z: 130}
+  m_LocalPosition: {x: 0, y: 0, z: 95}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -24657,7 +24637,6 @@ GameObject:
   - component: {fileID: 652061048637704938}
   - component: {fileID: 265610336241030506}
   - component: {fileID: 7025658227119463471}
-  - component: {fileID: 7100209233378091347}
   - component: {fileID: 717820147915850302}
   m_Layer: 0
   m_Name: WarpJumpTunnel_03
@@ -24676,7 +24655,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 3, y: 3, z: 95}
+  m_LocalScale: {x: 3, y: 3, z: 65}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 3314793122856299099}
@@ -24731,25 +24710,6 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!114 &7100209233378091347
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5642242579757932537}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 579b0f7f37f7a0f4ea9b8ecc4c9dca5d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  StartDelay: 3
-  FadeDelay: 3.2
-  ScaleTo: {x: 3, y: 3, z: 95}
-  ScaleTime: 20
-  ColorTime: 10
-  ColorFadeTime: 14
-  RotationSpeed: -20
 --- !u!114 &717820147915850302
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -24762,12 +24722,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 51cb70dc45c962f4fa746e0013aab5b8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  startDelay: 3
-  fadeDelay: 3.2
-  scaleTo: {x: 3, y: 3, z: 95}
-  scaleTime: 20
-  colorTime: 10
-  colorFadeTime: 14
+  startDelay: 1
+  fadeDelay: 2.5
+  scaleTo: {x: 3, y: 3, z: 65}
+  scaleTime: 3
+  colorTime: 3
+  colorFadeTime: 3
   rotationSpeed: -20
 --- !u!1 &5732525294619196289
 GameObject:
@@ -24813,7 +24773,7 @@ ParticleSystem:
   lengthInSec: 0.5
   simulationSpeed: 1
   stopAction: 0
-  cullingMode: 3
+  cullingMode: 1
   ringBufferMode: 0
   ringBufferLoopRange: {x: 0, y: 1}
   emitterVelocityMode: 0
@@ -29538,7 +29498,7 @@ ParticleSystem:
   lengthInSec: 1
   simulationSpeed: 1
   stopAction: 0
-  cullingMode: 3
+  cullingMode: 1
   ringBufferMode: 0
   ringBufferLoopRange: {x: 0, y: 1}
   emitterVelocityMode: 0
@@ -34396,7 +34356,6 @@ GameObject:
   - component: {fileID: 137043531267212317}
   - component: {fileID: 2441112856016205124}
   - component: {fileID: 5273388603513205162}
-  - component: {fileID: 8008291823970411598}
   - component: {fileID: 4540180432905182827}
   m_Layer: 0
   m_Name: WarpJumpTunnel_02
@@ -34415,7 +34374,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 4, y: 4, z: 85}
+  m_LocalScale: {x: 4, y: 4, z: 55}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 3314793122856299099}
@@ -34470,25 +34429,6 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!114 &8008291823970411598
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7704420877550950589}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 579b0f7f37f7a0f4ea9b8ecc4c9dca5d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  StartDelay: 2.7
-  FadeDelay: 2.9
-  ScaleTo: {x: 2.5, y: 2.5, z: 85}
-  ScaleTime: 15
-  ColorTime: 10
-  ColorFadeTime: 9
-  RotationSpeed: 10
 --- !u!114 &4540180432905182827
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -34501,12 +34441,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 51cb70dc45c962f4fa746e0013aab5b8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  startDelay: 2.7
-  fadeDelay: 2.9
-  scaleTo: {x: 2.5, y: 2.5, z: 85}
-  scaleTime: 15
-  colorTime: 10
-  colorFadeTime: 9
+  startDelay: 0.7
+  fadeDelay: 2.2
+  scaleTo: {x: 2.5, y: 2.5, z: 55}
+  scaleTime: 3
+  colorTime: 3
+  colorFadeTime: 3
   rotationSpeed: 10
 --- !u!1 &8631533341899094310
 GameObject:
@@ -34552,7 +34492,7 @@ ParticleSystem:
   lengthInSec: 1
   simulationSpeed: 1
   stopAction: 0
-  cullingMode: 3
+  cullingMode: 1
   ringBufferMode: 0
   ringBufferLoopRange: {x: 0, y: 1}
   emitterVelocityMode: 0

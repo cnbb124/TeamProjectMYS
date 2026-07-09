@@ -9729,7 +9729,7 @@ GameObject:
   - component: {fileID: 323221539770171966}
   - component: {fileID: 5141906170134776176}
   - component: {fileID: 6151170763054703056}
-  - component: {fileID: 7396747663694482722}
+  - component: {fileID: 2387761176727073784}
   m_Layer: 0
   m_Name: WarpJumpTunnel_02
   m_TagString: Untagged
@@ -9747,7 +9747,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 1, z: 0, w: -0.00000004371139}
   m_LocalPosition: {x: 0, y: 0, z: 131.53}
-  m_LocalScale: {x: 4, y: 4, z: 85}
+  m_LocalScale: {x: 4, y: 4, z: 55}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1583066641341518650}
@@ -9802,7 +9802,7 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!114 &7396747663694482722
+--- !u!114 &2387761176727073784
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -9811,16 +9811,16 @@ MonoBehaviour:
   m_GameObject: {fileID: 3317356511750327267}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 579b0f7f37f7a0f4ea9b8ecc4c9dca5d, type: 3}
+  m_Script: {fileID: 11500000, guid: 51cb70dc45c962f4fa746e0013aab5b8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  StartDelay: 2.7
-  FadeDelay: 2.9
-  ScaleTo: {x: 2.5, y: 2.5, z: 85}
-  ScaleTime: 15
-  ColorTime: 10
-  ColorFadeTime: 9
-  RotationSpeed: 10
+  startDelay: 1
+  fadeDelay: 2.9
+  scaleTo: {x: 2.5, y: 2.5, z: 55}
+  scaleTime: 15
+  colorTime: 10
+  colorFadeTime: 9
+  rotationSpeed: 10
 --- !u!1 &4908562415528932528
 GameObject:
   m_ObjectHideFlags: 0
@@ -9832,7 +9832,7 @@ GameObject:
   - component: {fileID: 5597140271765917990}
   - component: {fileID: 3005896665146670181}
   - component: {fileID: 7555556743771565007}
-  - component: {fileID: 4742591047902652197}
+  - component: {fileID: 7837115654046387792}
   m_Layer: 0
   m_Name: WarpJumpTunnel_03
   m_TagString: Untagged
@@ -9850,7 +9850,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 1, z: 0, w: -0.00000004371139}
   m_LocalPosition: {x: 0, y: 0, z: 131.53}
-  m_LocalScale: {x: 3, y: 3, z: 95}
+  m_LocalScale: {x: 3, y: 3, z: 65}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1583066641341518650}
@@ -9905,7 +9905,7 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!114 &4742591047902652197
+--- !u!114 &7837115654046387792
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -9914,16 +9914,16 @@ MonoBehaviour:
   m_GameObject: {fileID: 4908562415528932528}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 579b0f7f37f7a0f4ea9b8ecc4c9dca5d, type: 3}
+  m_Script: {fileID: 11500000, guid: 51cb70dc45c962f4fa746e0013aab5b8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  StartDelay: 3
-  FadeDelay: 3.2
-  ScaleTo: {x: 3, y: 3, z: 95}
-  ScaleTime: 20
-  ColorTime: 10
-  ColorFadeTime: 14
-  RotationSpeed: -20
+  startDelay: 1
+  fadeDelay: 3.2
+  scaleTo: {x: 3, y: 3, z: 65}
+  scaleTime: 20
+  colorTime: 10
+  colorFadeTime: 14
+  rotationSpeed: -20
 --- !u!1 &7190144389692046391
 GameObject:
   m_ObjectHideFlags: 0
@@ -9977,7 +9977,7 @@ GameObject:
   - component: {fileID: 5942600094734676750}
   - component: {fileID: 8671936905423987362}
   - component: {fileID: 8815583584166143575}
-  - component: {fileID: 3088987704292642488}
+  - component: {fileID: 7871249474002350208}
   m_Layer: 0
   m_Name: WarpJumpTunnel_01
   m_TagString: Untagged
@@ -9995,7 +9995,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 1, z: 0, w: -0.00000004371139}
   m_LocalPosition: {x: 0, y: 0, z: 131.53}
-  m_LocalScale: {x: 3, y: 3, z: 75}
+  m_LocalScale: {x: 3, y: 3, z: 45}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1583066641341518650}
@@ -10050,7 +10050,7 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!114 &3088987704292642488
+--- !u!114 &7871249474002350208
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -10059,16 +10059,16 @@ MonoBehaviour:
   m_GameObject: {fileID: 7422757714380995320}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 579b0f7f37f7a0f4ea9b8ecc4c9dca5d, type: 3}
+  m_Script: {fileID: 11500000, guid: 51cb70dc45c962f4fa746e0013aab5b8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  StartDelay: 2.3
-  FadeDelay: 2.6
-  ScaleTo: {x: 2, y: 2, z: 75}
-  ScaleTime: 10
-  ColorTime: 10
-  ColorFadeTime: 4
-  RotationSpeed: -2
+  startDelay: 1
+  fadeDelay: 2.6
+  scaleTo: {x: 2, y: 2, z: 45}
+  scaleTime: 10
+  colorTime: 10
+  colorFadeTime: 4
+  rotationSpeed: -2
 --- !u!1 &7508590541654180002
 GameObject:
   m_ObjectHideFlags: 0

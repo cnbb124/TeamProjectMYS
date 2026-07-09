@@ -572,6 +572,20 @@ public class UnitParts : MonoBehaviour
                     fuelPlayer.maxFuelCapacity += val;
                 }
                 break;
+            // 연사 딜레이 감소 — 쿨다운(초)에서 보너스만큼 빼서 발사 간격을 줄인다.
+            // 장착(+1)이면 val>0이라 쿨다운 감소, 해제(-1)면 val<0이라 정확히 원복(대칭).
+            case STAT_TYPE.FIRE_BULLET_DELAY_DECREASE:
+                if (_weaponSystem != null)
+                {
+                    _weaponSystem.bulletFireCooldown -= val;
+                }
+                break;
+            case STAT_TYPE.FIRE_MISSILE_DELAY_DECREASE:
+                if (_weaponSystem != null)
+                {
+                    _weaponSystem.missileFireCooldown -= val;
+                }
+                break;
         }
     }
 }
