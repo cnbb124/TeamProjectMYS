@@ -43,6 +43,8 @@ public class ItemQuickSlotUI : MonoBehaviour
 
     [Header("배치/회전")]
     [SerializeField] private float radius      = 70f;
+    [Tooltip("인접 슬롯 사이 간격(px). 0보다 크면 radius 무시하고 이 간격 기준으로 반지름 자동 계산")]
+    [SerializeField] private float slotSpacing = 0f;
     [SerializeField] private float rotateSpeed = 10f;   // 리볼버 회전 부드러움
 
     [Header("선택 연출")]
@@ -122,13 +124,19 @@ public class ItemQuickSlotUI : MonoBehaviour
         _icons  = new Image[count];
         _counts = new TMP_Text[count];
 
+        // slotSpacing 지정 시 인접 슬롯 간격 기준으로 반지름 자동 계산
+        // (현의 길이 공식: spacing = 2 × r × sin(π/n) → r = spacing / (2 sin(π/n)))
+        float r = slotSpacing > 0f && count > 1
+            ? slotSpacing / (2f * Mathf.Sin(Mathf.PI / count))
+            : radius;
+
         for (int i = 0; i < count; i++)
         {
             GameObject go = Instantiate(slotPrefab, container);
             RectTransform rt = go.GetComponent<RectTransform>();
 
             float rad = (360f / count * i) * Mathf.Deg2Rad;
-            rt.anchoredPosition = new Vector2(Mathf.Sin(rad), Mathf.Cos(rad)) * radius;
+            rt.anchoredPosition = new Vector2(Mathf.Sin(rad), Mathf.Cos(rad)) * r;
 
             _slots[i]  = rt;
             _frames[i] = go.GetComponent<Image>();

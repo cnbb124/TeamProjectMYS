@@ -33240,7 +33240,7 @@ PrefabInstance:
       objectReference: {fileID: 21300000, guid: ab906670004a741449c2fa8eb1ba331d, type: 3}
     - target: {fileID: 652266807615060173, guid: ce710790cd4f4f7419301429beab47d1, type: 3}
       propertyPath: m_Color.a
-      value: 1
+      value: 0.5882353
       objectReference: {fileID: 0}
     - target: {fileID: 652266807615060173, guid: ce710790cd4f4f7419301429beab47d1, type: 3}
       propertyPath: m_Color.b
@@ -33254,6 +33254,10 @@ PrefabInstance:
       propertyPath: m_Color.r
       value: 0.20784314
       objectReference: {fileID: 0}
+    - target: {fileID: 652266807615060173, guid: ce710790cd4f4f7419301429beab47d1, type: 3}
+      propertyPath: m_Material
+      value: 
+      objectReference: {fileID: 2100000, guid: f14b2eedbe7da834f9c4afe0eb6e5fbc, type: 2}
     - target: {fileID: 1268897682758283738, guid: ce710790cd4f4f7419301429beab47d1, type: 3}
       propertyPath: m_Name
       value: ItemQuickSlotUI
@@ -33425,12 +33429,13 @@ MonoBehaviour:
     count: 5
   - item: {fileID: 11400000, guid: 0de0645e33aa6204b981955f2face52c, type: 2}
     count: 5
-  radius: 70
+  radius: 30
+  slotSpacing: 100
   rotateSpeed: 10
-  selectedScale: 1.07
+  selectedScale: 1.02
   normalScale: 1
-  selectedColor: {r: 0.495283, g: 1, b: 0.8352352, a: 1}
-  normalColor: {r: 0.4811321, g: 0.4811321, b: 0.4811321, a: 0.5882353}
+  selectedColor: {r: 0, g: 0.42745098, b: 0.6156863, a: 1}
+  normalColor: {r: 0.13207549, g: 0.13207549, b: 0.13207549, a: 0.5882353}
   flashColor: {r: 0.4, g: 1, b: 0.6, a: 1}
   flashTime: 0.15
   useInputManager: 1
@@ -33462,7 +33467,7 @@ PrefabInstance:
       objectReference: {fileID: 21300000, guid: ab906670004a741449c2fa8eb1ba331d, type: 3}
     - target: {fileID: 652266807615060173, guid: ce710790cd4f4f7419301429beab47d1, type: 3}
       propertyPath: m_Color.a
-      value: 1
+      value: 0.5882353
       objectReference: {fileID: 0}
     - target: {fileID: 652266807615060173, guid: ce710790cd4f4f7419301429beab47d1, type: 3}
       propertyPath: m_Color.b
@@ -33476,6 +33481,10 @@ PrefabInstance:
       propertyPath: m_Color.r
       value: 0.20754719
       objectReference: {fileID: 0}
+    - target: {fileID: 652266807615060173, guid: ce710790cd4f4f7419301429beab47d1, type: 3}
+      propertyPath: m_Material
+      value: 
+      objectReference: {fileID: 2100000, guid: f14b2eedbe7da834f9c4afe0eb6e5fbc, type: 2}
     - target: {fileID: 1268897682758283738, guid: ce710790cd4f4f7419301429beab47d1, type: 3}
       propertyPath: m_Name
       value: SkillQuickSlotUI
@@ -33649,12 +33658,13 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 9367ab263d4c19b4c98e7773e8d647ca, type: 2}
   - {fileID: 11400000, guid: 2c4ae3ca568e5d749a56569ea6d5019a, type: 2}
   - {fileID: 11400000, guid: 6070e93c2e514dd429d9ed03f366bf7c, type: 2}
-  radius: 70
+  radius: 30
+  slotSpacing: 100
   rotateSpeed: 10
-  selectedScale: 1.07
+  selectedScale: 1.02
   normalScale: 1
-  selectedColor: {r: 0.49411765, g: 1, b: 0.8352941, a: 1}
-  normalColor: {r: 0.48235294, g: 0.48235294, b: 0.48235294, a: 0.5882353}
+  selectedColor: {r: 0, g: 0.42584047, b: 0.6132076, a: 1}
+  normalColor: {r: 0.13333334, g: 0.13333334, b: 0.13333334, a: 0.5882353}
 --- !u!224 &8665774310562360071 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 3568387093020325719, guid: ce710790cd4f4f7419301429beab47d1, type: 3}
