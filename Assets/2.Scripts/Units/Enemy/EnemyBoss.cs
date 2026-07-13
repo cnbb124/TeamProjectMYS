@@ -34,9 +34,10 @@ public class EnemyBoss : EnemyShip
 
 	[Tooltip("탄막 발사 기준 위치(총구). 비우면 보스 본체 위치에서 발사")]
 	[SerializeField] private Transform _firePoint;
-
+	
 	// 현재 페이즈(State 패턴). 매 프레임 OnUpdate 호출됨.
 	private BossPhase _currentPhase;
+	
 	// 패턴 코루틴이 재생 중인지 — 중복 재생 방지.
 	private bool _isFiringPattern;
 
@@ -71,7 +72,7 @@ public class EnemyBoss : EnemyShip
 	}
 
 	// 페이즈가 호출 — 주어진 풀에서 랜덤 패턴 하나를 재생(이미 재생 중이면 무시).
-	public void PlayRandomPattern(BulletPatternData[] pool)
+	public void PlayRandomBulletPattern(BulletPatternData[] pool)
 	{
 		if (_isFiringPattern || pool == null || pool.Length == 0)
 		{
@@ -154,6 +155,7 @@ public class EnemyBoss : EnemyShip
 		public virtual void OnEnter() { }
 		public abstract void OnUpdate();
 		public virtual void OnExit() { }
+
 	}
 
 	// HP 100~70%
@@ -166,8 +168,10 @@ public class EnemyBoss : EnemyShip
 			{
 				_boss.SetPhase(new BossPhase2(_boss)); return;
 			}
-			_boss.PlayRandomPattern(_boss._phase1Patterns);
+			_boss.PlayRandomBulletPattern(_boss._phase1Patterns);
+			
 		}
+
 	}
 
 	// HP 70~40%
@@ -180,7 +184,7 @@ public class EnemyBoss : EnemyShip
 			{
 				_boss.SetPhase(new BossPhase3(_boss)); return;
 			}
-			_boss.PlayRandomPattern(_boss._phase2Patterns);
+			_boss.PlayRandomBulletPattern(_boss._phase2Patterns);
 		}
 	}
 
@@ -194,7 +198,7 @@ public class EnemyBoss : EnemyShip
 			{
 				_boss.SetPhase(new BossPhase4(_boss)); return;
 			}
-			_boss.PlayRandomPattern(_boss._phase3Patterns);
+			_boss.PlayRandomBulletPattern(_boss._phase3Patterns);
 		}
 	}
 
@@ -204,7 +208,8 @@ public class EnemyBoss : EnemyShip
 		public BossPhase4(EnemyBoss boss) : base(boss) { }
 		public override void OnUpdate()
 		{
-			_boss.PlayRandomPattern(_boss._phase4Patterns);
+			_boss.PlayRandomBulletPattern(_boss._phase4Patterns);
 		}
 	}
+
 }
