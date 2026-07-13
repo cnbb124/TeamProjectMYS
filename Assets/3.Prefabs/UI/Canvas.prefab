@@ -1347,6 +1347,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1267875855204136766}
+  - component: {fileID: 8726880265164613227}
+  - component: {fileID: 4363674281735725565}
   m_Layer: 5
   m_Name: Content
   m_TagString: Untagged
@@ -1371,8 +1373,48 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: -0.000022018277}
-  m_SizeDelta: {x: 0, y: 300}
+  m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 1}
+--- !u!114 &8726880265164613227
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2800247425582968362}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 59f8146938fff824cb5fd77236b75775, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Padding:
+    m_Left: 8
+    m_Right: 8
+    m_Top: 4
+    m_Bottom: 4
+  m_ChildAlignment: 0
+  m_Spacing: 2
+  m_ChildForceExpandWidth: 1
+  m_ChildForceExpandHeight: 0
+  m_ChildControlWidth: 1
+  m_ChildControlHeight: 1
+  m_ChildScaleWidth: 0
+  m_ChildScaleHeight: 0
+  m_ReverseArrangement: 0
+--- !u!114 &4363674281735725565
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2800247425582968362}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3245ec927659c4140ac4f8d17403cc18, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_HorizontalFit: 0
+  m_VerticalFit: 2
 --- !u!1 &3135869285862199459
 GameObject:
   m_ObjectHideFlags: 0
@@ -2141,8 +2183,8 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 5301269933542602612}
   m_HandleRect: {fileID: 6573653392837795554}
   m_Direction: 2
-  m_Value: 1.0000002
-  m_Size: 0.64983153
+  m_Value: 1
+  m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -2662,10 +2704,10 @@ RectTransform:
   - {fileID: 1416691367978605963}
   m_Father: {fileID: 4603538431088687911}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0}
-  m_AnchorMax: {x: 0.5, y: 0}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 0}
   m_AnchoredPosition: {x: 0, y: 17.5}
-  m_SizeDelta: {x: 350, y: 35}
+  m_SizeDelta: {x: 0, y: 35}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &8233502632038747922
 CanvasRenderer:
@@ -3173,6 +3215,8 @@ GameObject:
   - component: {fileID: 4603538431088687911}
   - component: {fileID: 2312638270650036414}
   - component: {fileID: 4556317939083059333}
+  - component: {fileID: 5152431050868583736}
+  - component: {fileID: 2491778754321812946}
   m_Layer: 5
   m_Name: ChatUI
   m_TagString: Untagged
@@ -3239,6 +3283,44 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &5152431050868583736
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5702173242425301453}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dcba9cdd1ab97f449a5c9fbcbc2628de, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  scrollRect: {fileID: 2501831171759875884}
+  content: {fileID: 1267875855204136766}
+  inputField: {fileID: 3085082547245850924}
+  sendButton: {fileID: 8692625966260129419}
+  messagePrefab: {fileID: 1801926921334719630, guid: 2b190836264be6c41961f15926d4bddf, type: 3}
+  maxMessages: 50
+  myName: Me
+  localEcho: 1
+  nameColor: {r: 0.4, g: 0.8, b: 1, a: 1}
+  systemColor: {r: 1, g: 0.85, b: 0.4, a: 1}
+--- !u!114 &2491778754321812946
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5702173242425301453}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b8391b3329b0ab845adba0c71db24c7c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  chatUI: {fileID: 5152431050868583736}
+  channel: lobby
+  chatRegion: asia
+  nickname: 
 --- !u!1 &6259887075009681604
 GameObject:
   m_ObjectHideFlags: 0
