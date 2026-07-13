@@ -93,8 +93,9 @@ public class PlayerSpawner : MonoBehaviour
         {
             return null;
         }
-        // 내 순번 = 방에 나보다 먼저 들어온 사람 수(대략) → PlayerCount-1로 근사.
-        int index = (PhotonNetwork.CurrentRoom.PlayerCount - 1) % spawnPoints.Length;
+        // 내 고유번호(ActorNumber, 1-based)로 배정 → 동시 입장에도 겹치지 않고 각자 다른 지점.
+        // (PlayerCount 방식은 두 명이 같은 순간 스폰하면 같은 위치를 뽑아 겹치는 문제가 있었음)
+        int index = (PhotonNetwork.LocalPlayer.ActorNumber - 1) % spawnPoints.Length;
         return spawnPoints[index];
     }
 }

@@ -218,6 +218,51 @@ public class PoolManager : MonoBehaviour
 		return newObj;
 	}
 
+	/// <summary>
+	/// 해당 POOL_TYPE의 비활성 오브젝트를 '활성화하지 않고' 반환. 없으면 자동 확장.
+	/// Photon 커스텀 풀(PhotonPoolAdapter)용 — PUN 규약상 Instantiate는 비활성 오브젝트를 돌려줘야
+	/// PUN이 PhotonView의 ViewID를 먼저 세팅한 뒤 직접 활성화한다(Get()은 즉시 활성화해서 이 규약과 안 맞음).
+	/// </summary>
+	public GameObject GetInactive(POOL_TYPE poolType)
+	{
+		if (!_pools.TryGetValue(poolType, out var pool))
+		{
+			Debug.LogError($"[PoolManager] 풀 없음: {poolType}. poolConfigs에 등록 필요.");
+			return null;
+		}
+
+		foreach (var obj in pool)
+		{
+			if (!obj.activeInHierarchy)
+			{
+				return obj;   // 활성화하지 않고 반환 (PUN이 ViewID 세팅 후 활성화)
+			}
+		}
+
+		// 풀 부족 → 자동 확장 (Get()과 동일하되 활성화하지 않음)
+		PoolEntry config = System.Array.Find(poolConfigs, c => c.poolType == poolType);
+		if (config == null)
+		{
+			Debug.LogError($"[PoolManager] {poolType} config null - poolConfigs 확인");
+			return null;
+		}
+
+		GameObject newObj = Instantiate(config.prefab, this.transform);
+		newObj.SetActive(false);
+		pool.Add(newObj);
+
+		bool isProjectile = config.category == PoolCategory.Projectile;
+		if (isProjectile && _projectilePools.ContainsKey(poolType))
+		{
+			Projectile proj = newObj.GetComponent<Projectile>();
+			if (proj != null)
+				_projectilePools[poolType].Add(proj);
+		}
+
+		Debug.LogWarning($"[PoolManager] {poolType} 자동 확장(비활성). 현재 수: {pool.Count}");
+		return newObj;
+	}
+
 	/// <summary>오브젝트를 풀로 반납 (비활성화). 모든 타입 공용.</summary>
 	public void Return(GameObject obj)
 	{

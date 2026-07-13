@@ -86,6 +86,13 @@ public class NetworkManager : MonoBehaviourPunCallbacks
 			// 연결/방 입장 상태는 로비 → 게임플레이 씬 전환에도 유지되어야 하므로 DDOL.
 			// (웨이브·카메라처럼 씬마다 초기화되는 SpawnManager/CameraShaker와는 정반대 성격)
 			DontDestroyOnLoad(gameObject);
+			// 씬 전환을 Master 기준으로 전원 동기화(PhotonNetwork.LoadLevel 사용 시 모두 같은 씬 유지).
+			// PlayerSpawner가 '전원이 같은 씬에 있다'는 가정에 의존하므로 반드시 켠다.
+			PhotonNetwork.AutomaticallySyncScene = true;
+
+			// 네트워크 오브젝트(적 등)를 로컬 PoolManager로 재사용하도록 커스텀 풀 등록.
+			// 풀 대상이 아닌 것(플레이어 등)은 어댑터 내부에서 기본 방식(Resources)으로 폴백.
+			PhotonNetwork.PrefabPool = new PhotonPoolAdapter();
 		}
 		else if (instance != this)
 		{
