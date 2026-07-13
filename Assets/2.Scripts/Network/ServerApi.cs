@@ -7,10 +7,11 @@ using UnityEngine.Networking;
 // ================================================================
 // [외부 참조 가이드]
 // ================================================================
-// ▶ 서버 저장/로드 (GameManager가 사용)
-//   Instance.SaveCo(saveData, onSuccess, onError) : 서버에 저장
-//   Instance.LoadCo(onSuccess, onError)           : 서버에서 로드
-//   IsLoggedIn / UserId                           : 로그인 여부 / 내 고유번호
+// ▶ 서버 저장/로드 — 세이브 슬롯(0~9) 지원. 슬롯 안 넘기면 0번 슬롯 사용(임시 테스트용 기본값).
+//   Instance.SaveCo(saveData, onSuccess, onError, slot) : 서버에 저장
+//   Instance.LoadCo(onSuccess, onError, slot)           : 서버에서 로드
+//   Instance.ListSavesCo(onSuccess, onError)            : 슬롯 목록(로드 화면용 — 슬롯/레벨/골드/시각)
+//   IsLoggedIn / UserId                                 : 로그인 여부 / 내 고유번호
 //
 // ▶ 로그인 UI 만들 때
 //   Instance.RegisterCo(id, pw, ...) : 회원가입
@@ -22,7 +23,8 @@ using UnityEngine.Networking;
 //
 // 역할:
 //   C# API 서버(Server/Api, ASP.NET)와 HTTP(UnityWebRequest)로 통신.
-//   창구 4개: /register(가입) /login(로그인) /save/{id}(저장) /load/{id}(로드)
+//   창구: /register(가입) /login(로그인) /save/{id}/{slot}(저장) /load/{id}/{slot}(로드)
+//         /saves/{id}(슬롯 목록, 로드 화면용)
 //
 // 데이터 흐름:
 //   [유니티] --JSON--> [API 서버] --SQL--> [MySQL DB]
@@ -148,9 +150,10 @@ public class ServerApi : MonoBehaviour
 
     // =====================================================================
     // 창구 3: 저장 — SaveData를 통째로 JSON으로 만들어 서버에 전송
+    // slot: 세이브 슬롯 번호(0~9). 안 넘기면 0번 슬롯(임시 테스트 기본값).
     // =====================================================================
     public IEnumerator SaveCo(SaveData data,
-                              Action onSuccess = null, Action<string> onError = null)
+                              Action onSuccess = null, Action<string> onError = null, int slot = 0)
     {
         if (!IsLoggedIn)
         {
@@ -159,7 +162,7 @@ public class ServerApi : MonoBehaviour
         }
 
         string json = JsonUtility.ToJson(data);   // 파일에 쓰던 그 JSON을 서버로 보낼 뿐
-        using UnityWebRequest req = MakeJsonPost($"/save/{UserId}", json);
+        using UnityWebRequest req = MakeJsonPost($"/save/{UserId}/{slot}", json);
         yield return req.SendWebRequest();
 
         if (req.result != UnityWebRequest.Result.Success)
@@ -168,14 +171,15 @@ public class ServerApi : MonoBehaviour
             yield break;
         }
 
-        Debug.Log($"[ServerApi] 서버 저장 완료 (userId {UserId})");
+        Debug.Log($"[ServerApi] 서버 저장 완료 (userId {UserId}, slot {slot})");
         onSuccess?.Invoke();
     }
 
     // =====================================================================
     // 창구 4: 로드 — 서버 응답(JSON)이 SaveData와 같은 모양이라 바로 복원됨
+    // slot: 세이브 슬롯 번호(0~9). 안 넘기면 0번 슬롯(임시 테스트 기본값).
     // =====================================================================
-    public IEnumerator LoadCo(Action<SaveData> onSuccess, Action<string> onError = null)
+    public IEnumerator LoadCo(Action<SaveData> onSuccess, Action<string> onError = null, int slot = 0)
     {
         if (!IsLoggedIn)
         {
@@ -183,7 +187,7 @@ public class ServerApi : MonoBehaviour
             yield break;
         }
 
-        using UnityWebRequest req = UnityWebRequest.Get($"{serverUrl}/load/{UserId}");
+        using UnityWebRequest req = UnityWebRequest.Get($"{serverUrl}/load/{UserId}/{slot}");
         yield return req.SendWebRequest();
 
         if (req.result != UnityWebRequest.Result.Success)
@@ -193,8 +197,61 @@ public class ServerApi : MonoBehaviour
         }
 
         SaveData data = JsonUtility.FromJson<SaveData>(req.downloadHandler.text);
-        Debug.Log($"[ServerApi] 서버 로드 완료 (userId {UserId})");
+        Debug.Log($"[ServerApi] 서버 로드 완료 (userId {UserId}, slot {slot})");
         onSuccess?.Invoke(data);
+    }
+
+    // =====================================================================
+    // 창구 5: 슬롯 목록 — 로드 화면용. 그 유저가 실제로 저장해둔 슬롯들의
+    // 요약(슬롯번호/레벨/골드/저장시각)만 배열로 받음. 저장 안 한 슬롯은 안 옴
+    // → 유니티에서 0~9 중 빠진 번호를 "빈 슬롯(새 게임)"으로 표시하면 됨.
+    // =====================================================================
+    public IEnumerator ListSavesCo(Action<SaveSummary[]> onSuccess, Action<string> onError = null)
+    {
+        if (!IsLoggedIn)
+        {
+            onError?.Invoke("로그인이 안 되어 있음 (UserId 없음)");
+            yield break;
+        }
+
+        using UnityWebRequest req = UnityWebRequest.Get($"{serverUrl}/saves/{UserId}");
+        yield return req.SendWebRequest();
+
+        if (req.result != UnityWebRequest.Result.Success)
+        {
+            onError?.Invoke(ReadError(req));
+            yield break;
+        }
+
+        // JsonUtility는 최상위가 배열인 JSON을 바로 못 받아서 { "items": [...] } 형태로 감싸서 파싱
+        string wrapped = "{\"items\":" + req.downloadHandler.text + "}";
+        SaveSummaryList wrapper = JsonUtility.FromJson<SaveSummaryList>(wrapped);
+        SaveSummary[] saves = wrapper.items ?? Array.Empty<SaveSummary>();
+        Debug.Log($"[ServerApi] 세이브 목록 {saves.Length}개 수신");
+        onSuccess?.Invoke(saves);
+    }
+
+    /// <summary>슬롯 삭제 (로드 화면 "삭제" 버튼용).</summary>
+    public IEnumerator DeleteSaveCo(int slot, Action onSuccess = null, Action<string> onError = null)
+    {
+        if (!IsLoggedIn)
+        {
+            onError?.Invoke("로그인이 안 되어 있음 (UserId 없음)");
+            yield break;
+        }
+
+        using UnityWebRequest req = UnityWebRequest.Delete($"{serverUrl}/save/{UserId}/{slot}");
+        req.downloadHandler = new DownloadHandlerBuffer();
+        yield return req.SendWebRequest();
+
+        if (req.result != UnityWebRequest.Result.Success)
+        {
+            onError?.Invoke(ReadError(req));
+            yield break;
+        }
+
+        Debug.Log($"[ServerApi] 슬롯 {slot} 삭제 완료");
+        onSuccess?.Invoke();
     }
 
     // =====================================================================
@@ -230,4 +287,15 @@ public class ServerApi : MonoBehaviour
     [Serializable] private class AuthRequest  { public string username; public string password; }
     [Serializable] private class AuthResponse { public long userId;     public string username; }
     [Serializable] private class ErrorResponse { public string error; }
+
+    /// <summary>슬롯 목록(로드 화면)용 요약 한 줄. 서버 SaveSummaryDto와 필드명 일치.</summary>
+    [Serializable]
+    public class SaveSummary
+    {
+        public int slot;
+        public int level;
+        public int gold;
+        public string updatedAt;
+    }
+    [Serializable] private class SaveSummaryList { public SaveSummary[] items; }
 }

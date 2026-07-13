@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- MySQL 접속용 (가볍고 빠른 ADO.NET 드라이버) -->
+    <PackageReference Include="MySqlConnector" Version="2.4.0" />
+    <!-- 비밀번호 해시용. 비번을 원문 그대로 DB에 넣으면 안 되므로 "다져서" 저장 -->
+    <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
+  </ItemGroup>
+
+</Project>

@@ -36,6 +36,7 @@ public class ChatUI : MonoBehaviour
     [SerializeField] private ScrollRect     scrollRect;
     [SerializeField] private Transform      content;        // 메시지 쌓일 곳
     [SerializeField] private TMP_InputField inputField;
+    [SerializeField] private Button         sendButton;     // 보내기 버튼 (선택 — 없으면 Enter로만 전송)
     [SerializeField] private GameObject     messagePrefab;  // TMP_Text 한 줄 프리팹
 
     [Header("Settings")]
@@ -50,12 +51,18 @@ public class ChatUI : MonoBehaviour
     /// <summary>전송 요청 이벤트 — 포톤 연결 시 여기에 SendMessage를 물리면 됨.</summary>
     public event Action<string> onSendRequested;
 
+    /// <summary>로컬 에코 켜고 끄기 — 포톤 연결되면 끄고(서버가 되돌려줌), 끊기면 다시 켬.</summary>
+    public bool LocalEcho { get => localEcho; set => localEcho = value; }
+
     private readonly Queue<GameObject> _messages = new Queue<GameObject>();
 
     private void Start()
     {
         if (inputField != null)
             inputField.onSubmit.AddListener(OnSubmit); // Enter 입력 시
+
+        if (sendButton != null)                        // EnterButton 클릭 시
+            sendButton.onClick.AddListener(() => OnSubmit(inputField != null ? inputField.text : ""));
     }
 
     // ── 전송 ──
