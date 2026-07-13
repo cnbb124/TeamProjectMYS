@@ -128,6 +128,11 @@ public class EnemyShip : Enemy
              "0이면 상하 변화 없이 수평으로만 비껴감.")]
     public float passVerticalRange = 40f;
 
+    [Tooltip("ATTACK_PASS 진입 후 이 시간(초) 동안 기수를 플레이어에게 돌려 조준 사격한다.\n" +
+             "시간이 지나면 기수를 이동방향(궤도)으로 되돌리고 사격을 멈춘 채 지나간다.\n" +
+             "0이면 조준 없이 기존처럼 궤도 방향으로만 통과(총알 함선은 거의 안 맞음).")]
+    public float passAimDuration = 1.5f;
+
     
 
 
@@ -145,6 +150,8 @@ public class EnemyShip : Enemy
     private float _passOffsetSign = 1f;
     // ATTACK_PASS 진입 시 Random.Range(-passVerticalRange, passVerticalRange)로 결정.
     private float _passVerticalOffset = 0f;
+    // ATTACK_PASS 진입 후 남은 '플레이어 조준 사격' 시간. >0이면 기수를 플레이어로 돌리고 그 동안만 사격.
+    private float _passAimTimer = 0f;
 
     protected override void Start()
     {
@@ -269,8 +276,17 @@ public class EnemyShip : Enemy
                     aimPoint = _target.position;
                 }
 
-                RotateTowardPosition(aimPoint);
-                MoveTowardPosition(transform.position + transform.forward);
+                // 이동은 항상 비껴가는 궤도(aimPoint)로 — 기수 방향과 무관하게 그 지점으로 추진(드리프트).
+                MoveTowardPosition(aimPoint);
+                // 조준 사격 시간 동안은 기수를 플레이어(예측점)로 돌려 겨냥, 그 후엔 이동방향(궤도)으로 복귀.
+                if (_passAimTimer > 0f)
+                {
+                    RotateTowardPosition(GetPredictedAimPoint());
+                }
+                else
+                {
+                    RotateTowardPosition(aimPoint);
+                }
                 break;
             }
 
@@ -312,6 +328,10 @@ public class EnemyShip : Enemy
         if (_evadeCoolTimer > 0f)
         {
             _evadeCoolTimer -= Time.deltaTime;
+        }
+        if (_passAimTimer > 0f)
+        {
+            _passAimTimer -= Time.deltaTime;
         }
 
         // AI_STATE → UNIT_STATE 동기화. DODGE/DIE 중에는 Unit FSM이 우선.
@@ -489,7 +509,8 @@ public class EnemyShip : Enemy
             EnterReposition();
             return;
         }
-        if (!ShouldSkipAttackFromBehind())
+        // 조준 사격 시간(_passAimTimer) 동안만 발사 — 그때 기수가 플레이어를 향하므로 총알이 맞는다.
+        if (_passAimTimer > 0f && !ShouldSkipAttackFromBehind())
         {
             ShootWeaponsOnPass();
         }
@@ -593,6 +614,7 @@ public class EnemyShip : Enemy
     {
         aiState = AI_STATE.ATTACK_PASS;
         _stateTimer = attackPassDuration;
+        _passAimTimer = passAimDuration;
 
         // 인스펙터 설정에 따라 좌우 방향 결정. Random이면 50% 확률로 선택.
         switch (passOffsetDir)

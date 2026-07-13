@@ -194,6 +194,13 @@ public class Player : Unit
 		{
 			GameManager.Instance.playerRef = this;
 		}
+
+		// 내 함선만 게임플레이 카메라(vCam)가 따라오게 붙인다. 남 함선(IsMine=false)엔 안 붙음.
+		// 멀티에선 런타임 스폰이라 인스펙터로 미리 못 걸어서 여기서 자기 자신을 대상으로 등록.
+		if (IsMine && CameraManager.Instance != null)
+		{
+			CameraManager.Instance.SetFollowTarget(transform);
+		}
 		_input = InputManager.Instance;
 		// 게임 시작 시 1번 슬롯 무기로 초기화
 		weaponSystem.Init();

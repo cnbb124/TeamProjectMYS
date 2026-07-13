@@ -255,10 +255,17 @@ public class Enemy : Unit
         {
             return _target.position;
         }
-        float distance = Vector3.Distance(transform.position, _target.position);
-        float leadTime = distance / bulletSpeed;
-        Vector3 fullPredictedPos = _target.position + _targetUnit.Velocity * leadTime;
-        return Vector3.Lerp(_target.position, fullPredictedPos, leadAccuracy);
+
+        // 반복 수렴 예측: leadTime을 '현재 위치'가 아니라 '예측 명중점'까지의 거리로 다시 계산하는 걸
+        // 몇 번 반복한다. 타겟이 비행 중 이동해 명중점까지 거리가 현재 거리와 달라지는 오차를 없앤다.
+        // (1회만 하면 crossing/고속 타겟에서 덜 앞서 조준해 뒤로 빗나감 — 3회면 사실상 참값에 수렴)
+        Vector3 predictedPos = _target.position;
+        for (int i = 0; i < 3; i++)
+        {
+            float leadTime = Vector3.Distance(transform.position, predictedPos) / bulletSpeed;
+            predictedPos = _target.position + _targetUnit.Velocity * leadTime;
+        }
+        return Vector3.Lerp(_target.position, predictedPos, leadAccuracy);
     }
 
     protected bool IsTargetInRange(float range)
