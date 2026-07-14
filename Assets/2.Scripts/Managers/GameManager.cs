@@ -500,7 +500,7 @@ public class GameManager : MonoBehaviour
         // 메뉴는 뜨고(호출자가 표시), 여기선 사운드 감쇠만 한다. 게임 로직 프리즈는 안 함.
         if (IsMultiplayer)
         {
-            SoundManager.Instance.SetBGMPaused(true);
+            SoundManager.Instance.SetBGMAtGamePaused(true);
             return true;
         }
 
@@ -510,7 +510,7 @@ public class GameManager : MonoBehaviour
             IsPaused = true;
             ChangeState(GAME_STATE.PAUSED);
             FreezeParticles(); // 폭발/트레일 등 파티클도 정지
-            SoundManager.Instance.SetBGMPaused(true); // 일시정지 중 BGM 볼륨 감쇠(pauseBGMVolumeScale)
+            SoundManager.Instance.SetBGMAtGamePaused(true); // 일시정지 중 BGM 볼륨 감쇠(pauseBGMVolumeScale)
         }
         return true;
     }
@@ -521,7 +521,7 @@ public class GameManager : MonoBehaviour
         // 멀티에선 프리즈를 안 걸었으므로 사운드만 원복.
         if (IsMultiplayer)
         {
-            SoundManager.Instance.SetBGMPaused(false);
+            SoundManager.Instance.SetBGMAtGamePaused(false);
             return;
         }
 
@@ -533,7 +533,7 @@ public class GameManager : MonoBehaviour
             IsPaused = false;
             ChangeState(GAME_STATE.PLAYING);
             UnfreezeParticles(); // 정지했던 파티클 재개
-            SoundManager.Instance.SetBGMPaused(false); // BGM 볼륨 원복
+            SoundManager.Instance.SetBGMAtGamePaused(false); // BGM 볼륨 원복
         }
     }
 

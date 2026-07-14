@@ -415,7 +415,7 @@ MonoBehaviour:
   maxHpRemaining: 150
   maxShieldCapacity: 0
   shieldRegainDelay: 0
-  shieldRegainRate: 0
+  shieldRegainRate: 6
   isShieldRegaining: 0
   shield: {fileID: 0}
   bodyHitboxRoot: {fileID: 0}
@@ -482,6 +482,13 @@ MonoBehaviour:
   passOffsetStartDist: 200
   passHorizontalDist: 60
   passVerticalRange: 40
+  passAimDuration: 1.5
+  _phase1Patterns: []
+  _phase2Patterns: []
+  _phase3Patterns: []
+  _phase4Patterns: []
+  _patternCooldown: 1.5
+  _firePoint: {fileID: 0}
 --- !u!114 &3166126961382493439
 MonoBehaviour:
   m_ObjectHideFlags: 0

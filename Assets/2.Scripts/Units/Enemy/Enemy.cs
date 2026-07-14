@@ -153,10 +153,21 @@ public class Enemy : Unit
         if (dropPoolTypes != null && dropPoolTypes.Length > 0 && Random.value < dropChance)
         {
             POOL_TYPE dropType = dropPoolTypes[Random.Range(0, dropPoolTypes.Length)];
-            GameObject drop = PoolManager.Instance?.Get(dropType);
-            if (drop != null)
+            // 아이템 드랍도 네트워크 오브젝트 — Master가 스폰하면 전원에게 동기화(어댑터가 로컬 풀로 라우팅).
+            // Die()는 적 소유자(Master, 오프라인은 자기 자신)에서만 도달하므로 여기서 스폰하면 됨.
+            // 드랍 픽업 프리팹에도 PhotonView 필요(적과 동일).
+            if (_photonView != null)
             {
-                drop.transform.SetPositionAndRotation(transform.position, Quaternion.identity);
+                PhotonNetwork.Instantiate(dropType.ToString(), transform.position, Quaternion.identity);
+            }
+            else
+            {
+                // 비네트워크(PhotonView 없는 싱글 씬배치 적 등)는 기존처럼 로컬 풀 드랍.
+                GameObject drop = PoolManager.Instance?.Get(dropType);
+                if (drop != null)
+                {
+                    drop.transform.SetPositionAndRotation(transform.position, Quaternion.identity);
+                }
             }
         }
 

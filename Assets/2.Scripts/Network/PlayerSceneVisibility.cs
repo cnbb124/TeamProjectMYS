@@ -67,7 +67,9 @@ public class PlayerSceneVisibility : MonoBehaviourPunCallbacks
             return;
         }
 
-        // 남 함선: 소유자의 '현재 씬'이 나의 현재 씬과 같을 때만 보임.
+        // 남 함선: 소유자의 '현재 씬'이 나의 현재 씬과 '확실히 다를' 때만 숨긴다.
+        // 소유자 씬을 아직 모르면(프로퍼티 미수신/미설정) 숨기지 않는다 — 같은 씬인데 타이밍 때문에
+        // 프로퍼티를 못 받아서 서로 안 보이는 비대칭 버그를 막기 위함. 정보가 오면 OnPlayerPropertiesUpdate가 재평가.
         string myScene = SceneManager.GetActiveScene().name;
         string ownerScene = null;
         if (photonView.Owner != null
@@ -75,7 +77,8 @@ public class PlayerSceneVisibility : MonoBehaviourPunCallbacks
         {
             ownerScene = v as string;
         }
-        SetVisible(ownerScene == myScene);
+        bool differentScene = !string.IsNullOrEmpty(ownerScene) && ownerScene != myScene;
+        SetVisible(!differentScene);
     }
 
     // 루트는 켜둔 채(콜백/동기화 유지) 렌더러·콜라이더만 토글.

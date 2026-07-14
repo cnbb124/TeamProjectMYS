@@ -189,10 +189,13 @@ public class SoundManager : MonoBehaviour
 
 	// BGM 볼륨 합성용 내부 상태 (실제 볼륨 = bgmVolume × 클립볼륨 × _bgmFadeFactor × 일시정지배율)
 	private float _bgmFadeFactor = 1f;    // 씬 전환/보스 전환 페이드용 배율(0~1)
-	private bool _bgmPaused = false;       // 일시정지 중 볼륨 감쇠 적용 여부
+	private bool _bgmAtGamePaused = false;       // 일시정지 중 볼륨 감쇠 적용 여부
 	private bool _bgmRotating = false;     // 여러 클립 순환(플레이리스트) 재생 중인지
 	private int _lastBgmClipIndex = -1;    // 직전 재생 클립 인덱스(랜덤 중복 방지)
 	private Coroutine _bgmFadeRoutine;     // 진행 중인 BGM 페이드 전환 코루틴
+
+
+	private bool _allVolumeAtGamePaused = false;
 
 	[Space(10)]
 	[Header("<size=14>기본 볼륨 설정</size>")]
@@ -201,6 +204,9 @@ public class SoundManager : MonoBehaviour
 	[Range(0f, 1f)]
 	[Tooltip("일시정지 중 BGM 볼륨 배율. 예: 0.5 = 절반으로 줄임. 1이면 그대로 유지.")]
 	public float pauseBGMVolumeScale = 0.5f;
+	[Range(0f, 1f)]
+	[Tooltip("일시정지 중 전체 사운드 볼륨 배율. 예: 0.5 = 절반으로 감소")]
+	public float pauseAllVolumeScale = 0.5f;
 	[Range(0f, 1f)]
 	public float sfxUIVolume = 1.0f;
 	[Range(0f, 1f)]
@@ -582,15 +588,48 @@ public class SoundManager : MonoBehaviour
 			return;
 		}
 		float clipVol = _curBgmData != null ? GetVolume(_curBgmData) : 1f;
-		float pauseScale = _bgmPaused ? pauseBGMVolumeScale : 1f;
+		float pauseScale = _bgmAtGamePaused ? pauseBGMVolumeScale : 1f;
 		_bgmSource.volume = bgmVolume * clipVol * _bgmFadeFactor * pauseScale;
 	}
 
 	// 일시정지 볼륨 감쇠 적용/해제. GameManager.PauseGame/ResumeGame에서 호출.
-	public void SetBGMPaused(bool paused)
+	public void SetBGMAtGamePaused(bool paused)
 	{
-		_bgmPaused = paused;
+		_bgmAtGamePaused = paused;
 		ApplyBGMVolume();
+	}
+
+	public void SetAllVolumeAtGamePaused(bool paused)
+	{
+		_allVolumeAtGamePaused = paused;
+		//bgm
+		SetBGMAtGamePaused(paused);
+		float pauseScale = _allVolumeAtGamePaused ? pauseAllVolumeScale : 1f;
+
+		
+
+		//// UI SFX
+		//if (_sfxUISource != null)
+		//{
+		//	_sfxUISource.volume = sfxUIVolume * pauseScale;
+		//}
+
+		// 3D SFX
+		for (int i = _sfx3DPool.Count - 1; i >= 0; i--)
+		{
+			AudioSource source = _sfx3DPool[i];
+
+			if (source == null)
+			{
+				_sfx3DPool.RemoveAt(i);
+				continue;
+			}
+
+			if (source.isPlaying)
+			{
+				source.volume = sfx3DVolume * pauseScale;
+			}
+		}
 	}
 
 	// 보스 등장 등 상태 전환 시 BGM 교체(현재 곡 페이드아웃 → 새 BGM → 페이드인).

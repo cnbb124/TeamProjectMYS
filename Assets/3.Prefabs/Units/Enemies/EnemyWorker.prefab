@@ -542,6 +542,8 @@ GameObject:
   - component: {fileID: 7303445838546670463}
   - component: {fileID: 4425676582768067325}
   - component: {fileID: 1126471100447482996}
+  - component: {fileID: -928440445826985301}
+  - component: {fileID: -3528632172192281665}
   m_Layer: 7
   m_Name: EnemyWorker
   m_TagString: Enemy
@@ -609,7 +611,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2a758127c24419549a80bb27e6819f8a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _blocksBeam: 0
   weaponSystem: {fileID: 0}
+  skillSystem: {fileID: 0}
   maxHpRemaining: 40
   maxShieldCapacity: 60
   shieldRegainDelay: 5
@@ -621,6 +625,14 @@ MonoBehaviour:
   defense: 1
   criChance: 0
   criDamageMultiplier: 0
+  _deathSequenceDuration: 1.5
+  curState: 0
+  curHpRemaining: 0
+  curShieldRemaining: 0
+  curArmorRemaining: 0
+  curSpeed: 0
+  curBoostRemaining: 0
+  _playSoundType: 0
   baseMoveSpeed: 50
   boostSpeed: 0
   maxSpeed: 100
@@ -638,20 +650,19 @@ MonoBehaviour:
   dodgeCoolTime: 0
   dodgeDistance: 40
   speedMultiPlier: 0
-  curState: 0
-  curHpRemaining: 0
-  curShieldRemaining: 0
-  curArmorRemaining: 0
-  curSpeed: 0
-  curBoostRemaining: 0
-  _playSoundType: 0
+  expRewardMin: 0
+  expRewardMax: 0
+  goldRewardMin: 0
+  goldRewardMax: 0
+  dropPoolTypes: 
+  dropChance: 1
   detectRange: 200
   rotateSpeed: 10
   rotateDeadZone: 0
   aiState: 1
+  leadAccuracy: 0
   rearAttackAngleThreshold: 110
   rearAttackSkipChance: 0.7
-  leadAccuracy: 0
   miningDamage: 100
   maxResource: 1
   currentResource: 0
@@ -685,6 +696,44 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &-928440445826985301
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6443261429966239528}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aa584fbee541324448dd18d8409c7a41, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ObservedComponentsFoldoutOpen: 1
+  Group: 0
+  prefixField: -1
+  Synchronization: 3
+  OwnershipTransfer: 0
+  observableSearch: 2
+  ObservedComponents: []
+  sceneViewId: 0
+  InstantiationId: 0
+  isRuntimeInstantiated: 0
+--- !u!114 &-3528632172192281665
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6443261429966239528}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 627855c7f81362d41938ffe0b1475957, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_SynchronizePosition: 1
+  m_SynchronizeRotation: 1
+  m_SynchronizeScale: 0
+  m_UseLocal: 1
 --- !u!1 &6482849843375923464
 GameObject:
   m_ObjectHideFlags: 0

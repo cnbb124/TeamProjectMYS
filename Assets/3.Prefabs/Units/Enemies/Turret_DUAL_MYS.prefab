@@ -1256,6 +1256,8 @@ GameObject:
   - component: {fileID: 8780441365474338247}
   - component: {fileID: 3205087385195567410}
   - component: {fileID: 5346114771317425202}
+  - component: {fileID: 8950724485814838234}
+  - component: {fileID: -8598732970096551808}
   m_Layer: 7
   m_Name: Turret_DUAL_MYS
   m_TagString: Enemy
@@ -1307,6 +1309,14 @@ MonoBehaviour:
   defense: 0
   criChance: 0
   criDamageMultiplier: 0
+  _deathSequenceDuration: 1.5
+  curState: 0
+  curHpRemaining: 0
+  curShieldRemaining: 0
+  curArmorRemaining: 0
+  curSpeed: 0
+  curBoostRemaining: 0
+  _playSoundType: 0
   baseMoveSpeed: 0
   boostSpeed: 0
   maxSpeed: 0
@@ -1324,20 +1334,19 @@ MonoBehaviour:
   dodgeCoolTime: 0
   dodgeDistance: 40
   speedMultiPlier: 0
-  curState: 0
-  curHpRemaining: 0
-  curShieldRemaining: 0
-  curArmorRemaining: 0
-  curSpeed: 0
-  curBoostRemaining: 0
-  _playSoundType: 0
+  expRewardMin: 0
+  expRewardMax: 0
+  goldRewardMin: 0
+  goldRewardMax: 0
+  dropPoolTypes: 
+  dropChance: 1
   detectRange: 500
   rotateSpeed: 270
   rotateDeadZone: 0
   aiState: 1
+  leadAccuracy: 1
   rearAttackAngleThreshold: 110
   rearAttackSkipChance: 0.9
-  leadAccuracy: 1
   swivelTransform: {fileID: 4177762561641812126}
   mountTransform: {fileID: 9141556630602784414}
   attackHoldDuration: 7
@@ -1407,6 +1416,45 @@ MonoBehaviour:
   MultiLockedTargets: []
   LockOnProgress: 0
   IsLocked: 0
+--- !u!114 &8950724485814838234
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6706981218406096366}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aa584fbee541324448dd18d8409c7a41, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ObservedComponentsFoldoutOpen: 1
+  Group: 0
+  prefixField: -1
+  Synchronization: 3
+  OwnershipTransfer: 0
+  observableSearch: 2
+  ObservedComponents:
+  - {fileID: -8598732970096551808}
+  sceneViewId: 0
+  InstantiationId: 0
+  isRuntimeInstantiated: 0
+--- !u!114 &-8598732970096551808
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6706981218406096366}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 627855c7f81362d41938ffe0b1475957, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_SynchronizePosition: 1
+  m_SynchronizeRotation: 1
+  m_SynchronizeScale: 0
+  m_UseLocal: 1
 --- !u!1 &6814546276404120738
 GameObject:
   m_ObjectHideFlags: 0

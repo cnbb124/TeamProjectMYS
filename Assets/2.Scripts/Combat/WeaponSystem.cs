@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Photon.Pun;
 using UnityEngine;
 
 // Sequential: 트리거 한 번에 총구(발사구) 하나씩 교대 발사 (1→2→3→1→...).
@@ -230,7 +231,14 @@ public class WeaponSystem : MonoBehaviour
 		{
 			_defaultMaxMultiLockCount = lockOnSystem.maxMultiLockCount;
 		}
+
+		// 멀티에서 "쐈다" 전파용. PhotonView 없으면(싱글) null → 로컬 발사만.
+		_photonView = GetComponent<PhotonView>();
 	}
+
+	// 멀티 발사 복제용. 투사체는 네트워크 오브젝트가 아니라 각 클라가 로컬 풀에서 생성하므로,
+	// "쐈다"는 사실만 RPC로 전파하고 받는 쪽이 자기 풀에서 같은 종류를 발사한다(총알은 다수+연출이라 이 방식).
+	private PhotonView _photonView;
 
 	private void Start()
 	{
@@ -304,6 +312,24 @@ public class WeaponSystem : MonoBehaviour
 				ShootAllMissiles();
 				break;
 
+		}
+
+		// 로컬(소유자)이 실제로 발사했으면 남 클라에게 "쐈다"를 전파 → 각자 로컬 풀에서 같은 종류 발사.
+		// 싱글(PhotonView 없음)이거나 룸 밖이면 전파 안 함. 남 소유 유닛은 여기 안 옴(입력/AI가 IsMine 게이트).
+		if (_photonView != null && _photonView.IsMine && PhotonNetwork.InRoom)
+		{
+			_photonView.RPC(nameof(RpcShoot), RpcTarget.Others, (int)type);
+		}
+	}
+
+	// 남 클라에서 수신 — 쿨다운/재전파 없이 로컬 풀에서만 발사(복제).
+	[PunRPC]
+	private void RpcShoot(int type)
+	{
+		switch ((PROJECTILE_TYPE)type)
+		{
+			case PROJECTILE_TYPE.BULLET:   ShootAllBullets();  break;
+			case PROJECTILE_TYPE.MISSILE:  ShootAllMissiles(); break;
 		}
 	}
 
