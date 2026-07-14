@@ -56,7 +56,8 @@ public class EnemyBoss : EnemyShip
 	protected override void Update()
 	{
 		base.Update();               // Enemy/EnemyShip AI(이동·추격·일반공격 유지)
-		if (ShouldPause || CurState == UNIT_STATE.DIE) return;
+		// 남(비Master) 소유 보스면 탄막 로직을 안 돌린다 — Master만 페이즈/발사를 계산.
+		if (ShouldPause || CurState == UNIT_STATE.DIE || !IsMine) return;
 
 		// 타겟이 있을 때만 탄막 로직 가동(플레이어 없으면 발사 안 함).
 		if (_target == null) return;

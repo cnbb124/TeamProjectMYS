@@ -163,7 +163,8 @@ public class EnemyShip : Enemy
     protected override void FixedUpdate()
     {
         base.FixedUpdate(); // angularVelocity 리셋
-        if (ShouldPause || CurState == UNIT_STATE.DIE || !UseGenericAI)
+        // 남(비Master) 소유 적이면 이동 AI를 안 돌린다 — 위치는 PhotonTransformView 동기화로만.
+        if (ShouldPause || CurState == UNIT_STATE.DIE || !UseGenericAI || !IsMine)
         {
             return;
         }

@@ -52,7 +52,8 @@ public class EnemyWorker : Enemy
     protected override void Update()
     {
         base.Update();
-        if (ShouldPause || CurState == UNIT_STATE.DIE) return;
+        // 남(비Master) 소유면 채굴 AI를 안 돌린다 — 위치는 PhotonTransformView 동기화로만.
+        if (ShouldPause || CurState == UNIT_STATE.DIE || !IsMine) return;
 
         switch (currentState)
         {

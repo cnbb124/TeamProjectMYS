@@ -1,3 +1,4 @@
+using Photon.Pun;
 using UnityEngine;
 
 // ================================================================
@@ -87,6 +88,18 @@ public class Enemy : Unit
     // 범용 AI 사용 여부. EnemyWorker처럼 자체 AI를 쓰는 자식은 false로 override.
     protected virtual bool UseGenericAI => true;
 
+    // 멀티 소유권 판정. PhotonView 없으면(싱글 씬배치/오프라인 등) 항상 내 것 → 기존 단일 동작 그대로.
+    // PhotonNetwork.Instantiate로 스폰된 적만 PhotonView를 가지며 Master가 소유(IsMine=true)해 AI를 돌린다.
+    // 남(비Master) 클라에선 IsMine=false라 AI를 안 돌리고, 위치는 PhotonTransformView 동기화로만 갱신됨.
+    private PhotonView _photonView;
+    protected bool IsMine => _photonView == null || _photonView.IsMine;
+
+    protected override void Awake()
+    {
+        base.Awake();
+        _photonView = GetComponent<PhotonView>();
+    }
+
     // OnEnable이 Start보다 항상 먼저 호출되므로, 등록은 여기서 — 죽어서 Unregister된 뒤
     // 풀에서 재사용(SetActive(true))될 때도 매번 다시 등록됨. RegisterEnemy는 중복등록 가드 있어 안전.
     // aiState는 STANDBY로 리셋 — 서브클래스(EnemyShip/EnemyTurretBase)가 각자 OnAIStandby/STANDBY 케이스에서
@@ -160,16 +173,29 @@ public class Enemy : Unit
         _deathReturnTimer -= Time.deltaTime;
         if (_deathReturnTimer <= 0f)
         {
-            // (SetActive(false) → OnDisable() → UnitManager.UnregisterEnemy 자동 호출됨)
-            PoolManager.Instance?.Return(gameObject);
+            // 네트워크 적(PhotonView 있음)은 소유자(Master)가 PhotonNetwork.Destroy로 전원에게서 반납한다.
+            // (PhotonPoolAdapter가 실제 파괴 대신 로컬 풀 SetActive(false)로 라우팅 → OnDisable에서 Unregister)
+            // 비네트워크 적(PhotonView 없음 — 싱글 씬배치 등)은 기존처럼 로컬 풀 반납.
+            if (_photonView != null)
+            {
+                if (_photonView.IsMine)
+                {
+                    PhotonNetwork.Destroy(gameObject);
+                }
+            }
+            else
+            {
+                // (SetActive(false) → OnDisable() → UnitManager.UnregisterEnemy 자동 호출됨)
+                PoolManager.Instance?.Return(gameObject);
+            }
         }
     }
 
     protected override void Update()
     {
         base.Update();
-        //일시정지중,죽었을시, AI사용안할시 AI사용안함
-        if (ShouldPause || CurState == UNIT_STATE.DIE || !UseGenericAI)
+        //일시정지중,죽었을시, AI사용안할시, 남(비Master) 소유 적일시 AI사용안함
+        if (ShouldPause || CurState == UNIT_STATE.DIE || !UseGenericAI || !IsMine)
         {
             return;
         }

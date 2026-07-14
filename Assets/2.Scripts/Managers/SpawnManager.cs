@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Photon.Pun;
 using UnityEngine;
 
 // ================================================================
@@ -104,6 +105,12 @@ public class SpawnManager : MonoBehaviour
 	// ================================================================
 	public void StartWave(int waveIndex)
 	{
+		// 적 스폰/웨이브는 Master 권위 — 나머지 클라는 웨이브를 안 돌리고 네트워크로 적을 받는다.
+		// (오프라인/싱글은 IsMasterClient=true라 기존과 동일하게 동작)
+		if (!PhotonNetwork.IsMasterClient)
+		{
+			return;
+		}
 		if (waves == null || waveIndex < 0 || waveIndex >= waves.Length)
 		{
 			return;
@@ -201,12 +208,13 @@ public class SpawnManager : MonoBehaviour
 				? _shuffleBuffer[i % _shuffleBuffer.Length].position
 				: GetSpawnPosition(entry.spawnPoint);
 
-			GameObject go = PoolManager.Instance.Get(entry.poolType);
+			// Master 권위 네트워크 스폰 — 모든 클라에 같은 적이 생성됨(PhotonPoolAdapter가 로컬 풀로 라우팅).
+			// prefabId = POOL_TYPE 이름(어댑터가 파싱해 풀에서 꺼냄). 위치는 Instantiate가 설정.
+			GameObject go = PhotonNetwork.Instantiate(entry.poolType.ToString(), pos, Quaternion.identity);
 			if (go == null)
 			{
 				continue;
 			}
-			go.transform.SetPositionAndRotation(pos, Quaternion.identity);
 			Enemy enemy = go.GetComponent<Enemy>();
 			if (enemy != null)
 			{
@@ -280,7 +288,8 @@ public class SpawnManager : MonoBehaviour
 	// ================================================================
 	private void OnBossSpawnTriggered()
 	{
-		if (bossWave == null)
+		// 보스 스폰도 Master 권위.
+		if (!PhotonNetwork.IsMasterClient || bossWave == null)
 		{
 			return;
 		}

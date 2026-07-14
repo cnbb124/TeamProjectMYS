@@ -196,8 +196,8 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     // 플레이어 스폰 (호출자 = 씬별 PlayerSpawner)
     // =====================================================================
     /// <summary>
-    /// 지정 프리팹을 내 소유로 방에 스폰. '무엇을·어디에'는 호출자(PlayerSpawner)가 결정한다.
-    /// 각 클라가 자기 것만 스폰하며 photonView.IsMine으로 소유권이 갈린다.
+    /// 지정 프리팹을 내 소유로 방에 스폰. '무엇을·어디에'는 호출자(PlayerSpawner)가 결정
+    /// 각 클라가 자기 것만 스폰하며 photonView.IsMine으로 소유권이 r갈림
     /// </summary>
     /// <param name="prefabName">Resources 폴더 안의 프리팹 이름(PhotonNetwork.Instantiate 제약).</param>
     public GameObject SpawnPlayer(string prefabName, Vector3 pos, Quaternion rot)

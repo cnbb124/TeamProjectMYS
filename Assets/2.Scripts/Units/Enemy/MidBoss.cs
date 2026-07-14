@@ -1,15 +1,16 @@
+using Photon.Pun;
 using UnityEngine;
 
 public class MidBoss : Enemy
 {
-    [Header("ÀÚ¿ø º¸À¯·®")]
-    public float currentResource = 1f;  /// ½ÃÀÛ½Ã ¹Ù·Î ÀÏ²Û »ı»ê
+    [Header("ï¿½Ú¿ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½")]
+    public float currentResource = 1f;  /// ï¿½ï¿½ï¿½Û½ï¿½ ï¿½Ù·ï¿½ ï¿½Ï²ï¿½ ï¿½ï¿½ï¿½ï¿½
 
-    [Header("ÀÏ²Û »ı»ê ¼³Á¤")]
+    [Header("ï¿½Ï²ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½")]
     public GameObject workerPrefab;
-    public float resourceCostPerWorker = 1f; // ÀÏ²Û 1¸¶¸®´ç ÀÚ¿ø ¼Ò¸ğ·®
-    public float spawnInterval = 60f;         // »ı»ê °£°İ (ÃÊ)
-    public int maxWorkers = 10;               // ÃÖ´ë ÀÏ²Û ¼ö
+    public float resourceCostPerWorker = 1f; // ï¿½Ï²ï¿½ 1ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ú¿ï¿½ ï¿½Ò¸ï¿½
+    public float spawnInterval = 60f;         // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½)
+    public int maxWorkers = 10;               // ï¿½Ö´ï¿½ ï¿½Ï²ï¿½ ï¿½ï¿½
 
     private float spawnTimer = 0f;
 
@@ -21,6 +22,7 @@ public class MidBoss : Enemy
 
     void Update()
     {
+        if (!IsMine) return; // ì›Œì»¤ ìŠ¤í°ì€ Master ê¶Œìœ„ (ë‚¨ í´ë¼ëŠ” ìŠ¤í° ì•ˆ í•¨, ë„¤íŠ¸ì›Œí¬ë¡œ ë°›ìŒ)
         if (currentResource <= 0) return;
 
         spawnTimer += Time.deltaTime;
@@ -33,22 +35,24 @@ public class MidBoss : Enemy
     public void ReceiveResource(float amount)
     {
         currentResource += amount;
-        Debug.Log($"º¸½º ÀÚ¿ø ¼ö½Å: +{amount} / ÃÑ º¸À¯: {currentResource}");
+        Debug.Log($"ï¿½ï¿½ï¿½ï¿½ ï¿½Ú¿ï¿½ ï¿½ï¿½ï¿½ï¿½: +{amount} / ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½: {currentResource}");
     }
 
     void TrySpawnWorker()
     {
-        // ÇöÀç ÀÏ²Û ¼ö Ã¼Å©
+        if (!IsMine) return; // ì›Œì»¤ ìŠ¤í°ì€ Master ê¶Œìœ„ (Start/Update ì–‘ìª½ ì§„ì… ëª¨ë‘ ì»¤ë²„)
+        // ï¿½ï¿½ï¿½ï¿½ ï¿½Ï²ï¿½ ï¿½ï¿½ Ã¼Å©
         EnemyWorker[] workers = FindObjectsOfType<EnemyWorker>();
         if (workers.Length >= maxWorkers) return;
 
-        // ÀÚ¿ø ¼Ò¸ğ
+        // ï¿½Ú¿ï¿½ ï¿½Ò¸ï¿½
         if (currentResource < resourceCostPerWorker) return;
         currentResource -= resourceCostPerWorker;
 
-        // ÀÏ²Û ½ºÆù
+        // ï¿½Ï²ï¿½ ï¿½ï¿½ï¿½ï¿½
         Vector3 spawnPos = transform.position + Random.insideUnitSphere * 30f;
-        Instantiate(workerPrefab, spawnPos, Quaternion.identity);
-        Debug.Log($"ÀÏ²Û »ı»ê! º¸½º ÀÚ¿ø ÀÜ·®: {currentResource}");
+        // ë„¤íŠ¸ì›Œí¬ ìŠ¤í° â€” Masterê°€ ë§Œë“¤ë©´ ì „ì›ì—ê²Œ ë™ê¸°í™”. workerPrefabì€ Resources í´ë” + PhotonView í•„ìš”.
+        PhotonNetwork.Instantiate(workerPrefab.name, spawnPos, Quaternion.identity);
+        Debug.Log($"ï¿½Ï²ï¿½ ï¿½ï¿½ï¿½ï¿½! ï¿½ï¿½ï¿½ï¿½ ï¿½Ú¿ï¿½ ï¿½Ü·ï¿½: {currentResource}");
     }
 }

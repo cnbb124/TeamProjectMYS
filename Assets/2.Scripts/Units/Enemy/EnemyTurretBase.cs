@@ -47,7 +47,8 @@ public class EnemyTurretBase : Enemy
     protected override void FixedUpdate()
     {
         base.FixedUpdate(); // angularVelocity 리셋
-        if (ShouldPause || CurState == UNIT_STATE.DIE)
+        // 남(비Master) 소유 적이면 조준 회전을 안 돌린다 — 회전은 PhotonTransformView 동기화로만.
+        if (ShouldPause || CurState == UNIT_STATE.DIE || !IsMine)
         {
             return;
         }
