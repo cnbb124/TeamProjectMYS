@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using Photon.Pun;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -123,22 +124,26 @@ public class GameManager : MonoBehaviour
     // (Unit은 자체 ShouldPause 사용 — 같은 조건)
     public bool IsGameplayFrozen => IsPaused || IsGameOver;
 
-    // 게임플레이 코루틴용 "일시정지 인지" 대기.
-    // WaitForSeconds는 timeScale 기준이라 이 프로젝트의 플래그 방식 일시정지(IsGameplayFrozen)를 무시함.
-    // 스폰/실드회복 등 게임플레이 코루틴의 WaitForSeconds를 이걸로 대체하면 프리즈 동안 시간이 안 흐름.
-    // (instance가 없으면(테스트 씬 등) 프리즈 개념이 없으므로 일반 시간처럼 흐름)
-    public static IEnumerator WaitGameplaySeconds(float seconds)
-    {
-        float elapsed = 0f;
-        while (elapsed < seconds)
-        {
-            if (instance == null || !instance.IsGameplayFrozen)
-            {
-                elapsed += Time.deltaTime;
-            }
-            yield return null;
-        }
-    }
+    // 온라인 멀티(오프라인 모드 아님 + 룸 입장 상태)면 true. 일시정지 시 시간을 멈출지 판정에 사용.
+    // 멀티에선 남들이 계속 플레이 중이라 시간을 멈추면 안 됨 → 메뉴/사운드만 처리하고 프리즈는 안 함.
+    private bool IsMultiplayer => PhotonNetwork.InRoom && !PhotonNetwork.OfflineMode;
+
+	// 게임플레이 코루틴용 "일시정지 인지" 대기.
+	// WaitForSeconds는 timeScale 기준이라 이 프로젝트의 플래그 방식 일시정지(IsGameplayFrozen)를 무시함.
+	// 스폰/실드회복 등 게임플레이 코루틴의 WaitForSeconds를 이걸로 대체하면 프리즈 동안 시간이 안 흐름.
+	// (instance가 없으면(테스트 씬 등) 프리즈 개념이 없으므로 일반 시간처럼 흐름)
+	public static IEnumerator WaitGameplaySeconds(float seconds)
+	{
+		float elapsed = 0f;
+		while (elapsed < seconds)
+		{
+			if (instance == null || !instance.IsGameplayFrozen)
+			{
+				elapsed += Time.deltaTime;
+			}
+			yield return null;
+		}
+	}
 
 	// =====================================================================
 	// Player 레퍼런스 (씬 로드 후 자동 캐싱)
@@ -485,10 +490,20 @@ public class GameManager : MonoBehaviour
     /// Player, Enemy 등 게임 로직은 IsPaused를 체크해서 스스로 멈춤.
     /// 여러 UI가 각각 호출할 수 있으며, 호출한 만큼 ResumeGame으로 해제해야 재개됨.
     /// </summary>
-    public void PauseGame()
+    /// <returns>메뉴를 띄워도 되는 상태면 true(게임오버/클리어면 false).</returns>
+    public bool PauseGame()
     {
         // 게임오버/클리어 상태에선 일시정지 불가. 그 외(PLAYING, 메뉴, 테스트 씬 등)는 허용.
-        if (curState == GAME_STATE.GAME_OVER || curState == GAME_STATE.STAGE_CLEAR) return;
+        if (curState == GAME_STATE.GAME_OVER || curState == GAME_STATE.STAGE_CLEAR) return false;
+
+        // 멀티(온라인)에선 시간을 멈추지 않는다 — 남들은 계속 플레이 중이므로.
+        // 메뉴는 뜨고(호출자가 표시), 여기선 사운드 감쇠만 한다. 게임 로직 프리즈는 안 함.
+        if (IsMultiplayer)
+        {
+            SoundManager.Instance.SetBGMPaused(true);
+            return true;
+        }
+
         _pauseRequests++;
         if (!IsPaused)
         {
@@ -497,11 +512,19 @@ public class GameManager : MonoBehaviour
             FreezeParticles(); // 폭발/트레일 등 파티클도 정지
             SoundManager.Instance.SetBGMPaused(true); // 일시정지 중 BGM 볼륨 감쇠(pauseBGMVolumeScale)
         }
+        return true;
     }
 
     /// <summary>일시정지 해제 요청. 모든 요청이 해제되면 게임 재개.</summary>
     public void ResumeGame()
     {
+        // 멀티에선 프리즈를 안 걸었으므로 사운드만 원복.
+        if (IsMultiplayer)
+        {
+            SoundManager.Instance.SetBGMPaused(false);
+            return;
+        }
+
         if (!IsPaused) return;
         _pauseRequests--;
         if (_pauseRequests <= 0)

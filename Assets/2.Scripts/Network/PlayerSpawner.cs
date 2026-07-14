@@ -13,7 +13,7 @@ using UnityEngine;
 // [동작]
 //   Start()에서 NetworkManager가 이미 방에 있으면 즉시 스폰,
 //   아직 연결 중이면 OnRoomReady 이벤트를 구독해 준비되는 순간 스폰한다.
-//   (씬은 AutomaticallySyncScene로 전원이 같이 로드 → 각 클라의 PlayerSpawner가 자기 로컬 플레이어를 스폰)
+//   (각 클라가 자기 로컬 플레이어만 스폰. 다른 씬에 있는 플레이어는 PlayerSceneVisibility가 숨김 처리)
 //
 // [에디터 세팅]
 //   1. 게임플레이/스테이션 등 각 씬에 빈 오브젝트 만들고 이 스크립트 부착.

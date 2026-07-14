@@ -1,6 +1,7 @@
 using Photon.Pun;
 using Photon.Realtime;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 // ================================================================
 // [외부 참조 가이드]
@@ -86,13 +87,15 @@ public class NetworkManager : MonoBehaviourPunCallbacks
 			// 연결/방 입장 상태는 로비 → 게임플레이 씬 전환에도 유지되어야 하므로 DDOL.
 			// (웨이브·카메라처럼 씬마다 초기화되는 SpawnManager/CameraShaker와는 정반대 성격)
 			DontDestroyOnLoad(gameObject);
-			// 씬 전환을 Master 기준으로 전원 동기화(PhotonNetwork.LoadLevel 사용 시 모두 같은 씬 유지).
-			// PlayerSpawner가 '전원이 같은 씬에 있다'는 가정에 의존하므로 반드시 켠다.
-			PhotonNetwork.AutomaticallySyncScene = true;
 
 			// 네트워크 오브젝트(적 등)를 로컬 PoolManager로 재사용하도록 커스텀 풀 등록.
 			// 풀 대상이 아닌 것(플레이어 등)은 어댑터 내부에서 기본 방식(Resources)으로 폴백.
 			PhotonNetwork.PrefabPool = new PhotonPoolAdapter();
+
+			// 이 게임은 플레이어마다 다른 씬에 있을 수 있음(한 명 스테이션, 한 명 스테이지)이라
+			// AutomaticallySyncScene(전원 씬 강제 통일)은 쓰지 않는다. 대신 각자 자기 씬을 룸에 알리고
+			// (PublishLocalScene), 같은 씬끼리만 서로 보이게 필터한다(PlayerSceneVisibility).
+			SceneManager.sceneLoaded += OnSceneLoaded;
 		}
 		else if (instance != this)
 		{
@@ -154,7 +157,9 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     public override void OnJoinedRoom()
     {
         IsReady = true;
-        Debug.Log($"[NetworkManager] 방 입장 완료 (인원 {PhotonNetwork.CurrentRoom.PlayerCount}/{maxPlayersPerRoom}, Master={PhotonNetwork.IsMasterClient})");
+        string modeLabel = PhotonNetwork.OfflineMode ? "싱글(오프라인)" : "멀티(온라인)";
+        Debug.Log($"[NetworkManager] 방 입장 완료 [{modeLabel}] (인원 {PhotonNetwork.CurrentRoom.PlayerCount}/{maxPlayersPerRoom}, Master={PhotonNetwork.IsMasterClient})");
+        PublishLocalScene();   // 입장 시점의 내 현재 씬을 룸에 알림(가시성 필터용)
         // 스폰은 이 매니저가 하지 않는다 — 준비됐다고 알리기만 하고, 무엇을·어디에 스폰할지는 씬별 PlayerSpawner가 결정.
         OnRoomReady?.Invoke();
     }
@@ -163,6 +168,28 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     {
         IsReady = false;
         Debug.LogWarning("[NetworkManager] 연결 끊김: " + cause);
+    }
+
+    // =====================================================================
+    // 씬 가시성 — 각자 자기 씬을 룸에 공유. 같은 씬끼리만 서로 보이게(PlayerSceneVisibility가 이 값을 봄).
+    // =====================================================================
+    private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        PublishLocalScene();
+    }
+
+    /// <summary>내가 지금 어느 씬에 있는지를 룸 전체에 알린다(룸 밖이면 무시).</summary>
+    private void PublishLocalScene()
+    {
+        if (!PhotonNetwork.InRoom)
+        {
+            return;
+        }
+        var props = new ExitGames.Client.Photon.Hashtable
+        {
+            { PlayerSceneVisibility.SCENE_KEY, SceneManager.GetActiveScene().name }
+        };
+        PhotonNetwork.LocalPlayer.SetCustomProperties(props);
     }
 
     // =====================================================================

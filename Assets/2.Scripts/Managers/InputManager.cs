@@ -352,6 +352,7 @@ public class InputManager : MonoBehaviour
         return noPlayerInScene
             || Input.GetKey(KeyCode.LeftAlt) || Input.GetKey(KeyCode.RightAlt)
             || InventoryPanelUI.IsOpen
+            || PauseMenuUI.IsOpen   // 멀티에선 IsPaused가 false라, 메뉴 열림 자체로 커서를 풀어야 클릭 가능
             || isPaused;
     }
 

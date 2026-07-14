@@ -36,8 +36,14 @@ public class PauseMenuUI : MonoBehaviour
     [Tooltip("목표(퀘스트) 패널. QuestHUD가 붙은 패널 연결. 없으면 비워둬도 됨.")]
     [SerializeField] private GameObject questPanel;
 
+    // 커서 잠금 해제 판정용(InputManager.IsUIRequestingCursor). 메뉴 패널이 떠 있으면 커서를 푼다 —
+    // 멀티에선 IsPaused가 false라, 인벤토리처럼 '열림 상태' 자체로 커서를 풀어야 메뉴 클릭이 된다.
+    private static PauseMenuUI _instance;
+    public static bool IsOpen => _instance != null && _instance.panel != null && _instance.panel.activeSelf;
+
     private void Start()
     {
+        _instance = this;
         // 시작 시 메뉴/연동 패널 전부 꺼두기 (씬에서 켜둔 채 저장해도 안전)
         if (panel != null)        panel.SetActive(false);
         if (optionsPanel != null) optionsPanel.SetActive(false);
@@ -73,8 +79,9 @@ public class PauseMenuUI : MonoBehaviour
     private void OpenMenu()
     {
         if (GameManager.Instance == null) return;
-        GameManager.Instance.PauseGame();
-        if (!GameManager.Instance.IsPaused) return; // 전투 중이 아니면 무시(게임오버 등)
+        // PauseGame() 반환값으로 판단 — 멀티에선 실제 프리즈(IsPaused)는 안 되지만 메뉴는 떠야 하므로
+        // IsPaused가 아니라 "메뉴 허용" 반환값을 본다. false면 게임오버/클리어라 메뉴 안 띄움.
+        if (!GameManager.Instance.PauseGame()) return;
 
         if (panel != null) panel.SetActive(true);
     }
