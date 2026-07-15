@@ -78,6 +78,8 @@ public class PlayerSceneVisibility : MonoBehaviourPunCallbacks
             ownerScene = v as string;
         }
         bool differentScene = !string.IsNullOrEmpty(ownerScene) && ownerScene != myScene;
+        // [진단용] 실제 비교값 확인. 원인 잡히면 이 로그는 제거.
+        Debug.Log($"[PlayerSceneVisibility] {name} IsMine={photonView.IsMine} myScene='{myScene}' ownerScene='{ownerScene}' → visible={!differentScene}");
         SetVisible(!differentScene);
     }
 

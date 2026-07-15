@@ -117,10 +117,6 @@ public class BulletPatternEditor : EditorWindow
 
             GUILayout.Label("Delay(초)");
             float.TryParse(GUILayout.TextField(wave.delay.ToString("F2"), GUILayout.Width(140)), out wave.delay);
-
-            GUILayout.Label("탄 프리팹");
-            wave.bulletPrefab = (GameObject)EditorGUI.ObjectField(
-                GUILayoutUtility.GetRect(140, 16), wave.bulletPrefab, typeof(GameObject), false);
         }
 
         GUI.EndGroup();

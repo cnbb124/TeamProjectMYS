@@ -21,8 +21,16 @@ public class ItemPickup : MonoBehaviour
 {
     [Header("고정 아이템 드랍용 (프리팹에서 설정)")]
     [Tooltip("이 픽업이 주는 아이템. 설정 시 풀에서 꺼낼 때 자동 초기화됨")]
-    [SerializeField] private ItemData itemData;
-    [SerializeField] private int amount = 1;
+    [SerializeField]
+    private ItemData itemData;
+    [Tooltip("아이템 갯수")]
+    [SerializeField]
+    private int amount = 1;
+    [SerializeField]
+    private float _turnRate;
+    [SerializeField]
+    private float _speed;
+
 
     private ItemData _data;
     private int _amount;
@@ -56,6 +64,43 @@ public class ItemPickup : MonoBehaviour
         _goldAmount = goldAmount;
     }
 
+    public void TracePlayerForPickup(Transform targetTr, Vector3 targetVelocity)
+    {
+		Vector3 toTarget = targetTr.position - transform.position;
+		float dist = toTarget.magnitude;
+
+		//타겟과 일정 거리 이내로 좁혀지면 미사일이 맴도는 현상 방지
+		//거리가 가까울 때는 복잡한 예측을 버리고 타겟을 향해 즉시 내리꽂도록 강제
+		if (dist < 20.0f)
+		{
+			Vector3 finalDir = Vector3.RotateTowards(transform.forward, toTarget.normalized, _turnRate * 2f * Mathf.Deg2Rad * Time.deltaTime, 0f);
+			transform.forward = finalDir;
+			transform.position += transform.forward * _speed * Time.deltaTime;
+			return;
+		}
+
+		Vector3 desiredDir = toTarget.normalized;
+
+		// 타겟의 위치를 계산하는 예측 추적(Predictive Pursuit) 알고리즘
+		if (targetVelocity.sqrMagnitude > 0.1f)
+		{
+			// 현재 속도로 타겟까지 도달하는 데 걸리는 예상 시간(ETA)
+			float timeToHit = dist / Mathf.Max(_speed, 1f);
+
+			// 거리가 너무 멀 때 예측 좌표가 우주로 튀는 것을 막기 위해 최대 1.5초 후의 위치까지만 예측
+			timeToHit = Mathf.Min(timeToHit, 1.5f);
+
+			// 타겟의 미래 예측 위치 도출
+			Vector3 predictedPos = targetTr.position + (targetVelocity * timeToHit);
+
+			desiredDir = (predictedPos - transform.position).normalized;
+		}
+
+		// 예측된 방향으로 부드럽게 회전 및 전진
+		Vector3 newDir = Vector3.RotateTowards(transform.forward, desiredDir, _turnRate * Mathf.Deg2Rad * Time.deltaTime, 0f);
+		transform.forward = newDir;
+		transform.position += transform.forward * _speed * Time.deltaTime;
+	}
     private void OnTriggerEnter(Collider other)
     {
         Player player = other.GetComponentInParent<Player>();

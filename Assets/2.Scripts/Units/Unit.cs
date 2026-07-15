@@ -485,6 +485,12 @@ public abstract class Unit : MonoBehaviour, IDamageable
 	// SoundManager에 넘김 — 볼륨/피치 곡선 자체(SoundManager.EngineSoundConfig)는 SoundManager가 전담(RTPC 스타일).
 	private void UpdateEngineAudio()
 	{
+		// 엔진음 없는 유닛(고정 터렛 등)은 루프를 등록하지 않으므로 갱신 자체를 건너뜀 —
+		// 안 그러면 매 프레임 "루프없음" 경고 + 불필요한 조회로 로그 스팸/렉 유발.
+		if (!HasEngineSound)
+		{
+			return;
+		}
 		bool mute = CurState == UNIT_STATE.DIE || _rb == null;
 		float intensity = mute ? 0f : GetEngineIntensity();
 		_sound?.UpdateEngineLoopVolumes(transform, intensity, _isBoosting, mute);

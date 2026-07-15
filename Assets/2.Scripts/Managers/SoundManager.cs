@@ -196,6 +196,9 @@ public class SoundManager : MonoBehaviour
 
 
 	private bool _allVolumeAtGamePaused = false;
+	// 현재 일시정지 감쇠 배율. 3D SFX·엔진음의 볼륨 계산에 곱해, 정지 중 새로 시작되는 소리와
+	// 매 프레임 재계산되는 엔진 루프도 함께 감쇠시킨다(BGM의 pauseScale과 같은 역할).
+	private float SfxPauseScale => _allVolumeAtGamePaused ? pauseAllVolumeScale : 1f;
 
 	[Space(10)]
 	[Header("<size=14>기본 볼륨 설정</size>")]
@@ -604,31 +607,29 @@ public class SoundManager : MonoBehaviour
 		_allVolumeAtGamePaused = paused;
 		//bgm
 		SetBGMAtGamePaused(paused);
-		float pauseScale = _allVolumeAtGamePaused ? pauseAllVolumeScale : 1f;
 
-		
+		// UI SFX(메뉴 클릭음 등)는 일시정지 중에도 들려야 하므로 감쇠하지 않음.
 
-		//// UI SFX
-		//if (_sfxUISource != null)
-		//{
-		//	_sfxUISource.volume = sfxUIVolume * pauseScale;
-		//}
-
-		// 3D SFX
+		// 3D SFX — 새로 시작되는 소리와 엔진 루프는 재생/재계산 경로에서 SfxPauseScale이 곱해져 자동 처리
+		// 여기서는 이미 재생중이던 단발음을 배율만큼 곱하거나(감쇠) 나눠서(복원) 개별 volumeScale을 보존
+		float scale = pauseAllVolumeScale;
+		if (scale <= 0f)
+		{
+			return; // 0 이하면 나눗셈 복원이 불가 — 감쇠 자체를 건너뜀(안전).
+		}
 		for (int i = _sfx3DPool.Count - 1; i >= 0; i--)
 		{
 			AudioSource source = _sfx3DPool[i];
-
 			if (source == null)
 			{
 				_sfx3DPool.RemoveAt(i);
 				continue;
 			}
-
-			if (source.isPlaying)
+			if (!source.isPlaying)
 			{
-				source.volume = sfx3DVolume * pauseScale;
+				continue;
 			}
+			source.volume = paused ? source.volume * scale : source.volume / scale;
 		}
 	}
 
@@ -732,7 +733,7 @@ public class SoundManager : MonoBehaviour
 
 			source.minDistance = data.minDistance;
 			source.maxDistance = data.maxDistance;
-			source.volume = sfx3DVolume * GetVolume(data);
+			source.volume = sfx3DVolume * GetVolume(data) * SfxPauseScale;
 			source.pitch = GetPitch(data);
 			source.loop = false;
 			//Debug.Log($"[PlaySFX3DAtPosition-DEBUG] clip!=null={source.clip != null}, clipName={source.clip?.name}, finalVolume={source.volume}, sfx3DVolume={sfx3DVolume}, minDist={source.minDistance}, maxDist={source.maxDistance}, sourcePos={source.transform.position}, mute={source.mute}");
@@ -765,7 +766,7 @@ public class SoundManager : MonoBehaviour
 			source.clip = GetRandomClip(data);
 			source.minDistance = data.minDistance;
 			source.maxDistance = data.maxDistance;
-			source.volume = sfx3DVolume * GetVolume(data);
+			source.volume = sfx3DVolume * GetVolume(data) * SfxPauseScale;
 
 			source.pitch = Random.Range(pitchMin, pitchMax);
 			source.loop = false;
@@ -807,7 +808,7 @@ public class SoundManager : MonoBehaviour
 
             source.minDistance = data.minDistance;
             source.maxDistance = data.maxDistance;
-            source.volume = sfx3DVolume * GetVolume(data);
+            source.volume = sfx3DVolume * GetVolume(data) * SfxPauseScale;
             source.pitch = GetPitch(data);
             source.loop = false;
             source.Play();
@@ -908,18 +909,21 @@ public class SoundManager : MonoBehaviour
 
 		speedRatio = Mathf.Clamp01(speedRatio);
 
+		// 엔진 루프도 3D SFX 카테고리 — 마스터(sfx3DVolume)와 일시정지 배율(SfxPauseScale)을 함께 반영.
+		float sfxScale = sfx3DVolume * SfxPauseScale;
+
 		if (idle != null)
 		{
-			idle.volume = Mathf.Lerp(engineSoundConfig.idleMaxVolume, 0f, speedRatio);
+			idle.volume = Mathf.Lerp(engineSoundConfig.idleMaxVolume, 0f, speedRatio) * sfxScale;
 		}
 		if (thrust != null)
 		{
-			thrust.volume = Mathf.Lerp(0f, engineSoundConfig.thrustMaxVolume, speedRatio);
+			thrust.volume = Mathf.Lerp(0f, engineSoundConfig.thrustMaxVolume, speedRatio) * sfxScale;
 			thrust.pitch = Mathf.Lerp(engineSoundConfig.thrustMinPitch, engineSoundConfig.thrustMaxPitch, speedRatio);
 		}
 		if (boost != null)
 		{
-			float targetVolume = isBoosting ? engineSoundConfig.boostMaxVolume : 0f;
+			float targetVolume = (isBoosting ? engineSoundConfig.boostMaxVolume : 0f) * sfxScale;
 			boost.volume = Mathf.MoveTowards(boost.volume, targetVolume, Time.deltaTime * engineSoundConfig.boostFadeSpeed);
 		}
 	}
@@ -1032,17 +1036,25 @@ public class SoundManager : MonoBehaviour
 
 	public void SetSFXUIVolume(float volume)
 	{
+		// 실제 반영은 PlayOneShot 시 (sfxUIVolume × 개별볼륨)으로 적용됨. 여기서 소스 자체 볼륨에
+		// 또 sfxUIVolume을 걸면 이중 적용되므로, 소스 배율은 1로 고정한다.
 		sfxUIVolume = volume;//입력한 볼륨값 현재설정에 저장
 		if (_sfxUISource != null)
 		{
-			_sfxUISource.volume = sfxUIVolume;//현재설정을 실제로 반영
+			_sfxUISource.volume = 1f;
 		}
 	}
 
 	public void SetSFX3DVolume(float volume)
 	{
+		float prev = sfx3DVolume;
 		sfx3DVolume = volume;//입력한 볼륨값 현재설정에 저장
-		// 뒤에서부터 순회 — 파괴된 슬롯을 접근 전에 제거하기 위함(해결책②).
+		if (prev <= 0f)
+		{
+			return; // 이전 마스터가 0이면 소스별 개별볼륨 비율을 복원할 수 없음 — 다음 재생부터 새 값 반영.
+		}
+		float ratio = volume / prev;
+		// 뒤에서부터 순회 — 파괴된 슬롯을 접근 전에 제거하기 위함
 		for (int i = _sfx3DPool.Count - 1; i >= 0; i--)
 		{
 			AudioSource source = _sfx3DPool[i];
@@ -1054,7 +1066,8 @@ public class SoundManager : MonoBehaviour
 			}
 			if (source.isPlaying)//혹여나 실행되고있는게있따면
 			{
-				source.volume = sfx3DVolume;
+				// 마스터 변경분만큼 비율로 조정 — 개별 volumeScale·일시정지 배율을 그대로 보존한다.
+				source.volume *= ratio;
 			}
 		}
 	}

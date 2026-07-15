@@ -187,6 +187,16 @@ public class Player : Unit
 		base.Start(); //유닛 초기화 호출 (RefillToMax 포함, Player override로 연료까지 채워짐)
 		UnitManager.Instance.RegisterPlayer(this);
 
+		// 네트워크 스폰 함선(PhotonView 보유, 멀티+오프라인)은 씬 로드에도 살아남게 DDOL.
+		// 안 그러면 '남'이 씬을 로드할 때 그의 로컬에서 이 함선 복사본이 파괴되고, Photon은 이미 인스턴스화된
+		// 오브젝트를 재생성하지 않아(버퍼된 Instantiate는 입장 시 1회뿐) 서로 안 보이게 된다.
+		// 내 함선은 전투씬 이탈 시 NetworkManager.DestroyLocalPlayerShip으로 명시 제거하므로 스테이션 등에 안 남는다.
+		// 씬 배치 싱글(PhotonView 없음)은 DDOL 안 함 — 기존 동작 유지.
+		if (_photonView != null)
+		{
+			DontDestroyOnLoad(gameObject);
+		}
+
 		// 로컬 플레이어(내 함선)만 GameManager의 대표 참조로 등록.
 		// 멀티에선 Player가 씬 로드 후 PhotonNetwork.Instantiate로 스폰돼 OnSceneLoaded의 FindObjectOfType가 놓치므로,
 		// 여기서 자기 자신을 등록한다. 남의 함선(IsMine=false)은 등록하지 않는다. 싱글은 IsMine=true라 동일 동작.

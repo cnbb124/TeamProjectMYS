@@ -169,6 +169,7 @@ public class Enemy : Unit
                     drop.transform.SetPositionAndRotation(transform.position, Quaternion.identity);
                 }
             }
+            
         }
 
         // 풀 반납(SetActive(false))은 사망 애니가 재생되도록 지연 — OnDying()의 타이머로 처리.

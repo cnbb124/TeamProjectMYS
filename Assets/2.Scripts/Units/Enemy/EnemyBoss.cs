@@ -13,7 +13,8 @@ using UnityEngine;
 //   - "페이즈 진입 시 패턴 추가"는 데이터로: 다음 페이즈 배열에 이전 패턴을 같이 넣으면 누적됨.
 //
 // 탄막 발사: BulletPatternData(웨이브 시퀀스 SO)를 코루틴으로 재생.
-//   대기는 GameManager.WaitGameplaySeconds(일시정지 안전). 총알은 PROJECTILE_BULLET 풀에서 발사.
+//   대기는 GameManager.WaitGameplaySeconds(일시정지 안전). 총알 종류/스탯은 _bulletData(BulletData)가 결정,
+//   속도는 패턴 포인트별 speed로 덮어씀.
 //
 // 페이즈는 코드 State 패턴(BossPhase 중첩 클래스)으로 분리 — 상태마다 클래스 하나.
 // ================================================================
@@ -34,6 +35,10 @@ public class EnemyBoss : EnemyShip
 
 	[Tooltip("탄막 발사 기준 위치(총구). 비우면 보스 본체 위치에서 발사")]
 	[SerializeField] private Transform _firePoint;
+
+	[Tooltip("탄막 총알의 스탯(데미지/사거리/피격VFX/사운드) 데이터. 발사 시 총알에 주입됨.\n" +
+	         "속도는 이 데이터 대신 패턴 포인트별 speed로 덮어씀. 반드시 지정할 것(비우면 데미지/사거리 0).")]
+	[SerializeField] private BulletData _bulletData;
 	
 	// 현재 페이즈(State 패턴). 매 프레임 OnUpdate 호출됨.
 	private BossPhase _currentPhase;
@@ -114,7 +119,7 @@ public class EnemyBoss : EnemyShip
 		_isFiringPattern = false;
 	}
 
-	// PatternPoint 하나를 실제 발사. 총알은 PROJECTILE_BULLET 풀에서 꺼냄(TestBoss와 동일 방식).
+	// PatternPoint 하나를 실제 발사. 총알 종류(풀)는 _bulletData.curProjectilePoolType이 결정(WeaponSystem과 동일 컨벤션).
 	private void FireOneBullet(PatternPoint point)
 	{
 		if (PoolManager.Instance == null)
@@ -138,10 +143,16 @@ public class EnemyBoss : EnemyShip
 			fireDir = transform.rotation * localOffset;
 		}
 
-		Projectile proj = PoolManager.Instance.GetProjectile(POOL_TYPE.PROJECTILE_BULLET);
-		if (proj != null)
+		// 총알 종류(프리팹)도 _bulletData가 결정 — curProjectilePoolType으로 풀 선택(미지정 시 기본 총알 풀 폴백).
+		POOL_TYPE poolType = _bulletData != null ? _bulletData.curProjectilePoolType : POOL_TYPE.PROJECTILE_BULLET;
+		Bullet bullet = PoolManager.Instance.GetProjectile(poolType) as Bullet;
+		if (bullet != null)
 		{
-			proj.Init(origin, fireDir, this);
+			// 스탯/사거리/VFX는 보스 패턴 데이터에서 주입(WeaponSystem이 curBulletData 주입하는 것과 동일 방식).
+			bullet.bulletData = _bulletData;
+			bullet.Init(origin, fireDir, this);
+			// 속도만 패턴 포인트별 값으로 덮어씀(패턴 SO의 설계 의도).
+			bullet.OverrideSpeed(point.speed);
 		}
 	}
 

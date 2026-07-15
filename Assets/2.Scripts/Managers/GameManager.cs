@@ -336,6 +336,13 @@ public class GameManager : MonoBehaviour
         SoundManager.Instance.StopSFXAll();
         VFXManager.Instance.ReturnAll();
 
+        // 전투씬을 벗어나므로 내 네트워크 함선을 제거(DDOL이라 씬 로드로는 안 죽음).
+        // 방에 있을 때만 의미 있음(오프라인 방 포함) — 순수 싱글 테스트씬(네트워크 없음)은 스킵.
+        if (PhotonNetwork.InRoom && NetworkManager.Instance != null)
+        {
+            NetworkManager.Instance.DestroyLocalPlayerShip();
+        }
+
         SceneManager.LoadScene(sceneName);
     }
 
@@ -500,7 +507,7 @@ public class GameManager : MonoBehaviour
         // 메뉴는 뜨고(호출자가 표시), 여기선 사운드 감쇠만 한다. 게임 로직 프리즈는 안 함.
         if (IsMultiplayer)
         {
-            SoundManager.Instance.SetBGMAtGamePaused(true);
+            SoundManager.Instance.SetAllVolumeAtGamePaused(true);
             return true;
         }
 
@@ -510,7 +517,7 @@ public class GameManager : MonoBehaviour
             IsPaused = true;
             ChangeState(GAME_STATE.PAUSED);
             FreezeParticles(); // 폭발/트레일 등 파티클도 정지
-            SoundManager.Instance.SetBGMAtGamePaused(true); // 일시정지 중 BGM 볼륨 감쇠(pauseBGMVolumeScale)
+            SoundManager.Instance.SetAllVolumeAtGamePaused(true); // 일시정지 중 전체 사운드(BGM+SFX+엔진) 감쇠
         }
         return true;
     }
@@ -521,7 +528,7 @@ public class GameManager : MonoBehaviour
         // 멀티에선 프리즈를 안 걸었으므로 사운드만 원복.
         if (IsMultiplayer)
         {
-            SoundManager.Instance.SetBGMAtGamePaused(false);
+            SoundManager.Instance.SetAllVolumeAtGamePaused(false);
             return;
         }
 
@@ -533,7 +540,7 @@ public class GameManager : MonoBehaviour
             IsPaused = false;
             ChangeState(GAME_STATE.PLAYING);
             UnfreezeParticles(); // 정지했던 파티클 재개
-            SoundManager.Instance.SetBGMAtGamePaused(false); // BGM 볼륨 원복
+            SoundManager.Instance.SetAllVolumeAtGamePaused(false); // 전체 사운드(BGM+SFX+엔진) 볼륨 원복
         }
     }
 

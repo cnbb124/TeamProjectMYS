@@ -342,6 +342,8 @@ GameObject:
   - component: {fileID: 8076714047065843668}
   - component: {fileID: 3166126961382493439}
   - component: {fileID: 4500251880083101797}
+  - component: {fileID: 3149687696165573906}
+  - component: {fileID: 2198074336302816408}
   m_Layer: 7
   m_Name: TestUnit_EnemyBoss
   m_TagString: Enemy
@@ -409,11 +411,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2fb53b7c1552f504c8c9ccb78e2f2e31, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _blocksBeam: 0
+  _blocksBeam: 1
   weaponSystem: {fileID: 0}
   skillSystem: {fileID: 0}
-  maxHpRemaining: 150
-  maxShieldCapacity: 0
+  maxHpRemaining: 9999
+  maxShieldCapacity: 9999
   shieldRegainDelay: 0
   shieldRegainRate: 6
   isShieldRegaining: 0
@@ -456,7 +458,7 @@ MonoBehaviour:
   dropChance: 1
   detectRange: 500
   rotateSpeed: 180
-  rotateDeadZone: 0
+  rotateDeadZone: 120
   aiState: 0
   leadAccuracy: 0
   rearAttackAngleThreshold: 110
@@ -483,12 +485,14 @@ MonoBehaviour:
   passHorizontalDist: 60
   passVerticalRange: 40
   passAimDuration: 1.5
-  _phase1Patterns: []
+  _phase1Patterns:
+  - {fileID: 11400000, guid: 8e028c3fba8c0404dbf722aece6f864b, type: 2}
   _phase2Patterns: []
   _phase3Patterns: []
   _phase4Patterns: []
   _patternCooldown: 1.5
-  _firePoint: {fileID: 0}
+  _firePoint: {fileID: 7543803328305267749}
+  _bulletData: {fileID: 11400000, guid: 909ae5aae1edf2f4f83716ad4fdca8aa, type: 2}
 --- !u!114 &3166126961382493439
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -547,6 +551,45 @@ MonoBehaviour:
   MultiLockedTargets: []
   LockOnProgress: 0
   IsLocked: 0
+--- !u!114 &3149687696165573906
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9127277378237319991}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aa584fbee541324448dd18d8409c7a41, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ObservedComponentsFoldoutOpen: 1
+  Group: 0
+  prefixField: -1
+  Synchronization: 3
+  OwnershipTransfer: 0
+  observableSearch: 2
+  ObservedComponents:
+  - {fileID: 2198074336302816408}
+  sceneViewId: 0
+  InstantiationId: 0
+  isRuntimeInstantiated: 0
+--- !u!114 &2198074336302816408
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9127277378237319991}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 627855c7f81362d41938ffe0b1475957, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_SynchronizePosition: 1
+  m_SynchronizeRotation: 1
+  m_SynchronizeScale: 0
+  m_UseLocal: 1
 --- !u!1001 &1907938916506145832
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -622,6 +665,10 @@ PrefabInstance:
     - target: {fileID: 8780441365474338247, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
       propertyPath: attackHoldDuration
       value: 10
+      objectReference: {fileID: 0}
+    - target: {fileID: 8950724485814838234, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
+      propertyPath: sceneViewId
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -709,6 +756,10 @@ PrefabInstance:
       propertyPath: attackHoldDuration
       value: 10
       objectReference: {fileID: 0}
+    - target: {fileID: 8950724485814838234, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
+      propertyPath: sceneViewId
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -794,6 +845,10 @@ PrefabInstance:
     - target: {fileID: 8780441365474338247, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
       propertyPath: attackHoldDuration
       value: 10
+      objectReference: {fileID: 0}
+    - target: {fileID: 8950724485814838234, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
+      propertyPath: sceneViewId
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -881,6 +936,10 @@ PrefabInstance:
       propertyPath: attackHoldDuration
       value: 10
       objectReference: {fileID: 0}
+    - target: {fileID: 8950724485814838234, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
+      propertyPath: sceneViewId
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -966,6 +1025,10 @@ PrefabInstance:
     - target: {fileID: 8780441365474338247, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
       propertyPath: attackHoldDuration
       value: 10
+      objectReference: {fileID: 0}
+    - target: {fileID: 8950724485814838234, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
+      propertyPath: sceneViewId
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -1053,6 +1116,10 @@ PrefabInstance:
       propertyPath: attackHoldDuration
       value: 10
       objectReference: {fileID: 0}
+    - target: {fileID: 8950724485814838234, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
+      propertyPath: sceneViewId
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -1114,6 +1181,10 @@ PrefabInstance:
     - target: {fileID: 6706981218406096366, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
       propertyPath: m_Name
       value: Turret_DUAL_MYS (1)
+      objectReference: {fileID: 0}
+    - target: {fileID: 8950724485814838234, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
+      propertyPath: sceneViewId
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -1188,6 +1259,10 @@ PrefabInstance:
     - target: {fileID: 6706981218406096366, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
       propertyPath: m_Name
       value: Turret_DUAL_MYS
+      objectReference: {fileID: 0}
+    - target: {fileID: 8950724485814838234, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
+      propertyPath: sceneViewId
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -1275,6 +1350,10 @@ PrefabInstance:
       propertyPath: attackHoldDuration
       value: 10
       objectReference: {fileID: 0}
+    - target: {fileID: 8950724485814838234, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
+      propertyPath: sceneViewId
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -1360,6 +1439,10 @@ PrefabInstance:
     - target: {fileID: 8780441365474338247, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
       propertyPath: attackHoldDuration
       value: 10
+      objectReference: {fileID: 0}
+    - target: {fileID: 8950724485814838234, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
+      propertyPath: sceneViewId
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -1447,6 +1530,10 @@ PrefabInstance:
       propertyPath: attackHoldDuration
       value: 10
       objectReference: {fileID: 0}
+    - target: {fileID: 8950724485814838234, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
+      propertyPath: sceneViewId
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -1532,6 +1619,10 @@ PrefabInstance:
     - target: {fileID: 8780441365474338247, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
       propertyPath: attackHoldDuration
       value: 10
+      objectReference: {fileID: 0}
+    - target: {fileID: 8950724485814838234, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
+      propertyPath: sceneViewId
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

@@ -69,6 +69,22 @@ public class PlayerSpawner : MonoBehaviour
         {
             return;
         }
+
+        // 함선은 DDOL이라 씬 전환에도 유지된다. 이미 내 함선이 살아있으면(정상 이탈 처리를 안 거친 예외 경로 등)
+        // 새로 스폰하지 않고 이 씬의 스폰 위치로 옮겨 재사용한다 — 중복 함선 방지.
+        NetworkManager net = NetworkManager.Instance;
+        if (net != null && net.HasLocalPlayerShip)
+        {
+            Transform reuse = GetSpawnPoint();
+            if (reuse != null)
+            {
+                net.LocalPlayerShip.transform.SetPositionAndRotation(reuse.position, reuse.rotation);
+            }
+            _spawned = true;
+            NetworkManager.Instance.OnRoomReady -= SpawnNow;
+            return;
+        }
+
         if (playerPrefab == null)
         {
             Debug.LogWarning("[PlayerSpawner] playerPrefab 미지정 — 스폰 불가");

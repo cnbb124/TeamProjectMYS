@@ -30,7 +30,10 @@ using UnityEngine.SceneManagement;
 //
 // 사용법:
 //   1. 로비 등 '가장 먼저 연결을 시작할 씬'에 빈 오브젝트 만들고 이 스크립트 부착 (DDOL로 이후 씬까지 유지)
-//   2. offlineMode : 싱글플레이 테스트면 체크(기본값)
+//   2. 연결 시점:
+//      - autoConnectOnStart 켜짐(기존/단독 테스트) : 씬 시작 시 offlineMode 값대로 자동 연결.
+//      - autoConnectOnStart 꺼짐(새 흐름) : 스테이션까지 비포톤 유지, 스테이지 입장 UI에서
+//        StartSingleplayer()(싱글) 또는 ConnectMultiplayer()(멀티)를 호출. 복귀 시 Disconnect().
 //   ※ '무엇을·어디에 스폰'은 이 매니저가 아니라 각 씬의 PlayerSpawner가 결정한다(연결과 스폰 분리).
 //     프리팹/위치가 씬마다 다를 수 있으므로(전투기 vs 스테이션 유닛) 씬별 PlayerSpawner에서 설정.
 // =====================================================================
@@ -59,8 +62,14 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     // =====================================================================
     // 설정
     // =====================================================================
-    [Header("━━━━━━ 모드 ━━━━━━")]
-    [Tooltip("켜면 Photon 서버에 붙지 않고 '1인 방'으로 취급(싱글플레이). 같은 코드로 싱글/멀티 둘 다 돌아감.")]
+    [Header("━━━━━━ 연결 시점 ━━━━━━")]
+    [Tooltip("켜면 씬 시작 시 자동 연결(기존 방식 — 씬 단독 테스트/현행 흐름용).\n" +
+             "끄면 StartSingleplayer()/ConnectMultiplayer()를 명시 호출할 때까지 연결하지 않음 — 스테이션을 비포톤으로 두는 새 흐름용.")]
+    [SerializeField] private bool autoConnectOnStart = true;
+
+    [Header("━━━━━━ 모드(autoConnectOnStart 켜졌을 때만 사용) ━━━━━━")]
+    [Tooltip("autoConnectOnStart가 켜졌을 때의 모드. true=싱글(오프라인 1인 방), false=멀티(온라인).\n" +
+             "새 흐름(스테이션에서 런타임 선택)에선 StartSingleplayer/ConnectMultiplayer로 직접 고르므로 이 값은 안 쓰임.")]
     [SerializeField] private bool offlineMode = true;
 
     [Header("━━━━━━ 방 설정 ━━━━━━")]
@@ -72,6 +81,13 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     // =====================================================================
     /// <summary>방 입장 완료(내 함선 스폰 가능) 여부.</summary>
     public bool IsReady { get; private set; }
+
+    /// <summary>내(로컬)가 소유해 스폰한 플레이어 함선. 함선은 DDOL이라 씬 로드에도 유지되며(남이 씬을 로드해도
+    /// 그의 로컬에서 파괴되지 않게), 전투씬을 벗어날 때 DestroyLocalPlayerShip으로 명시적으로 제거한다.</summary>
+    public GameObject LocalPlayerShip { get; private set; }
+
+    /// <summary>지금 내 함선이 살아있는지(씬 전환에도 유지되므로 스폰 중복 방지 판정에 사용).</summary>
+    public bool HasLocalPlayerShip => LocalPlayerShip != null;
 
     /// <summary>방 입장 완료 순간 발생. 씬별 PlayerSpawner가 구독해 스폰 타이밍을 잡는다(연결과 스폰 분리).</summary>
     public event System.Action OnRoomReady;
@@ -107,24 +123,60 @@ public class NetworkManager : MonoBehaviourPunCallbacks
 
     private void Start()
     {
-        Connect();
-    }
-
-    /// <summary>모드에 따라 '연결'만 시작한다. 방 입장은 오프라인/온라인 공통으로 OnConnectedToMaster에서 처리(입장 경로 단일화).</summary>
-    private void Connect()
-    {
-        if (offlineMode)
+        // 자동 연결은 '기존 흐름/씬 단독 테스트'용. 새 흐름(스테이션 비포톤)에선 autoConnectOnStart를 끄고,
+        // 스테이지 입장 시 UI가 StartSingleplayer()/ConnectMultiplayer()를 직접 호출한다.
+        if (!autoConnectOnStart)
         {
-            // 오프라인 = Photon 서버 없이 로컬 시뮬레이션. 이 설정만으로 OnConnectedToMaster가 즉시 불린다.
-            // 방 입장은 온라인과 똑같이 그 콜백에서 하므로 여기선 방을 만들지 않는다(이중 입장 방지).
-            PhotonNetwork.OfflineMode = true;
             return;
         }
-
-        // 온라인 = 실제 Photon 마스터 서버에 접속. 완료되면 OnConnectedToMaster가 불린다.
-        if (!PhotonNetwork.IsConnected)
+        if (offlineMode)
         {
-            PhotonNetwork.ConnectUsingSettings();
+            StartSingleplayer();
+        }
+        else
+        {
+            ConnectMultiplayer();
+        }
+    }
+
+    // =====================================================================
+    // 연결 시작 — 싱글/멀티 명시 선택 (스테이션 등에서 스테이지 입장 시 호출)
+    // 방 입장은 오프라인/온라인 공통으로 OnConnectedToMaster에서 처리(입장 경로 단일화).
+    // =====================================================================
+
+    /// <summary>싱글플레이 시작(오프라인 = Photon 서버 없이 1인 방). 이미 연결/입장 중이면 무시(멱등).</summary>
+    public void StartSingleplayer()
+    {
+        if (PhotonNetwork.IsConnected || PhotonNetwork.InRoom)
+        {
+            return;
+        }
+        // 이 설정만으로 OnConnectedToMaster가 즉시 동기 호출되고, 거기서 방을 만든다(입장 경로 단일화).
+        PhotonNetwork.OfflineMode = true;
+    }
+
+    /// <summary>멀티플레이 연결(실제 Photon 마스터 서버). 완료되면 OnConnectedToMaster에서 방 입장. 이미 연결/입장 중이면 무시(멱등).</summary>
+    public void ConnectMultiplayer()
+    {
+        if (PhotonNetwork.IsConnected || PhotonNetwork.InRoom)
+        {
+            return;
+        }
+        PhotonNetwork.OfflineMode = false;
+        PhotonNetwork.ConnectUsingSettings();
+    }
+
+    /// <summary>Photon 연결/오프라인 방을 종료(멀티 세션에서 비포톤 씬으로 복귀 시). 연결이 없으면 무시.</summary>
+    public void Disconnect()
+    {
+        if (PhotonNetwork.OfflineMode)
+        {
+            PhotonNetwork.OfflineMode = false; // 오프라인 방 정리(이 대입이 방 퇴장을 유발)
+            return;
+        }
+        if (PhotonNetwork.IsConnected)
+        {
+            PhotonNetwork.Disconnect();
         }
     }
 
@@ -209,6 +261,26 @@ public class NetworkManager : MonoBehaviourPunCallbacks
         }
 
         // Resources 폴더 프리팹을 방 전원에게 생성. 소유권은 이 클라(스폰 주체)에게 있다.
-        return PhotonNetwork.Instantiate(prefabName, pos, rot);
+        LocalPlayerShip = PhotonNetwork.Instantiate(prefabName, pos, rot);
+        return LocalPlayerShip;
+    }
+
+    /// <summary>
+    /// 내 함선을 네트워크 전체에서 제거. 전투씬을 벗어나는 모든 경로(스테이션/로비/게임오버/리스타트)에서 호출.
+    /// 함선은 DDOL이라 로컬 씬 로드로는 안 죽으므로, 이탈 시 명시적으로 제거해야 다음 씬(스테이션 등)에 남지 않는다.
+    /// PhotonNetwork.Destroy라 남들 화면에서도 함께 사라진다("이 플레이어가 전투씬을 떠남"을 올바르게 반영).
+    /// </summary>
+    public void DestroyLocalPlayerShip()
+    {
+        if (LocalPlayerShip == null)
+        {
+            return;
+        }
+        PhotonView pv = LocalPlayerShip.GetComponent<PhotonView>();
+        if (pv != null && pv.IsMine)
+        {
+            PhotonNetwork.Destroy(LocalPlayerShip);
+        }
+        LocalPlayerShip = null;
     }
 }

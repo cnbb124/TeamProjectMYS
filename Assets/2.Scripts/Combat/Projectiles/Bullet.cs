@@ -58,6 +58,13 @@ public class Bullet : Projectile
 		}
 	}
 
+	// bulletData가 정한 speed를 발사 시점에 덮어씀 — 보스 탄막 패턴처럼 같은 데이터로 포인트별 속도만 다르게 줄 때 사용.
+	// 반드시 Init() 이후에 호출(Init이 bulletData.speed로 _speed를 세팅하므로).
+	public void OverrideSpeed(float speed)
+	{
+		_speed = speed;
+	}
+
 
 
 	

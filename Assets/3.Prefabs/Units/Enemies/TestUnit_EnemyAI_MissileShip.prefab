@@ -1810,6 +1810,8 @@ GameObject:
   - component: {fileID: 5359797006537843132}
   - component: {fileID: 6943651751778805224}
   - component: {fileID: 7564222775606011435}
+  - component: {fileID: 4127730027664293702}
+  - component: {fileID: 5063490728137185307}
   m_Layer: 7
   m_Name: Bomber_Turret_Up
   m_TagString: Enemy
@@ -1961,6 +1963,45 @@ MonoBehaviour:
   MultiLockedTargets: []
   LockOnProgress: 0
   IsLocked: 0
+--- !u!114 &4127730027664293702
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2632510861753634954}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aa584fbee541324448dd18d8409c7a41, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ObservedComponentsFoldoutOpen: 1
+  Group: 0
+  prefixField: -1
+  Synchronization: 3
+  OwnershipTransfer: 0
+  observableSearch: 2
+  ObservedComponents:
+  - {fileID: 5063490728137185307}
+  sceneViewId: 0
+  InstantiationId: 0
+  isRuntimeInstantiated: 0
+--- !u!114 &5063490728137185307
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2632510861753634954}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 627855c7f81362d41938ffe0b1475957, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_SynchronizePosition: 1
+  m_SynchronizeRotation: 1
+  m_SynchronizeScale: 0
+  m_UseLocal: 1
 --- !u!1 &2883962471659396001
 GameObject:
   m_ObjectHideFlags: 0
@@ -3969,6 +4010,8 @@ GameObject:
   - component: {fileID: 6654927112562213610}
   - component: {fileID: 59627658281611688}
   - component: {fileID: 7667028890625994720}
+  - component: {fileID: 6871791300929764423}
+  - component: {fileID: 126431162249342307}
   m_Layer: 7
   m_Name: Bomber_Turret_Down
   m_TagString: Enemy
@@ -4120,6 +4163,44 @@ MonoBehaviour:
   MultiLockedTargets: []
   LockOnProgress: 0
   IsLocked: 0
+--- !u!114 &6871791300929764423
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7125722278127160181}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aa584fbee541324448dd18d8409c7a41, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ObservedComponentsFoldoutOpen: 1
+  Group: 0
+  prefixField: -1
+  Synchronization: 3
+  OwnershipTransfer: 0
+  observableSearch: 2
+  ObservedComponents: []
+  sceneViewId: 0
+  InstantiationId: 0
+  isRuntimeInstantiated: 0
+--- !u!114 &126431162249342307
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7125722278127160181}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 627855c7f81362d41938ffe0b1475957, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_SynchronizePosition: 1
+  m_SynchronizeRotation: 1
+  m_SynchronizeScale: 0
+  m_UseLocal: 1
 --- !u!1 &7146894699358276338
 GameObject:
   m_ObjectHideFlags: 0
@@ -5228,7 +5309,8 @@ MonoBehaviour:
   Synchronization: 3
   OwnershipTransfer: 0
   observableSearch: 2
-  ObservedComponents: []
+  ObservedComponents:
+  - {fileID: 2815672866238033565}
   sceneViewId: 0
   InstantiationId: 0
   isRuntimeInstantiated: 0

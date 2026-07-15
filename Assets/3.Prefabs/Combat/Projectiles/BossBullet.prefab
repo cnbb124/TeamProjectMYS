@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 4359846102697372143}
   - component: {fileID: 3407556772702922030}
   - component: {fileID: 1918478901198763592}
-  - component: {fileID: 1741719667727684785}
+  - component: {fileID: 5583888669703037537}
   m_Layer: 0
   m_Name: EnergyCore
   m_TagString: Untagged
@@ -84,27 +84,26 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!135 &1741719667727684785
-SphereCollider:
+--- !u!114 &5583888669703037537
+MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 652603633640291479}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 3
-  m_Radius: 0.5
-  m_Center: {x: 0, y: 0, z: 0}
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3952b9f3bc0194b4b90039581d313ac6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  randomScale: 1
+  randomRotation: 1
+  randomSpin: 1
+  MinScale: 0.9
+  MaxScale: 1.1
+  MinRotation: -360
+  MaxRotaion: 360
+  _spinSpeed: 0
 --- !u!1 &7631773758385341126
 GameObject:
   m_ObjectHideFlags: 0
@@ -117,7 +116,7 @@ GameObject:
   - component: {fileID: 2439730279841918412}
   - component: {fileID: 4176758008222409027}
   - component: {fileID: 879410473260094701}
-  - component: {fileID: 472020097184013151}
+  - component: {fileID: 3012453668640961740}
   m_Layer: 0
   m_Name: BossBullet
   m_TagString: Untagged
@@ -210,9 +209,9 @@ SphereCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Radius: 0.5
+  m_Radius: 0.59
   m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &472020097184013151
+--- !u!114 &3012453668640961740
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -221,7 +220,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 7631773758385341126}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 56e1591138450464d8aec8e2cea966d7, type: 3}
+  m_Script: {fileID: 11500000, guid: 997d0b0b1b7b940499daccebfb128777, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   maxRange: 0
@@ -235,6 +234,4 @@ MonoBehaviour:
   curDamage: 0
   attacker: {fileID: 0}
   projectileType: 0
-  speed: 30
-  spinSpeed: 90
-  orbData: {fileID: 0}
+  bulletData: {fileID: 0}
