@@ -8,6 +8,11 @@ public class BulletPatternEditor : EditorWindow
     private BulletPatternData _target;
     private int _selectedWaveIndex = 0;
 
+    private const float LeftPanelWidth = 150f;
+    private const float RightPanelWidth = 260f;
+    private const float PanelGap = 10f;
+    private const float MinPatternSpeed = 0.1f;
+
     // ── 캔버스 설정 ───────────────────────────────────────
     private Vector2 _canvasCenter;
     private float   _canvasRadius = 150f;   // 캔버스 원 반지름 (픽셀)
@@ -29,7 +34,7 @@ public class BulletPatternEditor : EditorWindow
     public static void OpenWindow()
     {
         var win = GetWindow<BulletPatternEditor>("Bullet Pattern Editor");
-        win.minSize = new Vector2(600f, 500f);
+        win.minSize = new Vector2(760f, 500f);
     }
 
     private void OnGUI()
@@ -127,9 +132,9 @@ public class BulletPatternEditor : EditorWindow
     private void DrawCanvas()
     {
         // 캔버스 고정 위치 (왼쪽 패널 160px, 오른쪽 패널 165px 제외)
-        float canvasSize = Mathf.Min(position.width - 325f, position.height - 40f);
+        float canvasSize = Mathf.Min(position.width - LeftPanelWidth - RightPanelWidth - PanelGap - 20f, position.height - 40f);
         canvasSize = Mathf.Max(canvasSize, 200f);
-        float startX = 160f;
+        float startX = LeftPanelWidth + PanelGap;
         float startY = 35f;
         Rect canvasRect = new Rect(startX, startY, canvasSize, canvasSize);
         _canvasRadius = canvasSize * 0.45f;
@@ -244,7 +249,7 @@ public class BulletPatternEditor : EditorWindow
 
     private void DrawPointList()
     {
-        float panelWidth = 160f;
+        float panelWidth = RightPanelWidth;
         float startX = position.width - panelWidth - 5f;
         GUI.BeginGroup(new Rect(startX, 30, panelWidth, position.height - 30));
 
@@ -258,6 +263,9 @@ public class BulletPatternEditor : EditorWindow
 
         PatternWave wave = _target.waves[_selectedWaveIndex];
         if (wave.points == null) wave.points = new List<PatternPoint>();
+        float previousLabelWidth = EditorGUIUtility.labelWidth;
+        EditorGUIUtility.labelWidth = 70f;
+
 
         _pointListScroll = GUILayout.BeginScrollView(_pointListScroll, GUILayout.Width(panelWidth));
 
@@ -266,9 +274,23 @@ public class BulletPatternEditor : EditorWindow
             PatternPoint p = wave.points[i];
             EditorGUILayout.BeginVertical("box");
             GUILayout.Label($"Point {i}", EditorStyles.miniLabel);
-            p.localDir    = EditorGUILayout.Vector2Field("Dir", p.localDir);
-            p.speed       = EditorGUILayout.FloatField("Speed", p.speed);
-            p.aimAtPlayer = EditorGUILayout.Toggle("Aim Player", p.aimAtPlayer);
+
+            Vector2 nextLocalDir = EditorGUILayout.Vector2Field("Dir", p.localDir);
+            float nextSpeed = Mathf.Max(
+                MinPatternSpeed,
+                EditorGUILayout.FloatField("Speed", p.speed));
+            bool nextAimAtPlayer = EditorGUILayout.Toggle("Aim Player", p.aimAtPlayer);
+
+            if (nextLocalDir != p.localDir ||
+                !Mathf.Approximately(nextSpeed, p.speed) ||
+                nextAimAtPlayer != p.aimAtPlayer)
+            {
+                Undo.RecordObject(_target, "Edit Pattern Point");
+                p.localDir = nextLocalDir;
+                p.speed = nextSpeed;
+                p.aimAtPlayer = nextAimAtPlayer;
+                EditorUtility.SetDirty(_target);
+            }
 
             if (GUILayout.Button("삭제", GUILayout.Height(18)))
             {
@@ -282,6 +304,7 @@ public class BulletPatternEditor : EditorWindow
         }
 
         GUILayout.EndScrollView();
+        EditorGUIUtility.labelWidth = previousLabelWidth;
 
         if (GUILayout.Button("전체 삭제", GUILayout.Width(panelWidth)))
         {
