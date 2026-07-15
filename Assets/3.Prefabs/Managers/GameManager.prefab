@@ -50,6 +50,8 @@ MonoBehaviour:
     bgm: 100
   - scene: 50
     bgm: 105
+  _bossBGM: 108
+  _bossBGMFadeDuration: 1.5
   curState: 0
   playerRef: {fileID: 1295354817333113809, guid: a7897ad853ae9d6458830c653646215c, type: 3}
   killCountToSpawnBoss: 20
@@ -57,8 +59,8 @@ MonoBehaviour:
   bossSpawned: 0
   _fadeImage: {fileID: 182902350571200689}
   fadeDuration: 1.5
-  itemDatabase: {fileID: 0}
-  skillDatabase: {fileID: 0}
+  itemDatabase: {fileID: 11400000, guid: 2f0581e5b62951543ac6117778fbee09, type: 2}
+  skillDatabase: {fileID: 11400000, guid: b86b373dc8acee34f9c62149556ff212, type: 2}
 --- !u!1 &7932337896611673489
 GameObject:
   m_ObjectHideFlags: 0

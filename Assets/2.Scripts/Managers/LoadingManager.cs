@@ -32,7 +32,7 @@ public class LoadingManager : MonoBehaviour
     [SerializeField] private float fadeDuration  = 1f;   // 이미지 전환 페이드 시간
     [SerializeField] private string[] tips;
 
-    public static string NextScene = "GameScene";
+    public static SCENE_TYPE NextScene = SCENE_TYPE.MAIN;
 
     private int _currentImageIndex = 0;
 
