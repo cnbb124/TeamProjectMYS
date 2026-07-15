@@ -23,6 +23,7 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using WebSocketSharp;
 
 public class StartSceneManager : MonoBehaviour
 {
@@ -34,7 +35,7 @@ public class StartSceneManager : MonoBehaviour
     [SerializeField] private float holdDuration = 1.5f; // 로고 유지 시간
 
     [Header("다음 씬")]
-    [SerializeField] private string nextSceneName = ""; // 비우면 전환 안 함 (테스트용)
+    [SerializeField] private SCENE_TYPE nextSceneType ; // 비우면 전환 안 함 (테스트용)
     [SerializeField] private bool   useLoading    = false; // 로딩 씬 경유 여부
 
     [Header("스킵")]
@@ -113,7 +114,7 @@ public class StartSceneManager : MonoBehaviour
 
     private void GoNextScene()
     {
-        if (string.IsNullOrEmpty(nextSceneName))
+        if (string.IsNullOrEmpty(nextSceneType.ToString()))
         {
             Debug.Log("[StartScene] nextSceneName 비어있음 — 씬 전환 생략 (테스트 모드)");
             return;
@@ -122,12 +123,12 @@ public class StartSceneManager : MonoBehaviour
         if (useLoading)
         {
             // 로딩 씬 경유 (LoadingManager 방식)
-            LoadingManager.NextScene = nextSceneName;
-            SceneManager.LoadScene("LoadingScene");
+            LoadingManager.NextScene = nextSceneType;
+            GameManager.Instance.LoadScene("LoadingScene");
         }
         else
         {
-            SceneManager.LoadScene(nextSceneName);
+            GameManager.Instance.LoadScene(nextSceneType);
         }
     }
 }
