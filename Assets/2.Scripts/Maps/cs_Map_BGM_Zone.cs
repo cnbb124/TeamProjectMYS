@@ -13,7 +13,8 @@ public class cs_Map_BGM_Zone : MonoBehaviour
     {
         if (other.CompareTag("Player"))
         {
-            StartCoroutine(CrossFade());
+            //StartCoroutine(CrossFade());
+            SoundManager.Instance.ChangeBGMWithFade(bgmType, fadeTime);
             // StartCoroutine(Temp_CrossFade());
         }
     }

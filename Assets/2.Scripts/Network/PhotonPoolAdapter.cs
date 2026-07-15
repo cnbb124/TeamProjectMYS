@@ -5,21 +5,16 @@ using UnityEngine;
 // =====================================================================
 // PhotonPoolAdapter — PUN의 네트워크 스폰을 우리 PoolManager(풀링)에 연결하는 어댑터.
 //
-// [왜 필요한가]
-//   PhotonNetwork.Instantiate는 기본적으로 Resources에서 프리팹을 로드해 매번 실제
-//   Instantiate/Destroy 한다(DefaultPool). 적처럼 자주 생성/소멸하는 오브젝트는 이게 낭비다.
-//   IPunPrefabPool을 구현해 PhotonNetwork.PrefabPool에 등록하면, PUN의 생성/파괴 호출을
-//   가로채 "실제 파괴 대신 SetActive on/off로 재사용"하게 만들 수 있다.
-//   그러면서도 PhotonView·네트워크ID·동기화·late join 버퍼링·Master 승계는 PUN이 그대로 처리한다.
+// 
+//  
+//   IPunPrefabPool을 구현해 PhotonNetwork.PrefabPool에 등록하면, PUN의 생성/파괴 호출을 가로채 실제 파괴 대신 SetActive on/off로 재사용
+// 
 //
-// [규약 — 중요]
-//   Instantiate()는 반드시 '비활성' GameObject를 돌려줘야 한다. PUN이 그 오브젝트에
-//   PhotonView.ViewID를 세팅한 뒤 직접 활성화한다(활성 상태로 주면 PUN이 경고).
+
+//   Instantiate()는 반드시 비활성 GameObject를 반환해야함.
+//  
 //
-// [prefabId 규칙]
-//   풀 대상(적 등)은 PhotonNetwork.Instantiate에 넘기는 이름을 POOL_TYPE 이름으로 맞춘다
-//   (예: PhotonNetwork.Instantiate(poolType.ToString(), ...)). 어댑터가 그 이름을 POOL_TYPE으로
-//   파싱해 PoolManager에서 꺼낸다. 파싱 안 되는 이름(플레이어 등)은 DefaultPool로 폴백(Resources).
+
 //
 // [등록]
 //   NetworkManager.Awake에서 PhotonNetwork.PrefabPool = new PhotonPoolAdapter(); 한 줄.
