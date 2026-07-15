@@ -123,7 +123,7 @@ public class StartSceneManager : MonoBehaviour
         if (useLoading)
         {
             // 로딩 씬 경유 (LoadingManager 방식)
-            LoadingManager.NextScene = nextSceneType;
+            LoadingManager.NextScene = nextSceneType.ToString();
             GameManager.Instance.LoadScene("LoadingScene");
         }
         else
