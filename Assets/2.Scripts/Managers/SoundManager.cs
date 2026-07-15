@@ -146,6 +146,10 @@ public class SoundManager : MonoBehaviour
 				else
 				{
 					DontDestroyOnLoad(instance.gameObject);
+					// 다른 오브젝트가 자기 Awake/OnEnable에서 Instance를 먼저 건드리면 이 SoundManager의
+					// Awake가 아직 안 돌았을 수 있음(Unity는 스크립트 간 Awake 순서를 보장 안 함).
+					// 그 경우 여기서 즉시 초기화해야 사운드 목록(_soundDict)이 빈 채로 굳지 않는다.
+					instance.EnsureInitialized();
 				}
 			}
 			return instance;
@@ -252,8 +256,7 @@ public class SoundManager : MonoBehaviour
 		{
 			instance = this;
 			DontDestroyOnLoad(gameObject);
-			InitializeDictionary(); // 시작할 때 딕셔너리 세팅
-			InitializeSFXPool();    // 시작할 때 3D 사운드 풀링 세팅
+			EnsureInitialized();
 		}
 		else if (instance != this)
 		{
@@ -261,6 +264,21 @@ public class SoundManager : MonoBehaviour
 			Debug.LogWarning("중복된 SoundManager 발견. 파괴 후 실행");
 			Destroy(gameObject);
 		}
+	}
+
+	private bool _initialized;
+
+	// 사운드 목록 딕셔너리/풀 초기화. Awake와 Instance getter 양쪽에서 호출될 수 있어(실행 순서 무관하게
+	// 안전하려면 둘 다 필요) 중복 실행 방지 플래그로 감쌈. 어느 쪽이 먼저 오든 딱 한 번만 실행됨.
+	private void EnsureInitialized()
+	{
+		if (_initialized)
+		{
+			return;
+		}
+		_initialized = true;
+		InitializeDictionary(); // 시작할 때 딕셔너리 세팅
+		InitializeSFXPool();    // 시작할 때 3D 사운드 풀링 세팅
 	}
 
 	private void Update()

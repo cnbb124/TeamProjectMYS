@@ -131,17 +131,18 @@ public class EnemyBoss : EnemyShip
 
 		Vector3 localOffset = new Vector3(point.localDir.x, point.localDir.y, 1f).normalized;
 		Vector3 fireDir;
-		if (point.aimAtPlayer && _target != null)
-		{
-			// 플레이어 방향을 정면으로 삼고 localDir을 오프셋으로 적용.
-			Quaternion baseRot = Quaternion.LookRotation((_target.position - origin).normalized);
-			fireDir = baseRot * localOffset;
-		}
-		else
-		{
-			// 보스 자신의 방향 기준.
-			fireDir = transform.rotation * localOffset;
-		}
+		fireDir = transform.rotation * localOffset;
+		//if (point.aimAtPlayer && _target != null)
+		//{
+		//	// 플레이어 방향을 정면으로 삼고 localDir을 오프셋으로 적용.
+		//	Quaternion baseRot = Quaternion.LookRotation((_target.position - origin).normalized);
+		//	fireDir = baseRot * localOffset;
+		//}
+		//else
+		//{
+		// 보스 자신의 방향 기준.
+
+		//}
 
 		// 총알 종류(프리팹)도 _bulletData가 결정 — curProjectilePoolType으로 풀 선택(미지정 시 기본 총알 풀 폴백).
 		POOL_TYPE poolType = _bulletData != null ? _bulletData.curProjectilePoolType : POOL_TYPE.PROJECTILE_BULLET;
