@@ -27,7 +27,8 @@ public class BulletPatternEditor : EditorWindow
     private Color _circleColor  = new Color(0f, 1f, 0.8f, 0.3f);
     private Color _pointColor   = new Color(1f, 0.4f, 0.1f);
     private Color _lineColor    = new Color(1f, 0.8f, 0.2f, 0.8f);
-    private Color _aimColor     = new Color(0.4f, 0.8f, 1f);
+    // 정면(Front) 기준 탄막: 화면 위=+Y(상), 오른쪽=+X(우), Z=전진(발사부에서 부여).
+    // 플레이어 유도(aimAtPlayer)는 제거됨 — 그린 방향(localDir)대로만 발사.
 
     // ─────────────────────────────────────────────────────
     [MenuItem("Barrage/Bullet Pattern Editor")]
@@ -167,9 +168,14 @@ public class BulletPatternEditor : EditorWindow
         // 마우스 이벤트 처리
         HandleCanvasInput(canvasRect);
 
+        // 정면(Front view) 축 라벨
+        Handles.color = new Color(1f, 1f, 1f, 0.4f);
+        GUI.Label(new Rect(_canvasCenter.x + 4, canvasRect.y + 2, 60, 16), "▲ 상(+Y)", EditorStyles.miniLabel);
+        GUI.Label(new Rect(canvasRect.xMax - 55, _canvasCenter.y - 16, 60, 16), "우(+X) ▶", EditorStyles.miniLabel);
+
         // 안내 텍스트
-        GUI.Label(new Rect(canvasRect.x + 5, canvasRect.yMax - 20, 300, 20),
-            "클릭: 점 추가 | 드래그: 선(탄 배열) | Shift+클릭: 플레이어 조준 탄",
+        GUI.Label(new Rect(canvasRect.x + 5, canvasRect.yMax - 20, 320, 20),
+            "정면 기준 | 클릭: 점 추가 | 드래그: 선(탄 배열) | 우클릭: 삭제",
             EditorStyles.miniLabel);
     }
 
@@ -182,11 +188,11 @@ public class BulletPatternEditor : EditorWindow
             Vector2 screenPos = LocalDirToScreen(p.localDir);
 
             // 보스 → 포인트 방향선
-            Handles.color = p.aimAtPlayer ? _aimColor : _lineColor;
+            Handles.color = _lineColor;
             Handles.DrawLine(_canvasCenter, screenPos);
 
             // 포인트 원
-            Handles.color = p.aimAtPlayer ? _aimColor : _pointColor;
+            Handles.color = _pointColor;
             Handles.DrawSolidDisc(screenPos, Vector3.forward, 5f);
         }
     }
@@ -209,14 +215,13 @@ public class BulletPatternEditor : EditorWindow
         {
             _isDragging = false;
             Vector2 dragEnd = e.mousePosition;
-            bool aimAtPlayer = e.shift;
 
             float dragDist = Vector2.Distance(_dragStart, dragEnd);
 
             if (dragDist < 5f)
             {
                 // 클릭 (드래그 없음) → 점 1개 추가
-                AddPoint(_dragStart, aimAtPlayer);
+                AddPoint(_dragStart);
             }
             else
             {
@@ -226,7 +231,7 @@ public class BulletPatternEditor : EditorWindow
                 {
                     float t = (float)i / (count - 1);
                     Vector2 pos = Vector2.Lerp(_dragStart, dragEnd, t);
-                    AddPoint(pos, aimAtPlayer);
+                    AddPoint(pos);
                 }
             }
 
@@ -269,6 +274,8 @@ public class BulletPatternEditor : EditorWindow
 
         _pointListScroll = GUILayout.BeginScrollView(_pointListScroll, GUILayout.Width(panelWidth));
 
+        int removeIndex = -1;   // 순회 중엔 지우지 않고, 끝나고 처리 (GUIClip 균형 유지)
+
         for (int i = 0; i < wave.points.Count; i++)
         {
             PatternPoint p = wave.points[i];
@@ -279,31 +286,32 @@ public class BulletPatternEditor : EditorWindow
             float nextSpeed = Mathf.Max(
                 MinPatternSpeed,
                 EditorGUILayout.FloatField("Speed", p.speed));
-            bool nextAimAtPlayer = EditorGUILayout.Toggle("Aim Player", p.aimAtPlayer);
 
             if (nextLocalDir != p.localDir ||
-                !Mathf.Approximately(nextSpeed, p.speed) ||
-                nextAimAtPlayer != p.aimAtPlayer)
+                !Mathf.Approximately(nextSpeed, p.speed))
             {
                 Undo.RecordObject(_target, "Edit Pattern Point");
                 p.localDir = nextLocalDir;
                 p.speed = nextSpeed;
-                p.aimAtPlayer = nextAimAtPlayer;
                 EditorUtility.SetDirty(_target);
             }
 
             if (GUILayout.Button("삭제", GUILayout.Height(18)))
-            {
-                Undo.RecordObject(_target, "Remove Point");
-                wave.points.RemoveAt(i);
-                EditorUtility.SetDirty(_target);
-                break;
-            }
-            EditorGUILayout.EndVertical();
+                removeIndex = i;   // 표시만 — EndVertical은 아래서 항상 호출됨
+
+            EditorGUILayout.EndVertical();   // break 없이 항상 닫음 (GUIClip 균형)
             GUILayout.Space(2);
         }
 
         GUILayout.EndScrollView();
+
+        // 루프 종료 후 실제 삭제 (레이아웃 그룹이 다 닫힌 뒤라 안전)
+        if (removeIndex >= 0)
+        {
+            Undo.RecordObject(_target, "Remove Point");
+            wave.points.RemoveAt(removeIndex);
+            EditorUtility.SetDirty(_target);
+        }
         EditorGUIUtility.labelWidth = previousLabelWidth;
 
         if (GUILayout.Button("전체 삭제", GUILayout.Width(panelWidth)))
@@ -318,7 +326,7 @@ public class BulletPatternEditor : EditorWindow
 
     // ── 헬퍼 ─────────────────────────────────────────────
 
-    private void AddPoint(Vector2 screenPos, bool aimAtPlayer)
+    private void AddPoint(Vector2 screenPos)
     {
         if (_target.waves == null || _target.waves.Count == 0) return;
 
@@ -327,9 +335,8 @@ public class BulletPatternEditor : EditorWindow
         Undo.RecordObject(_target, "Add Point");
         _target.waves[_selectedWaveIndex].points.Add(new PatternPoint
         {
-            localDir    = localDir,
-            speed       = 10f,
-            aimAtPlayer = aimAtPlayer
+            localDir = localDir,
+            speed    = 300f  // 신규 점 기본 속도 (느리면 탄이 안 사라져 누적→렉)
         });
         EditorUtility.SetDirty(_target);
     }
