@@ -21,12 +21,12 @@ using UnityEngine.SceneManagement;
 //
 // 역할:
 //   Photon 연결 → 방 입장 → 내 함선 스폰까지의 최소 흐름을 담당.
-//   (ⓐ단계: '내 함선만 움직이고 남 함선 위치가 보이는' 것까지)
+//   ('내 함선만 움직이고 남 함선 위치가 보이는' 것까지)
 //
 // 권위 모델(설계):
 //   - 내 함선 입력/이동 : 각자 자기 것(photonView.IsMine)만 조작
-//   - 적 스폰/AI/데미지 : Master Client 권위 (ⓑ/ⓒ단계에서 적용 예정)
-//   - 투사체           : '쐈다'만 RPC, 각자 로컬 풀에서 생성 (ⓒ단계)
+//   - 적 스폰/AI/데미지 : Master Client 권위
+//   - 투사체           : '쐈다'만 RPC, 각자 로컬 풀에서 생성 
 //
 // 사용법:
 //   1. 로비 등 '가장 먼저 연결을 시작할 씬'에 빈 오브젝트 만들고 이 스크립트 부착 (DDOL로 이후 씬까지 유지)
@@ -64,7 +64,7 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     // =====================================================================
     [Header("━━━━━━ 연결 시점 ━━━━━━")]
     [Tooltip("켜면 씬 시작 시 자동 연결(기존 방식 — 씬 단독 테스트/현행 흐름용).\n" +
-             "끄면 StartSingleplayer()/ConnectMultiplayer()를 명시 호출할 때까지 연결하지 않음 — 스테이션을 비포톤으로 두는 새 흐름용.")]
+             "끄면 StartSingleplayer()/ConnectMultiplayer()를 명시 호출할 때까지 연결하지 않음 — 차후 수정 예정 임시.")]
     [SerializeField] private bool autoConnectOnStart = true;
 
     [Header("━━━━━━ 모드(autoConnectOnStart 켜졌을 때만 사용) ━━━━━━")]
