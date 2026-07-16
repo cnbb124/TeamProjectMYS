@@ -100,10 +100,8 @@ public class Player : Unit
 	//매니저 할당용 레퍼런스
 	private InputManager _input;
 
-	// 멀티플레이 소유권 판정용. 씬 배치 싱글플레이(=PhotonView 없음)면 항상 내 것으로 취급 → 기존 동작 그대로.
+	// 멀티플레이 소유권(_photonView/IsMine)은 base(Unit)로 통일됨 — 데미지 권위 라우팅이 base에서 필요하기 때문.
 	// PhotonNetwork.Instantiate로 스폰된 함선만 PhotonView를 가지며, 남의 함선은 IsMine=false가 되어 입력이 차단된다.
-	private PhotonView _photonView;
-	private bool IsMine => _photonView == null || _photonView.IsMine;
 
 	public QuickSlot quickSlot { get; private set; }
 	//public SkillSystem skillSystem { get; private set; }
@@ -177,7 +175,6 @@ public class Player : Unit
 		// 우주 공간 = 중력 없음. 회전은 직접 제어하므로 물리 회전 고정
 		_rb.useGravity = false;
 		_rb.freezeRotation = true;
-		_photonView = GetComponent<PhotonView>();
 		quickSlot = GetComponent<QuickSlot>();
 		//skillSystem = GetComponent<SkillSystem>();
 	}

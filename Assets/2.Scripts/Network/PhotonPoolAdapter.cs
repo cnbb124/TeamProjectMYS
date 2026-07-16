@@ -21,10 +21,10 @@ using UnityEngine;
 // =====================================================================
 public class PhotonPoolAdapter : IPunPrefabPool
 {
-    // 풀 대상이 아닌 것(플레이어 등)은 PUN 기본 방식(Resources 로드 후 실제 생성/파괴) 그대로 위임.
+    // 풀 대상이 아닌 것(플레이어 등)은 PUN 기본 방식 그대로 
     private DefaultPool _fallback = new DefaultPool();
 
-    // 우리 풀에서 꺼내 준 오브젝트 추적 → Destroy 시 '실제 파괴'가 아니라 '풀 반납'으로 처리하기 위함.
+    // 우리 풀에서 꺼내 준 오브젝트 추적 Destroy 시 실제 파괴가 아니라 풀 반납으로 처리하기 위해
     private HashSet<GameObject> _fromPool = new HashSet<GameObject>();
 
     public GameObject Instantiate(string prefabId, Vector3 position, Quaternion rotation)

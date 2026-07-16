@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 
+using Photon.Pun;
 using UnityEngine;
 
 
@@ -74,6 +75,12 @@ public abstract class Unit : MonoBehaviour, IDamageable
 	//매니저 할당용 레퍼런스
 	protected SoundManager _sound;
 	protected PoolManager _pool;
+
+	// 멀티플레이 소유권. PhotonView 없으면(싱글 씬배치/오프라인) 항상 내 것 → 기존 단일 동작 그대로.
+	// PhotonNetwork.Instantiate로 스폰된 유닛만 PhotonView를 가지며, 소유자만 IsMine=true.
+	// Player/Enemy가 각자 갖고 있던 것을 base로 통일 — 데미지 권위 라우팅(TakeDamage)이 여기서 필요하기 때문.
+	protected PhotonView _photonView;
+	public bool IsMine => _photonView == null || _photonView.IsMine;
 	[HideInInspector]
 	public WeaponSystem weaponSystem;
 	[HideInInspector]
@@ -274,6 +281,7 @@ public abstract class Unit : MonoBehaviour, IDamageable
 		weaponSystem = GetComponent<WeaponSystem>();
 		skillSystem = GetComponent<SkillSystem>();
 		_unitParts = GetComponent<UnitParts>();
+		_photonView = GetComponent<PhotonView>();
 
 		if (shield != null)
 		{
@@ -836,7 +844,44 @@ public abstract class Unit : MonoBehaviour, IDamageable
 	/// Unit TakeDamage(IDamageable 상속시 필수구현하는 메서드) 
 	/// </summary>
 	/// <param name="info"> 데미지정보구조체 받음</param>
-	public virtual void TakeDamage(HitInfo info)
+	// 투사체/스킬이 부르는 데미지 진입점(IDamageable). 멀티에서 '대상 소유자'만 실제 데미지를 계산하도록 라우팅한다:
+	// 내가 소유자가 아니면 여기서 처리하지 않고 소유자에게만 RPC로 넘긴다(권위 일원화 — 클라마다 HP 어긋남/이중적용 방지).
+	// 싱글/오프라인(PhotonView 없음)은 항상 IsMine=true라 그대로 로컬 적용(기존 동작).
+	// ※ 총알은 로컬 복제라 각 클라에 사본이 있으므로, '쏜 클라의 총알'만 여기까지 온다(복제탄은 데미지 권위 없음 — Projectile 참고).
+	public void TakeDamage(HitInfo info)
+	{
+		if (_photonView != null && !_photonView.IsMine)
+		{
+			_photonView.RPC(nameof(RpcTakeDamage), _photonView.Owner,
+				(int)info.type, info.damageAmount, info.isCritical,
+				info.ignoreArmor, info.shieldDamageMultiplier, info.aoeRadius, info.hitPosition);
+			return;
+		}
+		ApplyHitDamage(info);
+	}
+
+	// 대상 소유자 클라에서만 실행되는 데미지 적용 RPC(위 라우터가 전송). 연출용 필드(사운드/VFX/attacker)는
+	// 넘기지 않고 소유자 로컬에서 재구성 — Phase1은 데미지/사망 정확도만 맞춘다(피격VFX·킬귀속·체력바동기화는 후속).
+	[PunRPC]
+	private void RpcTakeDamage(int type, int damageAmount, bool isCritical,
+		bool ignoreArmor, float shieldDamageMultiplier, float aoeRadius, Vector3 hitPosition)
+	{
+		HitInfo info = new HitInfo
+		{
+			type = (DAMAGE_TYPE)type,
+			damageAmount = damageAmount,
+			isCritical = isCritical,
+			ignoreArmor = ignoreArmor,
+			shieldDamageMultiplier = shieldDamageMultiplier,
+			aoeRadius = aoeRadius,
+			hitPosition = hitPosition,
+		};
+		ApplyHitDamage(info);
+	}
+
+	// 실제 데미지 적용(계산/파츠/사망 트리거). 회피·자원흡수 등은 서브클래스가 override.
+	// 반드시 라우터(TakeDamage)를 거쳐 호출됨 — 소유자(또는 싱글) 클라에서만 실행 보장.
+	protected virtual void ApplyHitDamage(HitInfo info)
 	{
 
 		if (IsInvincible)

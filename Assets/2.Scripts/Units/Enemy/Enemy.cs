@@ -90,16 +90,13 @@ public class Enemy : Unit
 
 	// =========================포톤============================
 
-	// 멀티 소유권 판정. PhotonView 없으면(싱글 씬배치/오프라인 등) 항상 내 것 → 기존 단일 동작 그대로.
-	// PhotonNetwork.Instantiate로 스폰된 적만 PhotonView를 가지며 Master가 소유(IsMine=true)해 AI를 돌린다.
-	// 남(비Master) 클라에선 IsMine=false라 AI를 안 돌리고, 위치는 PhotonTransformView 동기화로만 갱신됨.
-	private PhotonView _photonView;
-    protected bool IsMine => _photonView == null || _photonView.IsMine;
+	// 멀티 소유권(_photonView/IsMine)은 base(Unit)로 통일됨. PhotonNetwork.Instantiate로 스폰된 적만 PhotonView를
+	// 가지며 Master가 소유(IsMine=true)해 AI를 돌린다. 남(비Master) 클라에선 IsMine=false라 AI를 안 돌리고,
+	// 위치는 PhotonTransformView 동기화로만 갱신됨.
 
     protected override void Awake()
     {
         base.Awake();
-        _photonView = GetComponent<PhotonView>();
     }
 
     // OnEnable이 Start보다 항상 먼저 호출되므로, 등록은 여기서 — 죽어서 Unregister된 뒤

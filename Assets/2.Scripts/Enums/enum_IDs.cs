@@ -28,16 +28,19 @@ public enum ITEM_ID
 	// LAUNCHER_LASER 제외 — 스킬로 전환 확정
 
 	// ── 투사체 (2000번대) ─────────────────────────────────────────
-	__ID_BULLET_Do_not_select_ = 2000, BULLET_DEFAULT,                                 //BULLET_END             = 2099,
-	__ID_MISSILE_Do_not_select_ = 2100, MISSILE_DEFAULT,                                //MISSILE_END            = 2199,
+	__ID_BULLET_Do_not_select_ = 2000,
+	BULLET_PLAYER_VULCAN_DEFAULT=2005,
+	BULLET_ENEMY_VULCAN_DEFAULT=2055,//BULLET_END             = 2099,
+	__ID_MISSILE_Do_not_select_ = 2100,
+	MISSILE_PLAYER_HOMING_DEFAULT = 2105,                                //MISSILE_END            = 2199,
 	//DUMB_MISSILE       = 2200,
-	DUMB_MISSILE_DEFAULT = 2201,                           //DUMB_MISSILE_END       = 2299,
+	MISSILE_PLAYER_DUMB_DEFAULT = 2201,                           //DUMB_MISSILE_END       = 2299,
 	//CLUSTER_MISSILE    = 2300,
-	CLUSTER_MISSILE_DEFAULT = 2301,                        //CLUSTER_MISSILE_END    = 2399,
-														   //NUKE_MISSILE       = 2400, NUKE_MISSILE_DEFAULT,                          // NUKE_MISSILE_END       = 2499,
+	MISSILE_PLAYER_CLUSTER_BASE_DEFAULT = 2301,                        //CLUSTER_MISSILE_END    = 2399,
+    MISSILE_PLAYER_CLUSTER_CHILDREN_DEFAULT = 2305,    
 
-	// ── 소모품 (3000번대) ─────────────────────────────────────────
-	__ID_CONSUMABLE_Do_not_select_= 3000,
+    // ── 소모품 (3000번대) ─────────────────────────────────────────
+    __ID_CONSUMABLE_Do_not_select_ = 3000,
 	//CONSUMABLE_HPKIT		= 3000,
 	CONSUMABLE_HPKIT_DEFAULT = 3001,			 //CONSUMABLE_HP_END		 = 3099,
 	//CONSUMABLE_SHIELDKIT	= 3100,

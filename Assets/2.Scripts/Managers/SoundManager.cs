@@ -191,7 +191,7 @@ public class SoundManager : MonoBehaviour
 	public SOUND_TYPE curBGM;
 	private SoundTypeClip _curBgmData; // SetBGMVolume에서 GetVolume 적용하기 위한 캐시
 
-	// BGM 볼륨 합성용 내부 상태 (실제 볼륨 = bgmVolume × 클립볼륨 × _bgmFadeFactor × 일시정지배율)
+	// BGM 볼륨 합성용 내부 상태 (실제 볼륨 = bgmVolume × 클립볼륨 × _bgmFadeFactor × 일시정지 시 pauseAllVolumeScale×pauseBGMVolumeScale)
 	private float _bgmFadeFactor = 1f;    // 씬 전환/보스 전환 페이드용 배율(0~1)
 	private bool _bgmAtGamePaused = false;       // 일시정지 중 볼륨 감쇠 적용 여부
 	private bool _bgmRotating = false;     // 여러 클립 순환(플레이리스트) 재생 중인지
@@ -209,10 +209,10 @@ public class SoundManager : MonoBehaviour
 	[Range(0f, 1f)]
 	public float bgmVolume = 1.0f;
 	[Range(0f, 1f)]
-	[Tooltip("일시정지 중 BGM 볼륨 배율. 예: 0.5 = 절반으로 줄임. 1이면 그대로 유지.")]
+	[Tooltip("일시정지 중 BGM에만 추가로 곱해지는 배율(pauseAllVolumeScale에 중첩 적용). 예: All=0.5, 이 값=0.5면 BGM은 최종 0.25배. 1이면 추가 감쇠 없이 All 배율만 적용.")]
 	public float pauseBGMVolumeScale = 0.5f;
 	[Range(0f, 1f)]
-	[Tooltip("일시정지 중 전체 사운드 볼륨 배율. 예: 0.5 = 절반으로 감소")]
+	[Tooltip("일시정지 중 전체 사운드(BGM+SFX+엔진) 1차 감쇠 배율. BGM은 여기에 pauseBGMVolumeScale이 추가로 곱해짐.")]
 	public float pauseAllVolumeScale = 0.5f;
 	[Range(0f, 1f)]
 	public float sfxUIVolume = 1.0f;
@@ -600,7 +600,9 @@ public class SoundManager : MonoBehaviour
 		ApplyBGMVolume();
 	}
 
-	// BGM 실제 볼륨 = 설정볼륨 × 클립볼륨 × 페이드배율 × (일시정지면 pauseBGMVolumeScale).
+	// BGM 실제 볼륨 = 설정볼륨 × 클립볼륨 × 페이드배율 × (일시정지면 pauseAllVolumeScale × pauseBGMVolumeScale).
+	// 일시정지 시 전체 1차 감쇠(pauseAllVolumeScale)에 BGM만 추가로 한 번 더 감쇠(pauseBGMVolumeScale)를 곱해
+	// 세밀 조정한다 — SFX/엔진음은 pauseAllVolumeScale만 적용(SfxPauseScale 참고).
 	// 볼륨을 바꾸는 모든 경로(설정/페이드/일시정지/곡교체)가 이 한 곳을 거치게 해 합성 일관성 유지.
 	private void ApplyBGMVolume()
 	{
@@ -609,7 +611,7 @@ public class SoundManager : MonoBehaviour
 			return;
 		}
 		float clipVol = _curBgmData != null ? GetVolume(_curBgmData) : 1f;
-		float pauseScale = _bgmAtGamePaused ? pauseBGMVolumeScale : 1f;
+		float pauseScale = _bgmAtGamePaused ? (pauseAllVolumeScale * pauseBGMVolumeScale) : 1f;
 		_bgmSource.volume = bgmVolume * clipVol * _bgmFadeFactor * pauseScale;
 	}
 

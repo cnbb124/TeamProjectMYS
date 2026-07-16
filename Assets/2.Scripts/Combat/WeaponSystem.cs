@@ -300,7 +300,7 @@ public class WeaponSystem : MonoBehaviour
 					return;
 				}
 				_lastBulletFireTime = Time.time;
-				ShootAllBullets();
+				ShootAllBullets(true); // 로컬 발사 = 데미지 권위 있음
 				break;
 
 			case PROJECTILE_TYPE.MISSILE:
@@ -309,7 +309,7 @@ public class WeaponSystem : MonoBehaviour
 					return;
 				}
 				_lastMissileFireTime = Time.time;
-				ShootAllMissiles();
+				ShootAllMissiles(true); // 로컬 발사 = 데미지 권위 있음
 				break;
 
 		}
@@ -328,8 +328,8 @@ public class WeaponSystem : MonoBehaviour
 	{
 		switch ((PROJECTILE_TYPE)type)
 		{
-			case PROJECTILE_TYPE.BULLET:   ShootAllBullets();  break;
-			case PROJECTILE_TYPE.MISSILE:  ShootAllMissiles(); break;
+			case PROJECTILE_TYPE.BULLET:   ShootAllBullets(false);  break; // 복제 연출 = 데미지 권위 없음
+			case PROJECTILE_TYPE.MISSILE:  ShootAllMissiles(false); break;
 		}
 	}
 
@@ -358,7 +358,8 @@ public class WeaponSystem : MonoBehaviour
 	/// 총알 — bulletFireMode에 따라 발사.
 	/// Sequential: 총구 하나씩 교대. Random: 랜덤 총구 하나. Simultaneous: 전체 동시.
 	/// </summary>
-	private void ShootAllBullets()
+	// hasAuthority: 이 발사가 데미지 권위를 갖는지. 로컬 발사(Shoot)=true, RpcShoot 복제=false.
+	private void ShootAllBullets(bool hasAuthority)
 	{
 		if (_bulletFirePositions.Count == 0)
 		{
@@ -368,18 +369,18 @@ public class WeaponSystem : MonoBehaviour
 		switch (bulletFireMode)
 		{
 			case BulletFireMode.Sequential:
-				ShootBulletFrom(_bulletFirePositions[_bulletFireIndex]);
+				ShootBulletFrom(_bulletFirePositions[_bulletFireIndex], hasAuthority);
 				_bulletFireIndex = (_bulletFireIndex + 1) % _bulletFirePositions.Count;
 				break;
 
 			case BulletFireMode.Random:
-				ShootBulletFrom(_bulletFirePositions[Random.Range(0, _bulletFirePositions.Count)]);
+				ShootBulletFrom(_bulletFirePositions[Random.Range(0, _bulletFirePositions.Count)], hasAuthority);
 				break;
 
 			case BulletFireMode.Simultaneous:
 				for (int i = 0; i < _bulletFirePositions.Count; i++)
 				{
-					ShootBulletFrom(_bulletFirePositions[i]);
+					ShootBulletFrom(_bulletFirePositions[i], hasAuthority);
 				}
 				break;
 		}
@@ -391,7 +392,7 @@ public class WeaponSystem : MonoBehaviour
 	/// 머즐플래시/발사음을 가져와 재생 — WeaponSystem에 따로 등록 안 해도 프리팹 데이터만으로 일치되게 함.
 	/// curBulletData는 풀 종류(어떤 프리팹을 꺼낼지) 결정용으로만 남음.
 	/// </summary>
-	private void ShootBulletFrom(Transform firePos)
+	private void ShootBulletFrom(Transform firePos, bool hasAuthority)
 	{
 		if (_launcherAnims.TryGetValue(firePos, out LauncherAnim bulletAnim))
 		{
@@ -421,6 +422,8 @@ public class WeaponSystem : MonoBehaviour
 		}
 
 		newBullet.Init(firePos.position, firePos.forward, _unit);
+		// 복제탄(RpcShoot)은 데미지 권위 없음 → 연출만. 로컬 발사만 실제 데미지 판정.
+		newBullet.SetDamageAuthority(hasAuthority);
 	}
 
 	/// <summary>
@@ -450,7 +453,8 @@ public class WeaponSystem : MonoBehaviour
 	/// 미사일 — missileFireMode에 따라 발사.
 	/// Sequential: 발사구 하나씩 교대. Random: 랜덤 발사구 하나. Simultaneous: 전체 동시.
 	/// </summary>
-	private void ShootAllMissiles()
+	// hasAuthority: 로컬 발사(Shoot)=true, RpcShoot 복제=false. (총알과 동일)
+	private void ShootAllMissiles(bool hasAuthority)
 	{
 		MissileSlot curSlot = CurMissileSlot;
 		if (curSlot == null || curSlot.curAmmo <= 0 || _missileFirePositions.Count == 0)
@@ -461,13 +465,13 @@ public class WeaponSystem : MonoBehaviour
 		switch (missileFireMode)
 		{
 			case MissileFireMode.Sequential:
-				ShootMissileFrom(_missileFirePositions[_missileFireIndex]);
+				ShootMissileFrom(_missileFirePositions[_missileFireIndex], hasAuthority);
 				curSlot.curAmmo--;
 				_missileFireIndex = (_missileFireIndex + 1) % _missileFirePositions.Count;
 				break;
 
 			case MissileFireMode.Random:
-				ShootMissileFrom(_missileFirePositions[Random.Range(0, _missileFirePositions.Count)]);
+				ShootMissileFrom(_missileFirePositions[Random.Range(0, _missileFirePositions.Count)], hasAuthority);
 				curSlot.curAmmo--;
 				break;
 
@@ -476,7 +480,7 @@ public class WeaponSystem : MonoBehaviour
 				int fireCount = Mathf.Min(_missileFirePositions.Count, curSlot.curAmmo);
 				for (int i = 0; i < fireCount; i++)
 				{
-					ShootMissileFrom(_missileFirePositions[i]);
+					ShootMissileFrom(_missileFirePositions[i], hasAuthority);
 					curSlot.curAmmo--;
 				}
 				break;
@@ -491,7 +495,7 @@ public class WeaponSystem : MonoBehaviour
 	/// 먼저 풀에서 꺼낸 뒤 그 missileData(프리팹에 미리 연결된 SO)에서 머즐/발사음을 가져와 재생
 	/// — WeaponSystem에 따로 등록 안 해도 프리팹 데이터만으로 일치되게 함.
 	/// </summary>
-	private void ShootMissileFrom(Transform firePos)
+	private void ShootMissileFrom(Transform firePos, bool hasAuthority)
 	{
 		if (_launcherAnims.TryGetValue(firePos, out LauncherAnim missileAnim))
 		{
@@ -561,6 +565,9 @@ public class WeaponSystem : MonoBehaviour
 
 				break;
 		}
+
+		// 복제 미사일(RpcShoot)은 데미지 권위 없음 → 연출만. (자탄은 ClusterMissile이 부모 권위를 물려줌)
+		proj?.SetDamageAuthority(hasAuthority);
 	}
 
 	/// <summary>

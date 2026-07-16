@@ -464,7 +464,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 8680903974801522845}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 7346898416011626984}
+        m_TargetAssemblyTypeName: MasSelectorUI, Assembly-CSharp
+        m_MethodName: OnClickButtonMap1
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &5052021693508977664
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1745,7 +1757,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 5100209601448879968}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 7346898416011626984}
+        m_TargetAssemblyTypeName: MasSelectorUI, Assembly-CSharp
+        m_MethodName: OnClickButtonMap2
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &4039114244442566599
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1772,6 +1796,7 @@ GameObject:
   - component: {fileID: 6973772825074704475}
   - component: {fileID: 552527097780034051}
   - component: {fileID: 1253731582506600244}
+  - component: {fileID: 7346898416011626984}
   m_Layer: 5
   m_Name: MapSelectorUI
   m_TagString: Untagged
@@ -1865,3 +1890,15 @@ MonoBehaviour:
   m_BlockingMask:
     serializedVersion: 2
     m_Bits: 4294967295
+--- !u!114 &7346898416011626984
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8311528934795220273}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 961d3575bcd79094f80eae2014790d8b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 

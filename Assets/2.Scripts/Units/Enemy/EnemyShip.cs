@@ -377,7 +377,7 @@ public class EnemyShip : Enemy
         }
     }
 
-    public override void TakeDamage(HitInfo info)
+    protected override void ApplyHitDamage(HitInfo info)
     {
         if (IsInvincible)
         {
@@ -402,7 +402,7 @@ public class EnemyShip : Enemy
             EnterEvade();
         }
 
-        base.TakeDamage(info);
+        base.ApplyHitDamage(info);
     }
 
     //=============== OnAI* 메서드 ===============

@@ -325,8 +325,9 @@ public class GameManager : MonoBehaviour
         // 남아있는 투사체는 미리 정지(페이드 동안 날아다니거나 데미지 주지 않게).
         // BGM은 여기서 끊지 않는다 — FadeOut이 화면과 함께 BGM 볼륨을 페이드다운한다.
         PoolManager.Instance.DisableAllProjectiles();
+		PoolManager.Instance.DisableAllEnemies();   
 
-        yield return StartCoroutine(FadeOut());
+		yield return StartCoroutine(FadeOut());
 
         // 완전한 검은 화면을 한 프레임 렌더한 뒤(로드 히치 동안 검은 화면 유지),
         yield return null;

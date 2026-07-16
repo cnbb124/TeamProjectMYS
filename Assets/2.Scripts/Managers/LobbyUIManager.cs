@@ -22,7 +22,7 @@ public class LobbyUIManager : MonoBehaviour
 
     public void OnClickNewGame()
     {
-        LoadingManager.NextScene = "STAGE1";
+        LoadingManager.NextScene = "MAP_SELECT";
         GameManager.Instance.LoadScene(SCENE_TYPE.LOADING_SEQUENCE);
     }
 
