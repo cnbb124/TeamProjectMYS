@@ -92,6 +92,13 @@ public abstract class Projectile : MonoBehaviour
 	[Header("공격한 유닛(참조, 확인용)")]
 	public Unit attacker;
 
+	// 멀티: 이 투사체가 데미지 판정 권위를 갖는지. 내가 직접 쏜 총알만 true.
+	// RpcShoot로 복제된 '남의 발사 연출' 총알은 false → 맞아도 데미지를 주지 않는다(연출·소멸만).
+	// 안 그러면 각 클라의 총알 사본이 모두 데미지를 넘겨 N배로 적용됨. 싱글/오프라인은 항상 true.
+	protected bool _hasDamageAuthority = true;
+	// WeaponSystem이 발사 직후 설정(로컬발사=true, 복제=false).
+	public void SetDamageAuthority(bool hasAuthority) { _hasDamageAuthority = hasAuthority; }
+
 
     //풀매니저에서 식별할 투사체 타입
     [HideInInspector]
@@ -144,6 +151,8 @@ public abstract class Projectile : MonoBehaviour
 		_startPos = startPos;
 		//공격자 저장
 		this.attacker = attacker;
+		// 풀 재사용 대비 기본값(권위 있음)으로 리셋 — 복제탄이면 WeaponSystem이 Init 후 false로 덮음.
+		_hasDamageAuthority = true;
 		_traveledDistance = 0f;
 		_prevPos = startPos;
 		//출발할좌표로 현재좌표 초기화
@@ -253,6 +262,11 @@ public abstract class Projectile : MonoBehaviour
     ///
     protected void ApplyDamage(Collider targetCollider, int damage, DAMAGE_TYPE currentDmgType)
     {
+        // 복제탄(남의 발사 연출)은 데미지 판정 권위 없음 — 소멸/이펙트만 하고 데미지는 스킵.
+        if (!_hasDamageAuthority)
+        {
+            return;
+        }
 
         IDamageable target = targetCollider.GetComponentInParent<IDamageable>();
 
@@ -334,6 +348,11 @@ public abstract class Projectile : MonoBehaviour
     /// </summary>
     protected void ApplyDamage(IDamageable target, Collider targetCollider, int damage, DAMAGE_TYPE currentDmgType, Vector3 explosionCenter, float aoeRadius)
     {
+        // 복제탄(남의 발사 연출)은 데미지 판정 권위 없음 — 데미지 스킵(폭발 연출은 호출부에서 별도 처리).
+        if (!_hasDamageAuthority)
+        {
+            return;
+        }
         if (target == null)
         {
             return;

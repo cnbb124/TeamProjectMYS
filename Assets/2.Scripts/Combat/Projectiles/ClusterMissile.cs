@@ -99,6 +99,9 @@ public class ClusterMissile : Missile
 			// (WeaponSystem이 발사 미사일에 슬롯 데이터 주입하는 것과 동일한 일관성. _childrenMissileData는 위에서 null 체크됨.)
 			child.missileData = _childrenMissileData;
 			child.Init(transform.position, spreadDir, attacker, target);
+			// 자탄은 부모(클러스터)의 데미지 권위를 그대로 물려받음 — 복제된 클러스터(권위 없음)의 자탄이
+			// 데미지를 주면 이중적용되므로. Init이 권위를 true로 리셋하니 그 뒤에 덮어써야 함.
+			child.SetDamageAuthority(_hasDamageAuthority);
 		}
 
 		// 분열 지점에서 폭발 (explosionRadius범위)
