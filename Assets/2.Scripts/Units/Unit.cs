@@ -862,8 +862,10 @@ public abstract class Unit : MonoBehaviour, IDamageable
 
 	// 대상 소유자 클라에서만 실행되는 데미지 적용 RPC(위 라우터가 전송). 연출용 필드(사운드/VFX/attacker)는
 	// 넘기지 않고 소유자 로컬에서 재구성 — Phase1은 데미지/사망 정확도만 맞춘다(피격VFX·킬귀속·체력바동기화는 후속).
+	// public 필수 — PUN은 실제 컴포넌트(Enemy/Player 등 파생 타입)를 리플렉션해 [PunRPC]를 찾는데,
+	// base(Unit)에 private로 선언하면 파생 타입에서 안 잡혀 "RPC method not found" 에러가 난다.
 	[PunRPC]
-	private void RpcTakeDamage(int type, int damageAmount, bool isCritical,
+	public void RpcTakeDamage(int type, int damageAmount, bool isCritical,
 		bool ignoreArmor, float shieldDamageMultiplier, float aoeRadius, Vector3 hitPosition)
 	{
 		HitInfo info = new HitInfo
