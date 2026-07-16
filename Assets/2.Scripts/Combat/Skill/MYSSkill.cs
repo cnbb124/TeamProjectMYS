@@ -183,6 +183,10 @@ public class MYSSkill : ActiveSkill
 				}
 				break;
 		}
+
+		// 복제 발동(원격)이면 데미지 권위 없음 → 연출만. Init 뒤에 세팅(Init이 권위 플래그를 true로 리셋하므로).
+		// 클러스터 자탄은 폭발 시 부모 권위를 상속받는다(ClusterMissile.Split).
+		proj.SetDamageAuthority(_hasDamageAuthority);
 	}
 
 	// TargetsInLockonRange(거리순 정렬)에서 라운드로빈으로 1개씩 배정. 타겟 없으면 null(직진).

@@ -66,6 +66,13 @@ public class WarpSkill : ActiveSkill
 		}
 
 		_isWarping = false;
+
+		// 실제 이동은 소유자 클라에서만. 원격 복제는 워프 VFX만 재생하고 위치는 PhotonTransformView 스트리밍으로 따라온다.
+		if (!_hasDamageAuthority)
+		{
+			return;
+		}
+
 		Vector3 warpTargetPos = _owner.transform.position + _owner.transform.forward * WarpSkillData.warpDistance;
 		_owner.Teleport(warpTargetPos);
 	}

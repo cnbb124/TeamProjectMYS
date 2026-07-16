@@ -122,7 +122,8 @@ public class LaserSkill : ActiveSkill
 			System.Array.Sort(_hitBuffer, 0, count, _hitComparer);
 		}
 
-		bool doDamage = Time.time >= _lastDamageTime + Data.damageInterval;
+		// 데미지 판정은 소유자 클라에서만(_hasDamageAuthority). 원격 복제 빔은 시각(길이/막힘)만 갱신하고 데미지/카메라쉐이크는 스킵.
+		bool doDamage = _hasDamageAuthority && Time.time >= _lastDamageTime + Data.damageInterval;
 		if (doDamage)
 		{
 			_lastDamageTime = Time.time;

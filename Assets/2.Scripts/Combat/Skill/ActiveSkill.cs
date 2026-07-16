@@ -27,6 +27,10 @@ public abstract class ActiveSkill : Skill
 		_activeSkillData = skillData;
 	}
 
+	// 멀티 복제 발동(PlayRemote)로 켜진 '남의 연출용' 인스턴스는 false → 실제 데미지/이동은 안 하고 연출만.
+	// 로컬(내 소유) 발동은 true 유지. WeaponSystem/Projectile의 _hasDamageAuthority와 같은 개념.
+	protected bool _hasDamageAuthority = true;
+
 	private float _lastSkillUseTime;
 
 	// activeSkillData.maxUseCount로 매번 초기화. 0 이하(횟수 무제한)면 사용 안 함.
@@ -73,6 +77,17 @@ public abstract class ActiveSkill : Skill
 
 		UseSkill();
 		return true;
+	}
+
+	/// <summary>
+	/// 멀티 원격 복제 발동. 쿨다운/사용횟수 체크 없이(남 클라의 연출 재현) UseSkill을 그대로 돌리되,
+	/// 데미지 권위를 끈다 → 스폰되는 투사체/판정은 연출만 하고 실제 데미지는 소유자 클라에서만.
+	/// SkillSystem.RpcUseSkill이 호출.
+	/// </summary>
+	public void PlayRemote()
+	{
+		_hasDamageAuthority = false;
+		UseSkill();
 	}
 
 	/// <summary>

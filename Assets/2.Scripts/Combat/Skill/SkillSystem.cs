@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Photon.Pun;
 using UnityEngine;
 
 // ================================================================
@@ -91,10 +92,13 @@ public class SkillSystem : MonoBehaviour
 	private int _currentSlotIndex = 0;
 
 	private Unit _unit;
+	// 멀티 복제 전파용. PhotonView 없으면(싱글) null → 로컬 발동만. Unit 루트의 PhotonView를 공유.
+	private PhotonView _photonView;
 
 	private void Awake()
 	{
 		_unit = GetComponent<Unit>();
+		_photonView = GetComponent<PhotonView>();
 	}
 
 	private void Start()
@@ -171,7 +175,28 @@ public class SkillSystem : MonoBehaviour
 		{
 			return false;
 		}
-		return slots[slotIndex].TryUseSkill();
+
+		bool used = slots[slotIndex].TryUseSkill();
+
+		// 로컬(소유자)이 실제로 발동했으면 남 클라에 복제 전파(연출용). WeaponSystem.RpcShoot와 동일 패턴.
+		// 싱글(PhotonView 없음)이거나 룸 밖이면 전파 안 함.
+		if (used && _photonView != null && _photonView.IsMine && PhotonNetwork.InRoom)
+		{
+			_photonView.RPC(nameof(RpcUseSkill), RpcTarget.Others, slotIndex);
+		}
+
+		return used;
+	}
+
+	// 남 클라에서 수신 — 쿨다운 체크 없이 해당 슬롯 스킬을 연출용으로 복제 발동(데미지 권위 없음).
+	[PunRPC]
+	private void RpcUseSkill(int slotIndex)
+	{
+		if (!IsValidIndex(slotIndex) || slots[slotIndex] == null)
+		{
+			return;
+		}
+		slots[slotIndex].PlayRemote();
 	}
 
 	public float GetCooldownRatio(int slotIndex)
