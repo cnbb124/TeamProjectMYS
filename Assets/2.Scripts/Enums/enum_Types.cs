@@ -91,11 +91,12 @@ public enum SOUND_TYPE
 	BGM_1F,             // 1층 배경음
 	BGM_B2,             // 지하2층배경음
 	BGM_MAIN,			// 메인화면
-	BGM_STAGE1,			// 스테이지1 현재로선 배틀맵이 하나이므로 배틀맵에 사용
+	BGM_STAGE1,// 스테이지1 현재로선 배틀맵이 하나이므로 배틀맵에 사용
+	BGM_STAGE2,
 	BGM_STATION,		// 스테이션
 	BGM_GAMEOVER,		// 게임오버
 	BGM_BOSS,			// 보스전(보스 등장 시 전환)
-
+	
 
 	//UI관련 200번대
 
@@ -173,6 +174,7 @@ public enum SCENE_TYPE
 	MULTIPLAYER = 25,   // ← 추가 (멀티 대기실 씬)
 	MAP_SELECT = 30,   // ← 추가 (맵 선택 화면)
 	STAGE1 = 50,   // ← 기존 인덱스 밀릴 수 있음
+	//STAGE2,
 
 	GAME_OVER = 999,   // ← 기존 인덱스 밀릴 수 있음
 }

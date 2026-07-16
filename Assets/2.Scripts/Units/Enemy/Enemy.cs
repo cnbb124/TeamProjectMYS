@@ -70,28 +70,30 @@ public class Enemy : Unit
 	[Tooltip("후방 판정 시 발사를 건너뛸 확률 (0~1). 0이면 후방 페널티 없음.")]
 	[Range(0f, 1f)]
 	public float rearAttackSkipChance = 0.7f;
-	
 
-    
 
-    
 
-    protected Transform _target;
-    // _target의 Velocity(Rigidbody.velocity) 참조용. UpdateTarget()에서 _target과 함께 갱신.
-    protected Unit _targetUnit;
+	protected Vector3 _spawnPosition;
 
-    protected Vector3 _spawnPosition;
 
-    private float _targetUpdateTimer = 0f;
-    private const float TargetUpdateInterval = 1f;
 
-    // 범용 AI 사용 여부. EnemyWorker처럼 자체 AI를 쓰는 자식은 false로 override.
-    protected virtual bool UseGenericAI => true;
+    // ======================AI설정용============================
+	protected Transform _target;
+	// _target의 Velocity(Rigidbody.velocity) 참조용. UpdateTarget()에서 _target과 함께 갱신.
+	protected Unit _targetUnit;
+	private float _targetUpdateTimer = 0f;
+	private const float TargetUpdateInterval = 1f;
+	protected virtual bool UseGenericAI => true;
 
-    // 멀티 소유권 판정. PhotonView 없으면(싱글 씬배치/오프라인 등) 항상 내 것 → 기존 단일 동작 그대로.
-    // PhotonNetwork.Instantiate로 스폰된 적만 PhotonView를 가지며 Master가 소유(IsMine=true)해 AI를 돌린다.
-    // 남(비Master) 클라에선 IsMine=false라 AI를 안 돌리고, 위치는 PhotonTransformView 동기화로만 갱신됨.
-    private PhotonView _photonView;
+	// 범용 AI 사용 여부. EnemyWorker처럼 자체 AI를 쓰는 자식은 false로 override.
+
+
+	// =========================포톤============================
+
+	// 멀티 소유권 판정. PhotonView 없으면(싱글 씬배치/오프라인 등) 항상 내 것 → 기존 단일 동작 그대로.
+	// PhotonNetwork.Instantiate로 스폰된 적만 PhotonView를 가지며 Master가 소유(IsMine=true)해 AI를 돌린다.
+	// 남(비Master) 클라에선 IsMine=false라 AI를 안 돌리고, 위치는 PhotonTransformView 동기화로만 갱신됨.
+	private PhotonView _photonView;
     protected bool IsMine => _photonView == null || _photonView.IsMine;
 
     protected override void Awake()
@@ -111,21 +113,51 @@ public class Enemy : Unit
         UnitManager.Instance?.RegisterEnemy(this);
     }
 
-    // 부모(전함/터렛 거치대 등)가 SetActive(false)되면 자식 터렛도 같이 비활성화되는데,
-    // 그 경우 자식 자신의 Die()는 호출되지 않아서 UnitManager 등록이 안 풀리는 문제가 있었음 —
-    // OnDisable은 비활성화 원인(자기 사망 vs 부모 cascade) 무관하게 항상 호출되므로 여기서 처리.
-    protected override void OnDisable()
-    {
-        base.OnDisable();
-        UnitManager.Instance?.UnregisterEnemy(this);
-    }
+	protected override void Start()
+	{
+		base.Start();
+		UpdateTarget();
+		_spawnPosition = transform.position;
+	}
 
-    protected override void Start()
-    {
-        base.Start();
-        UpdateTarget();
-        _spawnPosition = transform.position;
-    }
+	protected override void Update()
+	{
+		base.Update();
+		//일시정지중,죽었을시, AI사용안할시, 남(비Master) 소유 적일시 AI사용안함
+		if (ShouldPause || CurState == UNIT_STATE.DIE || !UseGenericAI || !IsMine)
+		{
+			return;
+		}
+		UpdateAI();
+	}
+	protected override void FixedUpdate()
+	{
+		base.FixedUpdate();
+		// 물리 스핀 방지 — 프리즈(일시정지/게임오버) 중이 아닐 때만.
+		// base.FixedUpdate()가 ShouldPause 시 isKinematic=true로 얼리는데, kinematic 바디엔
+		// angularVelocity 설정이 불가(에러)하고, 어차피 프리즈 중엔 물리 스핀도 안 생겨 리셋이 불필요.
+		if (_rb != null && !_rb.isKinematic) _rb.angularVelocity = Vector3.zero;
+		if (ShouldPause || CurState == UNIT_STATE.DIE || !UseGenericAI)
+		{
+			return;
+		}
+	}
+
+
+
+
+	// 1초마다 _target 갱신. 자식이 base.UpdateAI() 호출로 공유.
+	protected virtual void UpdateAI()
+	{
+		_targetUpdateTimer -= Time.deltaTime;
+		if (_targetUpdateTimer <= 0f)
+		{
+			UpdateTarget();
+			_targetUpdateTimer = TargetUpdateInterval;
+		}
+	}
+
+
 
     // 위치를 직접 배치하는 스폰 호출부(SpawnManager 등)가 transform.position을 옮긴 직후 호출.
     // OnEnable은 Get() 직후(=재배치 이전) 호출돼서 거기서 캡처하면 죽기 전 위치가 잡혀버림 —
@@ -135,108 +167,11 @@ public class Enemy : Unit
         _spawnPosition = transform.position;
     }
 
-    // 사망 후 풀 반납까지 남은 시간. Die()에서 세팅, OnDying()에서 카운트다운.
-    // ※ Die()를 오버라이드하는 서브클래스는 반드시 base.Die()를 호출할 것 — 그래야 이 반납 타이머가 세팅됨.
-    private float _deathReturnTimer;
+    
 
-    protected override void Die()
-    {
-        // 보상은 min~max 범위에서 랜덤 (같은 적이라도 매번 조금씩 다르게). Random.Range(int)는 max 미포함이라 +1.
-        int exp  = Random.Range(expRewardMin,  expRewardMax  + 1);
-        int gold = Random.Range(goldRewardMin, goldRewardMax + 1);
-        // 킬카운트 + 보상(경험치/골드)은 GameManager가 killer(_lastAttacker) 기준으로 분배.
-        GameManager.Instance?.OnEnemyKilled(_lastAttacker, exp, gold);
+   
 
-        // 아이템 드랍 — dropChance 확률로 발생. 성공 시 후보 풀 타입 중 랜덤 하나를 꺼내 죽은 자리에 배치.
-        // (Random.value는 0~1이라 dropChance=1이면 사실상 항상, 0이면 절대 안 나옴)
-        // 픽업은 프리팹에 직렬화된 ItemData로 OnEnable에서 자기 초기화하므로 여기선 Init 불필요.
-        if (dropPoolTypes != null && dropPoolTypes.Length > 0 && Random.value < dropChance)
-        {
-            POOL_TYPE dropType = dropPoolTypes[Random.Range(0, dropPoolTypes.Length)];
-            // 아이템 드랍도 네트워크 오브젝트 — Master가 스폰하면 전원에게 동기화(어댑터가 로컬 풀로 라우팅).
-            // Die()는 적 소유자(Master, 오프라인은 자기 자신)에서만 도달하므로 여기서 스폰하면 됨.
-            // 드랍 픽업 프리팹에도 PhotonView 필요(적과 동일).
-            if (_photonView != null)
-            {
-                PhotonNetwork.Instantiate(dropType.ToString(), transform.position, Quaternion.identity);
-            }
-            else
-            {
-                // 비네트워크(PhotonView 없는 싱글 씬배치 적 등)는 기존처럼 로컬 풀 드랍.
-                GameObject drop = PoolManager.Instance?.Get(dropType);
-                if (drop != null)
-                {
-                    drop.transform.SetPositionAndRotation(transform.position, Quaternion.identity);
-                }
-            }
-            
-        }
-
-        // 풀 반납(SetActive(false))은 사망 애니가 재생되도록 지연 — OnDying()의 타이머로 처리.
-        _deathReturnTimer = _deathSequenceDuration;
-        base.Die();
-    }
-
-    // DIE 상태 동안 매 프레임 호출(Unit.UpdateFSM). 사망 애니 시간만큼 지난 뒤 풀에 반납.
-    // Update(FSM) 기반이라 일시정지(ShouldPause) 중엔 자동으로 멈춤 —
-    // 코루틴 WaitForSeconds는 timeScale 기준이라 우리의 플래그 방식 일시정지를 무시해 부적합했음.
-    protected override void OnDying()
-    {
-        _deathReturnTimer -= Time.deltaTime;
-        if (_deathReturnTimer <= 0f)
-        {
-            // 네트워크 적(PhotonView 있음)은 소유자(Master)가 PhotonNetwork.Destroy로 전원에게서 반납한다.
-            // (PhotonPoolAdapter가 실제 파괴 대신 로컬 풀 SetActive(false)로 라우팅 → OnDisable에서 Unregister)
-            // 비네트워크 적(PhotonView 없음 — 싱글 씬배치 등)은 기존처럼 로컬 풀 반납.
-            if (_photonView != null)
-            {
-                if (_photonView.IsMine)
-                {
-                    PhotonNetwork.Destroy(gameObject);
-                }
-            }
-            else
-            {
-                // (SetActive(false) → OnDisable() → UnitManager.UnregisterEnemy 자동 호출됨)
-                PoolManager.Instance?.Return(gameObject);
-            }
-        }
-    }
-
-    protected override void Update()
-    {
-        base.Update();
-        //일시정지중,죽었을시, AI사용안할시, 남(비Master) 소유 적일시 AI사용안함
-        if (ShouldPause || CurState == UNIT_STATE.DIE || !UseGenericAI || !IsMine)
-        {
-            return;
-        }
-        UpdateAI();
-    }
-
-    protected override void FixedUpdate()
-    {
-        base.FixedUpdate();
-        // 물리 스핀 방지 — 프리즈(일시정지/게임오버) 중이 아닐 때만.
-        // base.FixedUpdate()가 ShouldPause 시 isKinematic=true로 얼리는데, kinematic 바디엔
-        // angularVelocity 설정이 불가(에러)하고, 어차피 프리즈 중엔 물리 스핀도 안 생겨 리셋이 불필요.
-        if (_rb != null && !_rb.isKinematic) _rb.angularVelocity = Vector3.zero;
-        if (ShouldPause || CurState == UNIT_STATE.DIE || !UseGenericAI)
-        {
-            return;
-        }
-    }
-
-    // 1초마다 _target 갱신. 자식이 base.UpdateAI() 호출로 공유.
-    protected virtual void UpdateAI()
-    {
-        _targetUpdateTimer -= Time.deltaTime;
-        if (_targetUpdateTimer <= 0f)
-        {
-            UpdateTarget();
-            _targetUpdateTimer = TargetUpdateInterval;
-        }
-    }
+    
 
     // 자식이 override해 발사 종류 지정.
     protected virtual void ShootWeapons() { }
@@ -372,4 +307,80 @@ public class Enemy : Unit
             _rb.velocity = _rb.velocity.normalized * maxSpeed;
         }
     }
+	// 부모(전함/터렛 거치대 등)가 SetActive(false)되면 자식 터렛도 같이 비활성화되는데,
+	// 그 경우 자식 자신의 Die()는 호출되지 않아서 UnitManager 등록이 안 풀리는 문제가 있었음 —
+	// OnDisable은 비활성화 원인(자기 사망 vs 부모 cascade) 무관하게 항상 호출되므로 여기서 처리.
+	protected override void OnDisable()
+	{
+		base.OnDisable();
+		UnitManager.Instance?.UnregisterEnemy(this);
+	}
+
+	// 사망 후 풀 반납까지 남은 시간. Die()에서 세팅, OnDying()에서 카운트다운.
+	// ※ Die()를 오버라이드하는 서브클래스는 반드시 base.Die()를 호출할 것 — 그래야 이 반납 타이머가 세팅됨.
+	private float _deathReturnTimer;
+
+	protected override void Die()
+	{
+		// 보상은 min~max 범위에서 랜덤 (같은 적이라도 매번 조금씩 다르게). Random.Range(int)는 max 미포함이라 +1.
+		int exp = Random.Range(expRewardMin, expRewardMax + 1);
+		int gold = Random.Range(goldRewardMin, goldRewardMax + 1);
+		// 킬카운트 + 보상(경험치/골드)은 GameManager가 killer(_lastAttacker) 기준으로 분배.
+		GameManager.Instance?.OnEnemyKilled(_lastAttacker, exp, gold);
+
+		// 아이템 드랍 — dropChance 확률로 발생. 성공 시 후보 풀 타입 중 랜덤 하나를 꺼내 죽은 자리에 배치.
+		// (Random.value는 0~1이라 dropChance=1이면 사실상 항상, 0이면 절대 안 나옴)
+		// 픽업은 프리팹에 직렬화된 ItemData로 OnEnable에서 자기 초기화하므로 여기선 Init 불필요.
+		if (dropPoolTypes != null && dropPoolTypes.Length > 0 && Random.value < dropChance)
+		{
+			POOL_TYPE dropType = dropPoolTypes[Random.Range(0, dropPoolTypes.Length)];
+			// 아이템 드랍도 네트워크 오브젝트 — Master가 스폰하면 전원에게 동기화(어댑터가 로컬 풀로 라우팅).
+			// Die()는 적 소유자(Master, 오프라인은 자기 자신)에서만 도달하므로 여기서 스폰하면 됨.
+			// 드랍 픽업 프리팹에도 PhotonView 필요(적과 동일).
+			if (_photonView != null)
+			{
+				PhotonNetwork.Instantiate(dropType.ToString(), transform.position, Quaternion.identity);
+			}
+			else
+			{
+				// 비네트워크(PhotonView 없는 싱글 씬배치 적 등)는 기존처럼 로컬 풀 드랍.
+				GameObject drop = PoolManager.Instance?.Get(dropType);
+				if (drop != null)
+				{
+					drop.transform.SetPositionAndRotation(transform.position, Quaternion.identity);
+				}
+			}
+
+		}
+
+		// 풀 반납(SetActive(false))은 사망 애니가 재생되도록 지연 — OnDying()의 타이머로 처리.
+		_deathReturnTimer = _deathSequenceDuration;
+		base.Die();
+	}
+
+	// DIE 상태 동안 매 프레임 호출(Unit.UpdateFSM). 사망 애니 시간만큼 지난 뒤 풀에 반납.
+	// Update(FSM) 기반이라 일시정지(ShouldPause) 중엔 자동으로 멈춤 —
+	// 코루틴 WaitForSeconds는 timeScale 기준이라 우리의 플래그 방식 일시정지를 무시해 부적합했음.
+	protected override void OnDying()
+	{
+		_deathReturnTimer -= Time.deltaTime;
+		if (_deathReturnTimer <= 0f)
+		{
+			// 네트워크 적(PhotonView 있음)은 소유자(Master)가 PhotonNetwork.Destroy로 전원에게서 반납한다.
+			// (PhotonPoolAdapter가 실제 파괴 대신 로컬 풀 SetActive(false)로 라우팅 → OnDisable에서 Unregister)
+			// 비네트워크 적(PhotonView 없음 — 싱글 씬배치 등)은 기존처럼 로컬 풀 반납.
+			if (_photonView != null)
+			{
+				if (_photonView.IsMine)
+				{
+					PhotonNetwork.Destroy(gameObject);
+				}
+			}
+			else
+			{
+				// (SetActive(false) → OnDisable() → UnitManager.UnregisterEnemy 자동 호출됨)
+				PoolManager.Instance?.Return(gameObject);
+			}
+		}
+	}
 }
