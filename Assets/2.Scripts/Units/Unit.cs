@@ -854,19 +854,22 @@ public abstract class Unit : MonoBehaviour, IDamageable
 		{
 			_photonView.RPC(nameof(RpcTakeDamage), _photonView.Owner,
 				(int)info.type, info.damageAmount, info.isCritical,
-				info.ignoreArmor, info.shieldDamageMultiplier, info.aoeRadius, info.hitPosition);
+				info.ignoreArmor, info.shieldDamageMultiplier, info.aoeRadius, info.hitPosition,
+				(int)info.hitVfxType, (int)info.shieldHitVfxType, (int)info.hitSoundType);
 			return;
 		}
 		ApplyHitDamage(info);
 	}
 
-	// 대상 소유자 클라에서만 실행되는 데미지 적용 RPC(위 라우터가 전송). 연출용 필드(사운드/VFX/attacker)는
-	// 넘기지 않고 소유자 로컬에서 재구성 — Phase1은 데미지/사망 정확도만 맞춘다(피격VFX·킬귀속·체력바동기화는 후속).
+	// 대상 소유자 클라에서만 실행되는 데미지 적용 RPC(위 라우터가 전송). 피격 VFX/사운드 종류도 함께 전송해
+	// 소유자 화면에서 올바른 피격 연출이 나오게 한다 — 누락하면 수신부에서 enum 기본값 0(VFX_EXPLOSION_MISSILE)으로
+	// 재구성돼 총알 피격에도 폭발이 재생된다. attacker(킬 귀속)는 아직 미전송(후속).
 	// public 필수 — PUN은 실제 컴포넌트(Enemy/Player 등 파생 타입)를 리플렉션해 [PunRPC]를 찾는데,
 	// base(Unit)에 private로 선언하면 파생 타입에서 안 잡혀 "RPC method not found" 에러가 난다.
 	[PunRPC]
 	public void RpcTakeDamage(int type, int damageAmount, bool isCritical,
-		bool ignoreArmor, float shieldDamageMultiplier, float aoeRadius, Vector3 hitPosition)
+		bool ignoreArmor, float shieldDamageMultiplier, float aoeRadius, Vector3 hitPosition,
+		int hitVfxType, int shieldHitVfxType, int hitSoundType)
 	{
 		HitInfo info = new HitInfo
 		{
@@ -877,6 +880,9 @@ public abstract class Unit : MonoBehaviour, IDamageable
 			shieldDamageMultiplier = shieldDamageMultiplier,
 			aoeRadius = aoeRadius,
 			hitPosition = hitPosition,
+			hitVfxType = (EFFECT_TYPE)hitVfxType,
+			shieldHitVfxType = (EFFECT_TYPE)shieldHitVfxType,
+			hitSoundType = (SOUND_TYPE)hitSoundType,
 		};
 		ApplyHitDamage(info);
 	}
