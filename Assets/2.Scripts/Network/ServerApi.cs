@@ -50,8 +50,8 @@ public class ServerApi : MonoBehaviour
     // 설정
     // =====================================================================
     [Header("━━━━━━ 서버 주소 ━━━━━━")]
-    [Tooltip("API 서버 주소. 내 PC 테스트 = localhost, 미니PC 배포 후 = 그 PC의 IP (예: http://192.168.0.50:5080)")]
-    [SerializeField] private string serverUrl = "http://192.168.0.8:5080";
+    [Tooltip("API 서버 주소. 학원 내부망만 쓸 땐 http://192.168.0.8:5080, 집 등 외부에서도 접속하려면 Tailscale IP(http://100.72.242.69:5080) 사용 — 접속하는 사람 전원이 Tailscale 설치 필요")]
+    [SerializeField] private string serverUrl = "http://100.72.242.69:5080";
 
     [Header("━━━━━━ 자동 로그인 (임시) ━━━━━━")]
     [Tooltip("로그인 UI가 생기기 전까지의 임시 기능. 켜두면 게임 시작 시 아래 계정으로 자동 로그인 (계정 없으면 자동 가입)")]
