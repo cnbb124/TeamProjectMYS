@@ -4,15 +4,15 @@ using Photon.Realtime;
 using UnityEngine;
 using UnityEngine.UI;
 
-// 맵 선택 UI. 멀티에서는 방장(Master)만 맵을 고를 수 있고, 선택 시 RaiseEvent로 전원이 동시에 같은 스테이지로 진입한다.
-// (WaitingRoomUI의 시작 버튼 호스트 게이팅과 동일한 패턴 — 각자 따로 진입하던 임시 동작을 호스트 권위로 교체.)
-// 맵 버튼의 onClick은 코드(Awake)에서 연결한다 → 인스펙터 onClick은 비워둘 것.
+// 맵 선택 UI. 멀티에서는 방장(Master)만 맵을 고를 수 있고, 선택 시 RaiseEvent로 전원이 동시에 같은 스테이지로 진입함.
+// (WaitingRoomUI의 시작 버튼 호스트 게이팅과 동일한 패턴 — 각자 따로 진입하던 임시 동작을 호스트 권위로 교체함.)
+// 맵 버튼의 onClick은 코드(Awake)에서 연결함 → 인스펙터 onClick은 비워둘 것.
 public class MapSelectorUI : MonoBehaviourPunCallbacks, IOnEventCallback
 {
 	private const byte MapSelectEventCode = 72; // WaitingRoomUI(71)와 겹치지 않는 별도 코드
 
 	[Header("맵 버튼 (방장만 활성)")]
-	[Tooltip("여기 드래그한 버튼의 onClick은 코드(Awake)에서 연결한다 → 인스펙터 onClick은 비워둘 것(중복 호출 방지). 비방장에겐 interactable=false로 잠긴다.")]
+	[Tooltip("여기 드래그한 버튼의 onClick은 코드(Awake)에서 연결함 → 인스펙터 onClick은 비워둘 것(중복 호출 방지). 비방장에겐 interactable=false로 잠김.")]
 	[SerializeField] private Button map1Button;
 	[SerializeField] private Button map2Button;
 
@@ -20,7 +20,7 @@ public class MapSelectorUI : MonoBehaviourPunCallbacks, IOnEventCallback
 
 	private void Awake()
 	{
-		// onClick을 코드에서 연결(WaitingRoomUI.startButton과 동일 방식) — 인스펙터 onClick은 비워둔다.
+		// onClick을 코드에서 연결(WaitingRoomUI.startButton과 동일 방식) — 인스펙터 onClick은 비워둠.
 		if (map1Button != null)
 		{
 			map1Button.onClick.AddListener(OnClickButtonMap1);
@@ -69,7 +69,7 @@ public class MapSelectorUI : MonoBehaviourPunCallbacks, IOnEventCallback
 		//RequestMapStart("STAGE2");
 	}
 
-	// 방장만 실제 진입을 트리거한다. 멀티면 RaiseEvent로 전원 동시 진입, 싱글(오프라인)이면 로컬 진입.
+	// 방장만 실제 진입을 트리거함. 멀티면 RaiseEvent로 전원 동시 진입, 싱글(오프라인)이면 로컬 진입.
 	private void RequestMapStart(string sceneName)
 	{
 		if (isStartingGame || string.IsNullOrWhiteSpace(sceneName))
@@ -93,7 +93,7 @@ public class MapSelectorUI : MonoBehaviourPunCallbacks, IOnEventCallback
 			return;
 		}
 
-		// 멀티 → 방장이 전원에게 브로드캐스트. 자기 자신도 OnEvent로 받아서 함께 로드한다.
+		// 멀티 → 방장이 전원에게 브로드캐스트. 자기 자신도 OnEvent로 받아서 함께 로드함.
 		RaiseEventOptions eventOptions = new RaiseEventOptions
 		{
 			Receivers = ReceiverGroup.All
@@ -143,7 +143,7 @@ public class MapSelectorUI : MonoBehaviourPunCallbacks, IOnEventCallback
 		GameManager.Instance.LoadScene(SCENE_TYPE.LOADING_SEQUENCE);
 	}
 
-	// 방장만 맵 버튼 활성. 싱글(오프라인)은 LocalPlayer가 곧 Master라 항상 활성.
+	// 방장만 맵 버튼 활성. 싱글(오프라인)은 LocalPlayer가 곧 Master라 항상 활성됨.
 	private void RefreshButtons()
 	{
 		bool canSelect = !PhotonNetwork.InRoom || PhotonNetwork.IsMasterClient;

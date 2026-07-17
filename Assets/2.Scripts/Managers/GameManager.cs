@@ -266,11 +266,27 @@ public class GameManager : MonoBehaviour
         SceneManager.sceneLoaded -= OnSceneLoaded;
     }
 
+    // playerRef를 IsMine(로컬) 플레이어로만 갱신함.
+    // 멀티에선 내 함선/남 함선이 DDOL로 씬을 넘어와 공존하므로 FindObjectOfType로 아무거나 잡으면
+    // HUD·카메라가 남 함선을 따라가는 버그가 남. 로컬을 못 찾으면(스폰 전) 덮어쓰지 않고 Player.Start의 자기등록에 맡김.
+    private void RefreshPlayerRefToLocal()
+    {
+        Player[] scenePlayers = FindObjectsOfType<Player>();
+        foreach (Player candidate in scenePlayers)
+        {
+            if (candidate != null && candidate.IsMine)
+            {
+                playerRef = candidate;
+                return;
+            }
+        }
+    }
+
     // 씬 로드 완료 시 자동 호출
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        // Player 레퍼런스 갱신
-        playerRef = FindObjectOfType<Player>();
+        // Player 레퍼런스 갱신 — 멀티에선 원격 함선(DDOL로 씬 넘어와 공존)을 잡지 않도록 IsMine인 로컬만 채운다.
+        RefreshPlayerRefToLocal();
 
         // BGM 재생
         PlaySceneBGM(scene.name);
@@ -297,7 +313,7 @@ public class GameManager : MonoBehaviour
     private IEnumerator RestoreAfterLoad(int slot)
     {
         yield return null; // Start() 단계 통과 대기
-        playerRef = FindObjectOfType<Player>();
+        RefreshPlayerRefToLocal();
         yield return LoadDataRoutine(slot, null); // 서버/로컬 로드(비동기) 완료까지 대기
     }
 
