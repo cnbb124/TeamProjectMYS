@@ -77,10 +77,10 @@ public class PartStatBonus
 public class PartData : ItemData
 {
     [Header("Part")]
-    public string partID;
+    //public string partID;// enum_ID로 변경해서 안씀
     public PART_TYPE partType;
 
-    [Header("장착시 기체에 붙일 프리펩, 툴팁확인")]
+    [Header("장착시 기체에 붙일 프리펩(비주얼), 툴팁확인")]
     [Tooltip("LAUNCHER류는 WeaponFirePos필수")]
     public GameObject partPrefab;
 

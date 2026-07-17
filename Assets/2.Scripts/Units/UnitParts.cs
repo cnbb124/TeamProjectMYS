@@ -34,8 +34,11 @@ public class PartSlotEntry
     public PartData equippedPart;
     // 장착 시 Instantiate된 파츠 오브젝트 (런타임 전용, 직렬화 제외)
     [System.NonSerialized] public GameObject spawnedInstance;
-    // 파츠 현재 HP (런타임 전용)
-    [System.NonSerialized] public int curPartHp;
+    [Tooltip("이 파츠의 현재 HP. 플레이 중 자동으로 갱신됨(여기 편집한 값은 무시됨). 실시간 확인용.")]
+    public int curPartHp;
+    // 지금 이 파츠가 유닛 스탯에 반영해둔 비율(0=파괴, 0.5=절반, 1=온전).
+    // HP가 바뀌면 이 값과의 차이만큼만 유닛 스탯에 더하거나 빼서 갱신함.
+    [System.NonSerialized] public float appliedStatRatio;
 }
 
 public class UnitParts : MonoBehaviour
@@ -97,6 +100,9 @@ public class UnitParts : MonoBehaviour
             if (slot.equippedPart != null)
             {
                 slot.curPartHp = slot.equippedPart.maxPartHp;
+                // 풀에서 다시 꺼내 쓸 때 HP가 가득 찬 상태로 돌아오므로, 스탯도 온전한 값으로 되돌림
+                // (이전에 죽기 전 깎였던 스탯이 남아있지 않게).
+                RefreshPartStat(slot, GetHpStatRatio(slot));
             }
         }
     }
@@ -117,8 +123,8 @@ public class UnitParts : MonoBehaviour
                 continue;
             }
             SpawnPartPrefab(slot);
-            ApplyStatBonuses(slot.equippedPart, 1);
             slot.curPartHp = slot.equippedPart.maxPartHp;
+            RefreshPartStat(slot, GetHpStatRatio(slot));
         }
 
         // Unit.Start()와의 실행순서가 보장되지 않아 cur=max 초기화가 위 보너스 적용 전에 끝났을 수 있음.
@@ -189,7 +195,7 @@ public class UnitParts : MonoBehaviour
             if (slot.equippedPart != null)
             {
                 DestroyPartPrefab(slot);
-                ApplyStatBonuses(slot.equippedPart, -1);
+                RefreshPartStat(slot, 0f);
                 slot.equippedPart = null;
             }
         }
@@ -207,8 +213,8 @@ public class UnitParts : MonoBehaviour
 
         slot.equippedPart = newPart;
         SpawnPartPrefab(slot);
-        ApplyStatBonuses(newPart, 1);
         slot.curPartHp = newPart.maxPartHp;
+        RefreshPartStat(slot, GetHpStatRatio(slot));
 
         if (newPart.partType == PART_TYPE.FRAME)
         {
@@ -245,7 +251,7 @@ public class UnitParts : MonoBehaviour
         if (slot.equippedPart != null)
         {
             DestroyPartPrefab(slot);
-            ApplyStatBonuses(slot.equippedPart, -1);
+            RefreshPartStat(slot, 0f);
         }
 
         slot.equippedPart = newPart;
@@ -253,8 +259,8 @@ public class UnitParts : MonoBehaviour
         if (newPart != null)
         {
             SpawnPartPrefab(slot);
-            ApplyStatBonuses(newPart, 1);
             slot.curPartHp = newPart.maxPartHp;
+            RefreshPartStat(slot, GetHpStatRatio(slot));
         }
 
         // 프레임 교체 시 슬롯 재구성
@@ -279,7 +285,7 @@ public class UnitParts : MonoBehaviour
         if (slot.equippedPart != null)
         {
             DestroyPartPrefab(slot);
-            ApplyStatBonuses(slot.equippedPart, -1);
+            RefreshPartStat(slot, 0f);
         }
 
         slot.equippedPart = newPart;
@@ -287,8 +293,8 @@ public class UnitParts : MonoBehaviour
         if (newPart != null)
         {
             SpawnPartPrefab(slot);
-            ApplyStatBonuses(newPart, 1);
             slot.curPartHp = newPart.maxPartHp;
+            RefreshPartStat(slot, GetHpStatRatio(slot));
         }
     }
 
@@ -359,7 +365,7 @@ public class UnitParts : MonoBehaviour
             if (slot.equippedPart != null)
             {
                 DestroyPartPrefab(slot);
-                ApplyStatBonuses(slot.equippedPart, -1);
+                RefreshPartStat(slot, 0f);
                 slot.equippedPart = null;
             }
 
@@ -502,26 +508,69 @@ public class UnitParts : MonoBehaviour
         return transform.position;
     }
 
-    // 파츠 HP 감소. 향후 HP 티어 변화 처리 위치.
+    // 파츠 HP를 깎고, 줄어든 HP에 맞춰 그 파츠의 스탯 기여도 다시 맞춤.
     private void ApplyPartDamage(PartSlotEntry slot, int damage)
     {
         slot.curPartHp = Mathf.Max(0, slot.curPartHp - damage);
+        RefreshPartStat(slot, GetHpStatRatio(slot));
     }
 
-    // ================== [스탯 보너스] ==================
+    // ================== [파츠 HP에 따른 스탯 조정] ==================
 
-    // multiplier: +1 = 장착, -1 = 해제
-    private void ApplyStatBonuses(PartData part, int multiplier)
+    // 파츠 HP에 따라 스탯을 얼마나 줄지 비율로 알려줌.
+    // HP 50% 초과면 온전(1), 50% 이하면 절반(0.5), HP 0(파괴)이면 스탯 없음(0).
+    // maxPartHp가 0인 파츠(FRAME처럼 HP 개념이 없는 것)는 항상 온전(1).
+    private float GetHpStatRatio(PartSlotEntry slot)
     {
-        if (_unit == null)
+        if (slot.equippedPart == null || slot.equippedPart.maxPartHp <= 0)
+        {
+            return 1f;
+        }
+        if (slot.curPartHp <= 0)
+        {
+            return 0f;
+        }
+        float ratio = (float)slot.curPartHp / slot.equippedPart.maxPartHp;
+        return ratio > 0.5f ? 1f : 0.5f;
+    }
+
+    // 이 파츠가 유닛 스탯에 넣는 양을 targetRatio(0/0.5/1)에 맞춰 갱신함.
+    // 최대실드/최대부스트 같은 값은 여러 파츠가 같이 더하는 공용 값이라, 전부 다시 계산하지 않고
+    // '이 파츠가 이전에 넣어둔 양'과의 차이만큼만 더하거나 뺌.
+    // 장착(가득 넣기)·피격이나 수리(HP만큼)·해제(0으로 빼기)가 전부 이 함수 하나로 처리됨.
+    private void RefreshPartStat(PartSlotEntry slot, float targetRatio)
+    {
+        if (_unit == null || slot.equippedPart == null)
         {
             return;
         }
-
-        foreach (PartStatBonus bonus in part.statBonuses)
+        float change = targetRatio - slot.appliedStatRatio;
+        if (!Mathf.Approximately(change, 0f))
         {
-            float val = bonus.value * multiplier;
-            ApplySingleBonus(bonus.statType, val);
+            foreach (PartStatBonus bonus in slot.equippedPart.statBonuses)
+            {
+                ApplySingleBonus(bonus.statType, bonus.value * change);
+            }
+            slot.appliedStatRatio = targetRatio;
+        }
+        // 최대치 스탯(실드/부스트/아머)이 줄었으면 현재값이 그 위로 튀지 않게 맞춤.
+        ClampCurrentToMax();
+    }
+
+    // 최대치가 줄었을 때 현재값이 그 위로 튀지 않게 맞춤. HP는 사망 유발 위험이라 건드리지 않음.
+    private void ClampCurrentToMax()
+    {
+        if (_unit.curShieldRemaining > _unit.maxShieldCapacity)
+        {
+            _unit.curShieldRemaining = _unit.maxShieldCapacity;
+        }
+        if (_unit.curBoostRemaining > _unit.maxBoostCapacity)
+        {
+            _unit.curBoostRemaining = _unit.maxBoostCapacity;
+        }
+        if (_unit.curArmorRemaining > _unit.maxArmor)
+        {
+            _unit.curArmorRemaining = _unit.maxArmor;
         }
     }
 

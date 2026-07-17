@@ -938,14 +938,18 @@ public abstract class Unit : MonoBehaviour, IDamageable, IPunObservable
 		{
 			StopCoroutine(_shieldRegenCoroutine);
 		}
+		// 실드가 막아주는 동안엔 파츠가 안 깎임 — 데미지 적용 '전' 실드 유무로 판정.
+		bool shieldWasUp = curShieldRemaining > 0;
+
 		//피격 데미지수치필요(실드있을시, 없을시),실제로 데미지받음
 		calculTakeDamage(damageAmount, info.ignoreArmor, info.shieldDamageMultiplier);
 
 		// 피격으로 실드가 0이 됐을수있으니 콜라이더 상태 갱신
 		UpdateShieldHitboxState();
 
-		// 파츠 피격 — FRAME HP는 본체가 담당하므로 FRAME 제외한 파츠만 처리
-		if (_unitParts != null)
+		// 파츠 피격 — FRAME HP는 본체가 담당하므로 FRAME 제외한 파츠만 처리.
+		// 실드가 켜져 있었으면 실드가 대신 막은 것으로 보고 파츠는 안 깎음.
+		if (_unitParts != null && !shieldWasUp)
 		{
 
 			//범위딜일시
