@@ -13,30 +13,33 @@ using UnityEngine;
 // WeaponSystem.Shoot()
 //   └── Init(startPos, dir, attacker)      발사 시 초기화 (자식 override 시 base.Init() 필수)
 //         Update()                          매 프레임 이동거리 누적 → maxRange 도달 시 OnMaxRange()
-//         OnTriggerEnter(Collider other)    HitBox 레이어 충돌 감지 → OnHit() 호출
-//           └── OnHit(Collider other)       피격 처리 (자식에서 override)
+//         OnTriggerEnter(Collider other)    HitBox 레이어 충돌 감지 → 대상 조회 1회 → HitTarget 만들어 OnHit() 호출
+//           └── OnHit(HitTarget hit)       피격 처리 (자식에서 override)
 //                 └── ApplyDamage(...)      HitInfo 생성 → target.TakeDamage()
 //                       └── ReturnToPool() 투사체 풀 반납 (소멸은 항상 이걸로)
+//
+// 대상 조회는 OnTriggerEnter에서 IHittable로 딱 한 번만 함 — IDamageable이 IHittable을 상속하므로
+// 유닛/환경이 한 번에 잡히고, 데미지 대상인지는 HitTarget 안에서 캐스트로 갈림.
+//   IDamageable 있음 → 데미지 + (TakeDamage가 피격 반응까지 처리)
+//   IHittable만 있음 → 환경 오브젝트. 데미지 없이 피격 반응(사운드/VFX)만
 //
 // ================================================================
 // [자식 구현 시 override 포인트]
 // ================================================================
 // Init(startPos, dir, attacker)            초기화 추가 시 — base.Init() 반드시 첫 줄 호출
-// OnHit(Collider other)                    피격 시 동작 — ApplyDamage + 이펙트/사운드 + ReturnToPool
+// OnHit(HitTarget hit)                    피격 시 동작 — ApplyDamage + 이펙트/사운드 + ReturnToPool
 // OnMaxRange()                             사거리 초과 시 동작 — 기본은 ReturnToPool (폭발형은 Explode 추가)
 // OnDisable()                              풀 반납 시 정리 — base.OnDisable() 호출
 //
 // ================================================================
-// [ApplyDamage 3종류 오버로딩]
+// [ApplyDamage 2종류 오버로딩]
 // ================================================================
-// ApplyDamage(Collider, int, DAMAGE_TYPE)
-//   기본 단일 피격. OnTriggerEnter의 collider를 그대로 전달.
-//
-// ApplyDamage(IDamageable, Collider, int, DAMAGE_TYPE)
-//   스플래시 target을 직접 지정할 때 사용. 레거시. 현재사용안함
+// ApplyDamage(HitTarget, int, DAMAGE_TYPE)
+//   기본 단일 피격. OnTriggerEnter가 만든 HitTarget를 그대로 전달(대상 재조회 없음).
 //
 // ApplyDamage(IDamageable, Collider, int, DAMAGE_TYPE, Vector3 explosionCenter, float aoeRadius)
 //   범위피해 폭발 전용. 폭발 중심 좌표와 반경을 함께 전달해 파츠 범위 피격 처리.
+//   OverlapSphere로 찾은 대상마다 부르므로 target을 직접 받음.
 // ================================================================
 public abstract class Projectile : MonoBehaviour
 {
@@ -224,23 +227,28 @@ public abstract class Projectile : MonoBehaviour
             return;
         }
 
-        // 맞은 대상이 데미지를 받을 수 있는지 (Unit 한정 아님 - IDamageable 전부)
-        IDamageable target = other.GetComponentInParent<IDamageable>();
+        // 대상 조회는 여기서 한 번만. IDamageable이 IHittable을 상속하므로 이 한 번으로 유닛/환경이 다 잡힘.
+        // 데미지 대상인지는 HitTarget가 캐스트로 판별함(추가 조회 없음).
+        IHittable hittable = other.GetComponentInParent<IHittable>();
+        if (hittable == null)
+        {
+            return;
+        }
 
         // attacker는 풀 투사체(DDOL)가 쏜 유닛보다 오래 살아 이미 파괴됐을 수 있음.
         GameObject attackerGo = attacker != null ? attacker.gameObject : null;
 
-        //대상이 존재하고, 발사자 본인이 아닐 경우에만 OnHit 발생
-        if (target != null && (target as MonoBehaviour)?.gameObject != attackerGo)
+        //발사자 본인이 아닐 경우에만 OnHit 발생
+        if ((hittable as MonoBehaviour)?.gameObject != attackerGo)
         {
-            OnHit(other);
+            OnHit(new HitTarget(other, hittable, other.ClosestPoint(transform.position)));
         }
 
 
     }
 
     //온트리거 재정의할 함수들
-    protected virtual void OnHit(Collider other)
+    protected virtual void OnHit(HitTarget hit)
     {
         //디버그용
   //      IDamageable target = other.GetComponentInParent<IDamageable>();
@@ -256,11 +264,11 @@ public abstract class Projectile : MonoBehaviour
     /// <summary>
     /// 데미지 허용 메서드(온힛에서호출)
     ///  </summary>
-    /// <param name="targetCollider"> 피격대상의 collider정보</param>
+    /// <param name="hit"> OnTriggerEnter가 만든 피격 대상 정보</param>
     /// <param name="damage"> 계산된 최종 데미지</param>
     /// <param name="currentDmgType"> 데미지 타입정보</param>
     ///
-    protected void ApplyDamage(Collider targetCollider, int damage, DAMAGE_TYPE currentDmgType)
+    protected void ApplyDamage(in HitTarget hit, int damage, DAMAGE_TYPE currentDmgType)
     {
         // 복제탄(남의 발사 연출)은 데미지 판정 권위 없음 — 소멸/이펙트만 하고 데미지는 스킵.
         if (!_hasDamageAuthority)
@@ -268,17 +276,14 @@ public abstract class Projectile : MonoBehaviour
             return;
         }
 
-        IDamageable target = targetCollider.GetComponentInParent<IDamageable>();
-
-        // 데미지를 받을 수 없는 대상(벽 등)이면 데미지 로직 생략
-        if (target == null)
+        // 데미지를 안 받는 대상(환경 오브젝트 등)이면 데미지 로직 생략. 피격 반응은 호출부가 따로 처리함.
+        if (hit.damageable == null)
         {
-            Debug.Log("ApplyDamage : 피격 상대가 데미지 받지 않는 종류");
             return;
         }
 
         // 아군 타격 방지
-        if (IsSameTeam(target as Unit))
+        if (IsSameTeam(hit.damageable as Unit))
         {
             //Debug.Log("ApplyDamage 상대가 같은팀");
             return;
@@ -290,8 +295,8 @@ public abstract class Projectile : MonoBehaviour
             type = currentDmgType,
             damageAmount = damage,
             isCritical = _critical,
-            hitPosition = targetCollider.ClosestPoint(transform.position),
-            hitDiriection = (targetCollider.ClosestPoint(transform.position) - transform.position).normalized,
+            hitPosition = hit.point,
+            hitDiriection = (hit.point - transform.position).normalized,
             attacker = this.attacker != null ? this.attacker.gameObject : null,
             hitSoundType = this.hitSoundType,
             hitVfxType = this.hitVfxType,
@@ -300,7 +305,23 @@ public abstract class Projectile : MonoBehaviour
             shieldDamageMultiplier = this.shieldDamageMultiplier
         };
 
-        target.TakeDamage(hitInfo);
+        hit.damageable.TakeDamage(hitInfo);
+    }
+
+    /// <summary>
+    /// 데미지를 안 받는 환경 대상에 넘길 피격 정보. 데미지 관련 필드는 안 씀.
+    /// </summary>
+    protected HitInfo BuildHitInfo(in HitTarget hit)
+    {
+        return new HitInfo
+        {
+            type = dmgType,
+            hitPosition = hit.point,
+            hitDiriection = (hit.point - transform.position).normalized,
+            attacker = attacker != null ? attacker.gameObject : null,
+            hitVfxType = this.hitVfxType,
+            shieldHitVfxType = this.shieldHitVfxType,
+        };
     }
 
 

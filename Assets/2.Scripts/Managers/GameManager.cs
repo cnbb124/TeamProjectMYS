@@ -4,6 +4,7 @@ using System.IO;
 using Photon.Pun;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using PhotonHashtable = ExitGames.Client.Photon.Hashtable;
 
 // ================================================================
 // [외부 참조 가이드]
@@ -53,7 +54,7 @@ using UnityEngine.SceneManagement;
 public delegate void GameStateHandler(GAME_STATE state);
 public delegate void BossSpawnHandler();
 
-public class GameManager : MonoBehaviour
+public class GameManager : MonoBehaviourPunCallbacks
 {
     // =====================================================================
     // 싱글톤
@@ -647,8 +648,9 @@ public class GameManager : MonoBehaviour
 	public void OnEnemyKilled(GameObject killer, int exp, int gold)
     {
         killCount++;
+        PublishBattleProgress();
         onObjectiveChanged?.Invoke();
-        GiveRewardToPlayer(killer, exp, gold);  
+        GiveRewardToPlayer(killer, exp, gold);
         CheckBossSpawnCondition();
     }
 
@@ -754,6 +756,65 @@ public class GameManager : MonoBehaviour
         _bossTargetsTotal = 0;
         _bossTargetsDestroyed = 0;
         onObjectiveChanged?.Invoke();
+        PublishBattleProgress();
+    }
+
+    // =====================================================================
+    // 멀티 — 전투 진행도(killCount) 공유
+    // =====================================================================
+    // 적 사망 처리(Enemy.Die)는 소유자(방장)에서만 돌아서 killCount도 방장만 오름.
+    // 그대로 두면 게스트 HUD가 0에 멈추고, 보스 조건/BGM도 게스트에선 영영 안 돌고,
+    // 방장이 나가면 진행도가 통째로 날아감.
+    // → 진행도는 특정 플레이어가 아니라 '방'에 속한 값이라 Room Custom Property에 올림.
+    //   방장만 기록하고 나머지는 받아서 반영함. 방장이 바뀌어도 값이 남음.
+    private const string KillCountPropertyKey = "StageKillCount";
+
+    // 방장만 기록(권위 일원화). 싱글/오프라인은 룸이 없어 그냥 무시됨.
+    private void PublishBattleProgress()
+    {
+        if (!PhotonNetwork.InRoom || !PhotonNetwork.IsMasterClient || PhotonNetwork.CurrentRoom == null)
+        {
+            return;
+        }
+        PhotonHashtable progress = new PhotonHashtable
+        {
+            { KillCountPropertyKey, killCount }
+        };
+        PhotonNetwork.CurrentRoom.SetCustomProperties(progress);
+    }
+
+    public override void OnRoomPropertiesUpdate(PhotonHashtable propertiesThatChanged)
+    {
+        if (propertiesThatChanged == null ||
+            !propertiesThatChanged.TryGetValue(KillCountPropertyKey, out object value) ||
+            !(value is int syncedKillCount))
+        {
+            return;
+        }
+        ApplySyncedKillCount(syncedKillCount);
+    }
+
+    // 방 입장 시점의 현재 진행도를 한 번 읽어옴(도중 합류 대비 — 프로퍼티 변경 콜백은 '변할 때'만 오므로).
+    public override void OnJoinedRoom()
+    {
+        if (PhotonNetwork.CurrentRoom != null &&
+            PhotonNetwork.CurrentRoom.CustomProperties.TryGetValue(KillCountPropertyKey, out object value) &&
+            value is int syncedKillCount)
+        {
+            ApplySyncedKillCount(syncedKillCount);
+        }
+    }
+
+    private void ApplySyncedKillCount(int syncedKillCount)
+    {
+        if (killCount == syncedKillCount)
+        {
+            return;
+        }
+        killCount = syncedKillCount;
+        onObjectiveChanged?.Invoke();
+        // 게스트도 보스 조건을 돌려야 보스 BGM/연출을 같이 받음. 실제 보스 스폰은 SpawnManager가 방장만 하도록 막아둠.
+        CheckBossSpawnCondition();
     }
 
     // =====================================================================

@@ -77,43 +77,19 @@ public class EnergyOrb : Projectile
         base.Update();
     }
 
-    protected override void OnHit(Collider other)
+    protected override void OnHit(HitTarget hit)
     {
-        base.OnHit(other);
+        base.OnHit(hit);
 
-        IDamageable dmg = other.GetComponentInParent<IDamageable>();
-        if (dmg == null)
+        // 데미지 안 받는 환경 오브젝트 — 피격 반응만 위임(Bullet과 동일 처리)
+        if (hit.damageable == null)
         {
-            // 데미지 안 받는 대상: IHittable(환경 피격 반응) 위임, 아니면 폴백 VFX — Bullet과 동일 처리
-            IHittable hittable = other.GetComponentInParent<IHittable>();
-            if (hittable != null)
-            {
-                hittable.OnHitReaction(BuildHitInfo(other));
-            }
-            else
-            {
-                VFXManager.Instance.PlayEffectAtPosition(hitVfxType, other.ClosestPoint(transform.position), Quaternion.identity);
-            }
+            hit.hittable.OnHitReaction(BuildHitInfo(hit));
         }
 
         // 공통 데미지 적용 — 쉴드 흡수/HP 차감은 Unit.TakeDamage에서 자동 분기
-        ApplyDamage(other, this.curDamage, this.dmgType);
+        ApplyDamage(hit, this.curDamage, this.dmgType);
 
         ReturnToPool();
-    }
-
-    // 환경(IHittable) 대상에 넘길 피격 정보 — Bullet과 동일 구성
-    private HitInfo BuildHitInfo(Collider other)
-    {
-        Vector3 hitPos = other.ClosestPoint(transform.position);
-        return new HitInfo
-        {
-            type             = dmgType,
-            hitPosition      = hitPos,
-            hitDiriection    = (hitPos - transform.position).normalized,
-            attacker         = attacker != null ? attacker.gameObject : null,
-            hitVfxType       = this.hitVfxType,
-            shieldHitVfxType = this.shieldHitVfxType,
-        };
     }
 }

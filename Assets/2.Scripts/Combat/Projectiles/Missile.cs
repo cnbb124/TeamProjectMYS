@@ -330,9 +330,9 @@ public class Missile : Projectile, IExplodable
 
 	//온트리거에 쓸 재정의함수
 
-	protected override void OnHit(Collider other)
+	protected override void OnHit(HitTarget hit)
 	{
-		base.OnHit(other);
+		base.OnHit(hit);
 		//Debug.Log("미사일 OnHit발동");
 		// 폭발 실행 후 투사체 소멸
 		Explode(explosionInfo);

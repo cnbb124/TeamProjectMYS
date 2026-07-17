@@ -1,6 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
+using ExitGames.Client.Photon;
 using Photon.Pun;
+using Photon.Realtime;
 using UnityEngine;
 using PhotonHashtable = ExitGames.Client.Photon.Hashtable;
 
@@ -27,8 +29,11 @@ using PhotonHashtable = ExitGames.Client.Photon.Hashtable;
 //   만든 사람이 나가면 CleanupCacheOnLeave로 전부 파괴됨 — 적에는 쓰면 안 됨)
 //   웨이브 진행도도 룸 종속 상태라 Room Custom Property에 기록해, 방장 교체 시 새 방장이 이어받음.
 // ================================================================
-public class SpawnManager : MonoBehaviourPunCallbacks
+public class SpawnManager : MonoBehaviourPunCallbacks, IOnEventCallback
 {
+	// 스테이지 클리어 알림용(WaitingRoomUI=71, MapSelectorUI=72와 겹치지 않는 코드).
+	private const byte StageClearEventCode = 73;
+
 	// ================================================================
 	// 싱글톤 (씬 전용 — DontDestroyOnLoad 없음)
 	// ================================================================
@@ -295,8 +300,44 @@ public class SpawnManager : MonoBehaviourPunCallbacks
 		}
 		else
 		{
-			GameManager.Instance?.StageClear();
+			BroadcastStageClear();
 		}
+	}
+
+	// 클리어는 '방'에서 일어난 사건이라 전원이 같이 받아야 함.
+	// 웨이브 코루틴은 방장만 돌아서 여기도 방장만 도달함 — 그냥 StageClear()를 부르면 방장 화면에서만 클리어되고
+	// 게스트는 스테이지에 갇힘. 그래서 이벤트로 전원에게 알리고 각자 로컬에서 StageClear()를 실행함.
+	private void BroadcastStageClear()
+	{
+		// 싱글(오프라인)이거나 룸 밖이면 그냥 로컬 처리.
+		if (!PhotonNetwork.InRoom || PhotonNetwork.OfflineMode)
+		{
+			GameManager.Instance?.StageClear();
+			return;
+		}
+
+		RaiseEventOptions eventOptions = new RaiseEventOptions
+		{
+			Receivers = ReceiverGroup.All
+		};
+		PhotonNetwork.RaiseEvent(StageClearEventCode, null, eventOptions, SendOptions.SendReliable);
+	}
+
+	public void OnEvent(EventData photonEvent)
+	{
+		if (photonEvent.Code != StageClearEventCode || !PhotonNetwork.InRoom)
+		{
+			return;
+		}
+
+		// 방장이 보낸 것만 신뢰(비방장 위조 차단).
+		Photon.Realtime.Player masterClient = PhotonNetwork.MasterClient;
+		if (masterClient == null || photonEvent.Sender != masterClient.ActorNumber)
+		{
+			return;
+		}
+
+		GameManager.Instance?.StageClear();
 	}
 
 	// ================================================================
