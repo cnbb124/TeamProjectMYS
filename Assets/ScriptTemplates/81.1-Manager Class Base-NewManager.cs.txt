@@ -6,26 +6,8 @@ public class #SCRIPTNAME# : MonoBehaviour
 {
 	private static #SCRIPTNAME# instance = null;
 
-	public static #SCRIPTNAME# Instance
-	{
-		get
-		{
-			if (instance == null)
-			{
-				instance = FindObjectOfType<#SCRIPTNAME#>();
-				if (instance == null)
-				{
-					Debug.LogError("[#SCRIPTNAME#] 씬에 #SCRIPTNAME# 없음! 하이어라키에 추가 필요");
-				}
-				else
-				{
-					DontDestroyOnLoad(instance.gameObject);
-				}
-			}
-			return instance;
-		}
-
-	}
+	// Awake에서만 세팅됨. Awake 전엔 null이므로 최초 접근은 Start부터 할 것.
+	public static #SCRIPTNAME# Instance => instance;
 
 
 	private void Awake()
@@ -33,12 +15,19 @@ public class #SCRIPTNAME# : MonoBehaviour
 		if (instance == null)
 		{
 			instance = this;
-			DontDestroyOnLoad(gameObject);
+			DontDestroyOnLoad(gameObject);   // 씬 전용 매니저면 이 줄 삭제
+			// 초기화(딕셔너리 구성, 풀 생성 등)는 여기에
 		}
-		else if (instance != null)
+		else if (instance != this)
 		{
 			Debug.LogWarning("[#SCRIPTNAME#] 중복 감지. 파괴 후 기존 유지");
 			Destroy(gameObject);
 		}
 	}
+
+	// 씬 전용 매니저(DDOL 뺀 경우)만 필요. instance == this 가드 필수.
+	//private void OnDestroy()
+	//{
+	//	if (instance == this) { instance = null; }
+	//}
 }

@@ -179,24 +179,46 @@ public class SkillSystem : MonoBehaviour
 		bool used = slots[slotIndex].TryUseSkill();
 
 		// 로컬(소유자)이 실제로 발동했으면 남 클라에 복제 전파(연출용). WeaponSystem.RpcShoot와 동일 패턴.
+		// 슬롯 인덱스가 아니라 '무슨 스킬인지'(SKILL_ID)를 보냄 — 받는 쪽 슬롯 배치가 쏜 사람과 같다는
+		// 보장이 없어서(스킬을 배우는 순서/구성이 달라지면 어긋남) 인덱스로 보내면 엉뚱한 스킬이 재생됨.
 		// 싱글(PhotonView 없음)이거나 룸 밖이면 전파 안 함.
 		if (used && _photonView != null && _photonView.IsMine && PhotonNetwork.InRoom)
 		{
-			_photonView.RPC(nameof(RpcUseSkill), RpcTarget.Others, slotIndex);
+			_photonView.RPC(nameof(RpcUseSkill), RpcTarget.Others, (int)slots[slotIndex].SkillId);
 		}
 
 		return used;
 	}
 
-	// 남 클라에서 수신 — 쿨다운 체크 없이 해당 슬롯 스킬을 연출용으로 복제 발동(데미지 권위 없음).
+	// 남 클라에서 수신 — 쿨다운 체크 없이 그 스킬을 연출용으로 복제 발동(데미지 권위 없음).
+	// 내 슬롯 배치와 무관하게 ID로 찾으므로 쏜 사람이 쓴 스킬 그대로 재생됨.
 	[PunRPC]
-	private void RpcUseSkill(int slotIndex)
+	private void RpcUseSkill(int skillId)
 	{
-		if (!IsValidIndex(slotIndex) || slots[slotIndex] == null)
+		ActiveSkill skill = FindSlotSkillById((SKILL_ID)skillId);
+		if (skill == null)
 		{
 			return;
 		}
-		slots[slotIndex].PlayRemote();
+		skill.PlayRemote();
+	}
+
+	// 슬롯에 꽂힌 스킬 중 해당 ID를 가진 것을 찾음. 없으면 null(그 스킬을 안 배운 복제본).
+	private ActiveSkill FindSlotSkillById(SKILL_ID skillId)
+	{
+		if (skillId == SKILL_ID.NONE)
+		{
+			return null;
+		}
+
+		for (int i = 0; i < SLOT_COUNT; i++)
+		{
+			if (slots[i] != null && slots[i].SkillId == skillId)
+			{
+				return slots[i];
+			}
+		}
+		return null;
 	}
 
 	public float GetCooldownRatio(int slotIndex)

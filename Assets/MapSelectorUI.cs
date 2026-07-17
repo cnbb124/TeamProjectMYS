@@ -58,6 +58,7 @@ public class MapSelectorUI : MonoBehaviourPunCallbacks, IOnEventCallback
 		RefreshButtons();
 	}
 
+	// ==============버튼들===============
 	public void OnClickButtonMap1()
 	{
 		RequestMapStart("STAGE1");
@@ -69,8 +70,22 @@ public class MapSelectorUI : MonoBehaviourPunCallbacks, IOnEventCallback
 		//RequestMapStart("STAGE2");
 	}
 
-	// 방장만 실제 진입을 트리거함. 멀티면 RaiseEvent로 전원 동시 진입, 싱글(오프라인)이면 로컬 진입.
-	private void RequestMapStart(string sceneName)
+	
+    public void OnClickButtonMap3()
+    {
+        
+    }
+    public void OnClickButtonMap4()
+    {
+       
+    }
+    public void OnClickButtonMap5()
+    {
+        
+    }
+
+    // 방장만 실제 진입을 트리거함. 멀티면 RaiseEvent로 전원 동시 진입, 싱글(오프라인)이면 로컬 진입.
+    private void RequestMapStart(string sceneName)
 	{
 		if (isStartingGame || string.IsNullOrWhiteSpace(sceneName))
 		{

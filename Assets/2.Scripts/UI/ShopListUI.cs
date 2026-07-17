@@ -39,17 +39,31 @@ public class ShopListUI : MonoBehaviour
         _category = startCategory;
     }
 
+    // InventoryManager 참조. Start에서 1회만 잡고 OnEnable/OnDisable은 이 필드만 씀.
+    private InventoryManager _inventoryManager;
+
+    // 매니저 최초 취득은 Start에서만 — Awake/OnEnable에서 .Instance를 부르면 매니저 자신의 Awake보다
+    // 먼저 instance를 선점해서, 매니저 Awake의 초기화가 통째로 스킵됨.
+    private void Start()
+    {
+        _inventoryManager = InventoryManager.Instance;
+        if (_inventoryManager != null)
+            _inventoryManager.OnInventoryChanged += Refresh;
+        Refresh();
+    }
+
     private void OnEnable()
     {
-        if (InventoryManager.Instance != null)
-            InventoryManager.Instance.OnInventoryChanged += Refresh;
+        // 캐시된 것만 씀. 최초 1회는 아직 null이라 넘어가고 바로 뒤의 Start가 구독을 마무리함.
+        if (_inventoryManager != null)
+            _inventoryManager.OnInventoryChanged += Refresh;
         Refresh();
     }
 
     private void OnDisable()
     {
-        if (InventoryManager.Instance != null)
-            InventoryManager.Instance.OnInventoryChanged -= Refresh;
+        if (_inventoryManager != null)
+            _inventoryManager.OnInventoryChanged -= Refresh;
     }
 
     // ── 탭 / 모드 전환 (버튼 OnClick에 연결) ──

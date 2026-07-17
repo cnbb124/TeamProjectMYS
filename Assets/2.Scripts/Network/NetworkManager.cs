@@ -43,21 +43,12 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     // 싱글톤
     // =====================================================================
     private static NetworkManager instance;
-    public static NetworkManager Instance
-    {
-		get
-		{
-			if (instance == null)
-			{
-				instance = FindObjectOfType<NetworkManager>();
-				if (instance == null)
-				{
-					Debug.Log("씬에 NetworkManager 누락! 하이어라키에 추가 필요");
-				}
-			}
-			return instance;
-		}
-	}
+    // Awake에서만 세팅됨. Awake 전엔 null이므로 최초 접근은 Start부터 할 것.
+    // (예전엔 여기서 FindObjectOfType으로 찾아줬는데, 그게 매니저 자신의 Awake보다 먼저
+    //  instance를 채워버려서 Awake의 초기화 블록이 통째로 스킵되는 버그를 만들었음.
+    //  특히 이 매니저는 Awake에서 PhotonNetwork.PrefabPool을 등록하므로, 읽기만 했는데
+    //  Photon 전역 설정이 등록되는 부작용까지 났음)
+    public static NetworkManager Instance => instance;
 
     // =====================================================================
     // 설정

@@ -131,30 +131,10 @@ public class EngineSoundConfig
 public class SoundManager : MonoBehaviour
 {
 	private static SoundManager instance = null;
-	public static SoundManager Instance
-	{
-		get
-		{
-			if (instance == null)
-			{
-
-				instance = FindObjectOfType<SoundManager>();
-				if (instance == null)
-				{
-					Debug.LogError("씬에 SoundManager 누락! 하이어라키에 사운드매니저 필요");
-				}
-				else
-				{
-					DontDestroyOnLoad(instance.gameObject);
-					// 다른 오브젝트가 자기 Awake/OnEnable에서 Instance를 먼저 건드리면 이 SoundManager의
-					// Awake가 아직 안 돌았을 수 있음(Unity는 스크립트 간 Awake 순서를 보장 안 함).
-					// 그 경우 여기서 즉시 초기화해야 사운드 목록(_soundDict)이 빈 채로 굳지 않는다.
-					instance.EnsureInitialized();
-				}
-			}
-			return instance;
-		}
-	}
+	// Awake에서만 세팅됨. Awake 전엔 null이므로 최초 접근은 Start부터 할 것.
+	// (예전엔 여기서 FindObjectOfType으로 찾아줬는데, 그게 매니저 자신의 Awake보다 먼저
+	//  instance를 채워버려서 Awake의 초기화 블록이 통째로 스킵되는 버그를 만들었음)
+	public static SoundManager Instance => instance;
 	
 
 	[Header("<size=22>사용시 SoundManager.Instance.메서드명</size>\n\n" +

@@ -20,30 +20,46 @@ public class QuestHUD : MonoBehaviour
 {
     [SerializeField] private TMP_Text objectiveText;
 
+    // GameManager 참조. Start에서 1회만 잡고 OnEnable/OnDisable은 이 필드만 씀.
+    private GameManager _gameManager;
+
+    // 매니저 최초 취득은 Start에서만 — Awake/OnEnable에서 .Instance를 부르면 매니저 자신의 Awake보다
+    // 먼저 instance를 선점해서, 매니저 Awake의 초기화 블록(itemDatabase.Init 등)이 통째로 스킵됨.
+    private void Start()
+    {
+        _gameManager = GameManager.Instance;
+        if (_gameManager != null)
+        {
+            _gameManager.onObjectiveChanged += Refresh;
+        }
+        Refresh();
+    }
+
     private void OnEnable()
     {
-        if (GameManager.Instance != null)
+        // 캐시된 것만 씀. 최초 1회는 아직 null이라 그냥 넘어가고 바로 뒤의 Start가 구독을 마무리함.
+        if (_gameManager != null)
         {
-            GameManager.Instance.onObjectiveChanged += Refresh;
+            _gameManager.onObjectiveChanged += Refresh;
         }
         Refresh();   // 켜질 때 즉시 최신값 반영
     }
 
     private void OnDisable()
     {
-        if (GameManager.Instance != null)
+        if (_gameManager != null)
         {
-            GameManager.Instance.onObjectiveChanged -= Refresh;
+            _gameManager.onObjectiveChanged -= Refresh;
         }
     }
 
     private void Refresh()
     {
-        if (objectiveText == null || GameManager.Instance == null)
+        if (objectiveText == null || _gameManager == null)
         {
             return;
         }
-        GameManager gm = GameManager.Instance;
+        GameManager gm = _gameManager;
 
         string text = "";
         if (gm.KillGoal > 0)

@@ -51,20 +51,36 @@ public class ShopNPCAnim : MonoBehaviour
         }
     }
 
+    // AffectionManager 참조. Start에서 1회만 잡고 OnEnable/OnDisable은 이 필드만 씀.
+    private AffectionManager _affectionManager;
+
+    // 매니저 최초 취득은 Start에서만 — Awake/OnEnable에서 .Instance를 부르면 매니저 자신의 Awake보다
+    // 먼저 instance를 선점해서, 매니저 Awake의 초기화가 통째로 스킵됨.
+    private void Start()
+    {
+        _affectionManager = AffectionManager.Instance;
+        if (_affectionManager != null)
+        {
+            _affectionManager.OnAffectionChanged += OnAffectionChanged;
+        }
+        RefreshIdleState();
+    }
+
     private void OnEnable()
     {
-        if (AffectionManager.Instance != null)
+        // 캐시된 것만 씀. 최초 1회는 아직 null이라 넘어가고 바로 뒤의 Start가 구독을 마무리함.
+        if (_affectionManager != null)
         {
-            AffectionManager.Instance.OnAffectionChanged += OnAffectionChanged;
+            _affectionManager.OnAffectionChanged += OnAffectionChanged;
         }
         RefreshIdleState();
     }
 
     private void OnDisable()
     {
-        if (AffectionManager.Instance != null)
+        if (_affectionManager != null)
         {
-            AffectionManager.Instance.OnAffectionChanged -= OnAffectionChanged;
+            _affectionManager.OnAffectionChanged -= OnAffectionChanged;
         }
     }
 

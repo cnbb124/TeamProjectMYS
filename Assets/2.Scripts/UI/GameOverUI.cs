@@ -32,22 +32,32 @@ public class GameOverUI : MonoBehaviour
     [SerializeField] private bool useLoading = false;
     [SerializeField] private string loadingSceneName = "LoadingScene";
 
+    // GameManager 참조. Start에서 1회만 잡고 OnEnable/OnDisable은 이 필드만 씀.
+    private GameManager _gameManager;
+
     private void OnEnable()
     {
-        if (GameManager.Instance != null)
-            GameManager.Instance.onGameStateChanged += HandleStateChanged;
+        // 캐시된 것만 씀. 최초 1회는 아직 null이라 넘어가고 바로 뒤의 Start가 구독을 마무리함.
+        if (_gameManager != null)
+            _gameManager.onGameStateChanged += HandleStateChanged;
     }
 
     private void OnDisable()
     {
-        if (GameManager.Instance != null)
-            GameManager.Instance.onGameStateChanged -= HandleStateChanged;
+        if (_gameManager != null)
+            _gameManager.onGameStateChanged -= HandleStateChanged;
     }
 
+    // 매니저 최초 취득은 Start에서만 — Awake/OnEnable에서 .Instance를 부르면 매니저 자신의 Awake보다
+    // 먼저 instance를 선점해서, 매니저 Awake의 초기화가 통째로 스킵됨.
     private void Start()
     {
+        _gameManager = GameManager.Instance;
+        if (_gameManager != null)
+            _gameManager.onGameStateChanged += HandleStateChanged;
+
         // 시작 시 패널 꺼두기 (테스트로 켜둔 상태였다면 유지하고 싶을 때 이 줄 주석)
-        if (panel != null && GameManager.Instance != null && !GameManager.Instance.IsGameOver)
+        if (panel != null && _gameManager != null && !_gameManager.IsGameOver)
             panel.SetActive(false);
     }
 

@@ -18,25 +18,10 @@ using UnityEngine;
 public class UnitManager : MonoBehaviour
 {
     private static UnitManager instance;
-    public static UnitManager Instance
-    {
-        get
-        {
-            if (instance == null)
-            {
-                instance = FindObjectOfType<UnitManager>();
-                if (instance == null)
-                {
-                    Debug.LogError("[UnitManager] 씬에 UnitManager 없음! 하이어라키에 추가 필요");
-                }
-                else
-                {
-                    DontDestroyOnLoad(instance.gameObject);
-                }
-            }
-            return instance;
-        }
-    }
+    // Awake에서만 세팅됨. Awake 전엔 null이므로 최초 접근은 Start부터 할 것.
+    // (예전엔 여기서 FindObjectOfType으로 찾아줬는데, 그게 매니저 자신의 Awake보다 먼저
+    //  instance를 채워버려서 Awake의 초기화 블록이 통째로 스킵되는 버그를 만들었음)
+    public static UnitManager Instance => instance;
 
     private void Awake()
     {
@@ -49,6 +34,14 @@ public class UnitManager : MonoBehaviour
         {
             Debug.LogWarning("중복된 UnitManager 발견. 파괴 후 실행");
             Destroy(gameObject);
+        }
+    }
+
+    private void OnDestroy()
+    {
+        if (instance == this)
+        {
+            instance = null;
         }
     }
 

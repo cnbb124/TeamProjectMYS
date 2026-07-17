@@ -292,6 +292,11 @@ public class WeaponSystem : MonoBehaviour
 	/// </summary>
 	public void Shoot(PROJECTILE_TYPE type)
 	{
+		// 실제로 쏜 탄종. 발사가 성사됐을 때만 채워지고, 그대로 RPC에 실려 남 클라가 같은 걸 쏘게 함.
+		ITEM_ID firedDataId = ITEM_ID.NONE;
+		// 실제로 노린 락온 타겟. 이것도 같이 보내야 남 클라의 유도미사일이 같은 궤적을 그림.
+		int[] firedTargetRefs = EmptyTargetRefs;
+
 		switch (type)
 		{
 			case PROJECTILE_TYPE.BULLET:
@@ -300,7 +305,9 @@ public class WeaponSystem : MonoBehaviour
 					return;
 				}
 				_lastBulletFireTime = Time.time;
-				ShootAllBullets(true); // 로컬 발사 = 데미지 권위 있음
+				ShootAllBullets(curBulletData, true); // 로컬 발사 = 데미지 권위 있음
+				// 데이터 미설정 유닛(프리팹 값으로 쏘는 구형 세팅)은 가리킬 ID가 없어 복제 전파를 못 함.
+				firedDataId = curBulletData != null ? curBulletData.id : ITEM_ID.NONE;
 				break;
 
 			case PROJECTILE_TYPE.MISSILE:
@@ -308,29 +315,153 @@ public class WeaponSystem : MonoBehaviour
 				{
 					return;
 				}
+				MissileSlot curSlot = CurMissileSlot;
+				if (curSlot == null || curSlot.curAmmo <= 0)
+				{
+					return;
+				}
 				_lastMissileFireTime = Time.time;
-				ShootAllMissiles(true); // 로컬 발사 = 데미지 권위 있음
+				List<Transform> lockedTargets = CollectLockOnTargets(curSlot.missileData);
+				ShootAllMissiles(curSlot.missileData, true, lockedTargets); // 로컬 발사 = 데미지 권위 있음
+				// 데이터 미설정 슬롯(프리팹 값으로 쏘는 구형 세팅)은 가리킬 ID가 없어 복제 전파를 못 함.
+				firedDataId = curSlot.missileData != null ? curSlot.missileData.id : ITEM_ID.NONE;
+				firedTargetRefs = EncodeTargetRefs(lockedTargets);
 				break;
 
 		}
 
-		// 로컬(소유자)이 실제로 발사했으면 남 클라에게 "쐈다"를 전파 → 각자 로컬 풀에서 같은 종류 발사.
+		// 로컬(소유자)이 실제로 발사했으면 남 클라에게 "무엇을 쐈는지"까지 전파.
+		// 탄종 ID를 같이 보내는 이유: 플레이어는 받는 쪽 슬롯(_curSlotIndex)이 쏜 사람과 다름
+		// (슬롯 전환이 입력이라 IsMine 게이트에 막혀 원격 복제본은 0번에 고정됨).
+		// ID로 보내면 받는 쪽이 ItemDatabase에서 같은 SO를 찾아 쏘므로 슬롯 상태와 무관하게 일치함.
+		// ID가 없으면(NONE) 전파는 하되 받는 쪽이 자기 데이터로 쏨 — 적처럼 프리팹에 탄종이 고정된 유닛은
+		// 모든 클라가 같은 프리팹을 쓰므로 그게 정답임. (ID 없다고 전파를 끊으면 적 탄이 게스트에게 안 보임)
 		// 싱글(PhotonView 없음)이거나 룸 밖이면 전파 안 함. 남 소유 유닛은 여기 안 옴(입력/AI가 IsMine 게이트).
 		if (_photonView != null && _photonView.IsMine && PhotonNetwork.InRoom)
 		{
-			_photonView.RPC(nameof(RpcShoot), RpcTarget.Others, (int)type);
+			_photonView.RPC(nameof(RpcShoot), RpcTarget.Others, (int)type, (int)firedDataId, firedTargetRefs);
 		}
 	}
 
-	// 남 클라에서 수신 — 쿨다운/재전파 없이 로컬 풀에서만 발사(복제).
+	// 남 클라에서 수신 — 쿨다운/탄약/재전파 없이 로컬 풀에서만 발사(복제).
+	// dataId가 있으면 쏜 사람과 똑같은 탄종 데이터를 찾아 씀(자기 슬롯은 안 봄).
+	// NONE이면 데이터를 못 가리키는 유닛이므로 자기 것으로 폴백 — 적은 프리팹 고정이라 이게 맞음.
+	// targetRefs로 쏜 사람이 노린 타겟을 그대로 복원 — 이게 없으면 원격 유도미사일이 타겟을 몰라 직진함.
 	[PunRPC]
-	private void RpcShoot(int type)
+	private void RpcShoot(int type, int dataId, int[] targetRefs)
 	{
+		ITEM_ID firedDataId = (ITEM_ID)dataId;
+		ItemDatabase database = ItemDatabase.Instance;
+
 		switch ((PROJECTILE_TYPE)type)
 		{
-			case PROJECTILE_TYPE.BULLET:   ShootAllBullets(false);  break; // 복제 연출 = 데미지 권위 없음
-			case PROJECTILE_TYPE.MISSILE:  ShootAllMissiles(false); break;
+			case PROJECTILE_TYPE.BULLET:
+			{
+				BulletData data = (firedDataId != ITEM_ID.NONE && database != null)
+					? database.Get<BulletData>(firedDataId)
+					: curBulletData;
+				ShootAllBullets(data, false); // 복제 연출 = 데미지 권위 없음
+				break;
+			}
+			case PROJECTILE_TYPE.MISSILE:
+			{
+				MissileData data = (firedDataId != ITEM_ID.NONE && database != null)
+					? database.Get<MissileData>(firedDataId)
+					: CurMissileSlot?.missileData;
+				ShootAllMissiles(data, false, DecodeTargetRefs(targetRefs));
+				break;
+			}
 		}
+	}
+
+	// ================== [락온 타겟 전송] ==================
+	// 락온 타겟은 유닛 루트가 아니라 그 밑의 LockOnBox transform임(LockOnSystem이 그렇게 등록함).
+	// 유닛 하나에 박스가 여러 개라(보스 4개, 미사일쉽 3개) ViewID만으론 어느 박스인지 못 가림.
+	// → [ViewID, 박스인덱스] 짝으로 보냄. 인덱스는 GetComponentsInChildren<LockOnBox>(true) 순서라
+	//   같은 프리팹이면 클라마다 동일하고, 파괴/비활성으로도 안 밀림(true = 비활성 포함).
+	private static readonly int[] EmptyTargetRefs = new int[0];
+
+	// 지금 락온 상태에서 이 탄종이 쓸 타겟 목록. 아래 ShootMissileFrom의 분기와 짝을 맞춰야 함.
+	private List<Transform> CollectLockOnTargets(MissileData data)
+	{
+		if (lockOnSystem == null)
+		{
+			return null;
+		}
+
+		if (data is ClusterMisslleData)
+		{
+			if (lockOnSystem.currentLockMode == LOCK_ON_MODE.SINGLE && lockOnSystem.IsLocked)
+			{
+				// 단일 락온 모드 - 자탄 전부 한 타겟에 집중 (Split()의 라운드로빈이 자동으로 처리)
+				return new List<Transform> { lockOnSystem.LockedTarget };
+			}
+			if (lockOnSystem.MultiLockedTargets.Count > 0)
+			{
+				// 락온이 풀려도 자탄이 원래 타겟을 추적하도록 복사본 전달
+				return new List<Transform>(lockOnSystem.MultiLockedTargets);
+			}
+			return null;
+		}
+
+		return lockOnSystem.IsLocked ? new List<Transform> { lockOnSystem.LockedTarget } : null;
+	}
+
+	private int[] EncodeTargetRefs(List<Transform> targets)
+	{
+		if (targets == null || targets.Count == 0)
+		{
+			return EmptyTargetRefs;
+		}
+
+		int[] refs = new int[targets.Count * 2];
+		for (int i = 0; i < targets.Count; i++)
+		{
+			refs[i * 2] = 0;       // ViewID 0 = 가리킬 대상 없음
+			refs[i * 2 + 1] = -1;  // 박스 못 찾음
+			Transform target = targets[i];
+			if (target == null)
+			{
+				continue;
+			}
+			PhotonView targetView = target.GetComponentInParent<PhotonView>();
+			if (targetView == null)
+			{
+				continue; // PhotonView 없는 대상(씬 배치 비네트워크 적 등)은 못 가리킴 → 원격은 직진
+			}
+			LockOnBox[] boxes = targetView.GetComponentsInChildren<LockOnBox>(true);
+			refs[i * 2] = targetView.ViewID;
+			refs[i * 2 + 1] = System.Array.FindIndex(boxes, box => box.transform == target);
+		}
+		return refs;
+	}
+
+	private List<Transform> DecodeTargetRefs(int[] refs)
+	{
+		if (refs == null || refs.Length < 2)
+		{
+			return null;
+		}
+
+		List<Transform> targets = new List<Transform>(refs.Length / 2);
+		for (int i = 0; i + 1 < refs.Length; i += 2)
+		{
+			int viewId = refs[i];
+			int boxIndex = refs[i + 1];
+			if (viewId == 0)
+			{
+				continue;
+			}
+			PhotonView targetView = PhotonView.Find(viewId);
+			if (targetView == null)
+			{
+				continue; // 이미 파괴됐거나 아직 못 받은 대상
+			}
+			LockOnBox[] boxes = targetView.GetComponentsInChildren<LockOnBox>(true);
+			// 박스를 못 찾으면 유닛 루트로 폴백(조준점이 약간 다르지만 직진보다는 나음)
+			targets.Add(boxIndex >= 0 && boxIndex < boxes.Length ? boxes[boxIndex].transform : targetView.transform);
+		}
+		return targets.Count > 0 ? targets : null;
 	}
 
 	/// <summary>
@@ -359,7 +490,10 @@ public class WeaponSystem : MonoBehaviour
 	/// Sequential: 총구 하나씩 교대. Random: 랜덤 총구 하나. Simultaneous: 전체 동시.
 	/// </summary>
 	// hasAuthority: 이 발사가 데미지 권위를 갖는지. 로컬 발사(Shoot)=true, RpcShoot 복제=false.
-	private void ShootAllBullets(bool hasAuthority)
+	// data: 실제로 쏠 탄종. 로컬은 자기 curBulletData, 복제는 RPC로 받은 ID로 조회한 것.
+	//       장착 상태는 클라마다 다를 수 있어서 참조하지 않고 넘겨받은 데이터만 씀.
+	//       null이면(데이터 미설정 유닛) 프리팹에 박힌 값으로 폴백 — 기존 동작 유지.
+	private void ShootAllBullets(BulletData data, bool hasAuthority)
 	{
 		if (_bulletFirePositions.Count == 0)
 		{
@@ -369,18 +503,18 @@ public class WeaponSystem : MonoBehaviour
 		switch (bulletFireMode)
 		{
 			case BulletFireMode.Sequential:
-				ShootBulletFrom(_bulletFirePositions[_bulletFireIndex], hasAuthority);
+				ShootBulletFrom(_bulletFirePositions[_bulletFireIndex], data, hasAuthority);
 				_bulletFireIndex = (_bulletFireIndex + 1) % _bulletFirePositions.Count;
 				break;
 
 			case BulletFireMode.Random:
-				ShootBulletFrom(_bulletFirePositions[Random.Range(0, _bulletFirePositions.Count)], hasAuthority);
+				ShootBulletFrom(_bulletFirePositions[Random.Range(0, _bulletFirePositions.Count)], data, hasAuthority);
 				break;
 
 			case BulletFireMode.Simultaneous:
 				for (int i = 0; i < _bulletFirePositions.Count; i++)
 				{
-					ShootBulletFrom(_bulletFirePositions[i], hasAuthority);
+					ShootBulletFrom(_bulletFirePositions[i], data, hasAuthority);
 				}
 				break;
 		}
@@ -388,56 +522,46 @@ public class WeaponSystem : MonoBehaviour
 
 	/// <summary>
 	/// 지정 위치에서 총알 1발 발사.
-	/// 먼저 풀에서 Bullet을 꺼낸 뒤, 그 Bullet 자신의 bulletData(프리팹에 미리 연결된 SO)에서
-	/// 머즐플래시/발사음을 가져와 재생 — WeaponSystem에 따로 등록 안 해도 프리팹 데이터만으로 일치되게 함.
-	/// curBulletData는 풀 종류(어떤 프리팹을 꺼낼지) 결정용으로만 남음.
+	/// 꺼낼 프리팹(풀 종류)도 스탯/머즐/사운드도 넘겨받은 data가 결정함 —
+	/// 로컬이든 복제든 같은 data를 쓰므로 양쪽에서 똑같은 총알이 나감.
+	/// data가 null이면(데이터 미설정 유닛) 기본 풀에서 꺼내 프리팹에 박힌 값을 그대로 씀.
 	/// </summary>
-	private void ShootBulletFrom(Transform firePos, bool hasAuthority)
+	private void ShootBulletFrom(Transform firePos, BulletData data, bool hasAuthority)
 	{
 		if (_launcherAnims.TryGetValue(firePos, out LauncherAnim bulletAnim))
 		{
 			bulletAnim.PlayFire();
 		}
 
-		Bullet newBullet = _pool.GetProjectile(GetBulletPoolType()) as Bullet;
-
-		// [데이터 주입] 장착한 curBulletData를 총알에 주입 → 프리팹 박힌 값 대신 이 데이터로 스탯/머즐/사운드 결정.
-		// (미사일 주입과 동일. curBulletData가 없으면(미장착) 프리팹 값 유지.)
-		if (newBullet != null && curBulletData != null)
+		POOL_TYPE poolType = data != null ? data.curProjectilePoolType : POOL_TYPE.PROJECTILE_BULLET;
+		Bullet newBullet = _pool.GetProjectile(poolType) as Bullet;
+		if (newBullet == null)
 		{
-			newBullet.bulletData = curBulletData;
+			return;
 		}
 
-		BulletData data = newBullet.bulletData;
+		// [데이터 주입] 프리팹에 박힌 값 대신 이 데이터로 스탯/머즐/사운드 결정.
+		if (data != null)
+		{
+			newBullet.bulletData = data;
+		}
+
+		BulletData effectiveData = newBullet.bulletData;
 
 		if (_useBulletMuzzle)
 		{
-			EFFECT_TYPE muzzleType = (data != null) ? data.muzzleEffectType : EFFECT_TYPE.VFX_BULLET_MUZZLE;
+			EFFECT_TYPE muzzleType = effectiveData != null ? effectiveData.muzzleEffectType : EFFECT_TYPE.VFX_BULLET_MUZZLE;
 			_vfx.PlayEffectAtUnit(muzzleType, _unit.transform, firePos.position, firePos.rotation, _bulletMuzzleFlashVFXPlayTime);
 		}
 		if (_useBulletSound)
 		{
-			SOUND_TYPE soundType = (data != null) ? data.shootSoundType : SOUND_TYPE.SFX_NONE;
+			SOUND_TYPE soundType = effectiveData != null ? effectiveData.shootSoundType : SOUND_TYPE.SFX_NONE;
 			_sound.PlaySFX3DAtUnit(soundType, _unit.transform, firePos);
 		}
 
 		newBullet.Init(firePos.position, firePos.forward, _unit);
 		// 복제탄(RpcShoot)은 데미지 권위 없음 → 연출만. 로컬 발사만 실제 데미지 판정.
 		newBullet.SetDamageAuthority(hasAuthority);
-	}
-
-	/// <summary>
-	/// 발사할 총알 풀 종류 결정. curBulletData.curBulletPoolType이 설정돼있으면 그 값,
-	/// curBulletData가 null이면(에디터 미설정) 기존 기본 풀(POOL_TYPE.PROJECTILE_BULLET)로 폴백.
-	/// </summary>
-	private POOL_TYPE GetBulletPoolType()
-	{
-		if (curBulletData != null)
-		{
-			return curBulletData.curProjectilePoolType;
-		}
-
-		return POOL_TYPE.PROJECTILE_BULLET;
 	}
 
 	/// <summary>
@@ -453,132 +577,143 @@ public class WeaponSystem : MonoBehaviour
 	/// 미사일 — missileFireMode에 따라 발사.
 	/// Sequential: 발사구 하나씩 교대. Random: 랜덤 발사구 하나. Simultaneous: 전체 동시.
 	/// </summary>
+	// data: 실제로 쏠 미사일. 로컬은 자기 슬롯 것, 복제는 RPC로 받은 ID로 조회한 것.
 	// hasAuthority: 로컬 발사(Shoot)=true, RpcShoot 복제=false. (총알과 동일)
-	private void ShootAllMissiles(bool hasAuthority)
+	// 탄약은 쏜 본인만 소비함 — 복제본이 남의 탄약을 자기 로컬에서 깎으면
+	// 복제본 잔탄이 먼저 0이 돼서 그 뒤로 복제 발사가 통째로 멈춤.
+	// targets: 이 발사가 노린 락온 타겟. 로컬은 CollectLockOnTargets로 만든 것, 복제는 RPC로 받아 복원한 것.
+	//          원격 복제본은 AI/락온이 안 돌아서 자기 lockOnSystem을 보면 타겟이 없음 → 반드시 넘겨받아야 함.
+	private void ShootAllMissiles(MissileData data, bool hasAuthority, List<Transform> targets)
 	{
-		MissileSlot curSlot = CurMissileSlot;
-		if (curSlot == null || curSlot.curAmmo <= 0 || _missileFirePositions.Count == 0)
+		if (_missileFirePositions.Count == 0)
 		{
 			return;
 		}
 
+		MissileSlot ammoSlot = hasAuthority ? CurMissileSlot : null;
+
 		switch (missileFireMode)
 		{
 			case MissileFireMode.Sequential:
-				ShootMissileFrom(_missileFirePositions[_missileFireIndex], hasAuthority);
-				curSlot.curAmmo--;
+				ShootMissileFrom(_missileFirePositions[_missileFireIndex], data, hasAuthority, targets);
+				ConsumeMissileAmmo(ammoSlot);
 				_missileFireIndex = (_missileFireIndex + 1) % _missileFirePositions.Count;
 				break;
 
 			case MissileFireMode.Random:
-				ShootMissileFrom(_missileFirePositions[Random.Range(0, _missileFirePositions.Count)], hasAuthority);
-				curSlot.curAmmo--;
+				ShootMissileFrom(_missileFirePositions[Random.Range(0, _missileFirePositions.Count)], data, hasAuthority, targets);
+				ConsumeMissileAmmo(ammoSlot);
 				break;
 
 			case MissileFireMode.Simultaneous:
 			{
-				int fireCount = Mathf.Min(_missileFirePositions.Count, curSlot.curAmmo);
+				// 복제본은 탄약 개념이 없으므로 발사구 전체에서 쏨. 로컬은 잔탄만큼만.
+				int fireCount = ammoSlot != null
+					? Mathf.Min(_missileFirePositions.Count, ammoSlot.curAmmo)
+					: _missileFirePositions.Count;
 				for (int i = 0; i < fireCount; i++)
 				{
-					ShootMissileFrom(_missileFirePositions[i], hasAuthority);
-					curSlot.curAmmo--;
+					ShootMissileFrom(_missileFirePositions[i], data, hasAuthority, targets);
+					ConsumeMissileAmmo(ammoSlot);
 				}
 				break;
 			}
 		}
 	}
 
+	// ammoSlot이 null이면(복제 발사) 아무것도 안 함.
+	private void ConsumeMissileAmmo(MissileSlot ammoSlot)
+	{
+		if (ammoSlot != null)
+		{
+			ammoSlot.curAmmo--;
+		}
+	}
+
 	/// <summary>
 	/// 지정 위치에서 미사일 1발 발사.
-	/// 풀에서 꺼낼 프리팹은 missileData.curProjectilePoolType으로 결정(변형탄 대응).
-	/// missileData가 비어있으면(에디터 미설정) curMissileType 기준 기본 풀로 폴백.
-	/// 먼저 풀에서 꺼낸 뒤 그 missileData(프리팹에 미리 연결된 SO)에서 머즐/발사음을 가져와 재생
-	/// — WeaponSystem에 따로 등록 안 해도 프리팹 데이터만으로 일치되게 함.
+	/// 꺼낼 프리팹(풀 종류)도 스탯/이펙트/사운드도 전부 넘겨받은 data가 결정함 —
+	/// 로컬이든 복제든 같은 data를 쓰므로 양쪽에서 똑같은 미사일이 나감.
+	/// 자탄(ClusterMissile.Split이 소환)은 여기를 안 거침 — 각자 childrenMissileData 사용.
 	/// </summary>
-	private void ShootMissileFrom(Transform firePos, bool hasAuthority)
+	private void ShootMissileFrom(Transform firePos, MissileData data, bool hasAuthority, List<Transform> targets)
 	{
 		if (_launcherAnims.TryGetValue(firePos, out LauncherAnim missileAnim))
 		{
 			missileAnim.PlayFire();
 		}
 
-		Projectile proj = _pool.GetProjectile(GetMissilePoolType(CurMissileSlot));
-
-		// [데이터 주입] 발사 슬롯의 MissileData를 미사일에 주입 → 미사일이 프리팹 박힌 값 대신 이 데이터로
-		// 스탯/이펙트/사운드를 결정(발사 주체별로 다른 데이터 적용 가능). 슬롯 데이터가 없으면(미설정) 프리팹 값 유지.
-		// 자탄(ClusterMissile.Split이 소환)은 WeaponSystem을 안 거치므로 여기 영향 없음 — 각자 childrenMissileData 사용.
-		if (proj is Missile injectMissile && CurMissileSlot != null && CurMissileSlot.missileData != null)
+		Projectile proj = _pool.GetProjectile(GetMissilePoolType(data));
+		if (proj == null)
 		{
-			injectMissile.missileData = CurMissileSlot.missileData;
+			return;
 		}
 
-		MissileData data = (proj as Missile)?.missileData;
+		// [데이터 주입] 프리팹에 박힌 값 대신 이 데이터로 스탯/이펙트/사운드 결정. data가 없으면 프리팹 값 유지.
+		if (proj is Missile injectMissile && data != null)
+		{
+			injectMissile.missileData = data;
+		}
+
+		MissileData effectiveData = (proj as Missile)?.missileData;
 
 		if (_useMissileMuzzle)
 		{
-			EFFECT_TYPE muzzleType = (data != null) ? data.muzzleEffectType : EFFECT_TYPE.VFX_MISSILE_MUZZLE;
+			EFFECT_TYPE muzzleType = effectiveData != null ? effectiveData.muzzleEffectType : EFFECT_TYPE.VFX_MISSILE_MUZZLE;
 			_vfx.PlayEffectAtUnit(muzzleType, _unit.transform, firePos.position, firePos.rotation, _missileMuzzleFlashVFXPlayTime);
 		}
 		if (_useMissileSound)
 		{
-			SOUND_TYPE soundType = (data != null) ? data.shootSoundType : SOUND_TYPE.SFX_NONE;
-			//_sound.PlaySFX3DAtPosition(soundType, _unit.transform.position);
+			SOUND_TYPE soundType = effectiveData != null ? effectiveData.shootSoundType : SOUND_TYPE.SFX_NONE;
             _sound.PlaySFX3DAtUnit(soundType, _unit.transform, firePos);
-
         }
 
-		switch (curMissileType)
+		// 미사일 종류는 curMissileType(내 슬롯 상태)이 아니라 '실제로 꺼낸 투사체'로 판별함.
+		// 슬롯 인덱스는 클라마다 다를 수 있지만 data가 정한 프리팹은 같으므로 이쪽이 항상 맞음.
+		// ClusterMissile/DumbMissile 둘 다 Missile을 상속하므로 좁은 타입부터 검사할 것.
+		// 타겟은 lockOnSystem을 여기서 직접 보지 않고 넘겨받은 것만 씀 — 원격 복제본은 락온이 안 돌아
+		// 자기 lockOnSystem이 비어있어서, 직접 보면 타겟 없이 직진해버림(호스트는 유도, 게스트는 직진으로 갈림).
+		if (proj is ClusterMissile cm)
 		{
-			case MISSILE_TYPE.HOMING:
-				Missile newMissile = proj as Missile;
-				if (lockOnSystem != null && lockOnSystem.IsLocked)
-				{
-					newMissile.Init(firePos.position, firePos.forward, _unit, lockOnSystem.LockedTarget);
-				}
-				else
-				{
-					newMissile.Init(firePos.position, firePos.forward, _unit);
-				}
-				break;
-
-			case MISSILE_TYPE.CLUSTER:
-				ClusterMissile cm = proj as ClusterMissile;
-				if (lockOnSystem != null && lockOnSystem.currentLockMode == LOCK_ON_MODE.SINGLE && lockOnSystem.IsLocked)
-				{
-					// 단일 락온 모드 - 자탄 전부 한 타겟에 집중 (Split()의 라운드로빈이 자동으로 처리)
-					cm.Init(firePos.position, firePos.forward, _unit, new List<Transform> { lockOnSystem.LockedTarget });
-				}
-				else if (lockOnSystem != null && lockOnSystem.MultiLockedTargets.Count > 0)
-				{
-					// 락온이 풀려도 자탄이 원래 타겟을 추적하도록 복사본 전달
-					cm.Init(firePos.position, firePos.forward, _unit, new List<Transform>(lockOnSystem.MultiLockedTargets));
-				}
-				else
-				{
-					cm.Init(firePos.position, firePos.forward, _unit);
-				}
-				break;
-
-			case MISSILE_TYPE.DUMB:
-				DumbMissile newDm = proj as DumbMissile;
-				newDm.Init(firePos.position, firePos.forward, _unit);
-
-				break;
+			if (targets != null && targets.Count > 0)
+			{
+				cm.Init(firePos.position, firePos.forward, _unit, targets);
+			}
+			else
+			{
+				cm.Init(firePos.position, firePos.forward, _unit);
+			}
+		}
+		else if (proj is DumbMissile dm)
+		{
+			dm.Init(firePos.position, firePos.forward, _unit); // 무유도라 타겟 안 씀
+		}
+		else if (proj is Missile homing)
+		{
+			if (targets != null && targets.Count > 0)
+			{
+				homing.Init(firePos.position, firePos.forward, _unit, targets[0]);
+			}
+			else
+			{
+				homing.Init(firePos.position, firePos.forward, _unit);
+			}
 		}
 
 		// 복제 미사일(RpcShoot)은 데미지 권위 없음 → 연출만. (자탄은 ClusterMissile이 부모 권위를 물려줌)
-		proj?.SetDamageAuthority(hasAuthority);
+		proj.SetDamageAuthority(hasAuthority);
 	}
 
 	/// <summary>
-	/// 발사할 풀 종류 결정. missileData.curProjectilePoolType 설정돼있으면 그 값 사용,
-	/// missileData가 null이면(에디터 작업 전 임시 상태) curMissileType 기준 기존 기본 풀로 폴백.
+	/// 발사할 풀 종류 결정. data가 있으면 data.curProjectilePoolType,
+	/// data가 null이면(데이터 미설정 유닛) curMissileType 기준 기본 풀로 폴백.
+	/// 복제 발사(RpcShoot)는 항상 ID로 조회한 data가 있어서 폴백을 안 탐 — 그래서 여기서 내 슬롯을 봐도 안전함.
 	/// </summary>
-	private POOL_TYPE GetMissilePoolType(MissileSlot curSlot)
+	private POOL_TYPE GetMissilePoolType(MissileData data)
 	{
-		if (curSlot != null && curSlot.missileData != null)
+		if (data != null)
 		{
-			return curSlot.missileData.curProjectilePoolType;
+			return data.curProjectilePoolType;
 		}
 
 		switch (curMissileType)

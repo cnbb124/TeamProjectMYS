@@ -75,6 +75,9 @@ public class Enemy : Unit
 
 	protected Vector3 _spawnPosition;
 
+	// UnitManager 참조. Start에서 1회만 잡고 OnEnable/OnDisable은 이 필드만 씀(풀 재사용 때마다 재취득 안 함).
+	private UnitManager _unitManager;
+
 
 
     // ======================AI설정용============================
@@ -107,12 +110,18 @@ public class Enemy : Unit
     {
         base.OnEnable();
         aiState = AI_STATE.STANDBY;
-        UnitManager.Instance?.RegisterEnemy(this);
+        // 캐시된 것만 씀 — 여기서 .Instance를 새로 부르면 매니저 Awake보다 먼저 instance를 선점해
+        // 매니저 초기화를 통째로 스킵시킬 수 있음(project_singleton_pattern 규칙).
+        // 최초 1회는 아직 null이라 그냥 넘어가고, 바로 뒤의 Start가 등록을 마무리함.
+        _unitManager?.RegisterEnemy(this);
     }
 
 	protected override void Start()
 	{
 		base.Start();
+		// 매니저 최초 취득은 Start에서만 — 모든 오브젝트의 Awake가 끝난 게 보장되는 시점.
+		_unitManager = UnitManager.Instance;
+		_unitManager?.RegisterEnemy(this); // RegisterEnemy에 중복등록 가드 있어 OnEnable과 겹쳐도 안전
 		UpdateTarget();
 		_spawnPosition = transform.position;
 	}
@@ -310,7 +319,9 @@ public class Enemy : Unit
 	protected override void OnDisable()
 	{
 		base.OnDisable();
-		UnitManager.Instance?.UnregisterEnemy(this);
+		// 캐시된 참조만 씀 — 플레이 종료 때 매니저가 먼저 파괴되면 Unity의 fake-null로 조용히 스킵됨.
+		// 여기서 .Instance를 부르면 없는 매니저를 적 수만큼 다시 찾으면서 로그가 쏟아짐.
+		_unitManager?.UnregisterEnemy(this);
 	}
 
 	// 사망 후 풀 반납까지 남은 시간. Die()에서 세팅, OnDying()에서 카운트다운.
