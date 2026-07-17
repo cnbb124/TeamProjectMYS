@@ -52,7 +52,8 @@ public class MidBoss : Enemy
         // �ϲ� ����
         Vector3 spawnPos = transform.position + Random.insideUnitSphere * 30f;
         // 네트워크 스폰 — Master가 만들면 전원에게 동기화. workerPrefab은 Resources 폴더 + PhotonView 필요.
-        PhotonNetwork.Instantiate(workerPrefab.name, spawnPos, Quaternion.identity);
+        // 일꾼도 '룸 종속' — RoomObject로 만들어야 방장이 나가도 안 사라짐.
+        PhotonNetwork.InstantiateRoomObject(workerPrefab.name, spawnPos, Quaternion.identity);
         Debug.Log($"�ϲ� ����! ���� �ڿ� �ܷ�: {currentResource}");
     }
 }

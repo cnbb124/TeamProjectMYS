@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using Photon.Pun;
 using UnityEngine;
+using PhotonHashtable = ExitGames.Client.Photon.Hashtable;
 
 // ================================================================
 // [SpawnManager — 웨이브 기반 적 스폰]
@@ -19,8 +20,14 @@ using UnityEngine;
 // 보스 웨이브:
 //   GameManager.onBossSpawn 이벤트 발생 시 bossWave 별도 실행.
 //   진행 중이던 일반 웨이브는 중단됨.
+//
+// 멀티(소유권 범위):
+//   적/드랍은 '룸 종속' — InstantiateRoomObject로 스폰해 방장이 나가도 파괴되지 않고
+//   소유권(IsMine)이 새 방장에게 자동 이전됨. (PhotonNetwork.Instantiate는 '유저 종속'이라
+//   만든 사람이 나가면 CleanupCacheOnLeave로 전부 파괴됨 — 적에는 쓰면 안 됨)
+//   웨이브 진행도도 룸 종속 상태라 Room Custom Property에 기록해, 방장 교체 시 새 방장이 이어받음.
 // ================================================================
-public class SpawnManager : MonoBehaviour
+public class SpawnManager : MonoBehaviourPunCallbacks
 {
 	// ================================================================
 	// 싱글톤 (씬 전용 — DontDestroyOnLoad 없음)
@@ -67,6 +74,13 @@ public class SpawnManager : MonoBehaviour
 	[Header("보스 웨이브")]
 	[Tooltip("GameManager.onBossSpawn 이벤트 발생 시 실행할 WaveData. null이면 스킵.")]
 	public WaveData bossWave;
+
+	// ================================================================
+	// 룸 종속 상태 키 (방장 교체 시 새 방장이 이어받을 기준점)
+	// ================================================================
+	// 웨이브 진행도는 특정 플레이어가 아니라 '방'에 속한 상태라 Room Custom Property에 둠.
+	private const string WaveIndexPropertyKey = "SpawnWaveIndex";
+	private const string BossWavePropertyKey = "SpawnBossWave";
 
 	// ================================================================
 	// 내부 상태
@@ -116,6 +130,7 @@ public class SpawnManager : MonoBehaviour
 			return;
 		}
 		_currentWaveIndex = waveIndex;
+		PublishWaveState(waveIndex, false);
 		_waveEnemies.Clear();
 		StopAllCoroutines();
 		StartCoroutine(SpawnWaveRoutine(waves[waveIndex]));
@@ -210,7 +225,8 @@ public class SpawnManager : MonoBehaviour
 
 			// Master 권위 네트워크 스폰 — 모든 클라에 같은 적이 생성됨(PhotonPoolAdapter가 로컬 풀로 라우팅).
 			// prefabId = POOL_TYPE 이름(어댑터가 파싱해 풀에서 꺼냄). 위치는 Instantiate가 설정.
-			GameObject go = PhotonNetwork.Instantiate(entry.poolType.ToString(), pos, Quaternion.identity);
+			// 적은 '룸 종속'이라 RoomObject로 만듦 — 방장이 나가도 살아남고 소유권이 새 방장에게 넘어감.
+			GameObject go = PhotonNetwork.InstantiateRoomObject(entry.poolType.ToString(), pos, Quaternion.identity);
 			if (go == null)
 			{
 				continue;
@@ -293,9 +309,97 @@ public class SpawnManager : MonoBehaviour
 		{
 			return;
 		}
+		// _currentWaveIndex는 그대로 둠(보스 클리어 후 AdvanceWave가 이어갈 기준점).
+		PublishWaveState(_currentWaveIndex, true);
 		_waveEnemies.Clear();
 		StopAllCoroutines();
 		StartCoroutine(SpawnWaveRoutine(bossWave));
+	}
+
+	// ================================================================
+	// 방장 승계
+	// ================================================================
+	// 방장이 나가면 새 방장이 웨이브를 이어받음.
+	// 적/드랍은 룸 종속(InstantiateRoomObject)이라 파괴되지 않고 IsMine만 새 방장으로 넘어오므로,
+	// 여기서 다시 스폰하면 중복됨 → 재스폰 안 하고 '살아있는 적의 전멸 감시'만 인계받아 다음 웨이브로 진행함.
+	// 한계: 이전 방장이 스폰 도중(예: 10마리 중 3마리)에 나갔다면 남은 스폰분은 유실됨(부분 웨이브로 진행).
+	public override void OnMasterClientSwitched(Photon.Realtime.Player newMasterClient)
+	{
+		if (!PhotonNetwork.IsMasterClient)
+		{
+			return;
+		}
+		ResumeWaveAsNewMaster();
+	}
+
+	private void ResumeWaveAsNewMaster()
+	{
+		bool isBossWave = ReadRoomBool(BossWavePropertyKey);
+		_currentWaveIndex = ReadRoomInt(WaveIndexPropertyKey, _currentWaveIndex);
+
+		WaveData activeWave = isBossWave ? bossWave : GetNormalWave(_currentWaveIndex);
+		if (activeWave == null)
+		{
+			return;
+		}
+
+		// 룸 종속으로 살아남은 적을 인계받아 클리어 판정 대상으로 삼음.
+		_waveEnemies.Clear();
+		Enemy[] aliveEnemies = FindObjectsOfType<Enemy>();
+		foreach (Enemy enemy in aliveEnemies)
+		{
+			if (enemy != null && enemy.CurState != UNIT_STATE.DIE)
+			{
+				_waveEnemies.Add(enemy);
+			}
+		}
+
+		StopAllCoroutines();
+		StartCoroutine(WaitForWaveClear(activeWave));
+	}
+
+	// 현재 웨이브 진행도를 룸에 기록(방장만 호출) — 새 방장이 이걸 읽고 이어받음.
+	private void PublishWaveState(int waveIndex, bool isBossWave)
+	{
+		if (!PhotonNetwork.InRoom || PhotonNetwork.CurrentRoom == null)
+		{
+			return;
+		}
+		PhotonHashtable waveState = new PhotonHashtable
+		{
+			{ WaveIndexPropertyKey, waveIndex },
+			{ BossWavePropertyKey, isBossWave }
+		};
+		PhotonNetwork.CurrentRoom.SetCustomProperties(waveState);
+	}
+
+	private WaveData GetNormalWave(int waveIndex)
+	{
+		if (waves == null || waveIndex < 0 || waveIndex >= waves.Length)
+		{
+			return null;
+		}
+		return waves[waveIndex];
+	}
+
+	private int ReadRoomInt(string key, int fallback)
+	{
+		if (PhotonNetwork.CurrentRoom == null ||
+			!PhotonNetwork.CurrentRoom.CustomProperties.TryGetValue(key, out object value))
+		{
+			return fallback;
+		}
+		return value is int intValue ? intValue : fallback;
+	}
+
+	private bool ReadRoomBool(string key)
+	{
+		if (PhotonNetwork.CurrentRoom == null ||
+			!PhotonNetwork.CurrentRoom.CustomProperties.TryGetValue(key, out object value))
+		{
+			return false;
+		}
+		return value is bool boolValue && boolValue;
 	}
 
 	// ================================================================

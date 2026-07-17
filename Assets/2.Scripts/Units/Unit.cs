@@ -52,7 +52,7 @@ public class MissileSlot // 미사일 슬롯 — 타입+잔탄 통합 관리. eq
 	public bool HasAmmo { get { return curAmmo > 0; } }
 }
 
-public abstract class Unit : MonoBehaviour, IDamageable
+public abstract class Unit : MonoBehaviour, IDamageable, IPunObservable
 {
 
 
@@ -854,19 +854,22 @@ public abstract class Unit : MonoBehaviour, IDamageable
 		{
 			_photonView.RPC(nameof(RpcTakeDamage), _photonView.Owner,
 				(int)info.type, info.damageAmount, info.isCritical,
-				info.ignoreArmor, info.shieldDamageMultiplier, info.aoeRadius, info.hitPosition);
+				info.ignoreArmor, info.shieldDamageMultiplier, info.aoeRadius, info.hitPosition,
+				(int)info.hitVfxType, (int)info.shieldHitVfxType, (int)info.hitSoundType);
 			return;
 		}
 		ApplyHitDamage(info);
 	}
 
-	// 대상 소유자 클라에서만 실행되는 데미지 적용 RPC(위 라우터가 전송). 연출용 필드(사운드/VFX/attacker)는
-	// 넘기지 않고 소유자 로컬에서 재구성 — Phase1은 데미지/사망 정확도만 맞춘다(피격VFX·킬귀속·체력바동기화는 후속).
+	// 대상 소유자 클라에서만 실행되는 데미지 적용 RPC(위 라우터가 전송). 피격 VFX/사운드 종류도 함께 전송해
+	// 소유자 화면에서 올바른 피격 연출이 나오게 함 — 누락하면 수신부에서 enum 기본값 0(VFX_EXPLOSION_MISSILE)으로
+	// 재구성돼 총알 피격에도 폭발이 재생됨. attacker(킬 귀속)는 아직 미전송(후속).
 	// public 필수 — PUN은 실제 컴포넌트(Enemy/Player 등 파생 타입)를 리플렉션해 [PunRPC]를 찾는데,
-	// base(Unit)에 private로 선언하면 파생 타입에서 안 잡혀 "RPC method not found" 에러가 난다.
+	// base(Unit)에 private로 선언하면 파생 타입에서 안 잡혀 "RPC method not found" 에러 남.
 	[PunRPC]
 	public void RpcTakeDamage(int type, int damageAmount, bool isCritical,
-		bool ignoreArmor, float shieldDamageMultiplier, float aoeRadius, Vector3 hitPosition)
+		bool ignoreArmor, float shieldDamageMultiplier, float aoeRadius, Vector3 hitPosition,
+		int hitVfxType, int shieldHitVfxType, int hitSoundType)
 	{
 		HitInfo info = new HitInfo
 		{
@@ -877,8 +880,36 @@ public abstract class Unit : MonoBehaviour, IDamageable
 			shieldDamageMultiplier = shieldDamageMultiplier,
 			aoeRadius = aoeRadius,
 			hitPosition = hitPosition,
+			hitVfxType = (EFFECT_TYPE)hitVfxType,
+			shieldHitVfxType = (EFFECT_TYPE)shieldHitVfxType,
+			hitSoundType = (SOUND_TYPE)hitSoundType,
 		};
 		ApplyHitDamage(info);
+	}
+
+	// HP/실드 스트리밍 — 소유자(적=Master, 플레이어=본인)만 값을 쓰고 비소유자는 받기만 함.
+	// 이게 없으면 비소유자 화면에서 체력바가 안 깎이고 풀피로 보이다 적이 갑자기 사라짐(데미지는 실제로 들어가는데 안 보이는 것).
+	// 사망(CurState=DIE)·실드재생은 ApplyHitDamage(소유자 전용) 안에서만 트리거되므로, 비소유자가 값만 받아도 멋대로 죽거나 재생하지 않음.
+	// ⚠ 에디터: PhotonView의 Observed Components에 이 유닛 컴포넌트(Player/Enemy)를 등록해야 호출됨.
+	public void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)
+	{
+		if (stream.IsWriting)
+		{
+			stream.SendNext(curHpRemaining);
+			stream.SendNext(curShieldRemaining);
+		}
+		else
+		{
+			bool hadShield = curShieldRemaining > 0;
+			curHpRemaining = (int)stream.ReceiveNext();
+			curShieldRemaining = (int)stream.ReceiveNext();
+
+			// 실드 유무가 바뀐 순간에만 콜라이더 갱신 — 피격 판정은 각 클라 로컬에서 나므로 비소유자도 콜라이더가 맞아야 함.
+			if (hadShield != (curShieldRemaining > 0))
+			{
+				UpdateShieldHitboxState();
+			}
+		}
 	}
 
 	// 실제 데미지 적용(계산/파츠/사망 트리거). 회피·자원흡수 등은 서브클래스가 override.
