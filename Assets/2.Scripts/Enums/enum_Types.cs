@@ -103,6 +103,7 @@ public enum SOUND_TYPE
 	SFX_DICE_ROLL = 200,      // 주사위 굴리는 소리
 	SFX_UI_CLICK,       // 버튼 클릭음
 	SFX_UI_LOCKON_COMPLETE, // 락온 완료 사운드
+	SFX_UI_LOCKON_ALERT,    // 락온 경고음
 
 
 	//전투 효과음관련

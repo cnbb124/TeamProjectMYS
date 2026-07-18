@@ -30,7 +30,7 @@ public class AlertSystemUI : MonoBehaviour
 {
     [Header("References")]
     [SerializeField] private GameObject  alertRoot;     // 깜빡일 경고 오브젝트(자식)
-    [SerializeField] private AudioSource warningAudio;  // 경고음 (선택)
+    private SoundManager _soundManager;
 
     [Header("Settings")]
     [SerializeField] private float scanInterval  = 0.2f;  // 미사일 검사 주기(초)
@@ -42,6 +42,7 @@ public class AlertSystemUI : MonoBehaviour
 
     private void Start()
     {
+        _soundManager = SoundManager.Instance;
         // 시작 시 경고 꺼둠
         if (alertRoot != null) alertRoot.SetActive(false);
     }
@@ -53,7 +54,10 @@ public class AlertSystemUI : MonoBehaviour
         if (_scanTimer >= scanInterval)
         {
             _scanTimer = 0f;
+            bool hadThreat = _threat;
             _threat = HasIncomingMissile();
+            if (_threat && !hadThreat && _soundManager != null)
+                _soundManager.PlaySFXUI(SOUND_TYPE.SFX_UI_LOCKON_ALERT);
         }
 
         // ── 경고 표시 ──
@@ -66,13 +70,10 @@ public class AlertSystemUI : MonoBehaviour
                 if (alertRoot != null) alertRoot.SetActive(!alertRoot.activeSelf);
             }
 
-            if (warningAudio != null && !warningAudio.isPlaying)
-                warningAudio.Play();
         }
         else
         {
             if (alertRoot != null && alertRoot.activeSelf) alertRoot.SetActive(false);
-            if (warningAudio != null && warningAudio.isPlaying) warningAudio.Stop();
             _blinkTimer = 0f;
         }
     }
