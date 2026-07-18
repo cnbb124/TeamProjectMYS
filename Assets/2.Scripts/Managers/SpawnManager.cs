@@ -4,6 +4,7 @@ using ExitGames.Client.Photon;
 using Photon.Pun;
 using Photon.Realtime;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using PhotonHashtable = ExitGames.Client.Photon.Hashtable;
 
 // ================================================================
@@ -220,7 +221,11 @@ public class SpawnManager : MonoBehaviourPunCallbacks, IOnEventCallback
 			// Master 권위 네트워크 스폰 — 모든 클라에 같은 적이 생성됨(PhotonPoolAdapter가 로컬 풀로 라우팅).
 			// prefabId = POOL_TYPE 이름(어댑터가 파싱해 풀에서 꺼냄). 위치는 Instantiate가 설정.
 			// 적은 '룸 종속'이라 RoomObject로 만듦 — 방장이 나가도 살아남고 소유권이 새 방장에게 넘어감.
-			GameObject go = PhotonNetwork.InstantiateRoomObject(entry.poolType.ToString(), pos, Quaternion.identity);
+			// 마지막 인자로 '이 적이 태어난 씬'을 같이 보냄 — 다른 씬에 있는 클라가 이걸 보고 숨김(EnemySceneVisibility).
+			// 방장의 '현재 씬'이 아니라 '스폰 시점 씬'인 이유: 방장이 스테이션으로 돌아가도 스테이지 적은 그대로 보여야 함.
+			GameObject go = PhotonNetwork.InstantiateRoomObject(
+				entry.poolType.ToString(), pos, Quaternion.identity, 0,
+				new object[] { SceneManager.GetActiveScene().name });
 			if (go == null)
 			{
 				continue;

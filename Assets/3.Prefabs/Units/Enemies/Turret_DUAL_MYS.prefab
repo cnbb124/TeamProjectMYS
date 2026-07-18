@@ -1258,6 +1258,7 @@ GameObject:
   - component: {fileID: 5346114771317425202}
   - component: {fileID: 8950724485814838234}
   - component: {fileID: -8598732970096551808}
+  - component: {fileID: 4604919098371045564}
   m_Layer: 7
   m_Name: Turret_DUAL_MYS
   m_TagString: Enemy
@@ -1435,6 +1436,7 @@ MonoBehaviour:
   OwnershipTransfer: 0
   observableSearch: 2
   ObservedComponents:
+  - {fileID: 8780441365474338247}
   - {fileID: -8598732970096551808}
   sceneViewId: 0
   InstantiationId: 0
@@ -1455,6 +1457,18 @@ MonoBehaviour:
   m_SynchronizeRotation: 1
   m_SynchronizeScale: 0
   m_UseLocal: 1
+--- !u!114 &4604919098371045564
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6706981218406096366}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ca56db56e47459d42b133fe616689e11, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &6814546276404120738
 GameObject:
   m_ObjectHideFlags: 0

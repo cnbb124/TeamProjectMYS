@@ -350,6 +350,15 @@ public class WeaponSystem : MonoBehaviour
 	[PunRPC]
 	private void RpcShoot(int type, int dataId, int[] targetRefs)
 	{
+		// 쏜 사람이 나와 다른 씬에 있으면 무시. Photon은 씬을 모르고 방 전체에 뿌리기 때문에,
+		// 이 체크가 없으면 스테이지에서 쏜 총알이 로비/대기실 화면에도 생긴다(머즐VFX·사운드까지).
+		// 함선 자체는 PlayerSceneVisibility가 숨기지만 그 함선이 뱉는 총알은 별개라 여기서 막아야 함.
+		if (PlayerSceneVisibility.IsDifferentFromLocalScene(
+				PlayerSceneVisibility.GetPlayerScene(_photonView != null ? _photonView.Owner : null)))
+		{
+			return;
+		}
+
 		ITEM_ID firedDataId = (ITEM_ID)dataId;
 		ItemDatabase database = ItemDatabase.Instance;
 

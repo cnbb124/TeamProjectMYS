@@ -195,6 +195,15 @@ public class SkillSystem : MonoBehaviour
 	[PunRPC]
 	private void RpcUseSkill(int skillId)
 	{
+		// 쓴 사람이 나와 다른 씬에 있으면 무시(WeaponSystem.RpcShoot과 동일).
+		// Photon은 씬을 모르고 방 전체에 뿌리므로, 이게 없으면 스테이지에서 쓴 스킬 연출이
+		// 로비/대기실 화면에도 재생됨.
+		if (PlayerSceneVisibility.IsDifferentFromLocalScene(
+				PlayerSceneVisibility.GetPlayerScene(_photonView != null ? _photonView.Owner : null)))
+		{
+			return;
+		}
+
 		ActiveSkill skill = FindSlotSkillById((SKILL_ID)skillId);
 		if (skill == null)
 		{

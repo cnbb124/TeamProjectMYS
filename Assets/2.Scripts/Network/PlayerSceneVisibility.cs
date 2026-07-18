@@ -26,6 +26,32 @@ public class PlayerSceneVisibility : MonoBehaviourPunCallbacks
     // NetworkManager와 공유하는 Player Custom Property 키.
     public const string SCENE_KEY = "scene";
 
+    // 적 스폰 시 "어느 씬에서 태어났는지"를 실어보낼 때 쓰는 InstantiationData 인덱스.
+    public const int SPAWN_SCENE_DATA_INDEX = 0;
+
+    /// <summary>그 플레이어가 지금 있는 씬 이름. 아직 못 받았으면 null.</summary>
+    public static string GetPlayerScene(Photon.Realtime.Player player)
+    {
+        if (player == null || !player.CustomProperties.TryGetValue(SCENE_KEY, out object v))
+        {
+            return null;
+        }
+        return v as string;
+    }
+
+    /// <summary>
+    /// 저 씬이 내 씬과 '확실히 다른가'. 씬 정보를 아직 모르면(null/빈값) false —
+    /// 정보 못 받은 타이밍에 애먼 걸 숨기거나 막지 않기 위함(모르면 일단 보여줌).
+    /// </summary>
+    public static bool IsDifferentFromLocalScene(string otherScene)
+    {
+        if (string.IsNullOrEmpty(otherScene))
+        {
+            return false;
+        }
+        return otherScene != SceneManager.GetActiveScene().name;
+    }
+
     private void Start()
     {
         ApplyVisibility();
@@ -70,16 +96,7 @@ public class PlayerSceneVisibility : MonoBehaviourPunCallbacks
         // 남 함선: 소유자의 '현재 씬'이 나의 현재 씬과 '확실히 다를' 때만 숨긴다.
         // 소유자 씬을 아직 모르면(프로퍼티 미수신/미설정) 숨기지 않는다 — 같은 씬인데 타이밍 때문에
         // 프로퍼티를 못 받아서 서로 안 보이는 비대칭 버그를 막기 위함. 정보가 오면 OnPlayerPropertiesUpdate가 재평가.
-        string myScene = SceneManager.GetActiveScene().name;
-        string ownerScene = null;
-        if (photonView.Owner != null
-            && photonView.Owner.CustomProperties.TryGetValue(SCENE_KEY, out object v))
-        {
-            ownerScene = v as string;
-        }
-        bool differentScene = !string.IsNullOrEmpty(ownerScene) && ownerScene != myScene;
-        // [진단용] 실제 비교값 확인. 원인 잡히면 이 로그는 제거.
-        Debug.Log($"[PlayerSceneVisibility] {name} IsMine={photonView.IsMine} myScene='{myScene}' ownerScene='{ownerScene}' → visible={!differentScene}");
+        bool differentScene = IsDifferentFromLocalScene(GetPlayerScene(photonView.Owner));
         SetVisible(!differentScene);
     }
 

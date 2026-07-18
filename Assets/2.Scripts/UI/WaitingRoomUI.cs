@@ -252,6 +252,15 @@ public class WaitingRoomUI : MonoBehaviourPunCallbacks, IOnEventCallback
             return;
         }
 
+        // 시작한 방은 닫는다 — 이후에 멀티를 누른 사람은 이 방에 못 들어오고(IsOpen=false),
+        // 매칭 목록에도 안 잡혀서(IsVisible=false) JoinRandomOrCreateRoom이 새 방을 만들게 된다.
+        // 중간에 나간 사람이 다시 들어오는 것도 이걸로 막힌다.
+        if (PhotonNetwork.CurrentRoom != null)
+        {
+            PhotonNetwork.CurrentRoom.IsOpen = false;
+            PhotonNetwork.CurrentRoom.IsVisible = false;
+        }
+
         RaiseEventOptions eventOptions = new RaiseEventOptions
         {
             Receivers = ReceiverGroup.All

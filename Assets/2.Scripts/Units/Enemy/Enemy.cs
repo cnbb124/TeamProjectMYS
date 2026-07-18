@@ -348,7 +348,9 @@ public class Enemy : Unit
 			// 드랍은 '룸 종속' — RoomObject로 만들어야 방장이 나가도 안 사라짐(Instantiate는 만든 사람 이탈 시 파괴됨).
 			if (_photonView != null)
 			{
-				PhotonNetwork.InstantiateRoomObject(dropType.ToString(), transform.position, Quaternion.identity);
+				// 드랍도 적과 같은 씬 소속 — 다른 씬 클라에서 숨기려면 스폰 씬을 같이 보내야 함.
+				PhotonNetwork.InstantiateRoomObject(dropType.ToString(), transform.position, Quaternion.identity, 0,
+					new object[] { UnityEngine.SceneManagement.SceneManager.GetActiveScene().name });
 			}
 			else
 			{

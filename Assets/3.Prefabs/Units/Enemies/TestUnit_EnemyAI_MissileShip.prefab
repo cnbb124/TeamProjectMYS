@@ -5528,6 +5528,7 @@ GameObject:
   - component: {fileID: 2166254428839377297}
   - component: {fileID: -5207532380320973160}
   - component: {fileID: 2815672866238033565}
+  - component: {fileID: 5532840297424911996}
   m_Layer: 7
   m_Name: TestUnit_EnemyAI_MissileShip
   m_TagString: Enemy
@@ -5835,6 +5836,7 @@ MonoBehaviour:
   OwnershipTransfer: 0
   observableSearch: 2
   ObservedComponents:
+  - {fileID: 4888139802992600001}
   - {fileID: 2815672866238033565}
   sceneViewId: 0
   InstantiationId: 0
@@ -5855,6 +5857,18 @@ MonoBehaviour:
   m_SynchronizeRotation: 1
   m_SynchronizeScale: 0
   m_UseLocal: 1
+--- !u!114 &5532840297424911996
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8508547545565869303}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ca56db56e47459d42b133fe616689e11, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &8577692801610593443
 GameObject:
   m_ObjectHideFlags: 0

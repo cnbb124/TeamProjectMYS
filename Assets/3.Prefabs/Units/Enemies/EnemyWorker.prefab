@@ -544,6 +544,7 @@ GameObject:
   - component: {fileID: 1126471100447482996}
   - component: {fileID: -928440445826985301}
   - component: {fileID: -3528632172192281665}
+  - component: {fileID: 6561935200736225810}
   m_Layer: 7
   m_Name: EnemyWorker
   m_TagString: Enemy
@@ -714,7 +715,9 @@ MonoBehaviour:
   Synchronization: 3
   OwnershipTransfer: 0
   observableSearch: 2
-  ObservedComponents: []
+  ObservedComponents:
+  - {fileID: 4425676582768067325}
+  - {fileID: -3528632172192281665}
   sceneViewId: 0
   InstantiationId: 0
   isRuntimeInstantiated: 0
@@ -734,6 +737,18 @@ MonoBehaviour:
   m_SynchronizeRotation: 1
   m_SynchronizeScale: 0
   m_UseLocal: 1
+--- !u!114 &6561935200736225810
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6443261429966239528}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ca56db56e47459d42b133fe616689e11, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &6482849843375923464
 GameObject:
   m_ObjectHideFlags: 0

@@ -3281,6 +3281,9 @@ GameObject:
   - component: {fileID: 2411932149713499669}
   - component: {fileID: 8663576800075854773}
   - component: {fileID: 5941539124639823583}
+  - component: {fileID: 5802353315480139881}
+  - component: {fileID: 8068631124423015552}
+  - component: {fileID: 7742924094218919035}
   m_Layer: 0
   m_Name: EnemyBossShip
   m_TagString: Untagged
@@ -3438,6 +3441,65 @@ MonoBehaviour:
   _patternCooldown: 1.5
   _firePoint: {fileID: 0}
   _bulletData: {fileID: 11400000, guid: 909ae5aae1edf2f4f83716ad4fdca8aa, type: 2}
+--- !u!114 &5802353315480139881
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2382669352406378664}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aa584fbee541324448dd18d8409c7a41, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ObservedComponentsFoldoutOpen: 1
+  Group: 0
+  prefixField: -1
+  Synchronization: 3
+  OwnershipTransfer: 0
+  observableSearch: 2
+  ObservedComponents:
+  - {fileID: 5941539124639823583}
+  - {fileID: 8068631124423015552}
+  - {fileID: 922796097214107415}
+  - {fileID: 1230056297222094713}
+  - {fileID: 638745818817838788}
+  - {fileID: 6608642223199901820}
+  - {fileID: 8547857597217760173}
+  - {fileID: 2968214610183489330}
+  - {fileID: 516563657394256048}
+  sceneViewId: 0
+  InstantiationId: 0
+  isRuntimeInstantiated: 0
+--- !u!114 &8068631124423015552
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2382669352406378664}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 627855c7f81362d41938ffe0b1475957, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_SynchronizePosition: 1
+  m_SynchronizeRotation: 1
+  m_SynchronizeScale: 0
+  m_UseLocal: 1
+--- !u!114 &7742924094218919035
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2382669352406378664}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ca56db56e47459d42b133fe616689e11, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &2432290003101517648
 GameObject:
   m_ObjectHideFlags: 0
