@@ -34,6 +34,11 @@ public class ShopNPCAnim : MonoBehaviour
     [SerializeField] private NPC_ANIM_STATE midLevelAnim = NPC_ANIM_STATE.Idle;
     [SerializeField] private NPC_ANIM_STATE highLevelAnim = NPC_ANIM_STATE.Idle;
 
+    [Header("바라보기 설정")]
+    [SerializeField] private Transform npcBody;
+    [SerializeField] private float turnSpeed = 5f;
+    private Transform _playerTransform;
+
     // Animator State 실제 이름 매핑
     private readonly string IDLE = "Idle";
     private readonly string GREETING = "Greeting";
@@ -48,6 +53,10 @@ public class ShopNPCAnim : MonoBehaviour
         if (animator == null)
         {
             animator = GetComponentInParent<Animator>();
+        }
+        if (npcBody == null && animator != null)
+        {
+            npcBody = animator.transform;
         }
     }
 
@@ -64,6 +73,14 @@ public class ShopNPCAnim : MonoBehaviour
             _affectionManager.OnAffectionChanged += OnAffectionChanged;
         }
         RefreshIdleState();
+    }
+
+    private void Update()
+    {
+        if (_playerNearby && _playerTransform != null)
+        {
+            LookAtPlayer();
+        }
     }
 
     private void OnEnable()
@@ -100,7 +117,14 @@ public class ShopNPCAnim : MonoBehaviour
             return;
         }
         _playerNearby = true;
+        _playerTransform = other.transform;
         animator.CrossFade(GREETING, 0.25f);
+
+        // E키를 누르면 상호작용으로
+        // 플레이어 canControl = false
+        // AffinityUI 활성화
+
+        // ui에서 exit하면 AffinityUI 비활성화 canControl = true????
     }
 
     private void OnTriggerExit(Collider other)
@@ -110,6 +134,7 @@ public class ShopNPCAnim : MonoBehaviour
             return;
         }
         _playerNearby = false;
+        _playerTransform = null;
         if (!_isTrading)
         {
             RefreshIdleState();
@@ -178,6 +203,17 @@ public class ShopNPCAnim : MonoBehaviour
                 animator.CrossFade(GREETING, 0.25f);
                 break;
         }
+    }
+
+    private void LookAtPlayer()
+    {
+        Vector3 direction = _playerTransform.position - npcBody.position;
+        direction.y = 0f;
+
+        if (direction.sqrMagnitude < 0.001f) return;
+
+        Quaternion targetRotation = Quaternion.LookRotation(direction);
+        npcBody.rotation = Quaternion.Slerp(npcBody.rotation, targetRotation, Time.deltaTime * turnSpeed);
     }
 }
 
