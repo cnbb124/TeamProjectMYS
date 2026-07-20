@@ -62,6 +62,10 @@ using UnityEngine;
 public class KeyboardMouseConfig
 {
     [Header("이동")]
+    public KeyCode moveForward = KeyCode.W;        // 전진
+    public KeyCode moveBack    = KeyCode.S;        // 후진
+    public KeyCode moveLeft    = KeyCode.A;        // 좌
+    public KeyCode moveRight   = KeyCode.D;        // 우
     public KeyCode moveUp    = KeyCode.Mouse4;    // 수직 상승
     public KeyCode moveDown  = KeyCode.Mouse3;    // 수직 하강
     public KeyCode rollLeft  = KeyCode.Q;         // 기체 좌 롤
@@ -100,15 +104,8 @@ public class KeyboardMouseConfig
     [Header("락온 모드 전환")]
     public KeyCode toggleClusterLockMode = KeyCode.C; // 클러스터 미사일 단일/다중 락온 전환
 
-    [Header("Unity Input Settings 축 이름")]
-    [Tooltip("Edit > Project Settings > Input Manager 에 등록된 이름과 일치해야 함")]
-    public string axisHorizontal  = "Horizontal";      // A/D
-    public string axisVertical    = "Vertical";        // W/S
-    public string axisMouseX      = "Mouse X";
-    public string axisMouseY      = "Mouse Y";
-    public string axisScrollWheel = "Mouse ScrollWheel";
-
-    
+    // 이동(WASD)은 위 KeyCode로 직접 읽음(축 아님). 마우스 시야/휠 축 이름은 값이 고정이라
+    // InputManager의 const(AxisMouseX/Y/ScrollWheel)로 옮김 — 인스펙터에 노출할 필요 없음.
 }
 
 // =====================================================================
@@ -170,16 +167,29 @@ public class GamepadConfig
     [Header("상호작용(STATION에서)")]
     public GAMEPAD_BUTTON interAct        = GAMEPAD_BUTTON.Cross; // 전투의 dodge와 씬 문맥이 달라 공유 무방
 
-    [Header("Unity Input Settings 축 이름 (Project Settings에 등록 필요)")]
+    //[Header("Unity Input Settings 축 이름 (Project Settings에 등록 필요)")]
+    [HideInInspector]
     public string axisLeftStickX   = "LeftStickX";
-    public string axisLeftStickY   = "LeftStickY";
+	[HideInInspector]
+	public string axisLeftStickY   = "LeftStickY";
+	[HideInInspector] 
     public string axisVerticalMove = "VerticalMove";
+	[HideInInspector]
     public string axisRightStickX  = "RightStickX";
+	[HideInInspector] 
     public string axisRightStickY  = "RightStickY";
+	[HideInInspector]
     public string axisDPadX        = "DPadX";
+	[HideInInspector] 
     public string axisDPadY        = "DPadY";
+	[HideInInspector] 
     public string axisL2           = "LeftTrigger";  // L2 트리거(축)
+	[HideInInspector] 
     public string axisR2           = "RightTrigger"; // R2 트리거(축)
+
+    [Header("시야 옵션")]
+    [Tooltip("오른쪽 스틱 상하(Y축) 반전. 켜면 스틱을 위로 밀 때 시야가 아래로 감(항공 스타일).")]
+    public bool invertRStickY = false;
 }
 
 // =====================================================================
@@ -224,8 +234,9 @@ public class InputManager : MonoBehaviour
     // =====================================================================
     // 인스펙터 설정
     // =====================================================================
-    [Header("━━━━━━ 조작 방식 선택 ━━━━━━")]
-    [Tooltip("KEYBOARD_MOUSE / GAMEPAD / MOBILE 중 선택")]
+    [Header("━━━━━━ 조작 방식 ━━━━━━")]
+    [Tooltip("MOBILE = 모바일 입력 강제. 그 외(KEYBOARD_MOUSE/GAMEPAD)는 값과 무관하게 키마+패드를 자동 병합함" +
+             "(둘 다 동시 사용, 동시 입력 시 패드 우선). 현재 사용 중인 장치는 LastUsedDevice로 확인.")]
     public INPUT_CONTROL_TYPE controlType = INPUT_CONTROL_TYPE.KEYBOARD_MOUSE;
 
     [Space(5)]
@@ -320,6 +331,37 @@ public class InputManager : MonoBehaviour
     private float _prevPadDpadX, _prevPadDpadY, _prevPadL2, _prevPadR2;
     private const float TriggerThreshold = 0.5f; // 트리거를 "눌림"으로 볼 임계값(축)
 
+    // === 키마+패드 자동 병합/전환 ===
+    // 마지막으로 실제 입력한 장치. UI가 이 값을 구독해 프롬프트(키/패드) 아이콘을 바꾸면 됨.
+    public INPUT_CONTROL_TYPE LastUsedDevice { get; private set; } = INPUT_CONTROL_TYPE.KEYBOARD_MOUSE;
+
+    // 패드가 하나라도 연결돼 있는지(자동 인식용).
+    public bool IsGamepadConnected
+    {
+        get
+        {
+            string[] names = Input.GetJoystickNames();
+            for (int i = 0; i < names.Length; i++)
+            {
+                if (!string.IsNullOrEmpty(names[i]))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+    }
+
+    // 마우스 시야/휠 축 이름(Unity 기본값 — 안 바뀜).
+    private const string AxisMouseX = "Mouse X";
+    private const string AxisMouseY = "Mouse Y";
+    private const string AxisScrollWheel = "Mouse ScrollWheel";
+    // 스틱이 이 값을 넘으면 '패드로 조작 중'으로 보고 키마 이동/시야를 덮어씀(패드 우선).
+    private const float StickActiveDeadzone = 0.2f;
+
+    private bool _kbActive;   // 이번 프레임 키마 입력 있었나
+    private bool _padActive;  // 이번 프레임 패드 입력 있었나
+
     // =====================================================================
     // 싱글톤 초기화
     // =====================================================================
@@ -338,17 +380,41 @@ public class InputManager : MonoBehaviour
     }
 
     // =====================================================================
-    // 매 프레임 입력 수집 - controlType에 따라 읽기 방식 분기
+    // 매 프레임 입력 수집
+    // MOBILE은 별도 경로. 그 외(PC)는 키마+패드를 매 프레임 둘 다 읽어 병합한다:
+    //   - 키마 값으로 먼저 채우고, 패드 입력이 있으면 아날로그(이동/시야/롤/락온)를 덮어씀(패드 우선)
+    //   - 버튼은 둘을 OR (아무 장치나 누르면 동작)
+    //   - 마지막 입력 장치를 LastUsedDevice에 기록 → UI 프롬프트 자동 전환
+    // controlType은 이제 'MOBILE 강제'용으로만 의미 있음(KEYBOARD_MOUSE/GAMEPAD 둘 다 자동 병합).
     // =====================================================================
     private void Update()
     {
         UpdateCursorLock();
 
-        switch (controlType)
+        if (controlType == INPUT_CONTROL_TYPE.MOBILE)
         {
-            case INPUT_CONTROL_TYPE.KEYBOARD_MOUSE: ReadKeyboardMouse(); break;
-            case INPUT_CONTROL_TYPE.GAMEPAD:        ReadGamepad();  break;
-            case INPUT_CONTROL_TYPE.MOBILE:         ReadMobile();   break;
+            ReadMobile();
+            return;
+        }
+
+        ReadKeyboardMouse();  // 키보드/마우스 값으로 먼저 채움
+
+        // 패드가 연결됐을 때만 오버레이 — 연결 안 됐으면 패드 축을 읽지 않음.
+        // (패드용 커스텀 축이 Project Settings에 없으면 GetAxisRaw가 예외를 던지므로, 키보드만 쓸 땐 아예 스킵)
+        _padActive = false;
+        if (IsGamepadConnected)
+        {
+            OverlayGamepad(); // 패드 입력이 있으면 덮어씀(아날로그) / OR(버튼)
+        }
+
+        // 마지막으로 실제 입력한 장치 갱신 — 동시 입력이면 패드 우선(UI도 패드로 전환)
+        if (_padActive)
+        {
+            LastUsedDevice = INPUT_CONTROL_TYPE.GAMEPAD;
+        }
+        else if (_kbActive)
+        {
+            LastUsedDevice = INPUT_CONTROL_TYPE.KEYBOARD_MOUSE;
         }
     }
 
@@ -395,15 +461,13 @@ public class InputManager : MonoBehaviour
     {
         var km = keyboardMouseConfig;
 
-        // 이동
-        // WASD: Unity 기본 축(Horizontal/Vertical) 사용
-        // 상하: Mouse4(상승) / Mouse3(하강)
+        // 이동 — 전부 개별 키(리바인딩 가능). 값은 -1/0/1(디지털), 기존 GetAxisRaw(WASD)와 동일.
+        // 좌우: A/D, 상하: Mouse4/Mouse3, 전후: W/S
         moveInput = new Vector3
         (
-            Input.GetAxisRaw(km.axisHorizontal),
-            (Input.GetKey(km.moveUp)   ? 1f : 0f)
-          + (Input.GetKey(km.moveDown) ? -1f : 0f),
-            Input.GetAxisRaw(km.axisVertical)
+            (Input.GetKey(km.moveRight)   ? 1f : 0f) + (Input.GetKey(km.moveLeft) ? -1f : 0f),
+            (Input.GetKey(km.moveUp)      ? 1f : 0f) + (Input.GetKey(km.moveDown) ? -1f : 0f),
+            (Input.GetKey(km.moveForward) ? 1f : 0f) + (Input.GetKey(km.moveBack) ? -1f : 0f)
         );
 
         // 롤 회전 - 동시 입력 시 상쇄
@@ -412,7 +476,7 @@ public class InputManager : MonoBehaviour
 
         // 시야 (마우스 이동량) — 커서가 풀려있는 동안(UI/Alt)은 카메라 조종 안 함
         lookInput = IsUIRequestingCursor()? Vector2.zero
-            : new Vector2(Input.GetAxisRaw(km.axisMouseX),Input.GetAxisRaw(km.axisMouseY));
+            : new Vector2(Input.GetAxisRaw(AxisMouseX), Input.GetAxisRaw(AxisMouseY));
 
         // 부스트 / 회피
         isBoosting = Input.GetKey(km.boost);
@@ -426,7 +490,7 @@ public class InputManager : MonoBehaviour
         //fireAll     = Input.GetKeyDown(km.fireAll);미사용레거시
 
         // 락온 대상 전환 (마우스휠)
-        switchLockOnTarget = Input.GetAxisRaw(km.axisScrollWheel);
+        switchLockOnTarget = Input.GetAxisRaw(AxisScrollWheel);
 
         // 미사일 슬롯/모드 전환
         switchMissilePrev      = Input.GetKeyDown(km.missilePrev);
@@ -447,15 +511,28 @@ public class InputManager : MonoBehaviour
         pauseMenu       = Input.GetKeyDown(km.pauseMenu);
         mapToggle       = Input.GetKeyDown(km.mapToggle);
         interAct        = Input.GetKeyDown(km.interAct);
+
+        // 이번 프레임 키마 입력이 있었는지(장치 전환 판정용). 이 시점 필드는 아직 키마 값만 담겨 있음.
+        _kbActive = moveInput.sqrMagnitude > 0f
+            || lookInput.sqrMagnitude > 0f
+            || Mathf.Abs(switchLockOnTarget) > 0.01f
+            || rollInput != 0f
+            || isBoosting || fireBullet || isDodging || fireMissile
+            || switchMissilePrev || switchMissileNext
+            || switchConsumable || useConsumable
+            || switchSkillSlot || useSkill || toggleClusterLockMode
+            || fuelGaugeToggle || inventoryToggle || pauseMenu || mapToggle || interAct;
     }
 
     // =====================================================================
-    // 게임패드 입력
+    // 게임패드 입력 — '오버레이' 방식. ReadKeyboardMouse가 채운 값 위에 얹는다.
+    //   아날로그(이동/시야/롤/락온): 패드 입력이 있으면 키마 값을 덮어씀(패드 우선).
+    //   버튼: 키마 결과에 OR (아무 장치나 누르면 동작).
     // 버튼 액션은 GAMEPAD_BUTTON(PS 명칭)으로 지정되고, 여기서 실제 KeyCode/축으로 매핑함.
     // 아래 축들은 Edit > Project Settings > Input Manager 에서 직접 등록 필요:
     //   LeftStickX, LeftStickY, RightStickX, RightStickY, VerticalMove, DPadX, DPadY, LeftTrigger, RightTrigger
     // =====================================================================
-    private void ReadGamepad()
+    private void OverlayGamepad()
     {
         var gp = gamepadConfig;
 
@@ -465,54 +542,87 @@ public class InputManager : MonoBehaviour
         _padL2    = Input.GetAxisRaw(gp.axisL2);
         _padR2    = Input.GetAxisRaw(gp.axisR2);
 
-        // 이동 (왼쪽 스틱)
-        moveInput = new Vector3
+        // --- 아날로그: 패드가 데드존 넘게 들어오면 키마 값을 덮어씀(패드 우선) ---
+        // 이동 (왼쪽 스틱) — 스틱 크기가 그대로 반영돼 살짝=살살 / 확=빠르게(MovingByInput이 크기 보존).
+        Vector3 padMove = new Vector3
         (
             Input.GetAxisRaw(gp.axisLeftStickX),
             Input.GetAxisRaw(gp.axisVerticalMove),
             Input.GetAxisRaw(gp.axisLeftStickY)
         );
+        bool padMoving = padMove.sqrMagnitude > StickActiveDeadzone * StickActiveDeadzone;
+        if (padMoving)
+        {
+            moveInput = padMove;
+        }
 
-        // 롤 회전 (누르는 동안)
-        rollInput = (GetPad(gp.rollRight) ? 1f  : 0f)
-                  + (GetPad(gp.rollLeft)  ? -1f : 0f);
-
-        // 시야 (오른쪽 스틱)
-        lookInput = new Vector2
+        // 시야 (오른쪽 스틱) — Y축 반전 옵션 반영
+        float rStickY = Input.GetAxisRaw(gp.axisRightStickY);
+        Vector2 padLook = new Vector2
         (
             Input.GetAxisRaw(gp.axisRightStickX),
-            Input.GetAxisRaw(gp.axisRightStickY)
+            gp.invertRStickY ? -rStickY : rStickY
         );
+        bool padLooking = padLook.sqrMagnitude > StickActiveDeadzone * StickActiveDeadzone;
+        if (padLooking)
+        {
+            lookInput = padLook;
+        }
 
-        // 부스트(누르는 동안) / 회피(누른 순간)
-        isBoosting = GetPad(gp.boost);
-        isDodging  = GetPadDown(gp.dodge);
+        // 롤 (누르는 동안)
+        float padRoll = (GetPad(gp.rollRight) ? 1f : 0f) + (GetPad(gp.rollLeft) ? -1f : 0f);
+        if (padRoll != 0f)
+        {
+            rollInput = padRoll;
+        }
 
-        // 사격 — 총알은 연사(누르는 동안), 미사일은 즉발(누른 순간)
-        fireBullet  = GetPad(gp.fireBullet);
-        fireMissile = GetPadDown(gp.fireMissile);
-        // 락온 대상 전환 - 지정 버튼 이전/다음(누른 순간 +1/-1). 키마 마우스휠과 같은 의미.
-        switchLockOnTarget = (GetPadDown(gp.lockOnNext) ? 1f  : 0f)
-                           + (GetPadDown(gp.lockOnPrev) ? -1f : 0f);
+        // 락온 대상 전환 — 지정 버튼 이전/다음(누른 순간 +1/-1). 키마 마우스휠과 같은 의미.
+        float padLockOn = (GetPadDown(gp.lockOnNext) ? 1f : 0f) + (GetPadDown(gp.lockOnPrev) ? -1f : 0f);
+        if (padLockOn != 0f)
+        {
+            switchLockOnTarget = padLockOn;
+        }
 
-        toggleClusterLockMode = GetPadDown(gp.toggleClusterLockMode);
+        // --- 버튼: 키마 결과에 OR ---
+        bool padBoost    = GetPad(gp.boost);
+        bool padFire     = GetPad(gp.fireBullet);
+        bool padDodge    = GetPadDown(gp.dodge);
+        bool padMissile  = GetPadDown(gp.fireMissile);
+        bool padCluster  = GetPadDown(gp.toggleClusterLockMode);
+        bool padMPrev    = GetPadDown(gp.missilePrev);
+        bool padMNext    = GetPadDown(gp.missileNext);
+        bool padSwCons   = GetPadDown(gp.switchConsumable);
+        bool padUseCons  = GetPadDown(gp.useConsumable);
+        bool padSwSkill  = GetPadDown(gp.switchSkillSlot);
+        bool padUseSkill = GetPadDown(gp.useSkill);
+        bool padFuel     = GetPadDown(gp.fuelGaugeToggle);
+        bool padInv      = GetPadDown(gp.inventoryToggle);
+        bool padPause    = GetPadDown(gp.pauseMenu);
+        bool padMap      = GetPadDown(gp.mapToggle);
+        bool padInter    = GetPadDown(gp.interAct);
 
-        // 미사일 슬롯 / 소모품 (기본 D패드 — 축 엣지 판정은 GetPadDown이 처리)
-        switchMissilePrev = GetPadDown(gp.missilePrev);
-        switchMissileNext = GetPadDown(gp.missileNext);
-        switchConsumable  = GetPadDown(gp.switchConsumable);
-        useConsumable     = GetPadDown(gp.useConsumable);
+        isBoosting            |= padBoost;
+        fireBullet            |= padFire;
+        isDodging             |= padDodge;
+        fireMissile           |= padMissile;
+        toggleClusterLockMode |= padCluster;
+        switchMissilePrev     |= padMPrev;
+        switchMissileNext     |= padMNext;
+        switchConsumable      |= padSwCons;
+        useConsumable         |= padUseCons;
+        switchSkillSlot       |= padSwSkill;
+        useSkill              |= padUseSkill;
+        fuelGaugeToggle       |= padFuel;
+        inventoryToggle       |= padInv;
+        pauseMenu             |= padPause;
+        mapToggle             |= padMap;
+        interAct              |= padInter;
 
-        // 스킬
-        switchSkillSlot = GetPadDown(gp.switchSkillSlot);
-        useSkill        = GetPadDown(gp.useSkill);
-
-        // UI 토글/상호작용 - 키마와 동일하게 지정 버튼으로 처리(None이면 안 눌림)
-        fuelGaugeToggle = GetPadDown(gp.fuelGaugeToggle);
-        inventoryToggle = GetPadDown(gp.inventoryToggle);
-        pauseMenu       = GetPadDown(gp.pauseMenu);
-        mapToggle       = GetPadDown(gp.mapToggle);
-        interAct        = GetPadDown(gp.interAct);
+        // 이번 프레임 패드 입력 있었나(장치 전환 판정용)
+        bool padButton = padBoost || padFire || padDodge || padMissile || padCluster
+            || padMPrev || padMNext || padSwCons || padUseCons || padSwSkill || padUseSkill
+            || padFuel || padInv || padPause || padMap || padInter;
+        _padActive = padMoving || padLooking || padRoll != 0f || padLockOn != 0f || padButton;
 
         // 다음 프레임 엣지 판정용으로 이번 축값 보관
         _prevPadDpadX = _padDpadX;
@@ -575,6 +685,8 @@ public class InputManager : MonoBehaviour
             case GAMEPAD_BUTTON.Options:  return KeyCode.JoystickButton7;
             case GAMEPAD_BUTTON.L3:       return KeyCode.JoystickButton8;
             case GAMEPAD_BUTTON.R3:       return KeyCode.JoystickButton9;
+            // 듀얼센스 터치패드 클릭 — 드라이버/OS마다 번호가 달라 확정값이 아님. 실기기에서 눌리는 번호로 조정할 것.
+            case GAMEPAD_BUTTON.TouchpadClick: return KeyCode.JoystickButton13;
             default:                      return KeyCode.None;
         }
     }

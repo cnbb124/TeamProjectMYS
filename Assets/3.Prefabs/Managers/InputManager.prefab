@@ -46,6 +46,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   controlType: 0
   keyboardMouseConfig:
+    moveForward: 119
+    moveBack: 115
+    moveLeft: 97
+    moveRight: 100
     moveUp: 327
     moveDown: 326
     rollLeft: 113
@@ -66,35 +70,37 @@ MonoBehaviour:
     mapToggle: 109
     interAct: 101
     toggleClusterLockMode: 99
-    axisHorizontal: Horizontal
-    axisVertical: Vertical
-    axisMouseX: Mouse X
-    axisMouseY: Mouse Y
-    axisScrollWheel: Mouse ScrollWheel
   gamepadConfig:
-    axisLeftStickX: LeftStickX
-    axisLeftStickY: LeftStickY
-    axisVerticalMove: VerticalMove
-    rollLeft: 336
-    rollRight: 337
-    boost: 338
-    dodge: 339
-    fireBullet: 335
-    fireMissile: 334
-    axisDPadX: DPadX
-    axisDPadY: DPadY
-    switchSkillSlot: 341
-    useSkill: 342
+    rollLeft: 7
+    rollRight: 8
+    boost: 6
+    dodge: 5
+    fireBullet: 3
+    fireMissile: 4
+    missilePrev: 15
+    missileNext: 16
+    switchConsumable: 13
+    useConsumable: 14
+    switchSkillSlot: 2
+    useSkill: 1
     toggleClusterLockMode: 330
     lockOnPrev: 343
     lockOnNext: 344
     fuelGaugeToggle: 345
-    inventoryToggle: 346
-    pauseMenu: 333
-    mapToggle: 340
-    interAct: 331
+    inventoryToggle: 12
+    pauseMenu: 11
+    mapToggle: 17
+    interAct: 1
+    axisLeftStickX: LeftStickX
+    axisLeftStickY: LeftStickY
+    axisVerticalMove: VerticalMove
     axisRightStickX: RightStickX
     axisRightStickY: RightStickY
+    axisDPadX: DPadX
+    axisDPadY: DPadY
+    axisL2: LeftTrigger
+    axisR2: RightTrigger
+    invertRStickY: 0
   moveInput: {x: 0, y: 0, z: 0}
   lookInput: {x: 0, y: 0}
   rollInput: 0

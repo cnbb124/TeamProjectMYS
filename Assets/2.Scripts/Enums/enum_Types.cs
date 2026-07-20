@@ -188,7 +188,11 @@ public enum INPUT_CONTROL_TYPE
 
 // 게임패드 버튼(플레이스테이션 명칭). 인스펙터에서 직관적으로 고르게 하고,
 // 실제 KeyCode.JoystickButton/축 매핑은 InputManager가 담당함(패드마다 번호가 달라 코드에 몰아둠).
-// None = 이 패드엔 배정 안 함(안 눌림). L2/R2·D패드는 버튼이 아니라 축이라 InputManager가 축으로 읽음.
+// None = 이 패드엔 배정 안 함(안 눌림).
+// ※ 스틱 '방향'(밀기)은 여기 없음 — 이동=왼쪽 스틱, 시야=오른쪽 스틱으로 축(axisLeftStick*/axisRightStick*)에서 따로 읽음.
+//    여기의 L3/R3은 '스틱 누르기(클릭)'만 뜻함(방향 아님).
+// ※ Dpad*는 게임패드 방향패드임 — 키보드 화살표(그건 KeyboardMouseConfig에서 KeyCode.UpArrow 등)와 전혀 별개.
+// ※ L2/R2·Dpad는 버튼이 아니라 축이라 InputManager가 축으로 읽음.
 public enum GAMEPAD_BUTTON
 {
 	None,
@@ -200,14 +204,15 @@ public enum GAMEPAD_BUTTON
 	R1,       // 오른쪽 범퍼 (Xbox RB)
 	L2,       // 왼쪽 트리거 (축) (Xbox LT)
 	R2,       // 오른쪽 트리거 (축) (Xbox RT)
-	L3,       // 왼쪽 스틱 누르기
-	R3,       // 오른쪽 스틱 누르기
+	L3,       // 왼쪽 스틱 '누르기(클릭)' — 스틱 방향 아님
+	R3,       // 오른쪽 스틱 '누르기(클릭)' — 스틱 방향 아님
 	Options,  // 시작 (Xbox Start/Menu)
 	Share,    // 선택 (Xbox Back/View)
-	DpadUp,
-	DpadDown,
-	DpadLeft,
-	DpadRight,
+	DpadUp,    // 게임패드 D패드 ↑ (키보드 화살표 아님)
+	DpadDown,  // 게임패드 D패드 ↓
+	DpadLeft,  // 게임패드 D패드 ←
+	DpadRight, // 게임패드 D패드 →
+	TouchpadClick, // 듀얼센스(PS4/5) 터치패드 '누르기' — 그 패드에만 있음. 물리 번호는 컨트롤러/드라이버별로 달라 아래 ToJoystickKey에서 조정 필요
 }
 public enum POOL_TYPE
 {
