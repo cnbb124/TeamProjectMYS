@@ -56,8 +56,16 @@ public class SkillQuickSlotUI : MonoBehaviour
     public ActiveSkillData CurrentSkill =>
         (CurrentIndex >= 0 && CurrentIndex < skills.Count) ? skills[CurrentIndex] : null;
 
+    [Header("입력")]
+    [Tooltip("체크 시 InputManager의 B(전환)/H(사용) 키로 조작")]
+    [SerializeField] private bool useInputManager = true;
+
     /// <summary>선택 변경 시 발행.</summary>
     public event Action<int> onSelectionChanged;
+
+    /// <summary>스킬 사용 요청 — SkillSystem이 구독해서 실제 발동 처리.
+    /// (쿨다운 중이면 발행되지 않음)</summary>
+    public event Action<ActiveSkillData> onSkillUsed;
 
     private RectTransform[] _slots;
     private Image[]         _frames;
@@ -77,7 +85,16 @@ public class SkillQuickSlotUI : MonoBehaviour
 
     private void Update()
     {
-        // TODO: InputManager 스킬 전환 키 통합 후 여기서 SelectNext() 연결
+        if (useInputManager && InputManager.Instance != null)
+        {
+            // B키 — 스킬 슬롯 전환
+            if (InputManager.Instance.switchSkillSlot)
+                SelectNext();
+
+            // H키 — 스킬 사용 (쿨다운 아니면 발동 요청 + 쿨다운 시작)
+            if (InputManager.Instance.useSkill)
+                TryUseCurrent();
+        }
 
         // 리볼버 회전 + 아이콘 역회전
         if (container != null)
@@ -170,6 +187,18 @@ public class SkillQuickSlotUI : MonoBehaviour
     }
 
     // ── 쿨다운 ──
+
+    /// <summary>현재 선택 스킬 사용 시도 (H키). 쿨다운 중이면 무시.
+    /// 실제 발동은 onSkillUsed 구독자(SkillSystem)가 처리.</summary>
+    public void TryUseCurrent()
+    {
+        ActiveSkillData skill = CurrentSkill;
+        if (skill == null) return;
+        if (IsOnCooldown(CurrentIndex)) return;   // 쿨다운 중 — 사용 불가
+
+        onSkillUsed?.Invoke(skill);
+        StartCooldown(CurrentIndex);              // 사용했으니 쿨다운 시작
+    }
 
     /// <summary>스킬 발동 성공 시 호출 — SkillData.skillCoolDown만큼 쿨다운 게이지 시작.</summary>
     public void StartCooldown(int index)

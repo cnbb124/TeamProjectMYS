@@ -68,6 +68,9 @@ public class ItemQuickSlotUI : MonoBehaviour
     /// <summary>선택 변경 시 발행.</summary>
     public event Action<int> onSelectionChanged;
 
+    /// <summary>아이템 사용 요청 — 소모/효과 적용은 구독자(QuickSlot/인벤토리)가 처리.</summary>
+    public event Action<ItemData> onItemUsed;
+
     private RectTransform[] _slots;
     private Image[]         _frames;
     private Image[]         _icons;
@@ -86,9 +89,16 @@ public class ItemQuickSlotUI : MonoBehaviour
 
     private void Update()
     {
-        // R키 전환
-        if (useInputManager && InputManager.Instance != null && InputManager.Instance.switchConsumable)
-            SelectNext();
+        if (useInputManager && InputManager.Instance != null)
+        {
+            // R키 — 아이템 슬롯 전환
+            if (InputManager.Instance.switchConsumable)
+                SelectNext();
+
+            // T키 — 아이템 사용 (사용 연출 + 이벤트 발행)
+            if (InputManager.Instance.useConsumable)
+                TryUseCurrent();
+        }
 
         // 리볼버 회전 + 아이콘 역회전 (내용물 항상 똑바로)
         if (container != null)
@@ -197,6 +207,17 @@ public class ItemQuickSlotUI : MonoBehaviour
         CurrentIndex = index;
         ApplySelection(instant: false);
         onSelectionChanged?.Invoke(CurrentIndex);
+    }
+
+    /// <summary>현재 아이템 사용 시도 (T키). 빈 슬롯이면 무시.
+    /// 실제 소모/효과는 onItemUsed 구독자가 처리.</summary>
+    public void TryUseCurrent()
+    {
+        ItemData item = CurrentItem;
+        if (item == null) return;
+
+        onItemUsed?.Invoke(item);
+        UseCurrent();   // 사용 연출(플래시)
     }
 
     /// <summary>현재 아이템 사용 연출(플래시). 실제 소모 로직은 외부에서 CurrentItem으로 처리.</summary>
