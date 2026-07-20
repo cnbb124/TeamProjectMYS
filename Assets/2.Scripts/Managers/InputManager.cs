@@ -114,43 +114,72 @@ public class KeyboardMouseConfig
 // =====================================================================
 // 게임패드 키 설정
 // 축 이름은 Unity Input Settings에서 직접 등록한 이름과 맞춰야 함
+//
+// [JoystickButton 번호 ↔ 실제 버튼] — Xbox 컨트롤러 / Windows 기준(레거시 Input)
+//   Button0 = A        Button1 = B        Button2 = X        Button3 = Y
+//   Button4 = LB(L1)   Button5 = RB(R1)
+//   Button6 = Back(View)   Button7 = Start(Menu)
+//   Button8 = L3(왼쪽 스틱 누름)   Button9 = R3(오른쪽 스틱 누름)
+//   ※ LT/RT(=L2/R2)는 버튼이 아니라 '축(아날로그 트리거)'임 — JoystickButton으로 안 잡힘.
+//      쓰려면 Project Settings > Input Manager에 축으로 등록해 axis 이름으로 읽어야 함.
+//   ※ Xbox/Windows는 버튼 0~9만 존재함 — Button10 이상은 이 조합에서 안 눌림.
+//   ※ PlayStation 패드/다른 OS는 번호 체계가 다름 — 위는 Xbox+Windows 기준.
 // =====================================================================
 [System.Serializable]
 public class GamepadConfig
 {
-    [Header("이동")]
+    // 버튼 액션은 GAMEPAD_BUTTON(PS 명칭)으로 지정 — 인스펙터에 R2/Square 등으로 직관적으로 뜸.
+    // 실제 KeyCode/축 변환은 InputManager가 함. None이면 이 패드엔 미배정(안 눌림).
+    // 물리 입력이 액션 수보다 적어 몇 개는 기본 None임 — 필요한 것만 인스펙터에서 배정하면 됨.
+
+    [Header("이동/회전")]
+    public GAMEPAD_BUTTON rollLeft  = GAMEPAD_BUTTON.Square;
+    public GAMEPAD_BUTTON rollRight = GAMEPAD_BUTTON.Circle;
+    public GAMEPAD_BUTTON boost     = GAMEPAD_BUTTON.L1;
+    public GAMEPAD_BUTTON dodge     = GAMEPAD_BUTTON.Cross;
+
+    [Header("사격")]
+    public GAMEPAD_BUTTON fireBullet  = GAMEPAD_BUTTON.R2;
+    public GAMEPAD_BUTTON fireMissile = GAMEPAD_BUTTON.L2;
+
+    [Header("미사일 슬롯 전환")]
+    public GAMEPAD_BUTTON missilePrev = GAMEPAD_BUTTON.DpadLeft;
+    public GAMEPAD_BUTTON missileNext = GAMEPAD_BUTTON.DpadRight;
+
+    [Header("소모품")]
+    public GAMEPAD_BUTTON switchConsumable = GAMEPAD_BUTTON.DpadUp;
+    public GAMEPAD_BUTTON useConsumable    = GAMEPAD_BUTTON.DpadDown;
+
+    [Header("스킬")]
+    public GAMEPAD_BUTTON switchSkillSlot = GAMEPAD_BUTTON.R1;
+    public GAMEPAD_BUTTON useSkill        = GAMEPAD_BUTTON.Triangle;
+
+    [Header("락온 모드 전환")]
+    public GAMEPAD_BUTTON toggleClusterLockMode = GAMEPAD_BUTTON.R3;
+
+    [Header("락온 대상 전환")]
+    public GAMEPAD_BUTTON lockOnPrev = GAMEPAD_BUTTON.L3;    // 이전 락온 대상 (키마 마우스휠 아래에 대응)
+    public GAMEPAD_BUTTON lockOnNext = GAMEPAD_BUTTON.Share; // 다음 락온 대상 (키마 마우스휠 위에 대응)
+
+    [Header("UI 패널 토글")]
+    public GAMEPAD_BUTTON fuelGaugeToggle = GAMEPAD_BUTTON.None; // 물리 버튼 부족 — 기본 미배정
+    public GAMEPAD_BUTTON inventoryToggle = GAMEPAD_BUTTON.None; // 물리 버튼 부족 — 기본 미배정
+    public GAMEPAD_BUTTON pauseMenu       = GAMEPAD_BUTTON.Options;
+    public GAMEPAD_BUTTON mapToggle       = GAMEPAD_BUTTON.None; // 물리 버튼 부족 — 기본 미배정
+
+    [Header("상호작용(STATION에서)")]
+    public GAMEPAD_BUTTON interAct        = GAMEPAD_BUTTON.Cross; // 전투의 dodge와 씬 문맥이 달라 공유 무방
+
+    [Header("Unity Input Settings 축 이름 (Project Settings에 등록 필요)")]
     public string axisLeftStickX   = "LeftStickX";
     public string axisLeftStickY   = "LeftStickY";
     public string axisVerticalMove = "VerticalMove";
-    public KeyCode rollLeft        = KeyCode.JoystickButton6;
-    public KeyCode rollRight       = KeyCode.JoystickButton7;
-    public KeyCode boost           = KeyCode.JoystickButton8;
-    public KeyCode dodge           = KeyCode.JoystickButton9;
-
-    [Header("사격")]
-    public KeyCode fireBullet      = KeyCode.JoystickButton5;
-    public KeyCode fireMissile     = KeyCode.JoystickButton4;
-    //public KeyCode fireAll         = KeyCode.JoystickButton2; 미사용레거시
-
-    [Header("미사일 슬롯 전환")]
-    public string axisDPadX        = "DPadX";
-
-    [Header("소모품")]
-    public string axisDPadY        = "DPadY";
-
-    [Header("스킬")]
-    public KeyCode switchSkillSlot = KeyCode.JoystickButton11;  // 스킬 슬롯 전환
-    public KeyCode useSkill        = KeyCode.JoystickButton12; // 스킬 사용
-
-    //[Header("모드 전환")]
-    //public KeyCode switchFireMode  = KeyCode.JoystickButton10; 미사용 레거시
-
-    [Header("락온 모드 전환")]
-    public KeyCode toggleClusterLockMode = KeyCode.JoystickButton0;
-
-    [Header("Unity Input Settings 축 이름")]
     public string axisRightStickX  = "RightStickX";
     public string axisRightStickY  = "RightStickY";
+    public string axisDPadX        = "DPadX";
+    public string axisDPadY        = "DPadY";
+    public string axisL2           = "LeftTrigger";  // L2 트리거(축)
+    public string axisR2           = "RightTrigger"; // R2 트리거(축)
 }
 
 // =====================================================================
@@ -285,9 +314,11 @@ public class InputManager : MonoBehaviour
     [Tooltip("상호작용 - 누른 순간 한 프레임만 true ")]
     public bool interAct;
 
-    // D-패드 이전 프레임값 (게임패드 "누른 순간" 감지용)
-    private float _prevDPadX = 0f;
-    private float _prevDPadY = 0f;
+    // 게임패드 축(트리거/D패드)을 매 프레임 1번만 샘플해두는 값 — GetPad/GetPadDown이 이걸 봄.
+    // 축은 버튼이 아니라 "누른 순간"을 이전 프레임과 비교해 판정하므로 현재/직전 값을 같이 보관함.
+    private float _padDpadX, _padDpadY, _padL2, _padR2;
+    private float _prevPadDpadX, _prevPadDpadY, _prevPadL2, _prevPadR2;
+    private const float TriggerThreshold = 0.5f; // 트리거를 "눌림"으로 볼 임계값(축)
 
     // =====================================================================
     // 싱글톤 초기화
@@ -420,12 +451,19 @@ public class InputManager : MonoBehaviour
 
     // =====================================================================
     // 게임패드 입력
+    // 버튼 액션은 GAMEPAD_BUTTON(PS 명칭)으로 지정되고, 여기서 실제 KeyCode/축으로 매핑함.
     // 아래 축들은 Edit > Project Settings > Input Manager 에서 직접 등록 필요:
-    //   LeftStickX, LeftStickY, RightStickX, RightStickY, VerticalMove, DPadY
+    //   LeftStickX, LeftStickY, RightStickX, RightStickY, VerticalMove, DPadX, DPadY, LeftTrigger, RightTrigger
     // =====================================================================
     private void ReadGamepad()
     {
         var gp = gamepadConfig;
+
+        // 축(트리거/D패드)을 이번 프레임 1번만 샘플 — GetPad/GetPadDown이 엣지 판정에 이 값을 씀.
+        _padDpadX = Input.GetAxisRaw(gp.axisDPadX);
+        _padDpadY = Input.GetAxisRaw(gp.axisDPadY);
+        _padL2    = Input.GetAxisRaw(gp.axisL2);
+        _padR2    = Input.GetAxisRaw(gp.axisR2);
 
         // 이동 (왼쪽 스틱)
         moveInput = new Vector3
@@ -435,9 +473,9 @@ public class InputManager : MonoBehaviour
             Input.GetAxisRaw(gp.axisLeftStickY)
         );
 
-        // 롤 회전 (LT/RT 버튼)
-        rollInput = (Input.GetKey(gp.rollRight) ? 1f  : 0f)
-                  + (Input.GetKey(gp.rollLeft)  ? -1f : 0f);
+        // 롤 회전 (누르는 동안)
+        rollInput = (GetPad(gp.rollRight) ? 1f  : 0f)
+                  + (GetPad(gp.rollLeft)  ? -1f : 0f);
 
         // 시야 (오른쪽 스틱)
         lookInput = new Vector2
@@ -446,46 +484,99 @@ public class InputManager : MonoBehaviour
             Input.GetAxisRaw(gp.axisRightStickY)
         );
 
-        // 부스트 / 회피
-        isBoosting = Input.GetKey(gp.boost);
-        isDodging  = Input.GetKeyDown(gp.dodge);
+        // 부스트(누르는 동안) / 회피(누른 순간)
+        isBoosting = GetPad(gp.boost);
+        isDodging  = GetPadDown(gp.dodge);
 
-        // 사격
-        fireBullet  = Input.GetKey(gp.fireBullet);
-        fireMissile = Input.GetKeyDown(gp.fireMissile);
-		// fireAll     = Input.GetKeyDown(gp.fireAll);미사용레거시
+        // 사격 — 총알은 연사(누르는 동안), 미사일은 즉발(누른 순간)
+        fireBullet  = GetPad(gp.fireBullet);
+        fireMissile = GetPadDown(gp.fireMissile);
+        // 락온 대상 전환 - 지정 버튼 이전/다음(누른 순간 +1/-1). 키마 마우스휠과 같은 의미.
+        switchLockOnTarget = (GetPadDown(gp.lockOnNext) ? 1f  : 0f)
+                           + (GetPadDown(gp.lockOnPrev) ? -1f : 0f);
 
-		// 락온 대상 전환 - D-패드 사용으로 충돌, 패드 미지원
-		// TODO: 추후 별도 버튼 지정 필요
-		switchLockOnTarget = 0f;
+        toggleClusterLockMode = GetPadDown(gp.toggleClusterLockMode);
 
-        // 모드 전환
-        //switchMissileShootMode = Input.GetKeyDown(gp.switchFireMode); //미사용레거시
-		toggleClusterLockMode  = Input.GetKeyDown(gp.toggleClusterLockMode);
-
-        // D-패드: 이전 프레임 비교로 "누른 순간" 감지
-        //   좌 → 미사일 이전 슬롯
-        //   우 → 미사일 다음 슬롯
-        //   상 → 소모품 슬롯 전환
-        //   하 → 소모품 사용
-        float dpadX = Input.GetAxisRaw(gp.axisDPadX);
-        float dpadY = Input.GetAxisRaw(gp.axisDPadY);
-
-        switchMissilePrev = (dpadX < -0.5f) && (_prevDPadX >= -0.5f);
-        switchMissileNext = (dpadX >  0.5f) && (_prevDPadX <=  0.5f);
-        switchConsumable  = (dpadY >  0.5f) && (_prevDPadY <=  0.5f);
-        useConsumable     = (dpadY < -0.5f) && (_prevDPadY >= -0.5f);
+        // 미사일 슬롯 / 소모품 (기본 D패드 — 축 엣지 판정은 GetPadDown이 처리)
+        switchMissilePrev = GetPadDown(gp.missilePrev);
+        switchMissileNext = GetPadDown(gp.missileNext);
+        switchConsumable  = GetPadDown(gp.switchConsumable);
+        useConsumable     = GetPadDown(gp.useConsumable);
 
         // 스킬
-        switchSkillSlot = Input.GetKeyDown(gp.switchSkillSlot);
-        useSkill        = Input.GetKeyDown(gp.useSkill);
+        switchSkillSlot = GetPadDown(gp.switchSkillSlot);
+        useSkill        = GetPadDown(gp.useSkill);
 
-        fuelGaugeToggle = false; // 게임패드 미지원 (키 없음)
-        inventoryToggle = false; // 게임패드 미지원 (키 없음)
-        pauseMenu       = false; // 게임패드 미지원 (전용 버튼 배정 시 gamepadConfig에 추가)
-        mapToggle       = false; // 게임패드 미지원 (키 없음)
-        _prevDPadX = dpadX;
-        _prevDPadY = dpadY;
+        // UI 토글/상호작용 - 키마와 동일하게 지정 버튼으로 처리(None이면 안 눌림)
+        fuelGaugeToggle = GetPadDown(gp.fuelGaugeToggle);
+        inventoryToggle = GetPadDown(gp.inventoryToggle);
+        pauseMenu       = GetPadDown(gp.pauseMenu);
+        mapToggle       = GetPadDown(gp.mapToggle);
+        interAct        = GetPadDown(gp.interAct);
+
+        // 다음 프레임 엣지 판정용으로 이번 축값 보관
+        _prevPadDpadX = _padDpadX;
+        _prevPadDpadY = _padDpadY;
+        _prevPadL2    = _padL2;
+        _prevPadR2    = _padR2;
+    }
+
+    // =====================================================================
+    // 게임패드 버튼 매핑/판정 — GAMEPAD_BUTTON(PS 명칭)을 실제 입력으로 변환.
+    // 페이스/범퍼/스틱/메뉴 버튼은 KeyCode.JoystickButton, L2/R2·D패드는 축으로 읽음.
+    // 물리 번호는 Xbox+Windows(레거시 Input) 기준 — 다른 패드/OS면 ToJoystickKey만 고치면 됨.
+    // =====================================================================
+
+    // 누르는 동안 true
+    private bool GetPad(GAMEPAD_BUTTON b)
+    {
+        switch (b)
+        {
+            case GAMEPAD_BUTTON.None:      return false;
+            case GAMEPAD_BUTTON.L2:        return _padL2 > TriggerThreshold;
+            case GAMEPAD_BUTTON.R2:        return _padR2 > TriggerThreshold;
+            case GAMEPAD_BUTTON.DpadUp:    return _padDpadY >  0.5f;
+            case GAMEPAD_BUTTON.DpadDown:  return _padDpadY < -0.5f;
+            case GAMEPAD_BUTTON.DpadLeft:  return _padDpadX < -0.5f;
+            case GAMEPAD_BUTTON.DpadRight: return _padDpadX >  0.5f;
+            default:                       return Input.GetKey(ToJoystickKey(b));
+        }
+    }
+
+    // 누른 순간 한 프레임만 true (축은 이전 프레임과 비교해 엣지 판정)
+    private bool GetPadDown(GAMEPAD_BUTTON b)
+    {
+        switch (b)
+        {
+            case GAMEPAD_BUTTON.None:      return false;
+            case GAMEPAD_BUTTON.L2:        return _padL2 > TriggerThreshold && _prevPadL2 <= TriggerThreshold;
+            case GAMEPAD_BUTTON.R2:        return _padR2 > TriggerThreshold && _prevPadR2 <= TriggerThreshold;
+            case GAMEPAD_BUTTON.DpadUp:    return _padDpadY >  0.5f && _prevPadDpadY <=  0.5f;
+            case GAMEPAD_BUTTON.DpadDown:  return _padDpadY < -0.5f && _prevPadDpadY >= -0.5f;
+            case GAMEPAD_BUTTON.DpadLeft:  return _padDpadX < -0.5f && _prevPadDpadX >= -0.5f;
+            case GAMEPAD_BUTTON.DpadRight: return _padDpadX >  0.5f && _prevPadDpadX <=  0.5f;
+            default:                       return Input.GetKeyDown(ToJoystickKey(b));
+        }
+    }
+
+    // 실제 버튼(페이스/범퍼/스틱/메뉴)만 KeyCode로 변환. 축(L2/R2/D패드)은 위에서 처리하므로 여기 안 옴.
+    // Xbox+Windows 레거시 Input 기준 번호. 다른 패드/OS면 이 표만 교체하면 됨.
+    private KeyCode ToJoystickKey(GAMEPAD_BUTTON b)
+    {
+        switch (b)
+        {
+            case GAMEPAD_BUTTON.Cross:    return KeyCode.JoystickButton0;
+            case GAMEPAD_BUTTON.Circle:   return KeyCode.JoystickButton1;
+            case GAMEPAD_BUTTON.Square:   return KeyCode.JoystickButton2;
+            case GAMEPAD_BUTTON.Triangle: return KeyCode.JoystickButton3;
+            case GAMEPAD_BUTTON.L1:       return KeyCode.JoystickButton4;
+            case GAMEPAD_BUTTON.R1:       return KeyCode.JoystickButton5;
+            case GAMEPAD_BUTTON.Share:    return KeyCode.JoystickButton6;
+            case GAMEPAD_BUTTON.Options:  return KeyCode.JoystickButton7;
+            case GAMEPAD_BUTTON.L3:       return KeyCode.JoystickButton8;
+            case GAMEPAD_BUTTON.R3:       return KeyCode.JoystickButton9;
+            default:                      return KeyCode.None;
+        }
     }
 
     // =====================================================================
