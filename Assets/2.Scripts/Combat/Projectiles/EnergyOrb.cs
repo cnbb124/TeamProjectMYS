@@ -81,8 +81,11 @@ public class EnergyOrb : Projectile
     {
         base.OnHit(hit);
 
-        // 데미지 안 받는 환경 오브젝트 — 피격 반응만 위임(Bullet과 동일 처리)
-        if (hit.damageable == null)
+        // 피격 반응은 각 클라 로컬 재생 — 데미지는 소유자만(권위), 연출은 전원(Bullet과 동일 처리).
+        // 환경은 항상 로컬, 유닛은 소유자 클라가 ApplyHitDamage → OnHitReaction으로 처리하므로
+        // 비소유자(원격 유닛)에서만 여기서 로컬 재생함(이중 방지).
+        Unit hitUnit = hit.damageable as Unit;
+        if (hit.damageable == null || (hitUnit != null && !hitUnit.IsMine))
         {
             hit.hittable.OnHitReaction(BuildHitInfo(hit));
         }

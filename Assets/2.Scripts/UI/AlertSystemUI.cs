@@ -79,9 +79,11 @@ public class AlertSystemUI : MonoBehaviour
     }
 
     /// <summary>
-    /// 씬의 활성 미사일 중 플레이어를 추적하는 것이 있는지 검사.
-    /// targetTr이 플레이어(또는 그 자식 히트박스)면 위협으로 판단.
+    /// 씬의 활성 미사일 중 '내 함선(로컬 플레이어)'을 추적하는 것이 있는지 검사.
+    /// targetTr이 로컬 플레이어(또는 그 자식 히트박스)면 위협으로 판단.
     /// (플레이어 자신의 미사일은 적을 추적하므로 자동 제외됨)
+    /// 멀티에선 씬에 함선이 여럿이라 IsMine으로 걸러야 함 — 안 걸면 남이 락온당해도 내 경고가 뜸.
+    /// 싱글은 Player가 항상 IsMine=true라 기존과 동일하게 동작.
     /// </summary>
     private bool HasIncomingMissile()
     {
@@ -90,7 +92,10 @@ public class AlertSystemUI : MonoBehaviour
         for (int i = 0; i < missiles.Length; i++)
         {
             Transform t = missiles[i].targetTr;
-            if (t != null && t.GetComponentInParent<Player>() != null)
+            if (t == null)
+                continue;
+            Player p = t.GetComponentInParent<Player>();
+            if (p != null && p.IsMine)
                 return true;
         }
         return false;

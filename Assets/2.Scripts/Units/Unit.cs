@@ -890,6 +890,7 @@ public abstract class Unit : MonoBehaviour, IDamageable, IPunObservable
 	// HP/실드 스트리밍 — 소유자(적=Master, 플레이어=본인)만 값을 쓰고 비소유자는 받기만 함.
 	// 이게 없으면 비소유자 화면에서 체력바가 안 깎이고 풀피로 보이다 적이 갑자기 사라짐(데미지는 실제로 들어가는데 안 보이는 것).
 	// 사망(CurState=DIE)·실드재생은 ApplyHitDamage(소유자 전용) 안에서만 트리거되므로, 비소유자가 값만 받아도 멋대로 죽거나 재생하지 않음.
+	// 단, 실드 오버레이 시각(파괴/페이드/재생)은 비소유자에도 보여야 하므로 수신부에서 받은 실드량으로 직접 몰아줌.
 	// ⚠ 에디터: PhotonView의 Observed Components에 이 유닛 컴포넌트(Player/Enemy)를 등록해야 호출됨.
 	public void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)
 	{
@@ -903,11 +904,35 @@ public abstract class Unit : MonoBehaviour, IDamageable, IPunObservable
 			bool hadShield = curShieldRemaining > 0;
 			curHpRemaining = (int)stream.ReceiveNext();
 			curShieldRemaining = (int)stream.ReceiveNext();
+			bool hasShield = curShieldRemaining > 0;
 
 			// 실드 유무가 바뀐 순간에만 콜라이더 갱신 — 피격 판정은 각 클라 로컬에서 나므로 비소유자도 콜라이더가 맞아야 함.
-			if (hadShield != (curShieldRemaining > 0))
+			if (hadShield != hasShield)
 			{
 				UpdateShieldHitboxState();
+			}
+
+			// 실드 오버레이 시각도 비소유자에서 재현 — 스트리밍은 값만 주므로 여기서 오버레이를 직접 몰아줌.
+			// (소유자는 calculTakeDamage에서 파괴, ShieldRegenerationRoutine에서 리셋 — 그 대칭)
+			if (_shieldOverlay != null && maxShieldCapacity > 0)
+			{
+				if (hadShield && !hasShield)
+				{
+					// 이번 갱신으로 실드가 완전 소진됨 — 파괴 이펙트/파괴음 1회(오버레이가 _isDestroyed로 중복 차단).
+					_shieldOverlay.TriggerDestroy();
+					_sound?.PlaySFX3DAtPosition(SOUND_TYPE.SFX_SHIELD_DESTROY, transform.position);
+				}
+				else if (!hadShield && hasShield)
+				{
+					// 실드가 다시 회복됨 — 파괴 상태 해제 후 HP 비율 반영.
+					_shieldOverlay.TriggerReset();
+					_shieldOverlay.UpdateShieldHP((float)curShieldRemaining / maxShieldCapacity);
+				}
+				else if (hasShield)
+				{
+					// 실드량 변화에 따른 페이드/깜빡임 반영.
+					_shieldOverlay.UpdateShieldHP((float)curShieldRemaining / maxShieldCapacity);
+				}
 			}
 		}
 	}
