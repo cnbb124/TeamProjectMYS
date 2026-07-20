@@ -185,6 +185,30 @@ public enum INPUT_CONTROL_TYPE
 	GAMEPAD,
 	MOBILE,
 }
+
+// 게임패드 버튼(플레이스테이션 명칭). 인스펙터에서 직관적으로 고르게 하고,
+// 실제 KeyCode.JoystickButton/축 매핑은 InputManager가 담당함(패드마다 번호가 달라 코드에 몰아둠).
+// None = 이 패드엔 배정 안 함(안 눌림). L2/R2·D패드는 버튼이 아니라 축이라 InputManager가 축으로 읽음.
+public enum GAMEPAD_BUTTON
+{
+	None,
+	Cross,    // ✕  (Xbox A)
+	Circle,   // ○  (Xbox B)
+	Square,   // □  (Xbox X)
+	Triangle, // △  (Xbox Y)
+	L1,       // 왼쪽 범퍼 (Xbox LB)
+	R1,       // 오른쪽 범퍼 (Xbox RB)
+	L2,       // 왼쪽 트리거 (축) (Xbox LT)
+	R2,       // 오른쪽 트리거 (축) (Xbox RT)
+	L3,       // 왼쪽 스틱 누르기
+	R3,       // 오른쪽 스틱 누르기
+	Options,  // 시작 (Xbox Start/Menu)
+	Share,    // 선택 (Xbox Back/View)
+	DpadUp,
+	DpadDown,
+	DpadLeft,
+	DpadRight,
+}
 public enum POOL_TYPE
 {
 	// 투사체 (DisableAllProjectiles 대상)
