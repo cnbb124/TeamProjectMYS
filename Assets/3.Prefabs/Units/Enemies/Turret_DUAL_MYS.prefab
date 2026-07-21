@@ -1299,7 +1299,7 @@ MonoBehaviour:
   _blocksBeam: 0
   weaponSystem: {fileID: 0}
   skillSystem: {fileID: 0}
-  maxHpRemaining: 999
+  maxHpRemaining: 150
   maxShieldCapacity: 0
   shieldRegainDelay: 0
   shieldRegainRate: 6
@@ -1341,13 +1341,13 @@ MonoBehaviour:
   goldRewardMax: 0
   dropPoolTypes: 
   dropChance: 1
-  detectRange: 500
+  detectRange: 850
   rotateSpeed: 270
   rotateDeadZone: 0
   aiState: 1
   leadAccuracy: 1
   rearAttackAngleThreshold: 110
-  rearAttackSkipChance: 0.9
+  rearAttackSkipChance: 0.8
   swivelTransform: {fileID: 4177762561641812126}
   mountTransform: {fileID: 9141556630602784414}
   attackHoldDuration: 7
@@ -1403,7 +1403,7 @@ MonoBehaviour:
   currentLockMode: 0
   maxMultiLockCount: 4
   _targetInRadarRangeBufferSize: 64
-  lockOnRange: 400
+  lockOnRange: 750
   lockOnRequiredTime: 1.2
   targetLayerMask:
     serializedVersion: 2

@@ -38,7 +38,16 @@ public class VisualRandomize : MonoBehaviour
 			transform.rotation *= Quaternion.Euler(0, 0, Random.Range(MinRotation, MaxRotaion));
 		}
 
-		if(randomSpin)
+
+	}
+
+	private void Update()
+	{
+		if (GameManager.Instance != null && GameManager.Instance.IsGameplayFrozen || GameManager.Instance.IsGameOver)
+		{
+			return;
+		}
+		if (randomSpin)
 		{
 			if (_spinSpeed != 0f)
 			{
