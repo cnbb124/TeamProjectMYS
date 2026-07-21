@@ -2,7 +2,6 @@ using UnityEngine;
 
 public class ShopNPCInteraction : MonoBehaviour
 {
-    [SerializeField] private ShopNPCAnim npcAnim;
     [SerializeField] private GameObject affinityUI;
     [SerializeField] private PlayerTestCtrl player;
 
@@ -32,18 +31,16 @@ public class ShopNPCInteraction : MonoBehaviour
     {
         player.canControl = false;
         affinityUI.SetActive(true);
-        npcAnim.StartTrading();
 
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
-        Debug.Log($"Cursor visible: {Cursor.visible}, lockState: {Cursor.lockState}");
+   
     }
 
     public void CloseInteraction()
     {
         player.canControl = true;
         affinityUI.SetActive(false);
-        npcAnim.EndTrading();
 
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
