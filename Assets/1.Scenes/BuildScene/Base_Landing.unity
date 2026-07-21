@@ -817,7 +817,7 @@ PrefabInstance:
     - target: {fileID: 8982490151561249217, guid: 95f67c443a9fccf4eb8042c5d490dc28, type: 3}
       propertyPath: playerOverride
       value: 
-      objectReference: {fileID: 5459510670687534261}
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -844,7 +844,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   shipLanding: {fileID: 1740834327}
-  launchSceneName: 
+  launchSceneName: STAGE1
 --- !u!1 &251658645
 GameObject:
   m_ObjectHideFlags: 0
@@ -1662,21 +1662,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 3970313675330854974}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 65}
---- !u!114 &217103542827776192
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 217110691278459292}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7483eddd1f61ff44cb7573f041af0021, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _defaultLoadout: {fileID: 11400000, guid: 7c2bd1293467d554591b2fc6ec5b62fd, type: 2}
-  _visualRoot: {fileID: 0}
-  partSlots: []
 --- !u!4 &217110691278161340
 Transform:
   m_ObjectHideFlags: 0
@@ -1702,13 +1687,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 217110691278161340}
-  - component: {fileID: 5459510670687534261}
-  - component: {fileID: 7863336485704517503}
-  - component: {fileID: 3086103552308329370}
-  - component: {fileID: 4307442494495189841}
-  - component: {fileID: 217103542827776192}
-  - component: {fileID: 7591612362796876021}
-  - component: {fileID: 6254025428292656679}
   - component: {fileID: 2509431856066114508}
   - component: {fileID: 641738273087915738}
   m_Layer: 6
@@ -1930,7 +1908,7 @@ Rigidbody:
     m_Bits: 0
   m_ImplicitCom: 1
   m_ImplicitTensor: 1
-  m_UseGravity: 1
+  m_UseGravity: 0
   m_IsKinematic: 0
   m_Interpolate: 0
   m_Constraints: 0
@@ -2562,35 +2540,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &3086103552308329370
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 217110691278459292}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a547208e588a6c04ebc7cf397cd9034d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  currentLockMode: 0
-  maxMultiLockCount: 8
-  _targetInRadarRangeBufferSize: 64
-  lockOnRange: 1125
-  lockOnRequiredTime: 0.8
-  targetLayerMask:
-    serializedVersion: 2
-    m_Bits: 4096
-  lockOnAngle: 120
-  TargetsInLockonRange: []
-  TargetsInRadarRange: []
-  LockOnCandidate: {fileID: 0}
-  LockedTarget: {fileID: 0}
-  MultiLockCandidates: []
-  MultiLockedTargets: []
-  LockOnProgress: 0
-  IsLocked: 0
 --- !u!1 &3144099110163872249
 GameObject:
   m_ObjectHideFlags: 0
@@ -3027,22 +2976,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &4307442494495189841
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 217110691278459292}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4a126d7caf6cc7041b0412e828924d63, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  slots:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
 --- !u!1 &4355632067998793850
 GameObject:
   m_ObjectHideFlags: 0
@@ -3286,69 +3219,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 6776665142791123427}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: -90}
---- !u!114 &5459510670687534261
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 217110691278459292}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 120491e114eaf54449edb1ede4eca701, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _blocksBeam: 0
-  weaponSystem: {fileID: 0}
-  skillSystem: {fileID: 0}
-  maxHpRemaining: 999999
-  maxShieldCapacity: 1500
-  shieldRegainDelay: 3
-  shieldRegainRate: 100
-  isShieldRegaining: 0
-  shield: {fileID: 0}
-  bodyHitboxRoot: {fileID: 0}
-  maxArmor: 150
-  defense: 3
-  criChance: 20
-  criDamageMultiplier: 1.5
-  _deathSequenceDuration: 1.5
-  curState: 0
-  curHpRemaining: 0
-  curShieldRemaining: 0
-  curArmorRemaining: 0
-  curSpeed: 0
-  curBoostRemaining: 0
-  _playSoundType: 0
-  baseMoveSpeed: 100
-  boostSpeed: 150
-  maxSpeed: 150
-  timeToMaxSpeed: 1.2
-  timeToStop: 1.5
-  brakeEnterSpeedRatio: 0.65
-  brakeExitSpeedRatio: 0.2
-  maxBoostCapacity: 75
-  minBoostRequired: 10
-  boostConsumeAmont: 25
-  boostRegainDelay: 1
-  boostRegainRate: 10
-  dodgeDuration: 0.5
-  dodgeInvincibleTime: 0.4
-  dodgeCoolTime: 2
-  dodgeDistance: 40
-  speedMultiPlier: 0
-  xSensitivity: 200
-  ySensitivity: 250
-  rollSensitivity: 120
-  level: 1
-  exp: 0
-  expToNextLevel: 100
-  fuelMoveConsumeRate: 5
-  fuelBoostConsumeRate: 10
-  maxFuelCapacity: 5000
-  curFuelRemaining: 0
-  strafeSpeedRatio: 0.3
-  throttleResponseSpeed: 1
 --- !u!33 &5650831377530404797
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -3492,36 +3362,6 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!114 &6254025428292656679
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 217110691278459292}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: bcb17a26509e3854eb34ea026babacc9, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _equippedSkillNames:
-  - 
-  - 
-  - 
-  _startingSkills:
-  - {fileID: 11400000, guid: 2c4ae3ca568e5d749a56569ea6d5019a, type: 2}
-  - {fileID: 11400000, guid: 6070e93c2e514dd429d9ed03f366bf7c, type: 2}
-  - {fileID: 11400000, guid: 9367ab263d4c19b4c98e7773e8d647ca, type: 2}
-  _mysSiloPositions:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  _laserFirePosition: {fileID: 0}
-  _laserChargePosition: {fileID: 0}
-  _skillAnimCtrl: {fileID: 0}
 --- !u!23 &6292780151182922997
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -3940,33 +3780,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &7591612362796876021
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 217110691278459292}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ae1b975512cde9f49a8b76ca33645c06, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  animTypeClips:
-  - animType: 0
-    animClip: {fileID: 7400000, guid: f3a0e585198b9bc4c898f00a4eb32282, type: 2}
-  - animType: 1
-    animClip: {fileID: 7400000, guid: 193e381484e01b248964a4bb9724bdfd, type: 2}
-  - animType: 2
-    animClip: {fileID: 7400000, guid: affe0ef733b23c54fa61a859af3c472f, type: 2}
-  - animType: 3
-    animClip: {fileID: 7400000, guid: c58b9d20b24111e4b9f15fb507eb7183, type: 2}
-  - animType: 4
-    animClip: {fileID: 7400000, guid: 1a33c9b43f05d4347a47558fc3f27faf, type: 2}
-  - animType: 5
-    animClip: {fileID: 0}
-  - animType: 6
-    animClip: {fileID: 0}
 --- !u!1 &7600264324215986391
 GameObject:
   m_ObjectHideFlags: 0
@@ -4119,47 +3932,6 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!114 &7863336485704517503
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 217110691278459292}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: aa66153ac3873e44589a1d73fc8a0257, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  lockOnSystem: {fileID: 3086103552308329370}
-  bulletFireCooldown: 0.1
-  curBulletData: {fileID: 11400000, guid: 78ae5846b86eca04eafcb56df9874caa, type: 2}
-  _useBulletMuzzle: 1
-  _useBulletSound: 1
-  _useMissileMuzzle: 0
-  _useMissileSound: 1
-  _bulletMuzzleFlashVFXPlayTime: 0.05
-  _missileMuzzleFlashVFXPlayTime: 0.2
-  bulletFireMode: 0
-  missileFireMode: 2
-  autoDetectFirePositions: 0
-  _fixedBulletFirePositions: []
-  _fixedMissileFirePositions: []
-  missileFireCooldown: 3
-  missileSlots:
-  - type: 0
-    curAmmo: 999
-    maxAmmo: 999
-    missileData: {fileID: 11400000, guid: 2652fd978459f5a44aad1cc7fa6033a7, type: 2}
-  - type: 2
-    curAmmo: 100
-    maxAmmo: 100
-    missileData: {fileID: 11400000, guid: 8c191d98c98221143a109045fef3cf95, type: 2}
-  - type: 1
-    curAmmo: 555
-    maxAmmo: 555
-    missileData: {fileID: 11400000, guid: 3d552595dc550124e99acaedac3d0fde, type: 2}
-  curMissileType: 0
 --- !u!23 &7897592956314944075
 MeshRenderer:
   m_ObjectHideFlags: 0
