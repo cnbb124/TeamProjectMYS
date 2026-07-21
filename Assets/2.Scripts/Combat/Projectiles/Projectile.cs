@@ -235,11 +235,16 @@ public abstract class Projectile : MonoBehaviour
             return;
         }
 
-        // attacker는 풀 투사체(DDOL)가 쏜 유닛보다 오래 살아 이미 파괴됐을 수 있음.
-        GameObject attackerGo = attacker != null ? attacker.gameObject : null;
+        // 자기충돌 제외를 '루트(transform.root) 기준'으로 함 — 스테이션+터렛처럼 한 구조물에
+        // 여러 유닛이 붙어 있을 때, 그중 하나가 쏜 탄이 같은 구조물의 다른 유닛(부모 스테이션/형제 터렛)
+        // 히트박스에 총구에서 즉시 맞아 소멸하던 문제 방지. 계층은 물리 무시를 안 해주므로 코드로 처리.
+        // 같은 루트 소속이면 관통, 다른 구조물(적/플레이어/환경)이면 명중.
+        // attacker는 풀 투사체(DDOL)가 쏜 유닛보다 오래 살아 이미 파괴됐을 수 있음(null 가능).
+        Transform attackerRoot = attacker != null ? attacker.transform.root : null;
+        Transform hitRoot = (hittable as MonoBehaviour)?.transform.root;
 
-        //발사자 본인이 아닐 경우에만 OnHit 발생
-        if ((hittable as MonoBehaviour)?.gameObject != attackerGo)
+        //같은 구조물(루트) 소속이 아닐 때만 OnHit 발생
+        if (hitRoot != attackerRoot)
         {
             OnHit(new HitTarget(other, hittable, other.ClosestPoint(transform.position)));
         }

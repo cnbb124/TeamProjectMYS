@@ -850,6 +850,17 @@ public abstract class Unit : MonoBehaviour, IDamageable, IPunObservable
 	// ※ 총알은 로컬 복제라 각 클라에 사본이 있으므로, '쏜 클라의 총알'만 여기까지 온다(복제탄은 데미지 권위 없음 — Projectile 참고).
 	public void TakeDamage(HitInfo info)
 	{
+		// [구조물 실드] 스테이션+터렛처럼 한 구조물(같은 transform.root)에 여러 유닛이 붙어 있을 때,
+		// 이 유닛이 서브유닛이고 루트 유닛(구조물 본체)의 실드가 살아있으면 그 실드가 대신 흡수한다.
+		// 안 그러면 총알/폭발이 실드 안쪽 터렛(별개 유닛, 자기 실드 없음)을 그냥 죽였음.
+		// 루트 실드가 소진(0)돼야 그때부터 서브유닛이 직접 데미지를 받는다.
+		Unit shieldProvider = GetStructureShieldProvider();
+		if (shieldProvider != null)
+		{
+			shieldProvider.TakeDamage(info);
+			return;
+		}
+
 		if (_photonView != null && !_photonView.IsMine)
 		{
 			_photonView.RPC(nameof(RpcTakeDamage), _photonView.Owner,
@@ -859,6 +870,26 @@ public abstract class Unit : MonoBehaviour, IDamageable, IPunObservable
 			return;
 		}
 		ApplyHitDamage(info);
+	}
+
+	// 이 유닛이 구조물의 서브유닛이면, 실드를 대신 소모해줄 루트 유닛(구조물 본체)을 돌려준다.
+	// 루트가 자기 자신(단일 유닛)이거나 루트 실드가 없으면 null → 평소대로 자기가 데미지 처리.
+	private Unit GetStructureShieldProvider()
+	{
+		Unit rootUnit = transform.root.GetComponent<Unit>();
+		if (rootUnit != null && rootUnit != this && rootUnit.curShieldRemaining > 0)
+		{
+			return rootUnit;
+		}
+		return null;
+	}
+
+	// 범위딜(AOE) 중복제거용 키. 이 유닛이 실드 구조물의 서브유닛이면 실드 제공자(루트)를, 아니면 자기 자신을 반환.
+	// 실드 켜져 있으면 한 폭발이 구조물 전체를 '실드 1방'으로 묶고, 실드 없으면 각 유닛(=자기 자신)이 1방씩 받게 함.
+	public Unit GetShieldDedupKey()
+	{
+		Unit provider = GetStructureShieldProvider();
+		return provider != null ? provider : this;
 	}
 
 	// 대상 소유자 클라에서만 실행되는 데미지 적용 RPC(위 라우터가 전송). 피격 VFX/사운드 종류도 함께 전송해

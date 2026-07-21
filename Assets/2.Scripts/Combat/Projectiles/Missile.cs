@@ -367,22 +367,34 @@ public class Missile : Projectile, IExplodable
 		{
 			//맞은것들중 부모에 데미지받는애들 갖고오기
 			IDamageable target = _explosionHits[i].GetComponentInParent<IDamageable>();
-
-			// 타격 대상 기록 . 중복이없으면
-			if (target != null && !_damagedTargets.Contains(target))
+			if (target == null)
 			{
-				if ((object)target == attacker)
-				{
-					continue;
-				}
-				// 거리 비례 데미지 감쇠 (중심 100%, 외곽 50%)
-				float distRatio = 1f - (Vector3.Distance(transform.position, _explosionHits[i].transform.position) / explosionInfo.explosionRadius);
-				int finalDamage = Mathf.RoundToInt(explosionInfo.explosionDamage * Mathf.Lerp(0.5f, 1f, distRatio));
-				//데미지 실제적용 (AOE 오버로드: 폭발 중심 + 반경 전달)
-				ApplyDamage(target, _explosionHits[i], finalDamage, this.dmgType, _explosionHits[i].ClosestPoint(transform.position), explosionInfo.explosionRadius);
-				//중복체크용 해쉬셋Add
-				_damagedTargets.Add(target);
+				continue;
 			}
+			if ((object)target == attacker)
+			{
+				continue;
+			}
+
+			// 중복제거 키 — 실드 켜진 구조물(스테이션+터렛)이면 실드 제공자(루트) 기준으로 묶어
+			// 한 폭발이 구조물 실드를 '1방'만 깎게 함. 실드 없으면 각 유닛(=자기 자신)이 1방씩 받음.
+			IDamageable dedupKey = target;
+			Unit targetUnit = target as Unit;
+			if (targetUnit != null)
+			{
+				dedupKey = targetUnit.GetShieldDedupKey();
+			}
+			if (_damagedTargets.Contains(dedupKey))
+			{
+				continue;
+			}
+			_damagedTargets.Add(dedupKey);
+
+			// 거리 비례 데미지 감쇠 (중심 100%, 외곽 50%)
+			float distRatio = 1f - (Vector3.Distance(transform.position, _explosionHits[i].transform.position) / explosionInfo.explosionRadius);
+			int finalDamage = Mathf.RoundToInt(explosionInfo.explosionDamage * Mathf.Lerp(0.5f, 1f, distRatio));
+			//데미지 실제적용 (AOE 오버로드: 폭발 중심 + 반경 전달)
+			ApplyDamage(target, _explosionHits[i], finalDamage, this.dmgType, _explosionHits[i].ClosestPoint(transform.position), explosionInfo.explosionRadius);
 		}
 	}
 
