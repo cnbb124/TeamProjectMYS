@@ -3166,8 +3166,28 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 9171410928315523197, guid: 6c5db46e320d9a84fb456a6ced5ae142, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 484133361}
   m_SourcePrefab: {fileID: 100100000, guid: 6c5db46e320d9a84fb456a6ced5ae142, type: 3}
+--- !u!1 &484133360 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 9171410928315523197, guid: 6c5db46e320d9a84fb456a6ced5ae142, type: 3}
+  m_PrefabInstance: {fileID: 484133359}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &484133361
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 484133360}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 374bae91d86478546a15769da3f9b0a4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &591470389
 GameObject:
   m_ObjectHideFlags: 0
@@ -4069,7 +4089,6 @@ MonoBehaviour:
   returnTime: 10
   vignetteImage: {fileID: 2065101532}
   maxAlpha: 0.8
-  player: {fileID: 2042188112}
 --- !u!4 &1951574352
 Transform:
   m_ObjectHideFlags: 0
@@ -4524,11 +4543,6 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: ef4e0c55a007602499bafc9d78b74bff, type: 3}
---- !u!4 &2042188112 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 1972906032483390973, guid: ef4e0c55a007602499bafc9d78b74bff, type: 3}
-  m_PrefabInstance: {fileID: 2042188111}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &2065101531
 GameObject:
   m_ObjectHideFlags: 0

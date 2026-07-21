@@ -62,10 +62,9 @@ public class HangarExitButton : MonoBehaviour
         // TODO: 출항 씬 완성되면 아래 로직 활성화
         // - 로딩 씬을 거치려면 LoadingManager.NextScene 방식 사용
         //
-        // if (!string.IsNullOrEmpty(launchSceneName))
-        // {
-        //     LoadingManager.NextScene = launchSceneName;
-        //     SceneManager.LoadScene("LoadingScene");
+        if (string.IsNullOrEmpty(launchSceneName)) return;
+        LoadingManager.NextScene = launchSceneName;
+        GameManager.Instance.LoadScene(SCENE_TYPE.LOADING_SEQUENCE);
         // }
         Debug.Log("[HangarExitButton] 이륙 연출 완료 — 출항 씬 아직 미연결 (launchSceneName 비어있음)");
     }

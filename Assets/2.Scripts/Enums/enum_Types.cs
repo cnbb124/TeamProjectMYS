@@ -171,6 +171,7 @@ public enum SCENE_TYPE
 	STATION = 1,
 	STATION_1F,
 	STATION_B2,
+    BASE_LANDING,
 	LOADING_SEQUENCE = 20,   // ← 추가 (로딩 시퀀스 씬)
 	MULTIPLAYER = 25,   // ← 추가 (멀티 대기실 씬)
 	MAP_SELECT = 30,   // ← 추가 (맵 선택 화면)
