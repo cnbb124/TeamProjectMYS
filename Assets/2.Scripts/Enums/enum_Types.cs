@@ -232,6 +232,7 @@ public enum POOL_TYPE
 	ENEMY_MISSILESHIP,
 	ENEMY_WORKER,
 	ENEMY_BOSS,
+	ENEMY_STATION,
 
 	// 아이템 / 이펙트 (추후 세분화)
 	ITEM = 200,
@@ -363,12 +364,3 @@ public enum SKILL_MSY_TYPE
 
 
 
-
-// 스폰 방식.
-// ScenePlaced : 씬에 미리 배치된 오브젝트 SetActive(true).
-// RandomSpawn : 지정 스폰포인트에 PoolManager.Get(poolType)으로 꺼내서 배치.
-public enum SpawnMethod
-{
-	ScenePlaced,
-	PoolSpawn
-}

@@ -12,9 +12,8 @@ using PhotonHashtable = ExitGames.Client.Photon.Hashtable;
 // ================================================================
 // 씬에 1개 배치. DontDestroyOnLoad 없음 (씬 전용).
 //
-// 스폰 방식 (WaveData.SpawnEntry.method):
-//   ScenePlaced : 씬에 미리 배치·비활성화된 적 SetActive(true)
-//   RandomSpawn : 지정 스폰포인트에 프리팹 Instantiate
+// 스폰: WaveData.SpawnEntry의 poolType을 spawnPoint(미지정 시 defaultSpawnPoints 중 랜덤)에
+//   InstantiateRoomObject로 네트워크 스폰. (씬 배치형은 SetActive가 멀티 동기화 안 돼 제거 — 배치 적은 spawnPoint로 대체)
 //
 // 웨이브 진행:
 //   Start() → StartWave(0) → 스폰 완료 → 적 전멸 대기
@@ -63,7 +62,7 @@ public class SpawnManager : MonoBehaviourPunCallbacks, IOnEventCallback
 	[Header("웨이브 설정")]
 	[Tooltip("순서대로 실행될 WaveData 목록. 전부 소진 시 StageClear 호출.")]
 	public WaveData[] waves;
-	[Tooltip("RandomSpawn SpawnEntry에 spawnPoint 미지정 시 랜덤 선택할 기본 스폰포인트.")]
+	[Tooltip("SpawnEntry에 spawnPoint 미지정 시 랜덤 선택할 기본 스폰포인트.")]
 	public Transform[] defaultSpawnPoints;
 
 	[Header("보스 웨이브")]
@@ -147,42 +146,13 @@ public class SpawnManager : MonoBehaviourPunCallbacks, IOnEventCallback
 				yield return GameManager.WaitGameplaySeconds(entry.delay);
 			}
 
-			if (entry.method == SpawnMethod.ScenePlaced)
-			{
-				SpawnScenePlaced(entry);
-			}
-			else
-			{
-				yield return StartCoroutine(SpawnRandom(entry));
-			}
+			yield return StartCoroutine(SpawnRandom(entry));
 		}
 
 		yield return StartCoroutine(WaitForWaveClear(wave));
 	}
 
-	// ================================================================
-	// 스폰 처리
-	// ================================================================
-	private void SpawnScenePlaced(WaveData.SpawnEntry entry)
-	{
-		if (entry.scenePlacedEnemies == null)
-		{
-			return;
-		}
-		foreach (GameObject go in entry.scenePlacedEnemies)
-		{
-			if (go == null)
-			{
-				continue;
-			}
-			go.SetActive(true);
-			Enemy enemy = go.GetComponent<Enemy>();
-			if (enemy != null)
-			{
-				_waveEnemies.Add(enemy);
-			}
-		}
-	}
+	
 
 	private IEnumerator SpawnRandom(WaveData.SpawnEntry entry)
 	{
@@ -191,7 +161,12 @@ public class SpawnManager : MonoBehaviourPunCallbacks, IOnEventCallback
 			yield break;
 		}
 
-		if (entry.spawnPoint == null && defaultSpawnPoints != null && defaultSpawnPoints.Length > 0)
+		// spawnPointIndex가 유효하면 그 지점 하나에 고정 스폰, 아니면(-1/범위밖) defaultSpawnPoints 중 랜덤(셔플).
+		bool useSpecificPoint = entry.spawnPointIndex >= 0
+			&& defaultSpawnPoints != null
+			&& entry.spawnPointIndex < defaultSpawnPoints.Length;
+
+		if (!useSpecificPoint && defaultSpawnPoints != null && defaultSpawnPoints.Length > 0)
 		{
 			if (_shuffleBuffer == null || _shuffleBuffer.Length != defaultSpawnPoints.Length)
 			{
@@ -214,9 +189,9 @@ public class SpawnManager : MonoBehaviourPunCallbacks, IOnEventCallback
 				yield return null;
 			}
 
-			Vector3 pos = (entry.spawnPoint == null && _shuffleBuffer != null)
-				? _shuffleBuffer[i % _shuffleBuffer.Length].position
-				: GetSpawnPosition(entry.spawnPoint);
+			Vector3 pos = useSpecificPoint
+				? defaultSpawnPoints[entry.spawnPointIndex].position
+				: (_shuffleBuffer != null ? _shuffleBuffer[i % _shuffleBuffer.Length].position : transform.position);
 
 			// Master 권위 네트워크 스폰 — 모든 클라에 같은 적이 생성됨(PhotonPoolAdapter가 로컬 풀로 라우팅).
 			// prefabId = POOL_TYPE 이름(어댑터가 파싱해 풀에서 꺼냄). 위치는 Instantiate가 설정.
@@ -435,21 +410,5 @@ public class SpawnManager : MonoBehaviourPunCallbacks, IOnEventCallback
 			return false;
 		}
 		return value is bool boolValue && boolValue;
-	}
-
-	// ================================================================
-	// 유틸
-	// ================================================================
-	private Vector3 GetSpawnPosition(Transform spawnPoint)
-	{
-		if (spawnPoint != null)
-		{
-			return spawnPoint.position;
-		}
-		if (defaultSpawnPoints != null && defaultSpawnPoints.Length > 0)
-		{
-			return defaultSpawnPoints[Random.Range(0, defaultSpawnPoints.Length)].position;
-		}
-		return transform.position;
 	}
 }

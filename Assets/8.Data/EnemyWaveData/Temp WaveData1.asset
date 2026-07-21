@@ -13,26 +13,29 @@ MonoBehaviour:
   m_Name: Temp WaveData1
   m_EditorClassIdentifier: 
   entries:
-  - method: 1
-    poolType: 100
-    spawnPoint: {fileID: 0}
+  - poolType: 105
+    spawnPointIndex: 7
+    count: 1
+    interval: 0.2
+    delay: 0.02
+  - poolType: 100
+    spawnPointIndex: -1
     count: 20
     interval: 0.1
-    scenePlacedEnemies: []
     delay: 1
-  - method: 1
-    poolType: 103
-    spawnPoint: {fileID: 0}
+  - poolType: 103
+    spawnPointIndex: -1
     count: 2
     interval: 2
-    scenePlacedEnemies: []
     delay: 1.5
-  - method: 1
-    poolType: 102
-    spawnPoint: {fileID: 0}
+  - poolType: 102
+    spawnPointIndex: -1
     count: 2
     interval: 0.2
-    scenePlacedEnemies:
-    - {fileID: 0}
+    delay: 1.5
+  - poolType: 102
+    spawnPointIndex: -1
+    count: 2
+    interval: 0.2
     delay: 1.5
   nextWaveDelay: 15

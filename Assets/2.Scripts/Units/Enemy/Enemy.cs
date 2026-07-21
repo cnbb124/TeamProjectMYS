@@ -167,7 +167,7 @@ public class Enemy : Unit
 
     // 위치를 직접 배치하는 스폰 호출부(SpawnManager 등)가 transform.position을 옮긴 직후 호출.
     // OnEnable은 Get() 직후(=재배치 이전) 호출돼서 거기서 캡처하면 죽기 전 위치가 잡혀버림 —
-    // 그래서 재배치가 끝난 다음 이 메서드로 명시적으로 갱신함. (ScenePlaced는 재배치를 안 하므로 호출 불필요)
+    // 그래서 재배치가 끝난 다음 이 메서드로 명시적으로 갱신함.
     public void RefreshSpawnAnchor()
     {
         _spawnPosition = transform.position;
