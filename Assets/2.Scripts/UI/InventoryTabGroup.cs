@@ -58,14 +58,38 @@ public class InventoryTabGroup : MonoBehaviour
         SelectTab(defaultTab);
     }
 
+    private bool _subscribed;
+
     private void OnEnable()
     {
         // 패널 열 때마다 현재 탭 갱신 (아이템 획득/소모 반영)
         RefreshGrid(_currentIndex);
+        Subscribe();
+    }
+
+    private void OnDisable()
+    {
+        if (_subscribed && InventoryManager.Instance != null)
+        {
+            InventoryManager.Instance.OnInventoryChanged -= RefreshCurrent;
+            _subscribed = false;
+        }
+    }
+
+    // 인벤토리가 바뀌면 즉시 그리드에 반영 (창을 연 채로 줍거나 버릴 때 필요).
+    // InventoryManager가 아직 없을 수 있어(씬 순서) Update에서 재시도한다.
+    private void Subscribe()
+    {
+        if (_subscribed || InventoryManager.Instance == null) return;
+
+        InventoryManager.Instance.OnInventoryChanged += RefreshCurrent;
+        _subscribed = true;
     }
 
     private void Update()
     {
+        if (!_subscribed) Subscribe();
+
         if (underline != null)
             underline.anchoredPosition = Vector2.Lerp(
                 underline.anchoredPosition, _underlineTarget,

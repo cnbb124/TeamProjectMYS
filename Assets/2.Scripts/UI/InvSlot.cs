@@ -36,6 +36,10 @@ public class InvSlot : MonoBehaviour,
     private static Image   _dragIcon;
     private static Canvas  _rootCanvas;
 
+    // 이번 드래그가 다른 슬롯에서 처리(교환)됐는지.
+    // OnDrop이 OnEndDrag보다 먼저 불리므로, 여기서 true면 "밖에 버린 것"이 아니다.
+    private static bool _handledBySlot;
+
     private CanvasGroup _canvasGroup;
 
     private void Awake()
@@ -87,7 +91,8 @@ public class InvSlot : MonoBehaviour,
     {
         if (Item == null) { e.pointerDrag = null; return; }
 
-        _dragSource = this;
+        _dragSource    = this;
+        _handledBySlot = false;
 
         _canvasGroup.alpha          = 0.35f;
         _canvasGroup.blocksRaycasts = false;
@@ -129,7 +134,46 @@ public class InvSlot : MonoBehaviour,
             _dragIcon = null;
         }
 
+        // 다른 슬롯이 받아가지 않았고, 인벤토리 패널 바깥에서 손을 놨으면 월드에 버린다.
+        if (!_handledBySlot && Item != null && IsPointerOutsideInventory(e))
+        {
+            TryDropToWorld();
+        }
+
         _dragSource = null;
+    }
+
+    // ── 인벤토리 밖으로 버리기 ────────────────────────────────
+
+    // 인벤토리 패널(InventoryTabGroup이 붙은 오브젝트)의 사각형 밖에서 손을 놨는지.
+    // 패널을 못 찾으면 "밖 판정"을 하지 않는다 — 실수로 버려지는 것보다 안 버려지는 게 안전.
+    private bool IsPointerOutsideInventory(PointerEventData e)
+    {
+        InventoryTabGroup group = GetComponentInParent<InventoryTabGroup>();
+        if (group == null) return false;
+
+        RectTransform panelRect = group.transform as RectTransform;
+        if (panelRect == null) return false;
+
+        Camera cam = (_rootCanvas != null && _rootCanvas.renderMode != RenderMode.ScreenSpaceOverlay)
+            ? _rootCanvas.worldCamera : null;
+
+        return !RectTransformUtility.RectangleContainsScreenPoint(panelRect, e.position, cam);
+    }
+
+    // 실제 드랍은 InventoryDropper가 담당 (인벤토리 차감 + 월드 생성).
+    private void TryDropToWorld()
+    {
+        if (InventoryDropper.Instance == null)
+        {
+            Debug.LogWarning("[InvSlot] 씬에 InventoryDropper가 없어 버리기를 건너뜁니다.");
+            return;
+        }
+
+        if (InventoryDropper.Instance.TryDrop(Item, Count))
+        {
+            ClearSlot();   // 그리드 전체 갱신은 InventoryTabGroup이 OnInventoryChanged로 처리
+        }
     }
 
     // ── 드롭 수신 ─────────────────────────────────────────────
@@ -147,6 +191,8 @@ public class InvSlot : MonoBehaviour,
         ItemData temp = Item;
         SetItem(_dragSource.Item);
         _dragSource.SetItem(temp);
+
+        _handledBySlot = true;   // 슬롯끼리 처리됨 — 밖에 버린 게 아님
     }
 
     // ── 수용 가능 여부 ────────────────────────────────────────
