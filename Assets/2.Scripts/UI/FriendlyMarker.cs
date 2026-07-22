@@ -37,6 +37,10 @@ public class FriendlyMarker : MonoBehaviour
              "위(12시)를 향해 그렸으면 0 / 아래(6시) 180 / 오른쪽 -90 / 왼쪽 90")]
     [SerializeField] private float    arrowAngleOffset = 180f;
 
+    [Tooltip("체크 시 화살표가 회전하지 않고 항상 같은 방향으로 고정됨.\n" +
+             "화면 밖 아군 방향을 가리키게 하려면 체크 해제")]
+    [SerializeField] private bool     lockArrowRotation = true;
+
     private RectTransform _rect;
 
     /// <summary>이 마커의 RectTransform (위치 조정용).</summary>
@@ -87,8 +91,12 @@ public class FriendlyMarker : MonoBehaviour
         arrowImage.gameObject.SetActive(visible);
         if (!visible) return;
 
-        // angleDeg는 "위를 향해 그린 화살표" 기준으로 계산돼 오므로, 실제 아트 방향만큼 더 돌려준다.
-        float finalAngle = (offScreen ? angleDeg : 0f) + arrowAngleOffset;
+        // lockArrowRotation이면 방향 계산을 무시하고 항상 arrowAngleOffset 각도로 고정.
+        // angleDeg는 "위를 향해 그린 화살표" 기준이라, 회전할 때만 아트 방향 보정을 더한다.
+        float finalAngle = (lockArrowRotation || !offScreen)
+            ? arrowAngleOffset
+            : angleDeg + arrowAngleOffset;
+
         arrowImage.rectTransform.localRotation = Quaternion.Euler(0f, 0f, finalAngle);
     }
 }
