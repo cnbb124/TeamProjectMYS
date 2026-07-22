@@ -19,7 +19,7 @@ public class HangarExitButton : MonoBehaviour
     [SerializeField] private ShipLanding shipLanding;
 
     [Header("출항 씬 (아직 미정 — 씬 완성 후 입력)")]
-    [SerializeField] private string launchSceneName = ""; // 예: "LaunchScene"
+    public static string launchSceneName = ""; // 예: "LaunchScene"
 
     private bool exitTriggered = false; // 버튼 중복 클릭 방지
 
@@ -59,7 +59,11 @@ public class HangarExitButton : MonoBehaviour
     /// <summary>이륙 연출이 끝나면 ShipLanding에서 호출됨.</summary>
     private void HandleTakeoffComplete()
     {
-
+        if (string.IsNullOrEmpty(launchSceneName))
+        {
+            Debug.Log("[HangarExitButton] 이륙 연출 완료 — 출항 씬 미연결 (launchSceneName 비어있음)");
+            return;
+        }
 
 
         // TODO: 출항 씬 완성되면 아래 로직 활성화
@@ -70,6 +74,6 @@ public class HangarExitButton : MonoBehaviour
         GameManager.Instance.LoadScene(SCENE_TYPE.LOADING_SEQUENCE);
 
         // }
-        Debug.Log("[HangarExitButton] 이륙 연출 완료 — 출항 씬 아직 미연결 (launchSceneName 비어있음)");
+
     }
 }
