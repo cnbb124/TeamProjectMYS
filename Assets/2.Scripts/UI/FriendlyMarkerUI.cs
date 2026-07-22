@@ -55,6 +55,10 @@ public class FriendlyMarkerUI : MonoBehaviour
     [Header("색상")]
     [SerializeField] private Color markerColor = new Color(0.2f, 0.8f, 1f, 1f); // 하늘색(아군)
 
+    [Header("디버그")]
+    [Tooltip("체크 시 아군 탐색 결과를 Console에 출력 (누가 아군으로 잡혔는지 확인용)")]
+    [SerializeField] private bool debugLog = false;
+
     private readonly List<FriendlyMarker> _markers = new List<FriendlyMarker>();
     private readonly List<Player>         _allies  = new List<Player>();
     private float _nextRefreshTime;
@@ -98,17 +102,30 @@ public class FriendlyMarkerUI : MonoBehaviour
     }
 
     // 씬의 Player 중 내 함선이 아닌 것만 수집.
+    // 자기 제외를 3중으로 건다 — IsMine이 기대와 다르게 나오는 경우(PhotonView 미부착 등)가 있어서,
+    // 하나만 믿으면 내 함선 위에 마커가 붙는 사고가 남.
     private void RefreshAllies()
     {
         _allies.Clear();
+
+        Player localPlayer = GameManager.Instance != null ? GameManager.Instance.playerRef : null;
 
         Player[] all = FindObjectsOfType<Player>();
         foreach (Player p in all)
         {
             if (p == null) continue;
-            if (p.IsMine) continue;                       // 내 함선은 제외 (HUD가 이미 보여줌)
-            if (playerTransform != null && p.transform == playerTransform) continue;
+            if (p.IsMine) continue;                                          // ① 내 소유
+            if (localPlayer != null && p == localPlayer) continue;           // ② GameManager가 아는 내 함선
+            if (playerTransform != null && p.transform == playerTransform) continue; // ③ 캐시된 내 트랜스폼
             _allies.Add(p);
+        }
+
+        if (debugLog)
+        {
+            string names = "";
+            foreach (Player p in _allies) names += $"{p.gameObject.name}(IsMine={p.IsMine}) ";
+            Debug.Log($"[FriendlyMarkerUI] Player 총 {all.Length}개 / 아군 {_allies.Count}개 → {names}" +
+                      $"| localPlayer={(localPlayer != null ? localPlayer.gameObject.name : "null")}");
         }
     }
 
