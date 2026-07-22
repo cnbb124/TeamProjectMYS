@@ -92,13 +92,13 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 36
-  m_fontSizeBase: 36
+  m_fontSize: 25
+  m_fontSizeBase: 25
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
   m_fontSizeMax: 72
-  m_fontStyle: 1
+  m_fontStyle: 0
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
   m_textAlignment: 65535
@@ -224,6 +224,7 @@ GameObject:
   - component: {fileID: 5077261884342228371}
   - component: {fileID: 5574885898366021887}
   - component: {fileID: 8468665158409787641}
+  - component: {fileID: 707562037102522483}
   m_Layer: 5
   m_Name: FriendlyPlayerUI
   m_TagString: Untagged
@@ -314,6 +315,23 @@ MonoBehaviour:
   m_BlockingMask:
     serializedVersion: 2
     m_Bits: 4294967295
+--- !u!114 &707562037102522483
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2412372701630135720}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2c723473ecee5c44488b93b4491e4614, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  nameText: {fileID: 252055222451360446}
+  distanceText: {fileID: 4509485740557286744}
+  arrowImage: {fileID: 6468488525060645170}
+  hideArrowOnScreen: 0
+  arrowAngleOffset: 180
 --- !u!1 &7192546988684142465
 GameObject:
   m_ObjectHideFlags: 0
@@ -412,7 +430,7 @@ MonoBehaviour:
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
   m_fontSizeMax: 72
-  m_fontStyle: 0
+  m_fontStyle: 1
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 1024
   m_textAlignment: 65535

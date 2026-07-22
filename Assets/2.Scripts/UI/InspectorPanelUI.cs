@@ -7,24 +7,30 @@ using TMPro;
 /// 인벤토리 인스펙터 패널.
 ///
 /// [HitPanel] — 파트 이미지 색상으로 파손 상태 표시
-///   각 이미지를 PART_TYPE에 1:1로 묶어, 그 파츠의 개별 HP로 색을 정한다.
-///   (UnitParts.partSlots[i].curPartHp / equippedPart.maxPartHp)
+///   이미지마다 "무엇을 기준으로 칠할지(Source)"를 골라 쓴다.
+///     PartHp     : 해당 PART_TYPE 파츠의 개별 HP (UnitParts.partSlots의 curPartHp / maxPartHp)
+///     UnitHp     : 기체 본체 HP
+///     UnitArmor  : 기체 아머
+///     UnitShield : 기체 실드
 ///   → 파츠마다 따로 물들기 때문에 "무기만 빨갛고 엔진은 멀쩡" 같은 상태가 한눈에 보임.
 ///
 ///   색 단계 (4단계 고정 — 시인성 위해 그라데이션 안 씀)
 ///     초록 100~75% / 노랑 75~50% / 주황 50~25% / 빨강 25~0%
-///     회색   = 슬롯 비어있음(미장착)
+///     회색   = 슬롯 비어있음(미장착, PartHp 전용)
 ///     검붉음 = 파괴됨(HP 0)
 ///
 ///   ※ 같은 PART_TYPE 슬롯이 여러 개면 그중 "가장 많이 깎인" 파츠 기준으로 칠한다(경고 목적).
-///   ※ FRAME처럼 maxPartHp가 0인 파츠는 useUnitHp를 켜서 기체 본체 HP로 표시.
+///   ※ FRAME처럼 maxPartHp가 0인 파츠는 자동으로 본체 HP로 대체 표시된다.
+///   ※ Body를 UnitArmor로 둔 이유: ARMOR 파츠는 기본 로드아웃에 없지만 유닛은 기본 아머를 가짐.
+///      PartHp로 두면 STATUS 패널엔 "아머 150/150"인데 기체는 회색이라 모순돼 보임.
+///      나중에 아머 파츠를 기본 지급하기로 하면 Source만 PartHp로 되돌리면 됨.
 ///
 /// [HitPanel 텍스트] Level / Gauge(HP cur-max)
 /// [StatPanel]       HP / Shield / Armor 바 + 텍스트
 ///
 /// [부착 / 연결]
 /// 1. InspectorPanel에 부착
-/// 2. Part Bindings에 항목 추가 → 각 Image와 PART_TYPE 지정
+/// 2. Part Bindings에 항목 추가 → Image + Source(+ PartHp면 PART_TYPE) 지정
 ///    (파츠가 늘어나도 인스펙터에서 항목만 추가하면 되고 코드 수정 불필요)
 /// 3. 구버전 개별 이미지 필드를 쓰던 씬이면 그대로 둬도 됨 —
 ///    Part Bindings가 비어있으면 시작할 때 구필드에서 자동 생성함.
@@ -32,15 +38,26 @@ using TMPro;
 /// </summary>
 public class InspectorPanelUI : MonoBehaviour
 {
-    /// <summary>파트 이미지 1개와 그 이미지가 나타낼 파츠 종류의 짝.</summary>
+    /// <summary>색을 무엇에서 뽑을지.</summary>
+    public enum ColorSource
+    {
+        PartHp,      // 지정한 PART_TYPE 파츠의 개별 HP
+        UnitHp,      // 기체 본체 HP
+        UnitArmor,   // 기체 아머
+        UnitShield,  // 기체 실드
+    }
+
+    /// <summary>파트 이미지 1개와 그 이미지가 나타낼 대상의 짝.</summary>
     [System.Serializable]
     public class PartImageBinding
     {
-        public Image     image;
-        public PART_TYPE partType;
+        public Image image;
 
-        [Tooltip("체크 시 파츠 HP 대신 기체 본체 HP로 색을 정함 (FRAME/콕핏처럼 파츠 HP가 없는 부위용)")]
-        public bool useUnitHp;
+        [Tooltip("색의 기준. PartHp일 때만 아래 Part Type을 사용함")]
+        public ColorSource source = ColorSource.PartHp;
+
+        [Tooltip("Source가 PartHp일 때 볼 파츠 종류")]
+        public PART_TYPE partType;
     }
 
     [Header("References")]
@@ -102,18 +119,18 @@ public class InspectorPanelUI : MonoBehaviour
         if (partBindings != null && partBindings.Count > 0) return;
 
         partBindings = new List<PartImageBinding>();
-        AddBinding(cockpitImage,    PART_TYPE.FRAME,            useUnitHp: true);
-        AddBinding(bodyImage,       PART_TYPE.ARMOR,            useUnitHp: false);
-        AddBinding(engineCoreImage, PART_TYPE.ENGINE,           useUnitHp: false);
-        AddBinding(thrusterImage,   PART_TYPE.THRUSTER,         useUnitHp: false);
-        AddBinding(bulletPosImage,  PART_TYPE.LAUNCHER_BULLET,  useUnitHp: false);
-        AddBinding(missilePosImage, PART_TYPE.LAUNCHER_MISSILE, useUnitHp: false);
+        AddBinding(cockpitImage,    ColorSource.UnitHp);                                 // FRAME은 파츠HP 없음
+        AddBinding(bodyImage,       ColorSource.UnitArmor);                              // 아머 파츠 미지급이라 유닛 아머로
+        AddBinding(engineCoreImage, ColorSource.PartHp, PART_TYPE.ENGINE);
+        AddBinding(thrusterImage,   ColorSource.PartHp, PART_TYPE.THRUSTER);
+        AddBinding(bulletPosImage,  ColorSource.PartHp, PART_TYPE.LAUNCHER_BULLET);
+        AddBinding(missilePosImage, ColorSource.PartHp, PART_TYPE.LAUNCHER_MISSILE);
     }
 
-    private void AddBinding(Image img, PART_TYPE type, bool useUnitHp)
+    private void AddBinding(Image img, ColorSource source, PART_TYPE type = PART_TYPE.FRAME)
     {
         if (img == null) return;
-        partBindings.Add(new PartImageBinding { image = img, partType = type, useUnitHp = useUnitHp });
+        partBindings.Add(new PartImageBinding { image = img, source = source, partType = type });
     }
 
     private void Update()
@@ -142,22 +159,33 @@ public class InspectorPanelUI : MonoBehaviour
         if (_parts == null || _parts.gameObject != player.gameObject)
             _parts = player.GetComponent<UnitParts>();
 
-        float unitHpRatio = player.maxHpRemaining > 0
-            ? (float)player.curHpRemaining / player.maxHpRemaining : 0f;
-
         foreach (PartImageBinding binding in partBindings)
         {
             if (binding == null || binding.image == null) continue;
-            binding.image.color = ResolvePartColor(binding, unitHpRatio);
+            binding.image.color = ResolvePartColor(binding);
         }
     }
 
+    private float Ratio(int cur, int max) => max > 0 ? (float)cur / max : 0f;
+
     // 바인딩 하나가 나타낼 색을 결정.
-    // 미장착 → 회색 / 파괴 → 검붉음 / 그 외 → 남은 HP 비율의 4단계 색.
-    private Color ResolvePartColor(PartImageBinding binding, float unitHpRatio)
+    // 미장착 → 회색 / 파괴 → 검붉음 / 그 외 → 남은 비율의 4단계 색.
+    private Color ResolvePartColor(PartImageBinding binding)
     {
-        if (binding.useUnitHp) return RatioToColor(unitHpRatio);
-        if (_parts == null)    return colorEmpty;
+        float unitHpRatio = Ratio(player.curHpRemaining, player.maxHpRemaining);
+
+        switch (binding.source)
+        {
+            case ColorSource.UnitHp:
+                return RatioToColor(unitHpRatio);
+            case ColorSource.UnitArmor:
+                return RatioToColor(Ratio(player.curArmorRemaining, player.maxArmor));
+            case ColorSource.UnitShield:
+                return RatioToColor(Ratio(player.curShieldRemaining, player.maxShieldCapacity));
+        }
+
+        // 이하 ColorSource.PartHp
+        if (_parts == null) return colorEmpty;
 
         // 같은 종류 슬롯이 여러 개일 수 있으므로(무기 슬롯 등) 가장 많이 깎인 파츠를 대표로 삼는다.
         bool  found = false;
