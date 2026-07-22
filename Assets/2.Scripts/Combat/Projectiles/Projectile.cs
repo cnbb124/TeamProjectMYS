@@ -111,6 +111,10 @@ public abstract class Projectile : MonoBehaviour
 	// 투사체가 크리 판정 담당 → HitInfo.isCritical로 전달.
 	protected bool _critical;
 
+	// 크리 시 데미지 배율. Init()에서 '공격자'의 criDamageMultiplier를 복사 → HitInfo.critMultiplier로 전달.
+	// (크리 판정도 공격자 criChance 기준이므로 배율도 공격자 값이어야 짝이 맞음. 맞는 쪽 값 쓰던 버그 수정)
+	protected float _critMultiplier = 1f;
+
 
     protected virtual void Awake()
     {
@@ -168,6 +172,7 @@ public abstract class Projectile : MonoBehaviour
 		curDamage = baseDamage;//차후 로직 추가 필요.(배율증가있을시)
 
 		_critical = Random.Range(0f, 100f) < attacker.criChance;//크리여부
+		_critMultiplier = attacker.criDamageMultiplier;//크리 배율은 공격자 기준(맞는 쪽 값 쓰던 버그 수정)
 
 
 		//물리처리를 위한 레이어 입력
@@ -300,6 +305,7 @@ public abstract class Projectile : MonoBehaviour
             type = currentDmgType,
             damageAmount = damage,
             isCritical = _critical,
+            critMultiplier = _critMultiplier,
             hitPosition = hit.point,
             hitDiriection = (hit.point - transform.position).normalized,
             attacker = this.attacker != null ? this.attacker.gameObject : null,
@@ -392,6 +398,7 @@ public abstract class Projectile : MonoBehaviour
             type = currentDmgType,
             damageAmount = damage,
             isCritical = _critical,
+            critMultiplier = _critMultiplier,
             hitPosition = targetCollider.ClosestPoint(explosionCenter),  // 변경 260611
             hitDiriection = (targetCollider.ClosestPoint(explosionCenter) - explosionCenter).normalized,  // 변경 260611
             attacker = this.attacker != null ? this.attacker.gameObject : null,

@@ -30,7 +30,7 @@ public class WaveData : ScriptableObject
 
      
 
-        [Header("<size=14>각 개체 소환 딜레이</size>")]
+        [Header("<size=14>다음 개체 소환 딜레이</size>")]
         [Tooltip("웨이브 시작 후 Entries간의 처리까지 지연 (초)")]
         public float delay = 0f;
     }

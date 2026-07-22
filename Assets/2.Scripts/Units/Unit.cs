@@ -77,10 +77,13 @@ public abstract class Unit : MonoBehaviour, IDamageable, IPunObservable
 	protected PoolManager _pool;
 
 	// 멀티플레이 소유권. PhotonView 없으면(싱글 씬배치/오프라인) 항상 내 것 → 기존 단일 동작 그대로.
-	// PhotonNetwork.Instantiate로 스폰된 유닛만 PhotonView를 가지며, 소유자만 IsMine=true.
+	// PhotonView가 있어도 '룸 밖'(싱글/오프라인 테스트)이면 ViewID가 미할당(0)이라 소유 개념이 없음 —
+	// 이때 _photonView.IsMine은 false라, 그대로 두면 로컬 권위 로직(TakeDamage 데미지/보스 탄막 등)이 통째로 막힘.
+	// 그래서 룸 밖이면 무조건 내 것으로 봄(로컬이 곧 유일한 권위).
+	// PhotonNetwork.Instantiate로 스폰된 유닛만 PhotonView를 가지며, 룸 안에선 소유자만 IsMine=true.
 	// Player/Enemy가 각자 갖고 있던 것을 base로 통일 — 데미지 권위 라우팅(TakeDamage)이 여기서 필요하기 때문.
 	protected PhotonView _photonView;
-	public bool IsMine => _photonView == null || _photonView.IsMine;
+	public bool IsMine => _photonView == null || !PhotonNetwork.InRoom || _photonView.IsMine;
 	[HideInInspector]
 	public WeaponSystem weaponSystem;
 	[HideInInspector]
@@ -123,6 +126,11 @@ public abstract class Unit : MonoBehaviour, IDamageable, IPunObservable
 	// 실드 오브젝트(자식 포함) 콜라이더 캐싱용
 	private Collider[] _shieldColliders;
 	private ProceduralForceField.ProceduralForceFieldOverlay _shieldOverlay;
+
+	// 구조물(스테이션+터렛) 서브유닛일 때, 실드를 대신 소모/반응해줄 루트 유닛 캐싱.
+	// 계층은 프리팹에서 고정이라 Awake에서 1회만 조회함(매 피격마다 transform.root.GetComponent 방지).
+	// 루트가 자기 자신(단일 유닛)이면 null.
+	private Unit _structureShieldRoot;
 
 
 	[Header("<size=14>3. 장갑(아머)</size>")]
@@ -282,6 +290,10 @@ public abstract class Unit : MonoBehaviour, IDamageable, IPunObservable
 		skillSystem = GetComponent<SkillSystem>();
 		_unitParts = GetComponent<UnitParts>();
 		_photonView = GetComponent<PhotonView>();
+
+		// 구조물 서브유닛이면 루트 유닛을 캐싱(단일 유닛/루트 자신이면 null).
+		Unit rootUnit = transform.root.GetComponent<Unit>();
+		_structureShieldRoot = (rootUnit != null && rootUnit != this) ? rootUnit : null;
 
 		if (shield != null)
 		{
@@ -850,10 +862,10 @@ public abstract class Unit : MonoBehaviour, IDamageable, IPunObservable
 	// ※ 총알은 로컬 복제라 각 클라에 사본이 있으므로, '쏜 클라의 총알'만 여기까지 온다(복제탄은 데미지 권위 없음 — Projectile 참고).
 	public void TakeDamage(HitInfo info)
 	{
-		// [구조물 실드] 스테이션+터렛처럼 한 구조물(같은 transform.root)에 여러 유닛이 붙어 있을 때,
-		// 이 유닛이 서브유닛이고 루트 유닛(구조물 본체)의 실드가 살아있으면 그 실드가 대신 흡수한다.
-		// 안 그러면 총알/폭발이 실드 안쪽 터렛(별개 유닛, 자기 실드 없음)을 그냥 죽였음.
-		// 루트 실드가 소진(0)돼야 그때부터 서브유닛이 직접 데미지를 받는다.
+		// 구조물 실드 스테이션+터렛처럼 한 구조물(같은 transform.root)에 여러 유닛이 붙어 있을 때,
+		// 이 유닛이 서브유닛이고 루트 유닛(구조물 본체)의 실드가 살아있으면 그 실드가 대신 흡수.
+		
+		// 루트 실드가 소진(0)돼야 그때부터 서브유닛이 직접 데미지를 받음
 		Unit shieldProvider = GetStructureShieldProvider();
 		if (shieldProvider != null)
 		{
@@ -861,10 +873,12 @@ public abstract class Unit : MonoBehaviour, IDamageable, IPunObservable
 			return;
 		}
 
-		if (_photonView != null && !_photonView.IsMine)
+		// 룸 안일 때만 소유자에게 RPC 위임. 싱글/오프라인(룸 밖)은 PhotonView가 있어도 ViewID 미할당(0)이라
+		// RPC가 "Illegal view ID:0"로 실패하고 데미지까지 유실됨 — WeaponSystem.Shoot와 동일하게 InRoom 가드.
+		if (_photonView != null && !_photonView.IsMine && PhotonNetwork.InRoom)
 		{
 			_photonView.RPC(nameof(RpcTakeDamage), _photonView.Owner,
-				(int)info.type, info.damageAmount, info.isCritical,
+				(int)info.type, info.damageAmount, info.isCritical, info.critMultiplier,
 				info.ignoreArmor, info.shieldDamageMultiplier, info.aoeRadius, info.hitPosition,
 				(int)info.hitVfxType, (int)info.shieldHitVfxType, (int)info.hitSoundType);
 			return;
@@ -876,10 +890,11 @@ public abstract class Unit : MonoBehaviour, IDamageable, IPunObservable
 	// 루트가 자기 자신(단일 유닛)이거나 루트 실드가 없으면 null → 평소대로 자기가 데미지 처리.
 	private Unit GetStructureShieldProvider()
 	{
-		Unit rootUnit = transform.root.GetComponent<Unit>();
-		if (rootUnit != null && rootUnit != this && rootUnit.curShieldRemaining > 0)
+		// 루트 참조는 Awake에서 캐싱됨(_structureShieldRoot) — 매 피격마다 GetComponent 안 함.
+		// 실드 잔량만 매번 확인함(루트 실드가 소진되면 서브유닛이 직접 데미지를 받아야 하므로).
+		if (_structureShieldRoot != null && _structureShieldRoot.curShieldRemaining > 0)
 		{
-			return rootUnit;
+			return _structureShieldRoot;
 		}
 		return null;
 	}
@@ -898,7 +913,7 @@ public abstract class Unit : MonoBehaviour, IDamageable, IPunObservable
 	// public 필수 — PUN은 실제 컴포넌트(Enemy/Player 등 파생 타입)를 리플렉션해 [PunRPC]를 찾는데,
 	// base(Unit)에 private로 선언하면 파생 타입에서 안 잡혀 "RPC method not found" 에러 남.
 	[PunRPC]
-	public void RpcTakeDamage(int type, int damageAmount, bool isCritical,
+	public void RpcTakeDamage(int type, int damageAmount, bool isCritical, float critMultiplier,
 		bool ignoreArmor, float shieldDamageMultiplier, float aoeRadius, Vector3 hitPosition,
 		int hitVfxType, int shieldHitVfxType, int hitSoundType)
 	{
@@ -907,6 +922,7 @@ public abstract class Unit : MonoBehaviour, IDamageable, IPunObservable
 			type = (DAMAGE_TYPE)type,
 			damageAmount = damageAmount,
 			isCritical = isCritical,
+			critMultiplier = critMultiplier,
 			ignoreArmor = ignoreArmor,
 			shieldDamageMultiplier = shieldDamageMultiplier,
 			aoeRadius = aoeRadius,
@@ -985,7 +1001,10 @@ public abstract class Unit : MonoBehaviour, IDamageable, IPunObservable
 		}
 
 		//info.isCritical = Random.Range(0f, 100f) < criChance; //크리판정은 투사체에서 직접담당.
-		int damageAmount = info.isCritical ? Mathf.RoundToInt(info.damageAmount * criDamageMultiplier) : info.damageAmount;
+		// 크리 배율은 '공격자' 것(info.critMultiplier). 예전엔 여기서 this.criDamageMultiplier(맞는 쪽)를 곱해서
+		// 적의 크리배율 스탯이 플레이어 크리에 곱해지는 버그가 있었음. 0(미지정)이면 1로 보정.
+		float critMult = info.critMultiplier > 0f ? info.critMultiplier : 1f;
+		int damageAmount = info.isCritical ? Mathf.RoundToInt(info.damageAmount * critMult) : info.damageAmount;
 		//실드회복중지, 타이머 초기화
 		//shieldRegainTimer = 0f; //0516 코루틴으로 변경
 		isShieldRegaining = false;
@@ -1045,6 +1064,16 @@ public abstract class Unit : MonoBehaviour, IDamageable, IPunObservable
 	// IHittable 구현 — 데미지 대상은 TakeDamage 내부에서, 환경은 투사체가 직접 호출. 그래서 public.
 	public virtual void OnHitReaction(HitInfo info)
 	{
+		// [구조물 실드] 데미지(TakeDamage)와 동일하게 라우팅함 — 실드 없는 서브유닛(터렛 등)이 맞았고
+		// 루트 실드가 살아있으면 피격 리액션도 루트가 대신 냄. 안 그러면 서브유닛엔 실드/오버레이가 없어
+		// 실드 리플·실드 피격VFX가 안 뜨고 일반 피격으로 나감.
+		Unit shieldProvider = GetStructureShieldProvider();
+		if (shieldProvider != null)
+		{
+			shieldProvider.OnHitReaction(info);
+			return;
+		}
+
 		//피격 애니메이션재생 필요
 		//피격 사운드재생 필요 실드있을떄는 실드사운드, 아니면 타입맞춰서
 		//실드 없을때: 탄종(SO)에 등록된 hitSoundType 그대로 사용. 미등록(SFX_NONE)이면 SoundManager가 자동 무음 처리.

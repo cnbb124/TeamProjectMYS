@@ -1,4 +1,5 @@
 using System.Collections;
+using Photon.Pun;
 using UnityEngine;
 
 // ================================================================
@@ -77,19 +78,68 @@ public class EnemyBoss : EnemyShip
 		_currentPhase?.OnEnter();
 	}
 
-	// 페이즈가 호출 — 주어진 풀에서 랜덤 패턴 하나를 재생(이미 재생 중이면 무시).
-	public void PlayRandomBulletPattern(BulletPatternData[] pool)
+	// 페이즈(Master에서만 돎)가 호출 — 랜덤 패턴 인덱스를 골라 전원이 같은 탄막을 재생하게 함.
+	// 멀티: RPC로 남 클라에도 같은 패턴을 재생시킴(게스트 총알은 연출용, 데미지는 Master 권위).
+	//       BulletPatternData는 결정적 SO라 인덱스만 넘기면 전원이 같은 탄막을 봄(총알당이 아닌 패턴당 RPC 1번).
+	// 싱글/룸 밖: 그냥 로컬 재생.
+	public void PlayRandomBulletPattern(int phase)
 	{
-		if (_isFiringPattern || pool == null || pool.Length == 0)
+		if (_isFiringPattern)
 		{
 			return;
 		}
-		BulletPatternData pattern = pool[Random.Range(0, pool.Length)];
+		BulletPatternData[] pool = GetPhasePool(phase);
+		if (pool == null || pool.Length == 0)
+		{
+			return;
+		}
+		int index = Random.Range(0, pool.Length);
+
+		if (_photonView != null && PhotonNetwork.InRoom)
+		{
+			_photonView.RPC(nameof(RpcPlayPattern), RpcTarget.Others, phase, index);
+		}
+		BeginPattern(phase, index);
+	}
+
+	// 남 클라 수신 — Master가 고른 패턴을 그대로 로컬 재생(연출). 데미지 권위는 FireOneBullet에서 IsMine으로 갈림.
+	[PunRPC]
+	private void RpcPlayPattern(int phase, int index)
+	{
+		BeginPattern(phase, index);
+	}
+
+	// 지정 페이즈/인덱스의 패턴을 로컬에서 재생 시작(중복 재생 방지).
+	private void BeginPattern(int phase, int index)
+	{
+		if (_isFiringPattern)
+		{
+			return;
+		}
+		BulletPatternData[] pool = GetPhasePool(phase);
+		if (pool == null || index < 0 || index >= pool.Length)
+		{
+			return;
+		}
+		BulletPatternData pattern = pool[index];
 		if (pattern == null)
 		{
 			return;
 		}
 		StartCoroutine(PlayPatternRoutine(pattern));
+	}
+
+	// 페이즈 번호(1~4) → 해당 패턴 풀. RPC로 넘어온 인덱스를 각 클라가 같은 풀에서 찾게 함.
+	private BulletPatternData[] GetPhasePool(int phase)
+	{
+		switch (phase)
+		{
+			case 1: return _phase1Patterns;
+			case 2: return _phase2Patterns;
+			case 3: return _phase3Patterns;
+			case 4: return _phase4Patterns;
+			default: return null;
+		}
 	}
 
 	// BulletPatternData의 웨이브를 순서대로 재생. 대기는 일시정지 안전(WaitGameplaySeconds).
@@ -122,7 +172,7 @@ public class EnemyBoss : EnemyShip
 	// PatternPoint 하나를 실제 발사. 총알 종류(풀)는 _bulletData.curProjectilePoolType이 결정(WeaponSystem과 동일 컨벤션).
 	private void FireOneBullet(PatternPoint point)
 	{
-		if (PoolManager.Instance == null)
+		if (weaponSystem == null)
 		{
 			return;
 		}
@@ -144,17 +194,10 @@ public class EnemyBoss : EnemyShip
 
 		//}
 
-		// 총알 종류(프리팹)도 _bulletData가 결정 — curProjectilePoolType으로 풀 선택(미지정 시 기본 총알 풀 폴백).
-		POOL_TYPE poolType = _bulletData != null ? _bulletData.curProjectilePoolType : POOL_TYPE.PROJECTILE_BULLET;
-		Bullet bullet = PoolManager.Instance.GetProjectile(poolType) as Bullet;
-		if (bullet != null)
-		{
-			// 스탯/사거리/VFX는 보스 패턴 데이터에서 주입(WeaponSystem이 curBulletData 주입하는 것과 동일 방식).
-			bullet.bulletData = _bulletData;
-			bullet.Init(origin, fireDir, this);
-			// 속도만 패턴 포인트별 값으로 덮어씀(패턴 SO의 설계 의도).
-			bullet.OverrideSpeed(point.speed);
-		}
+		// 총알 스폰은 WeaponSystem 공용 코어(SpawnBullet) 재사용 — 풀 선택/데이터 주입/Init/속도덮어씀을 한 곳에서.
+		// 스탯/사거리/피격VFX는 _bulletData 주입, 속도는 포인트별 point.speed로 덮어씀(패턴 SO 설계 의도).
+		// hasAuthority = IsMine: Master(또는 싱글)만 데미지 권위, 원격 복제본은 SetDamageAuthority(false)로 연출만.
+		weaponSystem.SpawnBullet(origin, fireDir, _bulletData, IsMine, point.speed);
 	}
 
 	// =====================================================================
@@ -181,8 +224,8 @@ public class EnemyBoss : EnemyShip
 			{
 				_boss.SetPhase(new BossPhase2(_boss)); return;
 			}
-			_boss.PlayRandomBulletPattern(_boss._phase1Patterns);
-			
+			_boss.PlayRandomBulletPattern(1);
+
 		}
 
 	}
@@ -197,7 +240,7 @@ public class EnemyBoss : EnemyShip
 			{
 				_boss.SetPhase(new BossPhase3(_boss)); return;
 			}
-			_boss.PlayRandomBulletPattern(_boss._phase2Patterns);
+			_boss.PlayRandomBulletPattern(2);
 		}
 	}
 
@@ -211,7 +254,7 @@ public class EnemyBoss : EnemyShip
 			{
 				_boss.SetPhase(new BossPhase4(_boss)); return;
 			}
-			_boss.PlayRandomBulletPattern(_boss._phase3Patterns);
+			_boss.PlayRandomBulletPattern(3);
 		}
 	}
 
@@ -221,7 +264,7 @@ public class EnemyBoss : EnemyShip
 		public BossPhase4(EnemyBoss boss) : base(boss) { }
 		public override void OnUpdate()
 		{
-			_boss.PlayRandomBulletPattern(_boss._phase4Patterns);
+			_boss.PlayRandomBulletPattern(4);
 		}
 	}
 

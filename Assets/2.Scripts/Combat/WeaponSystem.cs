@@ -335,13 +335,15 @@ public class WeaponSystem : MonoBehaviour
 		// (슬롯 전환이 입력이라 IsMine 게이트에 막혀 원격 복제본은 0번에 고정됨).
 		// ID로 보내면 받는 쪽이 ItemDatabase에서 같은 SO를 찾아 쏘므로 슬롯 상태와 무관하게 일치함.
 		// ID가 없으면(NONE) 전파는 하되 받는 쪽이 자기 데이터로 쏨 — 적처럼 프리팹에 탄종이 고정된 유닛은
-		// 모든 클라가 같은 프리팹을 쓰므로 그게 정답임. (ID 없다고 전파를 끊으면 적 탄이 게스트에게 안 보임)
+		// 모든 클라가 같은 프리팹을 쓰므로 그게 정답임. 
 		// 싱글(PhotonView 없음)이거나 룸 밖이면 전파 안 함. 남 소유 유닛은 여기 안 옴(입력/AI가 IsMine 게이트).
 		if (_photonView != null && _photonView.IsMine && PhotonNetwork.InRoom)
 		{
 			_photonView.RPC(nameof(RpcShoot), RpcTarget.Others, (int)type, (int)firedDataId, firedTargetRefs);
 		}
 	}
+
+	
 
 	// 남 클라에서 수신 — 쿨다운/탄약/재전파 없이 로컬 풀에서만 발사(복제).
 	// dataId가 있으면 쏜 사람과 똑같은 탄종 데이터를 찾아 씀(자기 슬롯은 안 봄).
@@ -542,21 +544,14 @@ public class WeaponSystem : MonoBehaviour
 			bulletAnim.PlayFire();
 		}
 
-		POOL_TYPE poolType = data != null ? data.curProjectilePoolType : POOL_TYPE.PROJECTILE_BULLET;
-		Bullet newBullet = _pool.GetProjectile(poolType) as Bullet;
+		Bullet newBullet = SpawnBullet(firePos.position, firePos.forward, data, hasAuthority);
 		if (newBullet == null)
 		{
 			return;
 		}
 
-		// [데이터 주입] 프리팹에 박힌 값 대신 이 데이터로 스탯/머즐/사운드 결정.
-		if (data != null)
-		{
-			newBullet.bulletData = data;
-		}
-
+		// 총구 연출(머즐VFX/사운드)은 총구 Transform 기준이라 여기 남김 — SpawnBullet은 임의 위치용 순수 스폰 코어.
 		BulletData effectiveData = newBullet.bulletData;
-
 		if (_useBulletMuzzle)
 		{
 			EFFECT_TYPE muzzleType = effectiveData != null ? effectiveData.muzzleEffectType : EFFECT_TYPE.VFX_BULLET_MUZZLE;
@@ -567,10 +562,43 @@ public class WeaponSystem : MonoBehaviour
 			SOUND_TYPE soundType = effectiveData != null ? effectiveData.shootSoundType : SOUND_TYPE.SFX_NONE;
 			_sound.PlaySFX3DAtUnit(soundType, _unit.transform, firePos);
 		}
+	}
 
-		newBullet.Init(firePos.position, firePos.forward, _unit);
-		// 복제탄(RpcShoot)은 데미지 권위 없음 → 연출만. 로컬 발사만 실제 데미지 판정.
+	/// <summary>
+	/// [공용 총알 스폰 코어] 임의 위치/방향으로 총알 1발을 풀에서 꺼내 발사.
+	/// 총구 Transform이 아닌 곳(보스 탄막 등)에서도 재사용하려고 ShootBulletFrom에서 분리함.
+	/// speed가 0 이하면 bulletData 기본 속도, 0 초과면 그 값으로 덮어씀(탄막 포인트별 속도).
+	/// hasAuthority: 로컬 발사=true(데미지 권위), 원격 복제=false(연출만).
+	/// 총구 머즐VFX/사운드/런처 애니는 호출부가 담당 — 여기선 순수 스폰만.
+	/// </summary>
+	public Bullet SpawnBullet(Vector3 origin, Vector3 dir, BulletData data, bool hasAuthority, float speed = 0f)
+	{
+		if (_pool == null)
+		{
+			return null;
+		}
+
+		POOL_TYPE poolType = data != null ? data.curProjectilePoolType : POOL_TYPE.PROJECTILE_BULLET;
+		Bullet newBullet = _pool.GetProjectile(poolType) as Bullet;
+		if (newBullet == null)
+		{
+			return null;
+		}
+
+		// [데이터 주입] 프리팹에 박힌 값 대신 이 데이터로 스탯/피격VFX/사운드 결정.
+		if (data != null)
+		{
+			newBullet.bulletData = data;
+		}
+
+		newBullet.Init(origin, dir, _unit);
+		// 복제탄(원격)은 데미지 권위 없음 → 연출만. 로컬 발사만 실제 데미지 판정.
 		newBullet.SetDamageAuthority(hasAuthority);
+		if (speed > 0f)
+		{
+			newBullet.OverrideSpeed(speed);
+		}
+		return newBullet;
 	}
 
 	/// <summary>
