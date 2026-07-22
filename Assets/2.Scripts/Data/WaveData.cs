@@ -20,7 +20,8 @@ public class WaveData : ScriptableObject
         //[Tooltip("참고용 프리팹 표시 — 실제 스폰에는 사용 안 됨(poolType이 실제 스폰 기준). " +
         //         "PoolManager.poolConfigs에 등록한 프리팹과 같은 걸로 맞춰둘 것.")]
         //public GameObject enemyPrefab;
-        [Tooltip("스폰 지점 = SpawnManager.defaultSpawnPoints의 인덱스(0부터). -1이면 그 목록 중 랜덤.")]
+        [Tooltip("스폰 지점. 0 이상이면 SpawnManager.fixedSpawnPoints의 인덱스(지정 스폰). " +
+                 "-1이면 SpawnManager.defaultSpawnPoints(랜덤 풀) 중 랜덤.")]
         public int spawnPointIndex = -1;
         [Tooltip("스폰할 수")]
         public int count = 1;

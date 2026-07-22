@@ -12,8 +12,9 @@ using PhotonHashtable = ExitGames.Client.Photon.Hashtable;
 // ================================================================
 // 씬에 1개 배치. DontDestroyOnLoad 없음 (씬 전용).
 //
-// 스폰: WaveData.SpawnEntry의 poolType을 spawnPoint(미지정 시 defaultSpawnPoints 중 랜덤)에
-//   InstantiateRoomObject로 네트워크 스폰. (씬 배치형은 SetActive가 멀티 동기화 안 돼 제거 — 배치 적은 spawnPoint로 대체)
+// 스폰: WaveData.SpawnEntry의 poolType을 스폰포인트에 InstantiateRoomObject로 네트워크 스폰.
+//   spawnPointIndex -1이면 defaultSpawnPoints(랜덤 풀) 중 랜덤, 0 이상이면 fixedSpawnPoints(지정 포인트)의 그 인덱스.
+//   (씬 배치형은 SetActive가 멀티 동기화 안 돼 제거 — 배치 적은 스폰포인트로 대체)
 //
 // 웨이브 진행:
 //   Start() → StartWave(0) → 스폰 완료 → 적 전멸 대기
@@ -62,8 +63,11 @@ public class SpawnManager : MonoBehaviourPunCallbacks, IOnEventCallback
 	[Header("웨이브 설정")]
 	[Tooltip("순서대로 실행될 WaveData 목록. 전부 소진 시 StageClear 호출.")]
 	public WaveData[] waves;
-	[Tooltip("SpawnEntry에 spawnPoint 미지정 시 랜덤 선택할 기본 스폰포인트.")]
+	[Tooltip("랜덤 스폰 풀 — SpawnEntry.spawnPointIndex가 -1일 때 이 중에서 랜덤(셔플) 선택함.")]
 	public Transform[] defaultSpawnPoints;
+	[Tooltip("지정 스폰 포인트 — SpawnEntry.spawnPointIndex가 0 이상일 때 이 배열의 인덱스로 고정 스폰함. " +
+		"랜덤 풀과 분리돼 있어, 여기 둔 중간보스(EnemyStation 등) 자리에는 랜덤 몹이 안 나옴.")]
+	public Transform[] fixedSpawnPoints;
 
 	[Header("보스 웨이브")]
 	[Tooltip("GameManager.onBossSpawn 이벤트 발생 시 실행할 WaveData. null이면 스킵.")]
@@ -161,10 +165,11 @@ public class SpawnManager : MonoBehaviourPunCallbacks, IOnEventCallback
 			yield break;
 		}
 
-		// spawnPointIndex가 유효하면 그 지점 하나에 고정 스폰, 아니면(-1/범위밖) defaultSpawnPoints 중 랜덤(셔플).
+		// spawnPointIndex가 유효하면 fixedSpawnPoints의 그 지점 하나에 고정 스폰, 아니면(-1/범위밖) defaultSpawnPoints 중 랜덤(셔플).
+		// 두 배열은 분리돼 있어, 랜덤 스폰이 지정 포인트(중간보스 자리 등)를 절대 고르지 않음.
 		bool useSpecificPoint = entry.spawnPointIndex >= 0
-			&& defaultSpawnPoints != null
-			&& entry.spawnPointIndex < defaultSpawnPoints.Length;
+			&& fixedSpawnPoints != null
+			&& entry.spawnPointIndex < fixedSpawnPoints.Length;
 
 		if (!useSpecificPoint && defaultSpawnPoints != null && defaultSpawnPoints.Length > 0)
 		{
@@ -190,7 +195,7 @@ public class SpawnManager : MonoBehaviourPunCallbacks, IOnEventCallback
 			}
 
 			Vector3 pos = useSpecificPoint
-				? defaultSpawnPoints[entry.spawnPointIndex].position
+				? fixedSpawnPoints[entry.spawnPointIndex].position
 				: (_shuffleBuffer != null ? _shuffleBuffer[i % _shuffleBuffer.Length].position : transform.position);
 
 			// Master 권위 네트워크 스폰 — 모든 클라에 같은 적이 생성됨(PhotonPoolAdapter가 로컬 풀로 라우팅).
