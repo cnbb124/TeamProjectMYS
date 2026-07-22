@@ -416,18 +416,52 @@ public class InputManager : MonoBehaviour
         {
             LastUsedDevice = INPUT_CONTROL_TYPE.KEYBOARD_MOUSE;
         }
+
+        // UI/메뉴가 열려있으면(=입력 잠금) 키마+패드 병합이 끝난 최종 출력에서 게임플레이 입력만 무효화함.
+        // 인벤토리/일시정지 등을 닫아야 하는 UI 토글 키는 살려둠(안 그러면 못 닫음).
+        if (IsGameplayInputLocked())
+        {
+            ClearGameplayInput();
+        }
     }
 
     // =====================================================================
-    // 마우스 커서 잠금/해제
-    // 평소(조종 중): Locked + 숨김 — Mouse X/Y가 카메라 시야 조작용 델타로 쓰임.
-    // UI 패널이 열려있거나 Alt를 누르는 동안, 또는 씬에 조종할 플레이어가 없을 때(로비/메뉴 등):
-    //   None + 보임 — 커서로 UI 클릭/창 밖 이동 가능.
+    // 게임플레이 입력 무효화 — UI/메뉴 열림 중(IsGameplayInputLocked) 호출.
+    // 키마+패드 병합이 끝난 최종 출력에서 게임플레이 액션(이동/사격/스킬 등)만 기본값으로 되돌림.
+    // UI 토글(연료/인벤토리/일시정지/맵)은 남겨둬야 패널을 닫을 수 있으므로 건드리지 않음.
+    // =====================================================================
+    private void ClearGameplayInput()
+    {
+        moveInput = Vector3.zero;
+        lookInput = Vector2.zero;
+        rollInput = 0f;
+        isBoosting = false;
+        isDodging = false;
+        fireBullet = false;
+        fireMissile = false;
+        switchLockOnTarget = 0f;
+        switchMissilePrev = false;
+        switchMissileNext = false;
+        switchMissileShootMode = false;
+        toggleClusterLockMode = false;
+        switchConsumable = false;
+        useConsumable = false;
+        switchSkillSlot = false;
+        useSkill = false;
+        interAct = false;
+    }
+
+    // =====================================================================
+    // 게임플레이 입력 잠금 판정 (커서 잠금/해제도 이 값에 연동)
+    // true면: 커서를 풀어(None+보임) UI 클릭 가능 + 게임플레이 입력(이동/사격/스킬 등)을 이번 프레임 무시함.
+    //   → UI 패널이 열려있거나 Alt를 누르는 동안, 또는 씬에 조종할 플레이어가 없을 때(로비/메뉴 등).
+    // false면(평소 조종 중): 커서 Locked+숨김 — Mouse X/Y가 카메라 시야 조작용 델타로 쓰임.
     // InputManager는 DontDestroyOnLoad라 모든 씬에서 같은 로직이 도는데, 플레이어가 없는 씬에서는
     // 항상 잠금이 걸려버리는 문제가 있었음 — playerRef 체크로 해결.
-    // 신규 UI 패널도 같은 방식으로 열림상태를 알리고 싶으면, IsUIRequestingCursor()에 || 조건만 추가.
+    // 신규 UI 패널도 게임 입력을 막고 싶으면, IsGameplayInputLocked()에 || 조건만 추가하면 됨.
+    // (실제 게임플레이 필드 클리어는 Update 끝의 ClearGameplayInput가 함 — UI 토글 키는 살려둠)
     // =====================================================================
-    private bool IsUIRequestingCursor()
+    private bool IsGameplayInputLocked()
     {
         bool noPlayerInScene = GameManager.Instance == null || GameManager.Instance.playerRef == null;
         bool isPaused = GameManager.Instance != null && GameManager.Instance.IsPaused;
@@ -440,7 +474,7 @@ public class InputManager : MonoBehaviour
 
     private void UpdateCursorLock()
     {
-        bool freeCursor = IsUIRequestingCursor();
+        bool freeCursor = IsGameplayInputLocked();
         Cursor.lockState = freeCursor ? CursorLockMode.None : CursorLockMode.Locked;
         Cursor.visible = freeCursor;
     }
@@ -475,7 +509,7 @@ public class InputManager : MonoBehaviour
                   + (Input.GetKey(km.rollLeft)  ? -1f : 0f);
 
         // 시야 (마우스 이동량) — 커서가 풀려있는 동안(UI/Alt)은 카메라 조종 안 함
-        lookInput = IsUIRequestingCursor()? Vector2.zero
+        lookInput = IsGameplayInputLocked()? Vector2.zero
             : new Vector2(Input.GetAxisRaw(AxisMouseX), Input.GetAxisRaw(AxisMouseY));
 
         // 부스트 / 회피

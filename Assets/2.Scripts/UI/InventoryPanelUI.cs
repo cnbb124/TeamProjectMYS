@@ -9,7 +9,7 @@ public class InventoryPanelUI : MonoBehaviour
     [Header("Panel")]
     [SerializeField] private GameObject panelRoot;
 
-    // InputManager가 읽기 전용으로 참조 — 인벤토리 열려있는 동안 마우스 커서 해제용.
+    // InputManager가 읽기 전용으로 참조 — 인벤토리 열려있는 동안 커서 해제 + 게임플레이 입력 잠금용.
     public static bool IsOpen { get; private set; }
 
     private void Start()

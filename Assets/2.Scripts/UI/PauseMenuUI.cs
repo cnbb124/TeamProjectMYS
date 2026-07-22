@@ -36,7 +36,7 @@ public class PauseMenuUI : MonoBehaviour
     [Tooltip("목표(퀘스트) 패널. QuestHUD가 붙은 패널 연결. 없으면 비워둬도 됨.")]
     [SerializeField] private GameObject questPanel;
 
-    // 커서 잠금 해제 판정용(InputManager.IsUIRequestingCursor). 메뉴 패널이 떠 있으면 커서를 푼다 —
+    // 입력 잠금/커서 해제 판정용(InputManager.IsGameplayInputLocked). 메뉴 패널이 떠 있으면 커서를 풀고 게임 입력을 막음 —
     // 멀티에선 IsPaused가 false라, 인벤토리처럼 '열림 상태' 자체로 커서를 풀어야 메뉴 클릭이 된다.
     private static PauseMenuUI _instance;
     public static bool IsOpen => _instance != null && _instance.panel != null && _instance.panel.activeSelf;
