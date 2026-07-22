@@ -819,8 +819,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2096491018820943091}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.000000037748947, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 27.206669, z: 47.34567}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 3.3333335, y: 3.3333335, z: 3.3333335}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -886,7 +886,7 @@ MonoBehaviour:
   goldRewardMax: 0
   dropPoolTypes: 
   dropChance: 1
-  detectRange: 500
+  detectRange: 1000
   rotateSpeed: 180
   rotateDeadZone: 0
   aiState: 0
@@ -912,12 +912,12 @@ MonoBehaviour:
   currentLockMode: 0
   maxMultiLockCount: 4
   _targetInRadarRangeBufferSize: 64
-  lockOnRange: 400
+  lockOnRange: 900
   lockOnRequiredTime: 1.2
   targetLayerMask:
     serializedVersion: 2
-    m_Bits: 0
-  lockOnAngle: 60
+    m_Bits: 4096
+  lockOnAngle: 360
   TargetsInLockonRange: []
   TargetsInRadarRange: []
   LockOnCandidate: {fileID: 0}
@@ -1096,7 +1096,7 @@ Transform:
   m_GameObject: {fileID: 2358126829895048777}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.782, y: 0.146, z: 2.754}
+  m_LocalPosition: {x: 0.782, y: 0.146, z: 3}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1326,7 +1326,7 @@ Transform:
   m_GameObject: {fileID: 2884868801699142720}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.782, y: 0.146, z: 2.754}
+  m_LocalPosition: {x: -0.782, y: 0.146, z: 3}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -2883,7 +2883,7 @@ Transform:
   m_GameObject: {fileID: 8873197320947755353}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.146, z: 2.754}
+  m_LocalPosition: {x: 0, y: 0.146, z: 3}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
