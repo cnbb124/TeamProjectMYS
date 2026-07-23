@@ -88,6 +88,12 @@ public class ItemQuickSlotUI : MonoBehaviour
     private float _flashTimer;
     private bool  _subscribed;
 
+    // 내가 UseSlot을 호출하는 동안 true. 이때 오는 OnInventoryChanged는 무시한다.
+    // (UseSlot은 내부에서 ConsumeOne→OnInventoryChanged를 부른 뒤 아직 그 슬롯으로 ApplyEffect를 실행하므로,
+    //  여기서 슬롯을 비우면 UseSlot이 null을 참조해 터진다. UseSlot이 끝나면 스스로 슬롯을 정리하고,
+    //  TryUseCurrent가 마지막에 RefreshAll을 부르므로 화면 갱신도 문제없다.)
+    private bool _usingSlot;
+
     private void OnDisable()
     {
         if (_subscribed && InventoryManager.Instance != null)
@@ -135,8 +141,31 @@ public class ItemQuickSlotUI : MonoBehaviour
 
     private void OnInventoryChanged()
     {
-        if (autoAssignFromInventory) AutoAssignEmptySlots();
-        RefreshAll();
+        // UseSlot 실행 도중 들어온 이벤트는 무시 — UseSlot이 그 슬롯을 아직 쓰고 있어서
+        // 지금 슬롯을 건드리면 재진입 크래시가 남. 처리는 TryUseCurrent가 끝나고 다시 한다.
+        if (_usingSlot) return;
+
+        ClearMissingSlots();                                  // 인벤토리에서 사라진 아이템의 슬롯을 먼저 비우고
+        if (autoAssignFromInventory) AutoAssignEmptySlots();  // 빈 칸을 다시 채운 뒤
+        RefreshAll();                                         // 화면에 반영
+    }
+
+    // 퀵슬롯에 물려있지만 인벤토리엔 더 이상 없는(수량 0) 아이템을 비운다.
+    // 아이템 '사용'은 QuickSlot.UseSlot이 알아서 슬롯을 비우지만,
+    // '드랍(밖으로 버리기)'은 InventoryManager를 직접 거쳐 QuickSlot을 안 타므로
+    // 여기서 인벤토리 기준으로 슬롯을 정리해줘야 유령 슬롯이 안 남는다.
+    private void ClearMissingSlots()
+    {
+        if (_quickSlot == null || InventoryManager.Instance == null) return;
+
+        for (int i = 0; i < _quickSlot.slots.Length; i++)
+        {
+            ConsumableData data = _quickSlot.slots[i];
+            if (data == null) continue;
+
+            if (InventoryManager.Instance.GetCount(data) <= 0)
+                _quickSlot.AssignSlot(i, null);   // 재고 없음 → 슬롯 비움
+        }
     }
 
     // 인벤토리에 있는데 퀵슬롯엔 없는 소모품을 빈 칸에 채운다.
@@ -195,7 +224,10 @@ public class ItemQuickSlotUI : MonoBehaviour
         int countBefore = InventoryManager.Instance != null
             ? InventoryManager.Instance.GetCount(before) : 0;
 
+        // UseSlot 내부에서 발행되는 OnInventoryChanged가 슬롯을 비우지 못하게 잠금 (재진입 방지)
+        _usingSlot = true;
         _quickSlot.UseSlot(CurrentIndex);
+        _usingSlot = false;
 
         int countAfter = InventoryManager.Instance != null
             ? InventoryManager.Instance.GetCount(before) : 0;
@@ -206,6 +238,9 @@ public class ItemQuickSlotUI : MonoBehaviour
             onItemUsed?.Invoke(before);
         }
 
+        // 사용 중 미뤄뒀던 정리를 지금 수행 (다 쓴 슬롯 비우기 + 다음 아이템 자동 배치 + 표시 갱신)
+        ClearMissingSlots();
+        if (autoAssignFromInventory) AutoAssignEmptySlots();
         RefreshAll();
     }
 
