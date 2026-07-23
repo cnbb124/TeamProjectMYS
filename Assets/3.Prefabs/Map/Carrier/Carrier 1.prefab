@@ -622,6 +622,7 @@ GameObject:
   m_Component:
   - component: {fileID: 400210}
   - component: {fileID: 11400000}
+  - component: {fileID: -55323198509235873}
   m_Layer: 0
   m_Name: Carrier 1
   m_TagString: Untagged
@@ -658,6 +659,20 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   lightColor: {r: 1, g: 1, b: 1, a: 1}
+--- !u!114 &-55323198509235873
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 100210}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0737fdfd317ed2647a9a7b6b251a0bd5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _hitSoundOverride: 9999
+  _blocksBeam: 1
 --- !u!1001 &211999288923936204
 PrefabInstance:
   m_ObjectHideFlags: 0
