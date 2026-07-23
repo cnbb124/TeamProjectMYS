@@ -11,14 +11,21 @@ using UnityEngine;
 //   3. 비행기가 통과 못 하게 할 실제 콜라이더는 별도로 둘 것(트리거 아님)
 public class MapEnvironmentHit : MonoBehaviour, IHittable
 {
-	[Tooltip("피격 시 재생할 사운드. SFX_NONE이면 무음. 비워두면 투사체가 준 사운드를 그대로 씀.")]
-	[SerializeField] private SOUND_TYPE _hitSoundOverride = SOUND_TYPE.SFX_NONE;
-
+	[Tooltip("Sound Override가 ON일 때 재생할 피격음. SFX_NONE이면 무음(소리 안 남).\n" +
+		"OFF면 이 값은 무시되고 투사체(탄종)가 준 피격음을 씀.")]
+	[SerializeField]
+	private SOUND_TYPE _hitSoundOverride = SOUND_TYPE.SFX_NONE;
+	[Tooltip("피격음을 이 오브젝트가 직접 지정할지 여부.\n" +
+		"OFF: 투사체(탄종)가 준 피격음을 그대로 사용.\n" +
+		"ON : Hit Sound Override 값을 사용(SFX_NONE으로 두면 이 오브젝트만 무음).")]
+	[SerializeField]
+	private bool _soundOverride = false;
 	[Tooltip("레이저 등 관통 판정에서 이 오브젝트가 빔을 막는지. 벽/구조물이면 켤 것.")]
-	[SerializeField] private bool _blocksBeam = true;
+	[SerializeField] 
+	private bool _blocksBeam = true;
 
 	public bool BlocksBeam => _blocksBeam;
-
+	
 	// 투사체가 HitInfo에 실어준 피격 지점/VFX 종류로 반응만 냄. 데미지 필드는 안 씀.
 	public void OnHitReaction(HitInfo info)
 	{
@@ -26,8 +33,8 @@ public class MapEnvironmentHit : MonoBehaviour, IHittable
 		{
 			VFXManager.Instance.PlayEffectAtPosition(info.hitVfxType, info.hitPosition, Quaternion.identity);
 		}
-
-		SOUND_TYPE hitSound = _hitSoundOverride != SOUND_TYPE.SFX_NONE ? _hitSoundOverride : info.hitSoundType;
+		SOUND_TYPE hitSound = _soundOverride ? _hitSoundOverride : info.hitSoundType;
+		
 		if (hitSound != SOUND_TYPE.SFX_NONE && SoundManager.Instance != null)
 		{
 			SoundManager.Instance.PlaySFX3DAtPosition(hitSound, info.hitPosition);

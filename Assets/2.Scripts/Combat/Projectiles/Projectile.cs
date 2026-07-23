@@ -330,6 +330,9 @@ public abstract class Projectile : MonoBehaviour
             hitPosition = hit.point,
             hitDiriection = (hit.point - transform.position).normalized,
             attacker = attacker != null ? attacker.gameObject : null,
+            // 환경 피격음. SOUND_TYPE은 100번대부터 시작해 0번 멤버가 없으므로, 안 채우면
+            // 구조체 기본값 0이 들어가 SFX_NONE(9999) 가드도 통과해버리고 존재하지 않는 사운드를 재생 시도함(=무음).
+            hitSoundType = this.hitSoundType,
             hitVfxType = this.hitVfxType,
             shieldHitVfxType = this.shieldHitVfxType,
         };
