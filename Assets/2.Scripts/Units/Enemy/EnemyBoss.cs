@@ -268,4 +268,25 @@ public class EnemyBoss : EnemyShip
 		}
 	}
 
+
+	protected override void Die()
+	{
+		base.Die();
+		// 보스 처치는 '방' 전체 사건인데 Die()는 적 소유자(Master)에서만 도달함 —
+		// 남 클라에도 전파해야 게스트도 보스BGM 복귀/onBossKilled 구독자가 동작함.
+		// (RPC는 여기서 즉시 전송되고 보스 오브젝트는 _deathSequenceDuration 뒤에야 풀 반납되므로,
+		//  받는 쪽 보스가 아직 살아있어 안전하게 도달함)
+		if (_photonView != null && PhotonNetwork.InRoom)
+		{
+			_photonView.RPC(nameof(RpcBossKilled), RpcTarget.Others);
+		}
+		GameManager.Instance?.OnBossKilled();
+	}
+
+	// 남 클라 수신 — 보스 처치 결과(킬카운트/BGM 복귀/onBossKilled)를 각자 로컬에서 반영.
+	[PunRPC]
+	private void RpcBossKilled()
+	{
+		GameManager.Instance?.OnBossKilled();
+	}
 }

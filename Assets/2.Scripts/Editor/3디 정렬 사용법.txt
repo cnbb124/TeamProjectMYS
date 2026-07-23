@@ -1,0 +1,78 @@
+// 커스텀 에디터 사용
+using PositionOrder;
+
+// 커스텀 클래스 객체 생성
+private PositionOrderer orderer = new PositionOrderer();
+// 카드 배열을 연결 할 레퍼런스 (난 리스트 사용)
+public List<Transform> transforms;
+
+public void SetPositions()
+{
+
+    //리스트 초기화 및 트랜스폼 추가
+    orderer.Transforms.Clear();
+    orderer.Transforms.AddRange(transforms); // 참고로 배열 넣어도 됨
+
+    //거리 설정
+    orderer.Distance_X = 1.55f;
+    orderer.Distance_Y = 0f;
+    orderer.Distance_Z = 0f;
+
+    //Line Type 정렬
+    orderer.ApplyLineOrder(LineAnchor.Center);
+
+}
+
+
+/*
+    // 커스텀 에디터 사용 설명서
+
+    PositionOrderer 클래스를 사용하기 위해서는 PositionOrder 네임스페이스를 참조해야한다.
+    PositionOrderer 인스턴스를 만든 뒤, Transforms 에 접근하여 리스트 내에 Transform을 추가하고 Distance 속성들을 설정해준 다음
+    Apply 함수를 호출해주면 된다.
+
+
+    public List<Transform> Transforms { get; set; }
+
+    Transforms 속성은 Transform을 관리하는 List이다. 이 List를 통해 Transform을 관리해주면 된다.
+
+
+
+    public float Distance_X { get; set; }
+    public float Distance_Y { get; set; }
+    public float Distance_Z { get; set; }
+
+    Distance 는 각 축 별로 float 속성으로 선언되어 있다.
+    Vector3를 사용하면 개별 요소 설정이 되지 않기 때문에 그러지 않고 float로 만들어두었다.
+
+
+
+    public const int MIN_COUNT = 2;
+
+    MIN_COUNT는 최소 요구 Transform 수를 나타내는 상수이다.
+    최소한 두개 이상의 Transform이 List에 존재해야만 위치 정렬이 적용된다는 의미이다.
+    또한 Table과 Cube 정렬에 따라 Column과 Row 또한 최소 2 이상이 되어야 한다.
+
+
+
+    public void ApplyLineOrder (LineAnchor anchor, int customIndex = 0);
+
+    Line Type 정렬을 적용하는 함수이다. 매개 변수로 LineAnchor를 받으며, LineAnchor가 Custom일 경우 customIndex를 같이 넘겨주면 된다.
+    customIndex가 List 인덱스를 벗어날 경우 경고가 표시되며 위치 정렬이 이루어지지 않는다.
+
+
+
+    public void ApplyTableOrder (TableAnchor anchor, Axis2D axis, int col, int customIndex = 0);
+
+    Table Type 정렬은 TableAnchor와 정렬이 이루어지는 축 Axis2D가 필요하며 행의 수인 col을 int로 받는다.
+    Table 정렬도 마찬가지로 TableAnchor가 Custom일 경우 customIndex를 넘겨주면 된다.
+
+
+
+    public void ApplyCubeOrder (CubeAnchor anchor, int col, int row, int customIndex = 0);
+
+    Cube Type 정렬도 마찬가지로 CubeAnchor를 받으며, Custom일 경우 customIndex를 넘겨주면 된다.
+    또한 행과 열을 int로 받는다.
+
+*/
+

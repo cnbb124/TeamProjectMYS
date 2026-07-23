@@ -84,6 +84,8 @@ public class SpawnManager : MonoBehaviourPunCallbacks, IOnEventCallback
 	// 내부 상태
 	// ================================================================
 	private int _currentWaveIndex = 0;
+	// 지금 돌고 있는 게 보스 웨이브인지. 보스 웨이브를 클리어하면 남은 일반 웨이브는 무시하고 즉시 스테이지 클리어함.
+	private bool _bossWaveActive = false;
 	// 현재 웨이브에서 스폰된 적 목록 (클리어 판정용)
 	private List<Enemy> _waveEnemies = new List<Enemy>();
 	private Transform[] _shuffleBuffer;
@@ -128,6 +130,7 @@ public class SpawnManager : MonoBehaviourPunCallbacks, IOnEventCallback
 			return;
 		}
 		_currentWaveIndex = waveIndex;
+		_bossWaveActive = false;
 		PublishWaveState(waveIndex, false);
 		_waveEnemies.Clear();
 		StopAllCoroutines();
@@ -267,6 +270,14 @@ public class SpawnManager : MonoBehaviourPunCallbacks, IOnEventCallback
 
 	private void AdvanceWave(WaveData wave)
 	{
+		// 보스 웨이브를 클리어했으면 남은 일반 웨이브는 전부 무시하고 즉시 스테이지 클리어.
+		if (_bossWaveActive)
+		{
+			_bossWaveActive = false;
+			BroadcastStageClear();
+			return;
+		}
+
 		int nextIndex = _currentWaveIndex + 1;
 		if (nextIndex < waves.Length)
 		{
@@ -324,7 +335,9 @@ public class SpawnManager : MonoBehaviourPunCallbacks, IOnEventCallback
 		{
 			return;
 		}
-		// _currentWaveIndex는 그대로 둠(보스 클리어 후 AdvanceWave가 이어갈 기준점).
+		// 보스 웨이브 진입 — 클리어하면 남은 일반 웨이브는 무시하고 스테이지 클리어로 감(AdvanceWave 참고).
+		// _currentWaveIndex는 방장 승계 시 기준점으로만 남겨둠.
+		_bossWaveActive = true;
 		PublishWaveState(_currentWaveIndex, true);
 		_waveEnemies.Clear();
 		StopAllCoroutines();
@@ -351,6 +364,8 @@ public class SpawnManager : MonoBehaviourPunCallbacks, IOnEventCallback
 	{
 		bool isBossWave = ReadRoomBool(BossWavePropertyKey);
 		_currentWaveIndex = ReadRoomInt(WaveIndexPropertyKey, _currentWaveIndex);
+		// 보스 웨이브 중에 방장이 바뀌어도 "클리어하면 스테이지 클리어" 규칙이 유지되도록 플래그도 인계.
+		_bossWaveActive = isBossWave;
 
 		WaveData activeWave = isBossWave ? bossWave : GetNormalWave(_currentWaveIndex);
 		if (activeWave == null)
