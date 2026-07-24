@@ -36,10 +36,26 @@ public class PauseMenuUI : MonoBehaviour
     [Tooltip("목표(퀘스트) 패널. QuestHUD가 붙은 패널 연결. 없으면 비워둬도 됨.")]
     [SerializeField] private GameObject questPanel;
 
-    // 입력 잠금/커서 해제 판정용(InputManager.IsGameplayInputLocked). 메뉴 패널이 떠 있으면 커서를 풀고 게임 입력을 막음 —
-    // 멀티에선 IsPaused가 false라, 인벤토리처럼 '열림 상태' 자체로 커서를 풀어야 메뉴 클릭이 된다.
+    // 입력 잠금/커서 해제 판정용(InputManager.IsGameplayInputLocked). 메뉴 계열 패널(메뉴/옵션/지도/퀘스트) 중
+    // 하나라도 떠 있으면 커서를 풀고 게임 입력을 막음 — 멀티에선 IsPaused가 false라 '열림 상태' 자체가 유일한 잠금 근거임.
+    // ※ 메뉴 panel만 보면 안 됨: OnOptions()가 panel을 끄고 옵션 패널을 켜므로 그 순간 잠금 근거가 사라져,
+    //    (싱글은 IsPaused가 가려주지만) 멀티에선 옵션창을 띄운 채 플레이어가 조종되는 문제가 생김.
     private static PauseMenuUI _instance;
-    public static bool IsOpen => _instance != null && _instance.panel != null && _instance.panel.activeSelf;
+    public static bool IsOpen => _instance != null && _instance.IsAnyPanelShown();
+
+    // 메뉴 계열 패널(메뉴/옵션/지도/퀘스트) 중 하나라도 표시 중인지
+    private bool IsAnyPanelShown()
+    {
+        if (IsShown() || IsOptionsShown())
+        {
+            return true;
+        }
+        if (mapPanel != null && mapPanel.activeSelf)
+        {
+            return true;
+        }
+        return questPanel != null && questPanel.activeSelf;
+    }
 
     private void Start()
     {
