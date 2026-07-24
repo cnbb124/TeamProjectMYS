@@ -65,16 +65,16 @@ MonoBehaviour:
   _blocksBeam: 0
   weaponSystem: {fileID: 0}
   skillSystem: {fileID: 0}
-  maxHpRemaining: 100000
-  maxShieldCapacity: 3000
+  maxHpRemaining: 9999
+  maxShieldCapacity: 500
   shieldRegainDelay: 3
   shieldRegainRate: 6
   isShieldRegaining: 0
   shield: {fileID: 8632861264470973050}
   bodyHitboxRoot: {fileID: 2330727422614379468}
-  maxArmor: 150
+  maxArmor: 200
   defense: 3
-  criChance: 20
+  criChance: 40
   criDamageMultiplier: 1.5
   _deathSequenceDuration: 1.5
   curState: 0
@@ -107,6 +107,7 @@ MonoBehaviour:
   level: 1
   exp: 0
   expToNextLevel: 100
+  missileSlotGainInterval: 3
   fuelMoveConsumeRate: 5
   fuelBoostConsumeRate: 10
   maxFuelCapacity: 5000

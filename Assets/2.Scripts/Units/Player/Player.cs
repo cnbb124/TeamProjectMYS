@@ -136,6 +136,10 @@ public class Player : Unit
 	[Tooltip("현재 레벨에서 다음 레벨까지 필요한 경험치")]
 	public int expToNextLevel = 100;
 
+	[Tooltip("미사일 슬롯을 1칸 늘려줄 레벨 주기. 3이면 3/6/9레벨마다 +1칸.\n" +
+		"1이면 매 레벨 증가(과할 수 있음). 0 이하로 두면 슬롯 지급 안 함.")]
+	public int missileSlotGainInterval = 3;
+
 
 
 	[Header("연료 소모량 입력")]
@@ -1028,11 +1032,23 @@ public class Player : Unit
 
 		Debug.Log($"[Player] 레벨업! 현재 레벨: {level}");
 
+		maxHpRemaining += 50;
+		criChance += 5;
+		criDamageMultiplier += 0.1f;
+		dodgeCoolTime -= 0.2f;
+
+		// 일정 레벨마다 미사일 슬롯 +1 (매 레벨은 과해서 주기로 지급).
+		// AddMissileSlot()은 빈 슬롯을 붙이는 것 — 실제 미사일은 인벤토리/상점에서 장착해 채움.
+		if (missileSlotGainInterval > 0 && level % missileSlotGainInterval == 0)
+		{
+			weaponSystem?.AddMissileSlot();
+		}
+
+		// HP/실드/아머/부스트 + 파츠 HP까지 최대치로 회복(파츠 스탯 페널티도 함께 해제됨).
+		RefillToMax();
+
 		// 레벨업 효과는 여기에 추가 예정:
-		//  - 최대 HP 증가 (maxHpRemaining ↑ + RefillToMax 등)
-		//  - 인벤토리 사용 가능 슬롯 증가
-		//  - 장착 가능한 미사일 슬롯 증가
-		//  - Dodge 쿨다운 감소 (dodgeCoolTime ↓)
+		//  - 인벤토리 사용 가능 슬롯 증가 (InventoryManager에 슬롯 상한 개념이 생기면 연결)
 		// (레벨업 연출/HUD 갱신이 필요하면 이벤트 훅을 여기서 발행)
 	}
 }

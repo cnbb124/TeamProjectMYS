@@ -675,15 +675,65 @@ public class SoundManager : MonoBehaviour
 	/// UI 클릭, 주사위 굴리기 등 화면 전체에서 들려야 하는 2D 효과음
 	/// </summary>
 	/// <param name="type"></param>
-	public void PlaySFXUI(SOUND_TYPE type)
+	// isLoop=false(기본): PlayOneShot으로 단발 재생 — 여러 개가 겹쳐 나도 됨(기존 동작 그대로).
+	// isLoop=true: 소스에 클립을 걸고 반복 재생. 경고음처럼 "상황이 끝날 때까지 계속" 울려야 할 때 사용.
+	//   ※ 루프는 반드시 StopSFXUILoop()로 꺼야 함(안 끄면 계속 울림).
+	//   ※ UI 소스는 1개뿐이라 루프는 동시에 하나만 가능 — 새 루프를 걸면 이전 루프는 대체됨.
+	public void PlaySFXUI(SOUND_TYPE type, bool isLoop = false)
 	{
 		SoundTypeClip data = GetSoundData(type);
-		if (data != null && data.type != SOUND_TYPE.SFX_NONE)
+		if (data == null || data.type == SOUND_TYPE.SFX_NONE)
 		{
-
-			_sfxUISource.pitch = 1.0f; // 기본 피치로 초기화
-			_sfxUISource.PlayOneShot(GetRandomClip(data), sfxUIVolume * GetVolume(data));
+			return;
 		}
+
+		_sfxUISource.pitch = 1.0f; // 기본 피치로 초기화
+
+		if (!isLoop)
+		{
+			// 단발 — 루프가 돌고 있었다면 남겨두고 그 위에 겹쳐 재생(PlayOneShot은 clip/loop 설정과 무관).
+			_sfxUISource.PlayOneShot(GetRandomClip(data), sfxUIVolume * GetVolume(data));
+			return;
+		}
+
+		// 루프 — 같은 타입이 이미 돌고 있으면 재시작하지 않음(매 프레임 호출돼도 끊기지 않게).
+		if (_sfxUILoopType == type && _sfxUISource.isPlaying && _sfxUISource.loop)
+		{
+			return;
+		}
+		_sfxUILoopType = type;
+		_sfxUISource.clip = GetRandomClip(data);
+		_sfxUISource.loop = true;
+		_sfxUISource.volume = sfxUIVolume * GetVolume(data);
+		_sfxUISource.Play();
+	}
+
+	// 현재 UI 소스에서 루프 중인 사운드 종류. SFX_NONE이면 루프 없음.
+	private SOUND_TYPE _sfxUILoopType = SOUND_TYPE.SFX_NONE;
+
+	/// <summary>
+	/// PlaySFXUI(type, isLoop:true)로 시작한 UI 루프음 정지.
+	/// type을 지정하면 그 종류가 재생 중일 때만 끔(남의 루프를 실수로 끄지 않게).
+	/// SFX_NONE(기본)이면 종류와 무관하게 현재 루프를 끔.
+	/// </summary>
+	public void StopSFXUILoop(SOUND_TYPE type = SOUND_TYPE.SFX_NONE)
+	{
+		if (_sfxUILoopType == SOUND_TYPE.SFX_NONE)
+		{
+			return;
+		}
+		if (type != SOUND_TYPE.SFX_NONE && _sfxUILoopType != type)
+		{
+			return;
+		}
+
+		_sfxUISource.Stop();
+		_sfxUISource.loop = false;
+		_sfxUISource.clip = null;
+		// 단발(PlayOneShot)은 소스 volume에 곱해지므로 루프용으로 바꿔둔 볼륨을 1로 되돌림
+		// (SetSFXUIVolume 주석대로 UI 단발은 PlayOneShot 인자에서 볼륨을 적용하는 구조).
+		_sfxUISource.volume = 1f;
+		_sfxUILoopType = SOUND_TYPE.SFX_NONE;
 	}
 	// 사용예
 	// SoundManager.Instance.PlaySFX(SOUND_TYPE.SFX_DICE_ROLL);
@@ -987,6 +1037,12 @@ public class SoundManager : MonoBehaviour
 		}
 		_bgmSource.Stop();
 		_sfxUISource.Stop();
+		// UI 루프음 상태도 같이 정리 — 안 그러면 씬을 넘어가도 루프 중으로 오인해
+		// 다음에 같은 타입을 걸 때 "이미 재생 중"으로 판단해 안 울림.
+		_sfxUISource.loop = false;
+		_sfxUISource.clip = null;
+		_sfxUISource.volume = 1f;
+		_sfxUILoopType = SOUND_TYPE.SFX_NONE;
 
 		// 풀링된 3D 스피커 전부 정지 + 회수. 뒤에서부터 순회 — 파괴된 슬롯은 접근 전에 제거(값싼 안전망②).
 		for (int i = _sfx3DPool.Count - 1; i >= 0; i--)
@@ -1041,7 +1097,17 @@ public class SoundManager : MonoBehaviour
 		sfxUIVolume = volume;//입력한 볼륨값 현재설정에 저장
 		if (_sfxUISource != null)
 		{
-			_sfxUISource.volume = 1f;
+			// 단, 루프음(PlaySFXUI isLoop)은 PlayOneShot이 아니라 소스 volume으로 재생되므로
+			// 1로 되돌리면 최대 볼륨으로 튀어버림 — 루프 중일 땐 새 볼륨을 소스에 다시 반영한다.
+			if (_sfxUILoopType != SOUND_TYPE.SFX_NONE)
+			{
+				SoundTypeClip loopData = GetSoundData(_sfxUILoopType);
+				_sfxUISource.volume = loopData != null ? sfxUIVolume * GetVolume(loopData) : sfxUIVolume;
+			}
+			else
+			{
+				_sfxUISource.volume = 1f;
+			}
 		}
 	}
 

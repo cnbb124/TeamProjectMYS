@@ -515,6 +515,24 @@ public class UnitParts : MonoBehaviour
         RefreshPartStat(slot, GetHpStatRatio(slot));
     }
 
+    /// <summary>
+    /// 장착된 모든 파츠의 HP를 최대치로 되돌리고, 깎여 있던 스탯 기여도도 온전한 값으로 복구.
+    /// 레벨업/수리 등 "완전 회복" 상황에서 Unit.RefillToMax()가 호출함.
+    /// (파츠 HP가 안 차면 엔진/스러스터 스탯이 깎인 채로 남아 최대치 회복이 반쪽이 됨)
+    /// </summary>
+    public void RefillAllPartsHp()
+    {
+        foreach (PartSlotEntry slot in partSlots)
+        {
+            if (slot.equippedPart == null)
+            {
+                continue;
+            }
+            slot.curPartHp = slot.equippedPart.maxPartHp;
+            RefreshPartStat(slot, GetHpStatRatio(slot));
+        }
+    }
+
     // ================== [파츠 HP에 따른 스탯 조정] ==================
 
     // 파츠 HP에 따라 스탯을 얼마나 줄지 비율로 알려줌.

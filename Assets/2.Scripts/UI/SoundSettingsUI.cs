@@ -107,7 +107,7 @@ public class SoundSettingsUI : MonoBehaviour
         PlayerPrefs.SetFloat(KEY_UI, v);
 
         // 조작 피드백 — 바뀐 볼륨으로 UI 효과음 재생 (SOUND_TYPE에 버튼음 있으면 교체)
-        // if (SoundManager.Instance != null) SoundManager.Instance.PlaySFXUI(SOUND_TYPE.SFX_UI_CLICK);
+        //if (SoundManager.Instance != null) SoundManager.Instance.PlaySFXUI(SOUND_TYPE.SFX_UI_CLICK);
     }
 
     // ── 실제 적용 (SoundManager 없는 테스트 씬에서도 에러 안 나게 가드) ──

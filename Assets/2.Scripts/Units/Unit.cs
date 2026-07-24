@@ -395,6 +395,10 @@ public abstract class Unit : MonoBehaviour, IDamageable, IPunObservable
 		curArmorRemaining = maxArmor;
 		curBoostRemaining = maxBoostCapacity;
 
+		// 파츠 HP도 같이 복구 — 안 그러면 깎인 파츠의 스탯 페널티(엔진/스러스터 등)가 남아
+		// '최대치로 회복'인데도 실제 성능은 덜 회복된 상태가 됨.
+		_unitParts?.RefillAllPartsHp();
+
 		UpdateShieldHitboxState();
 	}
 	// 엔진 루프 사운드(SFX_IDLE/MOVING/BOOST) 등록. Start()(최초 1회차)와 OnEnable()(풀 재사용 2회차+) 양쪽에서 호출.

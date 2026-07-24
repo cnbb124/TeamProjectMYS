@@ -47,6 +47,16 @@ public class AlertSystemUI : MonoBehaviour
         if (alertRoot != null) alertRoot.SetActive(false);
     }
 
+    // 경고 UI가 꺼지거나 씬이 바뀔 때 경고음 루프가 남아 계속 울리는 걸 막음.
+    private void OnDisable()
+    {
+        if (_threat && _soundManager != null)
+        {
+            _soundManager.StopSFXUILoop(SOUND_TYPE.SFX_UI_LOCKON_ALERT);
+        }
+        _threat = false;
+    }
+
     private void Update()
     {
         // ── 위협 검사 (주기적으로만) ──
@@ -56,8 +66,19 @@ public class AlertSystemUI : MonoBehaviour
             _scanTimer = 0f;
             bool hadThreat = _threat;
             _threat = HasIncomingMissile();
-            if (_threat && !hadThreat && _soundManager != null)
-                _soundManager.PlaySFXUI(SOUND_TYPE.SFX_UI_LOCKON_ALERT);
+            // 위협이 생긴 순간 경고음 루프 시작, 사라진 순간 정지 — 위협이 지속되는 동안 계속 울림.
+            // (단발이면 처음 한 번만 울리고 이후엔 화면만 깜빡여서 긴박감이 안 남)
+            if (_threat != hadThreat && _soundManager != null)
+            {
+                if (_threat)
+                {
+                    _soundManager.PlaySFXUI(SOUND_TYPE.SFX_UI_LOCKON_ALERT, true);
+                }
+                else
+                {
+                    _soundManager.StopSFXUILoop(SOUND_TYPE.SFX_UI_LOCKON_ALERT);
+                }
+            }
         }
 
         // ── 경고 표시 ──

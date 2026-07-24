@@ -273,6 +273,9 @@ public class GameManager : MonoBehaviourPunCallbacks
     // 씬 로드 완료 시 자동 호출
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
+        // 언로드 구간 종료 — 이제부터 오는 BossSpawnTarget OnDisable은 실제 파괴로 취급함.
+        _isSceneUnloading = false;
+
         // Player 레퍼런스 갱신 — 멀티에선 원격 함선(DDOL로 씬 넘어와 공존)을 잡지 않도록 IsMine인 로컬만 채운다.
         RefreshPlayerRefToLocal();
 
@@ -348,6 +351,9 @@ public class GameManager : MonoBehaviourPunCallbacks
             NetworkManager.Instance.DestroyLocalPlayerShip();
         }
 
+        // 씬 언로드 중 BossSpawnTarget들이 줄줄이 OnDisable을 맞는데, 그건 '파괴'가 아니라 정리 과정임 —
+        // 목표 달성으로 세어버리면 씬 나가는 중에 보스 조건이 터짐. 로드 완료(OnSceneLoaded)에서 해제함.
+        _isSceneUnloading = true;
         SceneManager.LoadScene(sceneName);
     }
 
@@ -687,19 +693,32 @@ public class GameManager : MonoBehaviourPunCallbacks
         {
             _bossTargetsTotal++;
             onObjectiveChanged?.Invoke();
+            PublishBattleProgress();
         }
     }
 
     /// <summary>BossSpawnTarget이 파괴(비활성) 시 통지. 남은 목표에서 제거 후 조건 체크.</summary>
+    /// 씬 언로드/종료로 인한 비활성은 '파괴'가 아니므로 무시함(안 그러면 씬 나가는 중에 보스 조건이 터짐).
     public void NotifyBossTargetDestroyed(GameObject target)
     {
         if (target == null) return;
+        if (_isQuitting || _isSceneUnloading) return;
         if (_bossTargets.Remove(target))
         {
             _bossTargetsDestroyed++;
             onObjectiveChanged?.Invoke();
+            PublishBattleProgress();
             CheckBossSpawnCondition();
         }
+    }
+
+    // 씬 언로드/앱 종료 중인지. 이때 오는 OnDisable은 '파괴'가 아니라 정리 과정이므로 목표 달성으로 세면 안 됨.
+    private bool _isQuitting;
+    private bool _isSceneUnloading;
+
+    private void OnApplicationQuit()
+    {
+        _isQuitting = true;
     }
 
     // =====================================================================
@@ -755,6 +774,9 @@ public class GameManager : MonoBehaviourPunCallbacks
     // → 진행도는 특정 플레이어가 아니라 '방'에 속한 값이라 Room Custom Property에 올림.
     //   방장만 기록하고 나머지는 받아서 반영함. 방장이 바뀌어도 값이 남음.
     private const string KillCountPropertyKey = "StageKillCount";
+    // 파괴 목표 진행도도 '방'에 속한 값 — 목표 등록/파괴는 방장 쪽에서만 일어나므로 게스트는 받아서 반영함.
+    private const string BossTargetTotalPropertyKey = "StageBossTargetTotal";
+    private const string BossTargetDonePropertyKey = "StageBossTargetDone";
 
     // 방장만 기록(권위 일원화). 싱글/오프라인은 룸이 없어 그냥 무시됨.
     private void PublishBattleProgress()
@@ -765,43 +787,68 @@ public class GameManager : MonoBehaviourPunCallbacks
         }
         PhotonHashtable progress = new PhotonHashtable
         {
-            { KillCountPropertyKey, killCount }
+            { KillCountPropertyKey, killCount },
+            { BossTargetTotalPropertyKey, _bossTargetsTotal },
+            { BossTargetDonePropertyKey, _bossTargetsDestroyed }
         };
         PhotonNetwork.CurrentRoom.SetCustomProperties(progress);
     }
 
     public override void OnRoomPropertiesUpdate(PhotonHashtable propertiesThatChanged)
     {
-        if (propertiesThatChanged == null ||
-            !propertiesThatChanged.TryGetValue(KillCountPropertyKey, out object value) ||
-            !(value is int syncedKillCount))
+        if (propertiesThatChanged == null)
         {
             return;
         }
-        ApplySyncedKillCount(syncedKillCount);
+        ApplySyncedProgress(propertiesThatChanged);
+    }
+
+    // 방장이 올린 진행도(킬/파괴목표)를 게스트가 반영. 바뀐 항목만 골라 적용 후 보스 조건 재검사.
+    private void ApplySyncedProgress(PhotonHashtable props)
+    {
+        // 방장은 자기가 올린 값의 권위자라 되돌려 받을 필요 없음(자기 값이 원본).
+        if (PhotonNetwork.IsMasterClient)
+        {
+            return;
+        }
+
+        bool changed = false;
+
+        if (props.TryGetValue(KillCountPropertyKey, out object killValue) && killValue is int syncedKillCount
+            && killCount != syncedKillCount)
+        {
+            killCount = syncedKillCount;
+            changed = true;
+        }
+        if (props.TryGetValue(BossTargetTotalPropertyKey, out object totalValue) && totalValue is int syncedTotal
+            && _bossTargetsTotal != syncedTotal)
+        {
+            _bossTargetsTotal = syncedTotal;
+            changed = true;
+        }
+        if (props.TryGetValue(BossTargetDonePropertyKey, out object doneValue) && doneValue is int syncedDone
+            && _bossTargetsDestroyed != syncedDone)
+        {
+            _bossTargetsDestroyed = syncedDone;
+            changed = true;
+        }
+
+        if (!changed)
+        {
+            return;
+        }
+        onObjectiveChanged?.Invoke();
+        // 게스트도 보스 조건을 돌려야 보스 BGM/연출을 같이 받음. 실제 보스 스폰은 SpawnManager가 방장만 하도록 막아둠.
+        CheckBossSpawnCondition();
     }
 
     // 방 입장 시점의 현재 진행도를 한 번 읽어옴(도중 합류 대비 — 프로퍼티 변경 콜백은 '변할 때'만 오므로).
     public override void OnJoinedRoom()
     {
-        if (PhotonNetwork.CurrentRoom != null &&
-            PhotonNetwork.CurrentRoom.CustomProperties.TryGetValue(KillCountPropertyKey, out object value) &&
-            value is int syncedKillCount)
+        if (PhotonNetwork.CurrentRoom != null)
         {
-            ApplySyncedKillCount(syncedKillCount);
+            ApplySyncedProgress(PhotonNetwork.CurrentRoom.CustomProperties);
         }
-    }
-
-    private void ApplySyncedKillCount(int syncedKillCount)
-    {
-        if (killCount == syncedKillCount)
-        {
-            return;
-        }
-        killCount = syncedKillCount;
-        onObjectiveChanged?.Invoke();
-        // 게스트도 보스 조건을 돌려야 보스 BGM/연출을 같이 받음. 실제 보스 스폰은 SpawnManager가 방장만 하도록 막아둠.
-        CheckBossSpawnCondition();
     }
 
     // =====================================================================

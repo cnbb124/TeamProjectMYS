@@ -47,19 +47,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _soundList:
-  - type: 100
-    clips:
-    - {fileID: 8300000, guid: dacbb4af6194c2d469139f7701cf5f85, type: 3}
-    volumeScale: 0.355
-    volumeMin: 1
-    volumeMax: 1
-    pitchMin: 1
-    pitchMax: 1
-    minPlayInterval: 0
-    maxConcurrent: 0
-    dropOldest: 0
-    minDistance: 0
-    maxDistance: 0
   - type: 300
     clips:
     - {fileID: 8300000, guid: 14ba2f7d17b7a434f851c648484e0806, type: 3}
@@ -175,6 +162,19 @@ MonoBehaviour:
     dropOldest: 1
     minDistance: 15
     maxDistance: 100
+  - type: 203
+    clips:
+    - {fileID: 8300000, guid: 9d8bea653fadce241aa3c5881ab84946, type: 3}
+    volumeScale: 0.8
+    volumeMin: 1
+    volumeMax: 1
+    pitchMin: 1
+    pitchMax: 1
+    minPlayInterval: 0.1
+    maxConcurrent: 12
+    dropOldest: 1
+    minDistance: 15
+    maxDistance: 100
   - type: 500
     clips:
     - {fileID: 8300000, guid: 51b29026a14d387498c8a7e8df09f1ab, type: 3}
@@ -227,10 +227,24 @@ MonoBehaviour:
     dropOldest: 1
     minDistance: 15
     maxDistance: 100
+  - type: 100
+    clips:
+    - {fileID: 8300000, guid: dacbb4af6194c2d469139f7701cf5f85, type: 3}
+    volumeScale: 0.355
+    volumeMin: 1
+    volumeMax: 1
+    pitchMin: 1
+    pitchMax: 1
+    minPlayInterval: 0
+    maxConcurrent: 0
+    dropOldest: 0
+    minDistance: 0
+    maxDistance: 0
   - type: 105
     clips:
     - {fileID: 8300000, guid: 6273a8bf5e7514848aa2b6871cb327ad, type: 3}
     - {fileID: 8300000, guid: d136e1a1e33b07047a7703fa53252c3b, type: 3}
+    - {fileID: 8300000, guid: 56c920c39da7b7441ac8e17215ba4ec5, type: 3}
     volumeScale: 0.383
     volumeMin: 1
     volumeMax: 1
@@ -246,6 +260,18 @@ MonoBehaviour:
     - {fileID: 8300000, guid: 6273a8bf5e7514848aa2b6871cb327ad, type: 3}
     - {fileID: 8300000, guid: d136e1a1e33b07047a7703fa53252c3b, type: 3}
     volumeScale: 0.383
+    volumeMin: 1
+    volumeMax: 1
+    pitchMin: 1
+    pitchMax: 1
+    minPlayInterval: 0.1
+    maxConcurrent: 12
+    dropOldest: 1
+    minDistance: 15
+    maxDistance: 100
+  - type: 109
+    clips: []
+    volumeScale: 0.393
     volumeMin: 1
     volumeMax: 1
     pitchMin: 1
