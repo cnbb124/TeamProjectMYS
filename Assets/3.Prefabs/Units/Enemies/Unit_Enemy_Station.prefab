@@ -2246,6 +2246,8 @@ Transform:
   - {fileID: 4852240861460760997}
   - {fileID: 7594695651200450112}
   - {fileID: 6079484884849615981}
+  - {fileID: 8462172021209304065}
+  - {fileID: 6156628782782860110}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &8952559385702762418
@@ -2263,15 +2265,15 @@ MonoBehaviour:
   _blocksBeam: 1
   weaponSystem: {fileID: 0}
   skillSystem: {fileID: 0}
-  maxHpRemaining: 1000
-  maxShieldCapacity: 1000
+  maxHpRemaining: 1500
+  maxShieldCapacity: 3500
   shieldRegainDelay: 5
   shieldRegainRate: 60
   isShieldRegaining: 0
   shield: {fileID: 6820784898341458894}
   bodyHitboxRoot: {fileID: 4852240861460760997}
-  maxArmor: 100
-  defense: 5
+  maxArmor: 1500
+  defense: 6
   criChance: 0
   criDamageMultiplier: 0
   _deathSequenceDuration: 1.5
@@ -2349,6 +2351,7 @@ MonoBehaviour:
   ObservedComponents:
   - {fileID: 8952559385702762418}
   - {fileID: 6343616621247048405}
+  - {fileID: 802751515135141515}
   sceneViewId: 0
   InstantiationId: 0
   isRuntimeInstantiated: 0
@@ -2742,6 +2745,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Turret_DUAL_MYS (5)
       objectReference: {fileID: 0}
+    - target: {fileID: 8780441365474338247, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
+      propertyPath: maxHpRemaining
+      value: 700
+      objectReference: {fileID: 0}
     - target: {fileID: 8950724485814838234, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
       propertyPath: sceneViewId
       value: 0
@@ -2820,6 +2827,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Turret_DUAL_MYS (7)
       objectReference: {fileID: 0}
+    - target: {fileID: 8780441365474338247, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
+      propertyPath: maxHpRemaining
+      value: 700
+      objectReference: {fileID: 0}
     - target: {fileID: 8950724485814838234, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
       propertyPath: sceneViewId
       value: 0
@@ -2897,6 +2908,10 @@ PrefabInstance:
     - target: {fileID: 6706981218406096366, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
       propertyPath: m_Name
       value: Turret_DUAL_MYS (1)
+      objectReference: {fileID: 0}
+    - target: {fileID: 8780441365474338247, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
+      propertyPath: maxHpRemaining
+      value: 700
       objectReference: {fileID: 0}
     - target: {fileID: 8950724485814838234, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
       propertyPath: sceneViewId
@@ -3302,6 +3317,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Turret_DUAL_MYS (4)
       objectReference: {fileID: 0}
+    - target: {fileID: 8780441365474338247, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
+      propertyPath: maxHpRemaining
+      value: 700
+      objectReference: {fileID: 0}
     - target: {fileID: 8950724485814838234, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
       propertyPath: sceneViewId
       value: 0
@@ -3507,6 +3526,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Turret_DUAL_MYS (6)
       objectReference: {fileID: 0}
+    - target: {fileID: 8780441365474338247, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
+      propertyPath: maxHpRemaining
+      value: 700
+      objectReference: {fileID: 0}
     - target: {fileID: 8950724485814838234, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
       propertyPath: sceneViewId
       value: 0
@@ -3584,6 +3607,10 @@ PrefabInstance:
     - target: {fileID: 6706981218406096366, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
       propertyPath: m_Name
       value: Turret_DUAL_MYS
+      objectReference: {fileID: 0}
+    - target: {fileID: 8780441365474338247, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
+      propertyPath: maxHpRemaining
+      value: 700
       objectReference: {fileID: 0}
     - target: {fileID: 8950724485814838234, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
       propertyPath: sceneViewId
@@ -3663,6 +3690,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Turret_DUAL_MYS (10)
       objectReference: {fileID: 0}
+    - target: {fileID: 8780441365474338247, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
+      propertyPath: maxHpRemaining
+      value: 700
+      objectReference: {fileID: 0}
     - target: {fileID: 8950724485814838234, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
       propertyPath: sceneViewId
       value: 0
@@ -3740,6 +3771,10 @@ PrefabInstance:
     - target: {fileID: 6706981218406096366, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
       propertyPath: m_Name
       value: Turret_DUAL_MYS (2)
+      objectReference: {fileID: 0}
+    - target: {fileID: 8780441365474338247, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
+      propertyPath: maxHpRemaining
+      value: 700
       objectReference: {fileID: 0}
     - target: {fileID: 8950724485814838234, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
       propertyPath: sceneViewId
@@ -3819,6 +3854,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Turret_DUAL_MYS (8)
       objectReference: {fileID: 0}
+    - target: {fileID: 8780441365474338247, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
+      propertyPath: maxHpRemaining
+      value: 700
+      objectReference: {fileID: 0}
     - target: {fileID: 8950724485814838234, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
       propertyPath: sceneViewId
       value: 0
@@ -3832,6 +3871,104 @@ PrefabInstance:
 Transform:
   m_CorrespondingSourceObject: {fileID: 4813471907493243705, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
   m_PrefabInstance: {fileID: 5022181600714696346}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1001 &5325801572454521031
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 8876826577693600254}
+    m_Modifications:
+    - target: {fileID: 866398829392019604, guid: c14dacbee11a78a42863baa6844d78b2, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 866398829392019604, guid: c14dacbee11a78a42863baa6844d78b2, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 866398829392019604, guid: c14dacbee11a78a42863baa6844d78b2, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 2060872996136522633, guid: c14dacbee11a78a42863baa6844d78b2, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2060872996136522633, guid: c14dacbee11a78a42863baa6844d78b2, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2060872996136522633, guid: c14dacbee11a78a42863baa6844d78b2, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2060872996136522633, guid: c14dacbee11a78a42863baa6844d78b2, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -9.94
+      objectReference: {fileID: 0}
+    - target: {fileID: 2060872996136522633, guid: c14dacbee11a78a42863baa6844d78b2, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 27.3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2060872996136522633, guid: c14dacbee11a78a42863baa6844d78b2, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -32.48
+      objectReference: {fileID: 0}
+    - target: {fileID: 2060872996136522633, guid: c14dacbee11a78a42863baa6844d78b2, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 0.29444468
+      objectReference: {fileID: 0}
+    - target: {fileID: 2060872996136522633, guid: c14dacbee11a78a42863baa6844d78b2, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: -0.035384882
+      objectReference: {fileID: 0}
+    - target: {fileID: 2060872996136522633, guid: c14dacbee11a78a42863baa6844d78b2, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: -0.9549939
+      objectReference: {fileID: 0}
+    - target: {fileID: 2060872996136522633, guid: c14dacbee11a78a42863baa6844d78b2, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0.0060713068
+      objectReference: {fileID: 0}
+    - target: {fileID: 2060872996136522633, guid: c14dacbee11a78a42863baa6844d78b2, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: -0.53
+      objectReference: {fileID: 0}
+    - target: {fileID: 2060872996136522633, guid: c14dacbee11a78a42863baa6844d78b2, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: -145.748
+      objectReference: {fileID: 0}
+    - target: {fileID: 2060872996136522633, guid: c14dacbee11a78a42863baa6844d78b2, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 4.081
+      objectReference: {fileID: 0}
+    - target: {fileID: 2096491018820943091, guid: c14dacbee11a78a42863baa6844d78b2, type: 3}
+      propertyPath: m_Name
+      value: Unit_Enemy_Turret Mortar_MYS (1)
+      objectReference: {fileID: 0}
+    - target: {fileID: 5803037774411386360, guid: c14dacbee11a78a42863baa6844d78b2, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 5803037774411386360, guid: c14dacbee11a78a42863baa6844d78b2, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 5803037774411386360, guid: c14dacbee11a78a42863baa6844d78b2, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 2
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: c14dacbee11a78a42863baa6844d78b2, type: 3}
+--- !u!4 &6156628782782860110 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 2060872996136522633, guid: c14dacbee11a78a42863baa6844d78b2, type: 3}
+  m_PrefabInstance: {fileID: 5325801572454521031}
   m_PrefabAsset: {fileID: 0}
 --- !u!1001 &5607262896710120520
 PrefabInstance:
@@ -3896,6 +4033,10 @@ PrefabInstance:
     - target: {fileID: 6706981218406096366, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
       propertyPath: m_Name
       value: Turret_DUAL_MYS (12)
+      objectReference: {fileID: 0}
+    - target: {fileID: 8780441365474338247, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
+      propertyPath: maxHpRemaining
+      value: 700
       objectReference: {fileID: 0}
     - target: {fileID: 8950724485814838234, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
       propertyPath: sceneViewId
@@ -3975,6 +4116,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Turret_DUAL_MYS (13)
       objectReference: {fileID: 0}
+    - target: {fileID: 8780441365474338247, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
+      propertyPath: maxHpRemaining
+      value: 700
+      objectReference: {fileID: 0}
     - target: {fileID: 8950724485814838234, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
       propertyPath: sceneViewId
       value: 0
@@ -4052,6 +4197,10 @@ PrefabInstance:
     - target: {fileID: 6706981218406096366, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
       propertyPath: m_Name
       value: Turret_DUAL_MYS (15)
+      objectReference: {fileID: 0}
+    - target: {fileID: 8780441365474338247, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
+      propertyPath: maxHpRemaining
+      value: 700
       objectReference: {fileID: 0}
     - target: {fileID: 8950724485814838234, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
       propertyPath: sceneViewId
@@ -4131,6 +4280,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Turret_DUAL_MYS (14)
       objectReference: {fileID: 0}
+    - target: {fileID: 8780441365474338247, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
+      propertyPath: maxHpRemaining
+      value: 700
+      objectReference: {fileID: 0}
     - target: {fileID: 8950724485814838234, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
       propertyPath: sceneViewId
       value: 0
@@ -4208,6 +4361,10 @@ PrefabInstance:
     - target: {fileID: 6706981218406096366, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
       propertyPath: m_Name
       value: Turret_DUAL_MYS (11)
+      objectReference: {fileID: 0}
+    - target: {fileID: 8780441365474338247, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
+      propertyPath: maxHpRemaining
+      value: 700
       objectReference: {fileID: 0}
     - target: {fileID: 8950724485814838234, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
       propertyPath: sceneViewId
@@ -4287,6 +4444,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Turret_DUAL_MYS (3)
       objectReference: {fileID: 0}
+    - target: {fileID: 8780441365474338247, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
+      propertyPath: maxHpRemaining
+      value: 700
+      objectReference: {fileID: 0}
     - target: {fileID: 8950724485814838234, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
       propertyPath: sceneViewId
       value: 0
@@ -4300,6 +4461,115 @@ PrefabInstance:
 Transform:
   m_CorrespondingSourceObject: {fileID: 4813471907493243705, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
   m_PrefabInstance: {fileID: 6861441107745346674}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1001 &7635322706552397704
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 8876826577693600254}
+    m_Modifications:
+    - target: {fileID: 866398829392019604, guid: c14dacbee11a78a42863baa6844d78b2, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 866398829392019604, guid: c14dacbee11a78a42863baa6844d78b2, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 866398829392019604, guid: c14dacbee11a78a42863baa6844d78b2, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 2060872996136522633, guid: c14dacbee11a78a42863baa6844d78b2, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2060872996136522633, guid: c14dacbee11a78a42863baa6844d78b2, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2060872996136522633, guid: c14dacbee11a78a42863baa6844d78b2, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2060872996136522633, guid: c14dacbee11a78a42863baa6844d78b2, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 21.441833
+      objectReference: {fileID: 0}
+    - target: {fileID: 2060872996136522633, guid: c14dacbee11a78a42863baa6844d78b2, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 27.87
+      objectReference: {fileID: 0}
+    - target: {fileID: 2060872996136522633, guid: c14dacbee11a78a42863baa6844d78b2, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 29.13
+      objectReference: {fileID: 0}
+    - target: {fileID: 2060872996136522633, guid: c14dacbee11a78a42863baa6844d78b2, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 0.9696348
+      objectReference: {fileID: 0}
+    - target: {fileID: 2060872996136522633, guid: c14dacbee11a78a42863baa6844d78b2, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0.07483018
+      objectReference: {fileID: 0}
+    - target: {fileID: 2060872996136522633, guid: c14dacbee11a78a42863baa6844d78b2, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0.23213784
+      objectReference: {fileID: 0}
+    - target: {fileID: 2060872996136522633, guid: c14dacbee11a78a42863baa6844d78b2, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0.017914912
+      objectReference: {fileID: 0}
+    - target: {fileID: 2060872996136522633, guid: c14dacbee11a78a42863baa6844d78b2, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 8.826
+      objectReference: {fileID: 0}
+    - target: {fileID: 2060872996136522633, guid: c14dacbee11a78a42863baa6844d78b2, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 26.927
+      objectReference: {fileID: 0}
+    - target: {fileID: 2060872996136522633, guid: c14dacbee11a78a42863baa6844d78b2, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2096491018820943091, guid: c14dacbee11a78a42863baa6844d78b2, type: 3}
+      propertyPath: m_Name
+      value: Unit_Enemy_Turret Mortar_MYS
+      objectReference: {fileID: 0}
+    - target: {fileID: 5803037774411386360, guid: c14dacbee11a78a42863baa6844d78b2, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 5803037774411386360, guid: c14dacbee11a78a42863baa6844d78b2, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 5803037774411386360, guid: c14dacbee11a78a42863baa6844d78b2, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 2
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: c14dacbee11a78a42863baa6844d78b2, type: 3}
+--- !u!114 &802751515135141515 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 7121861940838594819, guid: c14dacbee11a78a42863baa6844d78b2, type: 3}
+  m_PrefabInstance: {fileID: 7635322706552397704}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e9e6ea5e11016074ab3bc72b55db0b5f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!4 &8462172021209304065 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 2060872996136522633, guid: c14dacbee11a78a42863baa6844d78b2, type: 3}
+  m_PrefabInstance: {fileID: 7635322706552397704}
   m_PrefabAsset: {fileID: 0}
 --- !u!1001 &7791622227879067354
 PrefabInstance:
@@ -4364,6 +4634,10 @@ PrefabInstance:
     - target: {fileID: 6706981218406096366, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
       propertyPath: m_Name
       value: Turret_DUAL_MYS (9)
+      objectReference: {fileID: 0}
+    - target: {fileID: 8780441365474338247, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
+      propertyPath: maxHpRemaining
+      value: 700
       objectReference: {fileID: 0}
     - target: {fileID: 8950724485814838234, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
       propertyPath: sceneViewId
