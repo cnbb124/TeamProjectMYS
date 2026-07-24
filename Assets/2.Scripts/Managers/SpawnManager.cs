@@ -30,10 +30,8 @@ using PhotonHashtable = ExitGames.Client.Photon.Hashtable;
 //   만든 사람이 나가면 CleanupCacheOnLeave로 전부 파괴됨 — 적에는 쓰면 안 됨)
 //   웨이브 진행도도 룸 종속 상태라 Room Custom Property에 기록해, 방장 교체 시 새 방장이 이어받음.
 // ================================================================
-public class SpawnManager : MonoBehaviourPunCallbacks, IOnEventCallback
+public class SpawnManager : MonoBehaviourPunCallbacks
 {
-	// 스테이지 클리어 알림용(WaitingRoomUI=71, MapSelectorUI=72와 겹치지 않는 코드).
-	private const byte StageClearEventCode = 73;
 
 	// ================================================================
 	// 싱글톤 (씬 전용 — DontDestroyOnLoad 없음)
@@ -72,7 +70,16 @@ public class SpawnManager : MonoBehaviourPunCallbacks, IOnEventCallback
 	[Header("보스 웨이브")]
 	[Tooltip("GameManager.onBossSpawn 이벤트 발생 시 실행할 WaveData. null이면 스킵.")]
 	public WaveData bossWave;
-
+	[Tooltip("보스 등장 워프 VFX 재생 시간(초). 이 시간만큼 연출을 보여준 뒤 보스를 스폰함.\n" +
+		"0이면 연출 없이 바로 스폰.")]
+	[SerializeField]
+	private float _bossWarpSequenceTime;
+	[SerializeField]
+	[Tooltip("보스 등장 워프 VFX 스케일 배율. 0 이하면 프리팹 원본 크기 그대로 사용함.")]
+	private float _bossWarpSequenceScale;
+	[SerializeField]
+	[Tooltip("보스 등장 워프 VFX 출력 위치")]
+	private Transform _bossWarpVFXPoint;
 	// ================================================================
 	// 룸 종속 상태 키 (방장 교체 시 새 방장이 이어받을 기준점)
 	// ================================================================
@@ -145,6 +152,13 @@ public class SpawnManager : MonoBehaviourPunCallbacks, IOnEventCallback
 			yield break;
 		}
 
+		// 보스 웨이브는 등장 연출(워프)을 먼저 재생하고, 연출이 끝난 뒤 실제로 스폰함.
+		// (스폰 후에 틀면 보스가 이미 튀어나온 상태에서 워프가 뒤늦게 터져 앞뒤가 안 맞음)
+		if (wave == bossWave)
+		{
+			yield return StartCoroutine(PlayBossWarpSequence());
+		}
+
 		foreach (WaveData.SpawnEntry entry in wave.entries)
 		{
 			if (entry.delay > 0f)
@@ -159,7 +173,58 @@ public class SpawnManager : MonoBehaviourPunCallbacks, IOnEventCallback
 		yield return StartCoroutine(WaitForWaveClear(wave));
 	}
 
-	
+
+
+	// 보스 등장 워프 연출. 보스가 실제로 나올 지점에서 VFX를 틀고 그 시간만큼 대기함.
+	// 멀티: 스폰 코루틴은 방장만 돌기 때문에 그냥 재생하면 방장 화면에서만 보임 —
+	//       RPC로 남 클라에도 알려 각 클라가 자기 로컬 VFX 풀에서 재생함.
+	private IEnumerator PlayBossWarpSequence()
+	{
+		if (_bossWarpSequenceTime <= 0f)
+		{
+			yield break;
+		}
+
+		// 워프 VFX는 전용 지점(_bossWarpVFXPoint)에서 재생 — 보스마다 크기가 달라 스폰 위치와 별개로 잡아둠.
+		// 미지정이면 SpawnManager 자신 위치로 폴백.
+		Transform warpPoint = _bossWarpVFXPoint != null ? _bossWarpVFXPoint : transform;
+		BroadcastBossWarpVfx(warpPoint.position, warpPoint.rotation);
+
+		// 일시정지 인지 대기 — 연출 도중 ESC로 멈춰도 시간이 안 흐르게(다른 대기와 동일 규칙).
+		yield return GameManager.WaitGameplaySeconds(_bossWarpSequenceTime);
+	}
+
+	// 워프 VFX를 전원에게 재생시킴. 싱글/룸 밖은 로컬만, 멀티는 남 클라에 RPC로 전파(방장은 로컬 재생).
+	private void BroadcastBossWarpVfx(Vector3 position, Quaternion rotation)
+	{
+		PlayBossSpawnWarpVfxLocal(position, rotation);
+
+		if (PhotonNetwork.InRoom && !PhotonNetwork.OfflineMode)
+		{
+			photonView.RPC(nameof(RpcBossWarpVfx), RpcTarget.Others, position, rotation);
+		}
+	}
+
+	// 남 클라 수신 — 방장이 보낸 워프 위치/회전에서 로컬 VFX 재생.
+	[PunRPC]
+	private void RpcBossWarpVfx(Vector3 position, Quaternion rotation)
+	{
+		PlayBossSpawnWarpVfxLocal(position, rotation);
+	}
+
+	// 각 클라 로컬에서 워프 VFX 재생.
+	private void PlayBossSpawnWarpVfxLocal(Vector3 position, Quaternion rotation)
+	{
+		if (VFXManager.Instance == null)
+		{
+			return;
+		}
+		// scale은 0이면 VFXManager가 "안 넘김"으로 보고 프리팹 기본 스케일을 씀.
+		Vector3 scale = _bossWarpSequenceScale > 0f
+			? Vector3.one * _bossWarpSequenceScale
+			: Vector3.zero;
+		VFXManager.Instance.PlayEffectAtPosition(EFFECT_TYPE.VFX_BOSS_WARP_OUT, position, rotation, _bossWarpSequenceTime, scale);
+	}
 
 	private IEnumerator SpawnRandom(WaveData.SpawnEntry entry)
 	{
@@ -197,17 +262,21 @@ public class SpawnManager : MonoBehaviourPunCallbacks, IOnEventCallback
 				yield return null;
 			}
 
-			Vector3 pos = useSpecificPoint
-				? fixedSpawnPoints[entry.spawnPointIndex].position
-				: (_shuffleBuffer != null ? _shuffleBuffer[i % _shuffleBuffer.Length].position : transform.position);
+			// 위치+회전 모두 스폰포인트 Transform 기준. 포인트를 돌려놓으면 적도 그 방향으로 등장함.
+			// (지정 포인트는 그 하나, 랜덤은 셔플 버퍼에서 순회. 폴백은 SpawnManager 자신)
+			Transform spawnPoint = useSpecificPoint
+				? fixedSpawnPoints[entry.spawnPointIndex]
+				: (_shuffleBuffer != null ? _shuffleBuffer[i % _shuffleBuffer.Length] : transform);
+			Vector3 pos = spawnPoint.position;
+			Quaternion rot = spawnPoint.rotation;
 
 			// Master 권위 네트워크 스폰 — 모든 클라에 같은 적이 생성됨(PhotonPoolAdapter가 로컬 풀로 라우팅).
-			// prefabId = POOL_TYPE 이름(어댑터가 파싱해 풀에서 꺼냄). 위치는 Instantiate가 설정.
+			// prefabId = POOL_TYPE 이름(어댑터가 파싱해 풀에서 꺼냄). 위치/회전은 Instantiate가 설정.
 			// 적은 '룸 종속'이라 RoomObject로 만듦 — 방장이 나가도 살아남고 소유권이 새 방장에게 넘어감.
 			// 마지막 인자로 '이 적이 태어난 씬'을 같이 보냄 — 다른 씬에 있는 클라가 이걸 보고 숨김(EnemySceneVisibility).
 			// 방장의 '현재 씬'이 아니라 '스폰 시점 씬'인 이유: 방장이 스테이션으로 돌아가도 스테이지 적은 그대로 보여야 함.
 			GameObject go = PhotonNetwork.InstantiateRoomObject(
-				entry.poolType.ToString(), pos, Quaternion.identity, 0,
+				entry.poolType.ToString(), pos, rot, 0,
 				new object[] { SceneManager.GetActiveScene().name });
 			if (go == null)
 			{
@@ -218,7 +287,7 @@ public class SpawnManager : MonoBehaviourPunCallbacks, IOnEventCallback
 			{
 				// 풀 재사용 시 OnEnable이 재배치 이전에 먼저 도니, 새 위치 기준으로 순찰 앵커 갱신
 				enemy.RefreshSpawnAnchor();
-				
+
 				_waveEnemies.Add(enemy);
 			}
 			if (i < entry.count - 1 && entry.interval > 0f)
@@ -294,34 +363,19 @@ public class SpawnManager : MonoBehaviourPunCallbacks, IOnEventCallback
 	// 게스트는 스테이지에 갇힘. 그래서 이벤트로 전원에게 알리고 각자 로컬에서 StageClear()를 실행함.
 	private void BroadcastStageClear()
 	{
-		// 싱글(오프라인)이거나 룸 밖이면 그냥 로컬 처리.
-		if (!PhotonNetwork.InRoom || PhotonNetwork.OfflineMode)
-		{
-			GameManager.Instance?.StageClear();
-			return;
-		}
+		// 로컬(방장/싱글)에서 먼저 처리하고, 멀티면 남 클라에도 RPC로 전파.
+		GameManager.Instance?.StageClear();
 
-		RaiseEventOptions eventOptions = new RaiseEventOptions
+		if (PhotonNetwork.InRoom && !PhotonNetwork.OfflineMode)
 		{
-			Receivers = ReceiverGroup.All
-		};
-		PhotonNetwork.RaiseEvent(StageClearEventCode, null, eventOptions, SendOptions.SendReliable);
+			photonView.RPC(nameof(RpcStageClear), RpcTarget.Others);
+		}
 	}
 
-	public void OnEvent(EventData photonEvent)
+	// 남 클라 수신 — 방장이 클리어했으면 각자 로컬에서도 스테이지 클리어 처리.
+	[PunRPC]
+	private void RpcStageClear()
 	{
-		if (photonEvent.Code != StageClearEventCode || !PhotonNetwork.InRoom)
-		{
-			return;
-		}
-
-		// 방장이 보낸 것만 신뢰(비방장 위조 차단).
-		Photon.Realtime.Player masterClient = PhotonNetwork.MasterClient;
-		if (masterClient == null || photonEvent.Sender != masterClient.ActorNumber)
-		{
-			return;
-		}
-
 		GameManager.Instance?.StageClear();
 	}
 

@@ -90,12 +90,12 @@ public enum SOUND_TYPE
 	BGM_BATTLE,         // 우주 전투 배경음
 	BGM_1F,             // 1층 배경음
 	BGM_B2,             // 지하2층배경음
-	BGM_MAIN,			// 메인화면
+	BGM_MAIN,           // 메인화면
 	BGM_STAGE1,// 스테이지1 현재로선 배틀맵이 하나이므로 배틀맵에 사용
 	BGM_STAGE2,
-	BGM_STATION,		// 스테이션
-	BGM_GAMEOVER,		// 게임오버
-	BGM_BOSS,			// 보스전(보스 등장 시 전환)
+	BGM_STATION,        // 스테이션
+	BGM_GAMEOVER,       // 게임오버
+	BGM_BOSS,           // 보스전(보스 등장 시 전환)
 	BGM_MAP_SELECT,
 
 	//UI관련 200번대
@@ -119,13 +119,13 @@ public enum SOUND_TYPE
 	SFX_EXPLOSION,      // 미사일등 폭발음
 	SFX_CONTACTSHIP,    // 유닛끼리 부딪혔을때.
 	SFX_CONTACTGROUND,  //유닛이 행성등에 부딪혔을떄. 차후 필드명 수정할수있음
-	//SFX_LASERHIT,       //레거시 사용안함
+						//SFX_LASERHIT,       //레거시 사용안함
 	SFX_BULLETHIT_SHIELD = 406,//실드 도탄
 	SFX_EXPLOSION_SHIELD,//실드 폭발
 
 	SFX_CONTACTSHIP_SHIELD,    //유닛끼리부딪혔을때. 실드
 	SFX_CONTACTGROUND_SHIELD,  //유닛이 행성등에 부딪혔을 때, 실드
-	//SFX_LASERHIT_SHIELD,    //레거시 사용안함
+							   //SFX_LASERHIT_SHIELD,    //레거시 사용안함
 	SFX_SHIELD_DESTROY = 411,   // 실드 파괴시
 
 	//이동음 500번대
@@ -171,7 +171,7 @@ public enum SCENE_TYPE
 	STATION = 1,
 	STATION_1F,
 	STATION_B2,
-    BASE_LANDING,
+	BASE_LANDING,
 	LOADING_SEQUENCE = 20,   // ← 추가 (로딩 시퀀스 씬)
 	MULTIPLAYER = 25,   // ← 추가 (멀티 대기실 씬)
 	MAP_SELECT = 30,   // ← 추가 (맵 선택 화면)
@@ -354,6 +354,9 @@ public enum EFFECT_TYPE
 
 	VFX_SKILL_WARP_IN = 1000,
 	VFX_SKILL_WARP_OUT,
+
+	VFX_BOSS_WARP_IN = 2000,
+	VFX_BOSS_WARP_OUT,
 }
 
 

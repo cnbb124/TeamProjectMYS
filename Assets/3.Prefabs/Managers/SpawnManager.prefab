@@ -257,6 +257,37 @@ Transform:
   m_Children: []
   m_Father: {fileID: 291045029482259728}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &7641422445736006376
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 9218430356426870047}
+  m_Layer: 0
+  m_Name: EnemyBossWarpVFXPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &9218430356426870047
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7641422445736006376}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -0, y: 13.19, z: 54.3}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 4029501844511747673}
+  m_LocalEulerAnglesHint: {x: 0, y: -150.532, z: 0}
 --- !u!1 &7905178926866712344
 GameObject:
   m_ObjectHideFlags: 0
@@ -313,7 +344,7 @@ Transform:
   m_GameObject: {fileID: 8146788955822047546}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -569, y: 566, z: 1745.3}
+  m_LocalPosition: {x: 806, y: 150, z: 1262}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -374,13 +405,14 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8670764126271395164}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 1087, y: 566, z: 1627.9}
+  m_LocalRotation: {x: -0, y: -0.9671174, z: -0, w: 0.2543304}
+  m_LocalPosition: {x: 693, y: 150, z: 856}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 9218430356426870047}
   m_Father: {fileID: 1864595615566934619}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: -150.532, z: 0}
 --- !u!1 &8686961716372656570
 GameObject:
   m_ObjectHideFlags: 0
@@ -391,6 +423,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1864595615566934619}
   - component: {fileID: 6473795814811390719}
+  - component: {fileID: 630754959937073923}
   m_Layer: 0
   m_Name: SpawnManager
   m_TagString: Untagged
@@ -444,3 +477,28 @@ MonoBehaviour:
   - {fileID: 968380817365384350}
   - {fileID: 4029501844511747673}
   bossWave: {fileID: 11400000, guid: 6bb3e43bc363e8847963fe3b754999a0, type: 2}
+  _bossWarpSequenceTime: 3.2
+  _bossWarpSequenceScale: 4
+  _bossWarpVFXPoint: {fileID: 9218430356426870047}
+--- !u!114 &630754959937073923
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8686961716372656570}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aa584fbee541324448dd18d8409c7a41, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ObservedComponentsFoldoutOpen: 1
+  Group: 0
+  prefixField: -1
+  Synchronization: 3
+  OwnershipTransfer: 0
+  observableSearch: 2
+  ObservedComponents: []
+  sceneViewId: 0
+  InstantiationId: 0
+  isRuntimeInstantiated: 0

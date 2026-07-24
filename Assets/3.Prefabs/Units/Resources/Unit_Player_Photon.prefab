@@ -65,10 +65,10 @@ MonoBehaviour:
   _blocksBeam: 0
   weaponSystem: {fileID: 0}
   skillSystem: {fileID: 0}
-  maxHpRemaining: 9999
-  maxShieldCapacity: 500
+  maxHpRemaining: 700
+  maxShieldCapacity: 700
   shieldRegainDelay: 3
-  shieldRegainRate: 6
+  shieldRegainRate: 15
   isShieldRegaining: 0
   shield: {fileID: 8632861264470973050}
   bodyHitboxRoot: {fileID: 2330727422614379468}
@@ -91,11 +91,11 @@ MonoBehaviour:
   timeToStop: 1.5
   brakeEnterSpeedRatio: 0.65
   brakeExitSpeedRatio: 0.2
-  maxBoostCapacity: 75
+  maxBoostCapacity: 125
   minBoostRequired: 10
   boostConsumeAmont: 25
   boostRegainDelay: 1
-  boostRegainRate: 10
+  boostRegainRate: 25
   dodgeDuration: 0.5
   dodgeInvincibleTime: 0.4
   dodgeCoolTime: 2
@@ -140,7 +140,7 @@ MonoBehaviour:
   autoDetectFirePositions: 0
   _fixedBulletFirePositions: []
   _fixedMissileFirePositions: []
-  missileFireCooldown: 3.5
+  missileFireCooldown: 2.5
   missileSlots:
   - type: 0
     curAmmo: 999

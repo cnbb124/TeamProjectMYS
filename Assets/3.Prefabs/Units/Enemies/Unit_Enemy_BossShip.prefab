@@ -1125,15 +1125,15 @@ MonoBehaviour:
   _blocksBeam: 1
   weaponSystem: {fileID: 0}
   skillSystem: {fileID: 0}
-  maxHpRemaining: 2500
-  maxShieldCapacity: 2500
+  maxHpRemaining: 3500
+  maxShieldCapacity: 3500
   shieldRegainDelay: 5
   shieldRegainRate: 50
   isShieldRegaining: 0
   shield: {fileID: 6187219848671499612}
   bodyHitboxRoot: {fileID: 8742674730217107654}
-  maxArmor: 500
-  defense: 10
+  maxArmor: 2500
+  defense: 9
   criChance: 0
   criDamageMultiplier: 0
   _deathSequenceDuration: 4
@@ -1167,7 +1167,7 @@ MonoBehaviour:
   goldRewardMax: 3000
   dropPoolTypes: ca000000cb000000cc000000
   dropChance: 1
-  detectRange: 1500
+  detectRange: 4000
   rotateSpeed: 10
   rotateDeadZone: 80
   aiState: 0
@@ -4981,6 +4981,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Turret_DUAL_MYS (1)
       objectReference: {fileID: 0}
+    - target: {fileID: 8780441365474338247, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
+      propertyPath: maxHpRemaining
+      value: 350
+      objectReference: {fileID: 0}
     - target: {fileID: 8950724485814838234, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
       propertyPath: sceneViewId
       value: 0
@@ -5053,7 +5057,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1114227042205976223, guid: 3852953e2c130a541be790c182efb6ce, type: 3}
       propertyPath: maxHpRemaining
-      value: 200
+      value: 450
       objectReference: {fileID: 0}
     - target: {fileID: 2992633190783795959, guid: 3852953e2c130a541be790c182efb6ce, type: 3}
       propertyPath: targetLayerMask.m_Bits
@@ -5136,6 +5140,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Turret_DUAL_MYS (3)
       objectReference: {fileID: 0}
+    - target: {fileID: 8780441365474338247, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
+      propertyPath: maxHpRemaining
+      value: 350
+      objectReference: {fileID: 0}
     - target: {fileID: 8950724485814838234, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
       propertyPath: sceneViewId
       value: 0
@@ -5210,6 +5218,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Turret Mortar_Bottom_B
       objectReference: {fileID: 0}
+    - target: {fileID: 7121861940838594819, guid: c14dacbee11a78a42863baa6844d78b2, type: 3}
+      propertyPath: maxHpRemaining
+      value: 700
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -5283,6 +5295,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Turret_DUAL_MYS (7)
       objectReference: {fileID: 0}
+    - target: {fileID: 8780441365474338247, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
+      propertyPath: maxHpRemaining
+      value: 350
+      objectReference: {fileID: 0}
     - target: {fileID: 8950724485814838234, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
       propertyPath: sceneViewId
       value: 0
@@ -5348,6 +5364,10 @@ PrefabInstance:
     - target: {fileID: 6706981218406096366, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
       propertyPath: m_Name
       value: Turret_DUAL_MYS (8)
+      objectReference: {fileID: 0}
+    - target: {fileID: 8780441365474338247, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
+      propertyPath: maxHpRemaining
+      value: 350
       objectReference: {fileID: 0}
     - target: {fileID: 8950724485814838234, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
       propertyPath: sceneViewId
@@ -5418,6 +5438,10 @@ PrefabInstance:
     - target: {fileID: 744303783143235472, guid: 3852953e2c130a541be790c182efb6ce, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1114227042205976223, guid: 3852953e2c130a541be790c182efb6ce, type: 3}
+      propertyPath: maxHpRemaining
+      value: 450
       objectReference: {fileID: 0}
     - target: {fileID: 2992633190783795959, guid: 3852953e2c130a541be790c182efb6ce, type: 3}
       propertyPath: targetLayerMask.m_Bits
@@ -5504,6 +5528,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Turret Mortar_Bottom_C
       objectReference: {fileID: 0}
+    - target: {fileID: 7121861940838594819, guid: c14dacbee11a78a42863baa6844d78b2, type: 3}
+      propertyPath: maxHpRemaining
+      value: 700
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -5580,6 +5608,10 @@ PrefabInstance:
     - target: {fileID: 744303783143235472, guid: 3852953e2c130a541be790c182efb6ce, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1114227042205976223, guid: 3852953e2c130a541be790c182efb6ce, type: 3}
+      propertyPath: maxHpRemaining
+      value: 450
       objectReference: {fileID: 0}
     - target: {fileID: 2992633190783795959, guid: 3852953e2c130a541be790c182efb6ce, type: 3}
       propertyPath: targetLayerMask.m_Bits
@@ -5666,6 +5698,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 1114227042205976223, guid: 3852953e2c130a541be790c182efb6ce, type: 3}
+      propertyPath: maxHpRemaining
+      value: 450
+      objectReference: {fileID: 0}
     - target: {fileID: 2992633190783795959, guid: 3852953e2c130a541be790c182efb6ce, type: 3}
       propertyPath: targetLayerMask.m_Bits
       value: 4096
@@ -5751,6 +5787,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Turret Mortar_Bottom_F
       objectReference: {fileID: 0}
+    - target: {fileID: 7121861940838594819, guid: c14dacbee11a78a42863baa6844d78b2, type: 3}
+      propertyPath: maxHpRemaining
+      value: 700
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -5827,6 +5867,10 @@ PrefabInstance:
     - target: {fileID: 744303783143235472, guid: 3852953e2c130a541be790c182efb6ce, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1114227042205976223, guid: 3852953e2c130a541be790c182efb6ce, type: 3}
+      propertyPath: maxHpRemaining
+      value: 450
       objectReference: {fileID: 0}
     - target: {fileID: 2992633190783795959, guid: 3852953e2c130a541be790c182efb6ce, type: 3}
       propertyPath: targetLayerMask.m_Bits
@@ -5908,6 +5952,10 @@ PrefabInstance:
     - target: {fileID: 6706981218406096366, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
       propertyPath: m_Name
       value: Turret_DUAL_MYS (4)
+      objectReference: {fileID: 0}
+    - target: {fileID: 8780441365474338247, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
+      propertyPath: maxHpRemaining
+      value: 350
       objectReference: {fileID: 0}
     - target: {fileID: 8950724485814838234, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
       propertyPath: sceneViewId
@@ -6097,6 +6145,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Turret_DUAL_MYS
       objectReference: {fileID: 0}
+    - target: {fileID: 8780441365474338247, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
+      propertyPath: maxHpRemaining
+      value: 350
+      objectReference: {fileID: 0}
     - target: {fileID: 8950724485814838234, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
       propertyPath: sceneViewId
       value: 0
@@ -6166,6 +6218,10 @@ PrefabInstance:
     - target: {fileID: 744303783143235472, guid: 3852953e2c130a541be790c182efb6ce, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1114227042205976223, guid: 3852953e2c130a541be790c182efb6ce, type: 3}
+      propertyPath: maxHpRemaining
+      value: 450
       objectReference: {fileID: 0}
     - target: {fileID: 2992633190783795959, guid: 3852953e2c130a541be790c182efb6ce, type: 3}
       propertyPath: targetLayerMask.m_Bits
@@ -6252,6 +6308,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 1114227042205976223, guid: 3852953e2c130a541be790c182efb6ce, type: 3}
+      propertyPath: maxHpRemaining
+      value: 450
+      objectReference: {fileID: 0}
     - target: {fileID: 2992633190783795959, guid: 3852953e2c130a541be790c182efb6ce, type: 3}
       propertyPath: targetLayerMask.m_Bits
       value: 4096
@@ -6337,6 +6397,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 1114227042205976223, guid: 3852953e2c130a541be790c182efb6ce, type: 3}
+      propertyPath: maxHpRemaining
+      value: 450
+      objectReference: {fileID: 0}
     - target: {fileID: 2992633190783795959, guid: 3852953e2c130a541be790c182efb6ce, type: 3}
       propertyPath: targetLayerMask.m_Bits
       value: 4096
@@ -6418,6 +6482,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Turret Mortar_Top
       objectReference: {fileID: 0}
+    - target: {fileID: 7121861940838594819, guid: c14dacbee11a78a42863baa6844d78b2, type: 3}
+      propertyPath: maxHpRemaining
+      value: 700
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -6494,6 +6562,10 @@ PrefabInstance:
     - target: {fileID: 744303783143235472, guid: 3852953e2c130a541be790c182efb6ce, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1114227042205976223, guid: 3852953e2c130a541be790c182efb6ce, type: 3}
+      propertyPath: maxHpRemaining
+      value: 450
       objectReference: {fileID: 0}
     - target: {fileID: 7123669119416055179, guid: 3852953e2c130a541be790c182efb6ce, type: 3}
       propertyPath: m_Name
@@ -6572,6 +6644,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Turret_DUAL_MYS (5)
       objectReference: {fileID: 0}
+    - target: {fileID: 8780441365474338247, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
+      propertyPath: maxHpRemaining
+      value: 350
+      objectReference: {fileID: 0}
     - target: {fileID: 8950724485814838234, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
       propertyPath: sceneViewId
       value: 0
@@ -6641,6 +6717,10 @@ PrefabInstance:
     - target: {fileID: 744303783143235472, guid: 3852953e2c130a541be790c182efb6ce, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1114227042205976223, guid: 3852953e2c130a541be790c182efb6ce, type: 3}
+      propertyPath: maxHpRemaining
+      value: 450
       objectReference: {fileID: 0}
     - target: {fileID: 2992633190783795959, guid: 3852953e2c130a541be790c182efb6ce, type: 3}
       propertyPath: targetLayerMask.m_Bits
@@ -6722,6 +6802,10 @@ PrefabInstance:
     - target: {fileID: 6706981218406096366, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
       propertyPath: m_Name
       value: Turret_DUAL_MYS (2)
+      objectReference: {fileID: 0}
+    - target: {fileID: 8780441365474338247, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
+      propertyPath: maxHpRemaining
+      value: 350
       objectReference: {fileID: 0}
     - target: {fileID: 8950724485814838234, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
       propertyPath: sceneViewId
