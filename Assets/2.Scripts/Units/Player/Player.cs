@@ -1014,6 +1014,29 @@ public class Player : Unit
 			LevelUp();
 	}
 
+	//
+	// 킬 보상 수령 — 경험치/골드를 이 클라 로컬 스탯에 지급.
+	// 골드(InventoryManager)도 클라마다 로컬이라, 죽인 사람 클라에서만 호출되면 플레이어별로 귀속됨.
+	// 호출: GameManager.GiveRewardToPlayer(로컬 킬) / RpcReceiveKillReward(원격 킬).
+	//
+	public void ReceiveKillReward(int expAmount, int goldAmount)
+	{
+		GainExp(expAmount);
+		if (InventoryManager.Instance != null)
+		{
+			InventoryManager.Instance.gold += goldAmount;
+		}
+	}
+
+	//
+	// 원격 킬 보상 수신 — 적 소유자(방장)가 killer 소유 클라 한 곳으로만 보냄(GameManager.GiveRewardToPlayer).
+	//
+	[PunRPC]
+	public void RpcReceiveKillReward(int expAmount, int goldAmount)
+	{
+		ReceiveKillReward(expAmount, goldAmount);
+	}
+
 	// 
 	// 레벨업 처리.
 	// 경험치 초과분 이월, 레벨 증가, 다음 레벨 필요 경험치 갱신.

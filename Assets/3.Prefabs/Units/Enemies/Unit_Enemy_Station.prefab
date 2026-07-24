@@ -2265,15 +2265,15 @@ MonoBehaviour:
   _blocksBeam: 1
   weaponSystem: {fileID: 0}
   skillSystem: {fileID: 0}
-  maxHpRemaining: 1500
+  maxHpRemaining: 500
   maxShieldCapacity: 3500
   shieldRegainDelay: 5
   shieldRegainRate: 60
   isShieldRegaining: 0
   shield: {fileID: 6820784898341458894}
   bodyHitboxRoot: {fileID: 4852240861460760997}
-  maxArmor: 1500
-  defense: 6
+  maxArmor: 500
+  defense: 4
   criChance: 0
   criDamageMultiplier: 0
   _deathSequenceDuration: 1.5
@@ -2352,6 +2352,7 @@ MonoBehaviour:
   - {fileID: 8952559385702762418}
   - {fileID: 6343616621247048405}
   - {fileID: 802751515135141515}
+  - {fileID: 3115615609104146884}
   sceneViewId: 0
   InstantiationId: 0
   isRuntimeInstantiated: 0
@@ -2747,7 +2748,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8780441365474338247, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
       propertyPath: maxHpRemaining
-      value: 700
+      value: 850
       objectReference: {fileID: 0}
     - target: {fileID: 8950724485814838234, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
       propertyPath: sceneViewId
@@ -2829,7 +2830,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8780441365474338247, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
       propertyPath: maxHpRemaining
-      value: 700
+      value: 850
       objectReference: {fileID: 0}
     - target: {fileID: 8950724485814838234, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
       propertyPath: sceneViewId
@@ -2911,7 +2912,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8780441365474338247, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
       propertyPath: maxHpRemaining
-      value: 700
+      value: 850
       objectReference: {fileID: 0}
     - target: {fileID: 8950724485814838234, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
       propertyPath: sceneViewId
@@ -3319,7 +3320,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8780441365474338247, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
       propertyPath: maxHpRemaining
-      value: 700
+      value: 850
       objectReference: {fileID: 0}
     - target: {fileID: 8950724485814838234, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
       propertyPath: sceneViewId
@@ -3528,7 +3529,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8780441365474338247, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
       propertyPath: maxHpRemaining
-      value: 700
+      value: 850
       objectReference: {fileID: 0}
     - target: {fileID: 8950724485814838234, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
       propertyPath: sceneViewId
@@ -3610,7 +3611,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8780441365474338247, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
       propertyPath: maxHpRemaining
-      value: 700
+      value: 850
       objectReference: {fileID: 0}
     - target: {fileID: 8950724485814838234, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
       propertyPath: sceneViewId
@@ -3692,7 +3693,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8780441365474338247, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
       propertyPath: maxHpRemaining
-      value: 700
+      value: 850
       objectReference: {fileID: 0}
     - target: {fileID: 8950724485814838234, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
       propertyPath: sceneViewId
@@ -3774,7 +3775,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8780441365474338247, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
       propertyPath: maxHpRemaining
-      value: 700
+      value: 850
       objectReference: {fileID: 0}
     - target: {fileID: 8950724485814838234, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
       propertyPath: sceneViewId
@@ -3856,7 +3857,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8780441365474338247, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
       propertyPath: maxHpRemaining
-      value: 700
+      value: 850
       objectReference: {fileID: 0}
     - target: {fileID: 8950724485814838234, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
       propertyPath: sceneViewId
@@ -3965,6 +3966,17 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: c14dacbee11a78a42863baa6844d78b2, type: 3}
+--- !u!114 &3115615609104146884 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 7121861940838594819, guid: c14dacbee11a78a42863baa6844d78b2, type: 3}
+  m_PrefabInstance: {fileID: 5325801572454521031}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e9e6ea5e11016074ab3bc72b55db0b5f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!4 &6156628782782860110 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 2060872996136522633, guid: c14dacbee11a78a42863baa6844d78b2, type: 3}
@@ -4036,7 +4048,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8780441365474338247, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
       propertyPath: maxHpRemaining
-      value: 700
+      value: 850
       objectReference: {fileID: 0}
     - target: {fileID: 8950724485814838234, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
       propertyPath: sceneViewId
@@ -4118,7 +4130,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8780441365474338247, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
       propertyPath: maxHpRemaining
-      value: 700
+      value: 850
       objectReference: {fileID: 0}
     - target: {fileID: 8950724485814838234, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
       propertyPath: sceneViewId
@@ -4200,7 +4212,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8780441365474338247, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
       propertyPath: maxHpRemaining
-      value: 700
+      value: 850
       objectReference: {fileID: 0}
     - target: {fileID: 8950724485814838234, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
       propertyPath: sceneViewId
@@ -4282,7 +4294,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8780441365474338247, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
       propertyPath: maxHpRemaining
-      value: 700
+      value: 850
       objectReference: {fileID: 0}
     - target: {fileID: 8950724485814838234, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
       propertyPath: sceneViewId
@@ -4364,7 +4376,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8780441365474338247, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
       propertyPath: maxHpRemaining
-      value: 700
+      value: 850
       objectReference: {fileID: 0}
     - target: {fileID: 8950724485814838234, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
       propertyPath: sceneViewId
@@ -4446,7 +4458,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8780441365474338247, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
       propertyPath: maxHpRemaining
-      value: 700
+      value: 850
       objectReference: {fileID: 0}
     - target: {fileID: 8950724485814838234, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
       propertyPath: sceneViewId
@@ -4637,7 +4649,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8780441365474338247, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
       propertyPath: maxHpRemaining
-      value: 700
+      value: 850
       objectReference: {fileID: 0}
     - target: {fileID: 8950724485814838234, guid: 257c542916d85aa44abb0ae396c75c5d, type: 3}
       propertyPath: sceneViewId

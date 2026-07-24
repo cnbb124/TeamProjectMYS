@@ -499,14 +499,14 @@ MonoBehaviour:
   _blocksBeam: 0
   weaponSystem: {fileID: 0}
   skillSystem: {fileID: 0}
-  maxHpRemaining: 35
-  maxShieldCapacity: 25
+  maxHpRemaining: 25
+  maxShieldCapacity: 15
   shieldRegainDelay: 3
   shieldRegainRate: 6
   isShieldRegaining: 0
   shield: {fileID: 5387513345644067634}
   bodyHitboxRoot: {fileID: 2491442456591101992}
-  maxArmor: 10
+  maxArmor: 5
   defense: 1
   criChance: 20
   criDamageMultiplier: 1.2
@@ -518,9 +518,9 @@ MonoBehaviour:
   curSpeed: 0
   curBoostRemaining: 0
   _playSoundType: 0
-  baseMoveSpeed: 100
-  boostSpeed: 140
-  maxSpeed: 140
+  baseMoveSpeed: 110
+  boostSpeed: 150
+  maxSpeed: 150
   timeToMaxSpeed: 0.4
   timeToStop: 0.4
   brakeEnterSpeedRatio: 0.65
@@ -535,12 +535,12 @@ MonoBehaviour:
   dodgeCoolTime: 5
   dodgeDistance: 40
   speedMultiPlier: 0
-  expRewardMin: 3
-  expRewardMax: 7
+  expRewardMin: 5
+  expRewardMax: 10
   goldRewardMin: 100
   goldRewardMax: 150
   dropPoolTypes: ca000000cb000000cc000000
-  dropChance: 0.15
+  dropChance: 0.2
   detectRange: 2000
   rotateSpeed: 240
   rotateDeadZone: 0
@@ -583,13 +583,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   lockOnSystem: {fileID: 3033844199734762928}
-  bulletFireCooldown: 0.15
+  bulletFireCooldown: 0.25
   curBulletData: {fileID: 11400000, guid: f24cca7fba8ef164aa78249e4e93e164, type: 2}
   _useBulletMuzzle: 1
   _useBulletSound: 1
   _useMissileMuzzle: 0
   _useMissileSound: 0
-  _bulletMuzzleFlashVFXPlayTime: 0.075
+  _bulletMuzzleFlashVFXPlayTime: 0.1
   _missileMuzzleFlashVFXPlayTime: 0.2
   bulletFireMode: 0
   missileFireMode: 0

@@ -649,8 +649,10 @@ public class GameManager : MonoBehaviourPunCallbacks
 
     /// <summary>
     /// 킬 보상을 '죽인 사람'에게 지급. killer의 Player를 찾아 경험치/골드 지급.
-    /// killer가 플레이어가 아니면(환경 사망 등) 지급 없음. 멀티 땐 killer 기준으로 각자에게 귀속됨
-    /// (단, 골드 인벤토리는 아직 전역 싱글톤이라 멀티에선 플레이어별로 분리 필요).
+    /// killer가 플레이어가 아니면(환경 사망 등) 지급 없음.
+    /// 멀티: 이 함수는 적 소유자(방장) 클라에서 실행됨 — killer가 원격 플레이어면 여기서 직접 지급하지 않고
+    /// 그 소유 클라로만 RPC 전달(여기서 원격 사본에 지급하면 방장 화면의 사본만 바뀌고 본인은 못 받음).
+    /// 경험치/골드 전부 로컬 스탯이라(InventoryManager도 클라마다 로컬) killer 클라에서만 지급하면 자연스럽게 플레이어별 귀속됨.
     /// </summary>
     private void GiveRewardToPlayer(GameObject killer, int exp, int gold)
     {
@@ -663,11 +665,14 @@ public class GameManager : MonoBehaviourPunCallbacks
         {
             return;   // 플레이어가 죽인 게 아니면 보상 없음
         }
-        player.GainExp(exp);
-        if (InventoryManager.Instance != null)
+
+        PhotonView killerView = player.GetComponent<PhotonView>();
+        if (PhotonNetwork.InRoom && killerView != null && !killerView.IsMine)
         {
-            InventoryManager.Instance.gold += gold;
+            killerView.RPC(nameof(Player.RpcReceiveKillReward), killerView.Owner, exp, gold);
+            return;
         }
+        player.ReceiveKillReward(exp, gold);
     }
 
     /// <summary>
