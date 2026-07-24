@@ -66,7 +66,7 @@ MonoBehaviour:
   weaponSystem: {fileID: 0}
   skillSystem: {fileID: 0}
   maxHpRemaining: 700
-  maxShieldCapacity: 700
+  maxShieldCapacity: 99999
   shieldRegainDelay: 3
   shieldRegainRate: 15
   isShieldRegaining: 0
@@ -147,12 +147,12 @@ MonoBehaviour:
     maxAmmo: 999
     missileData: {fileID: 11400000, guid: 2652fd978459f5a44aad1cc7fa6033a7, type: 2}
   - type: 2
-    curAmmo: 100
-    maxAmmo: 100
+    curAmmo: 20
+    maxAmmo: 40
     missileData: {fileID: 11400000, guid: 8c191d98c98221143a109045fef3cf95, type: 2}
   - type: 1
-    curAmmo: 555
-    maxAmmo: 555
+    curAmmo: 300
+    maxAmmo: 400
     missileData: {fileID: 11400000, guid: 3d552595dc550124e99acaedac3d0fde, type: 2}
   curMissileType: 0
 --- !u!114 &3086103550316328721

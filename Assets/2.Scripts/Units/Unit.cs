@@ -292,8 +292,19 @@ public abstract class Unit : MonoBehaviour, IDamageable, IPunObservable
 		_photonView = GetComponent<PhotonView>();
 
 		// 구조물 서브유닛이면 루트 유닛을 캐싱(단일 유닛/루트 자신이면 null).
-		Unit rootUnit = transform.root.GetComponent<Unit>();
-		_structureShieldRoot = (rootUnit != null && rootUnit != this) ? rootUnit : null;
+		// transform.root를 쓰면 안 됨 — 풀링 유닛은 Awake 시점에 PoolManager 자식이라(스폰돼도 안 빠짐)
+		// transform.root가 PoolManager가 돼버려 구조물 루트를 못 찾고, 결국 실드 라우팅이 통째로 깨짐.
+		// 그래서 Unit이 아닌 외부 부모(PoolManager 등)는 무시하고, 부모 체인을 직접 올라가며 '최상위 Unit'을 구조물 루트로 잡음.
+		Unit topmostUnit = this;
+		for (Transform t = transform.parent; t != null; t = t.parent)
+		{
+			Unit u = t.GetComponent<Unit>();
+			if (u != null)
+			{
+				topmostUnit = u; // 더 위쪽 Unit을 만날 때마다 갱신 → 루프 끝나면 최상위 Unit
+			}
+		}
+		_structureShieldRoot = (topmostUnit != this) ? topmostUnit : null;
 
 		if (shield != null)
 		{
@@ -881,10 +892,21 @@ public abstract class Unit : MonoBehaviour, IDamageable, IPunObservable
 		// RPC가 "Illegal view ID:0"로 실패하고 데미지까지 유실됨 — WeaponSystem.Shoot와 동일하게 InRoom 가드.
 		if (_photonView != null && !_photonView.IsMine && PhotonNetwork.InRoom)
 		{
+			// 킬 귀속용 attacker 전파 — GameObject는 RPC로 못 보내므로 ViewID로 변환해 실어 보냄(수신부에서 복원).
+			// 공격자가 PhotonView 없는 대상(환경 등)이면 0 = 귀속 없음.
+			int attackerViewId = 0;
+			if (info.attacker != null)
+			{
+				PhotonView attackerView = info.attacker.GetComponentInParent<PhotonView>();
+				if (attackerView != null)
+				{
+					attackerViewId = attackerView.ViewID;
+				}
+			}
 			_photonView.RPC(nameof(RpcTakeDamage), _photonView.Owner,
 				(int)info.type, info.damageAmount, info.isCritical, info.critMultiplier,
 				info.ignoreArmor, info.shieldDamageMultiplier, info.aoeRadius, info.hitPosition,
-				(int)info.hitVfxType, (int)info.shieldHitVfxType, (int)info.hitSoundType);
+				(int)info.hitVfxType, (int)info.shieldHitVfxType, (int)info.hitSoundType, attackerViewId);
 			return;
 		}
 		ApplyHitDamage(info);
@@ -913,14 +935,17 @@ public abstract class Unit : MonoBehaviour, IDamageable, IPunObservable
 
 	// 대상 소유자 클라에서만 실행되는 데미지 적용 RPC(위 라우터가 전송). 피격 VFX/사운드 종류도 함께 전송해
 	// 소유자 화면에서 올바른 피격 연출이 나오게 함 — 누락하면 수신부에서 enum 기본값 0(VFX_EXPLOSION_MISSILE)으로
-	// 재구성돼 총알 피격에도 폭발이 재생됨. attacker(킬 귀속)는 아직 미전송(후속).
+	// 재구성돼 총알 피격에도 폭발이 재생됨. attacker는 ViewID로 받아 복원 — 킬 귀속(_lastAttacker→킬 보상)에 쓰임.
 	// public 필수 — PUN은 실제 컴포넌트(Enemy/Player 등 파생 타입)를 리플렉션해 [PunRPC]를 찾는데,
 	// base(Unit)에 private로 선언하면 파생 타입에서 안 잡혀 "RPC method not found" 에러 남.
 	[PunRPC]
 	public void RpcTakeDamage(int type, int damageAmount, bool isCritical, float critMultiplier,
 		bool ignoreArmor, float shieldDamageMultiplier, float aoeRadius, Vector3 hitPosition,
-		int hitVfxType, int shieldHitVfxType, int hitSoundType)
+		int hitVfxType, int shieldHitVfxType, int hitSoundType, int attackerViewId)
 	{
+		// 공격자 복원 — 이미 파괴/풀반납돼 못 찾으면 null(보상 없음)로 처리됨.
+		PhotonView attackerView = attackerViewId != 0 ? PhotonView.Find(attackerViewId) : null;
+
 		HitInfo info = new HitInfo
 		{
 			type = (DAMAGE_TYPE)type,
@@ -934,6 +959,7 @@ public abstract class Unit : MonoBehaviour, IDamageable, IPunObservable
 			hitVfxType = (EFFECT_TYPE)hitVfxType,
 			shieldHitVfxType = (EFFECT_TYPE)shieldHitVfxType,
 			hitSoundType = (SOUND_TYPE)hitSoundType,
+			attacker = attackerView != null ? attackerView.gameObject : null,
 		};
 		ApplyHitDamage(info);
 	}

@@ -14677,6 +14677,7 @@ GameObject:
   m_Component:
   - component: {fileID: 99004496784879083}
   - component: {fileID: 7457836008110185495}
+  - component: {fileID: 431837073413005898}
   m_Layer: 0
   m_Name: 2.5-stage missile
   m_TagString: Untagged
@@ -14720,6 +14721,32 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _allyColor: {r: 0.1, g: 0.65, b: 1, a: 1}
   _enemyColor: {r: 1, g: 0.25, b: 0.1, a: 1}
+--- !u!114 &431837073413005898
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4740244855463430667}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4dad31fac0f7574380e5cec3d07cb39, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _mediumStartDistance: 100
+  _lowStartDistance: 150
+  _offStartDistance: 450
+  _hysteresisMargin: 20
+  _checkInterval: 0.2
+  _mediumSetting:
+    emissionMultiplier: 0.5
+    maxParticlesMultiplier: 0.5
+    rendererEnabled: 1
+  _lowSetting:
+    emissionMultiplier: 0.2
+    maxParticlesMultiplier: 0.2
+    rendererEnabled: 1
+  _stopWhenOff: 0
 --- !u!1 &6069571403545866802
 GameObject:
   m_ObjectHideFlags: 0
