@@ -24,7 +24,6 @@ public class FriendlyMarker : MonoBehaviour
 {
     [Header("표시 요소 (프리팹 안에서 연결)")]
     [SerializeField] private TMP_Text nameText;
-    [SerializeField] private TMP_Text distanceText;
 
     [Tooltip("아군을 가리키는 화살표. 없으면 비워둬도 됨")]
     [SerializeField] private Image    arrowImage;
@@ -59,13 +58,6 @@ public class FriendlyMarker : MonoBehaviour
         if (nameText == null) return;
         nameText.text = playerName;
         nameText.gameObject.SetActive(!string.IsNullOrEmpty(playerName));
-    }
-
-    /// <summary>거리 표시(m 단위 반올림).</summary>
-    public void SetDistance(float distance)
-    {
-        if (distanceText == null) return;
-        distanceText.text = $"{Mathf.RoundToInt(distance)}m";
     }
 
     /// <summary>

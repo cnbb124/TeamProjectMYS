@@ -191,7 +191,6 @@ public class FriendlyMarkerUI : MonoBehaviour
         }
 
         m.SetName(GetPlayerName(ally));
-        m.SetDistance(dist);
     }
 
     // 포톤 닉네임 우선, 없으면 "P + 액터번호"로 대체.

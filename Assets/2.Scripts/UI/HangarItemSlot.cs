@@ -14,11 +14,13 @@
  * 슬롯이 참조하는 파츠는 Data 프로퍼티로 외부에서 읽을 수 있음 (클릭 시 장착 등에 활용).
  */
 
+using System;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 using TMPro;
 
-public class HangarItemSlot : MonoBehaviour
+public class HangarItemSlot : MonoBehaviour, IPointerClickHandler
 {
     [SerializeField] private Image    icon;
     [SerializeField] private TMP_Text nameText;
@@ -26,6 +28,15 @@ public class HangarItemSlot : MonoBehaviour
 
     // 이 슬롯이 표시 중인 파츠 데이터 (클릭/장착 처리에 활용)
     public PartData Data { get; private set; }
+
+    /// <summary>슬롯 클릭 시 발행 — 담고 있는 PartData를 전달 (장착 처리용).</summary>
+    public event Action<PartData> onClicked;
+
+    // 슬롯 루트에 raycastTarget 켜진 Image가 있어야 클릭이 잡힌다(보통 배경 Image).
+    public void OnPointerClick(PointerEventData eventData)
+    {
+        if (Data != null) onClicked?.Invoke(Data);
+    }
 
     /// <summary>
     /// PartData를 받아 슬롯 한 칸을 채움.
