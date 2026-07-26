@@ -154,6 +154,10 @@ public abstract class Unit : MonoBehaviour, IDamageable, IPunObservable
 	[Tooltip("사망 애니 재생 후 정리(풀 반납 등)까지 대기 시간(초). 이 시간 동안 죽는 모션이 재생됨.")]
 	[SerializeField] protected float _deathSequenceDuration = 1.5f;
 
+	[Tooltip("사망 시 재생할 VFX. VFX_NONE이면 재생 안 함.\n" +
+			 "VFXManager 인스펙터에 해당 타입이 등록돼 있어야 함.")]
+	[SerializeField] protected EFFECT_TYPE _deathVfxType = EFFECT_TYPE.VFX_NONE;
+
 	//[HideInInspector]
 	//public Transform curFirePos;//밑에서 총구스위칭용 
 	//필요없음.
@@ -675,7 +679,14 @@ public abstract class Unit : MonoBehaviour, IDamageable, IPunObservable
 				break;
 
 			case UNIT_STATE.DIE:
-				PlayAnim(ANIM_TYPE.DIE);
+				PlayDeathFx();
+				// 사망 연출은 소유자(적=Master)에서만 트리거됨 — 데미지 판정 자체가 소유자 전용이라
+				// 비소유자는 DIE 상태에 진입하지 않고 오브젝트가 그냥 사라짐(모션·VFX 둘 다 안 보임).
+				// 그래서 "죽었다"만 알리고 연출은 각자 로컬에서 재생시킴(투사체 RpcShoot과 같은 방식).
+				if (_photonView != null && IsMine && PhotonNetwork.InRoom)
+				{
+					_photonView.RPC(nameof(RpcPlayDeathFx), RpcTarget.Others);
+				}
 				// DIE 상태 진입 시 사망 정리 1회 실행 (어느 경로로 죽든 여기로 일원화).
 				// 풀 반납 등 "즉시 하면 사망 애니가 안 보이는" 처리는 Die() 구현부에서 _deathSequenceDuration만큼 지연.
 				Die();
@@ -1146,6 +1157,33 @@ public abstract class Unit : MonoBehaviour, IDamageable, IPunObservable
 	/// 사망처리(오브젝트 풀반납, 비활성화등. 플레이어와는 다르게 처리할거기때문에 자식에서 override)
 	/// </summary>
 	protected virtual void Die() { }
+
+	// 사망 연출(죽는 모션 + VFX) 한 묶음. 소유자·비소유자가 똑같은 걸 재생해야 해서 따로 뺌.
+	protected void PlayDeathFx()
+	{
+		PlayAnim(ANIM_TYPE.DIE);
+		PlayDeathVFX();
+	}
+
+	// 비소유자 클라에서 사망 연출만 재생. 죽는 판정 자체는 소유자가 이미 했으므로 여기선 연출만 함
+	// (상태·HP를 건드리면 소유자 권위와 어긋남).
+	[PunRPC]
+	public void RpcPlayDeathFx()
+	{
+		PlayDeathFx();
+	}
+
+	// 사망 VFX 재생. DIE 상태 진입 시 1회 호출됨(OnStateEnter) — 어느 경로로 죽든 여기로 모임.
+	// 위치 고정(PlayEffectAtPosition)으로 재생함 — 유닛에 부착하면 _deathSequenceDuration 뒤 풀 반납될 때
+	// 이펙트도 같이 끌려가 사라지기 때문(폭발 VFX가 월드 고정인 것과 같은 이유).
+	protected virtual void PlayDeathVFX()
+	{
+		if (_deathVfxType == EFFECT_TYPE.VFX_NONE)
+		{
+			return;
+		}
+		VFXManager.Instance?.PlayEffectAtPosition(_deathVfxType, transform.position, Quaternion.identity);
+	}
 
 	//bool isCritical()
 	//{

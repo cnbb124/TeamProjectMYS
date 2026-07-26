@@ -97,6 +97,17 @@ public class Enemy : Unit
 	// 가지며 Master가 소유(IsMine=true)해 AI를 돌린다. 남(비Master) 클라에선 IsMine=false라 AI를 안 돌리고,
 	// 위치는 PhotonTransformView 동기화로만 갱신됨.
 
+    // 적은 공회전/가속/부스트 엔진 루프 사운드를 등록하지 않음 —
+    // 유닛당 루프 3개라 적이 늘수록 Unity의 동시재생 보이스(기본 32개) 한도를 넘겨
+    // 총소리·폭발음 같은 중요한 소리가 밀려나기 때문. 엔진음은 플레이어만 가짐.
+    protected override bool HasEngineSound
+    {
+        get
+        {
+            return false;
+        }
+    }
+
     protected override void Awake()
     {
         base.Awake();

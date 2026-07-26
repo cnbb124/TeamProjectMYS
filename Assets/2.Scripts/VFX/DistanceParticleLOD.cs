@@ -8,10 +8,12 @@ using UnityEngine;
 // 대상 ParticleSystem들이 전부 하위에 모여있는 오브젝트에 부착.
 //
 // 동작 원리:
-//   - Awake에서 하위 전체 PS의 원본 값(rateOverTime/rateOverDistance/maxParticles/렌더러 상태) 캐싱.
+//   - Awake에서 하위 전체 PS의 원본 값(rateOverTime/rateOverDistance/버스트/maxParticles/렌더러 상태) 캐싱.
 //   - 배율 적용은 항상 이 원본 기준으로 재계산 → 배율이 중첩 적용되지 않고,
 //     파티클 간 상대 비율(fire 700 : smoke 100 등)도 안 망가짐.
 //   - MinMaxCurve 4개 모드(Constant/TwoConstants/Curve/TwoCurves) 전부 대응.
+//   - 버스트("터질 때 한 방에 N개")도 같은 배율로 조절 — 폭발/머즐플래시처럼 원샷 이펙트는
+//     rateOverTime이 0이라 이게 없으면 배율을 아무리 낮춰도 전혀 안 줄어듦.
 //
 // 레벨 구성:
 //   HIGH   = 원본 그대로 (별도 설정 없음)
@@ -43,7 +45,7 @@ public class DistanceParticleLOD : MonoBehaviour
     [System.Serializable]
     public class LevelSetting
     {
-        [Tooltip("이미션 배율 — 원본 rateOverTime/rateOverDistance × 이 값")]
+        [Tooltip("이미션 배율 — 원본 rateOverTime/rateOverDistance/버스트 개수 × 이 값")]
         [Range(0f, 1f)] public float emissionMultiplier = 0.5f;
 
         [Tooltip("Max Particles 배율 — 원본 × 이 값 (최소 1 보장)")]
@@ -60,6 +62,7 @@ public class DistanceParticleLOD : MonoBehaviour
         public ParticleSystemRenderer psRenderer;
         public ParticleSystem.MinMaxCurve baseRateOverTime;
         public ParticleSystem.MinMaxCurve baseRateOverDistance;
+        public ParticleSystem.Burst[] baseBursts;   // 원본 버스트. 버스트 안 쓰는 PS면 길이 0
         public int baseMaxParticles;
         public bool baseRendererEnabled;
         public bool stoppedByLOD;   // _stopWhenOff로 이 컴포넌트가 직접 멈춘 PS만 복귀 시 재생
@@ -97,6 +100,7 @@ public class DistanceParticleLOD : MonoBehaviour
     [SerializeField] private bool _stopWhenOff = false;
 
     private ParticleCache[] _caches;
+    private ParticleSystem.Burst[] _burstScratch;   // SetBursts에 넘길 공용 버퍼(매 적용마다 할당 방지)
     private LOD_LEVEL _currentLevel = LOD_LEVEL.HIGH;
     private float _nextCheckTime;
     private bool _initialized;
@@ -106,6 +110,7 @@ public class DistanceParticleLOD : MonoBehaviour
         // 비활성 자식 포함 전체 캐싱 — 나중에 켜지는 파티클도 대상에 포함됨
         ParticleSystem[] systems = GetComponentsInChildren<ParticleSystem>(true);
         _caches = new ParticleCache[systems.Length];
+        int maxBurstCount = 0;
 
         for (int i = 0; i < systems.Length; i++)
         {
@@ -119,8 +124,22 @@ public class DistanceParticleLOD : MonoBehaviour
             cache.baseMaxParticles = ps.main.maxParticles;
             cache.baseRendererEnabled = cache.psRenderer != null && cache.psRenderer.enabled;
 
+            int burstCount = ps.emission.burstCount;
+            cache.baseBursts = new ParticleSystem.Burst[burstCount];
+            if (burstCount > 0)
+            {
+                ps.emission.GetBursts(cache.baseBursts);
+                if (burstCount > maxBurstCount)
+                {
+                    maxBurstCount = burstCount;
+                }
+            }
+
             _caches[i] = cache;
         }
+
+        // 버스트 재설정용 공용 버퍼 — 적용할 때마다 배열을 새로 만들면 GC가 발생하므로 최대 크기로 1번만 잡음
+        _burstScratch = new ParticleSystem.Burst[maxBurstCount];
 
         _initialized = true;
     }
@@ -247,6 +266,7 @@ public class DistanceParticleLOD : MonoBehaviour
         var emission = cache.ps.emission;
         emission.rateOverTime = ScaleCurve(cache.baseRateOverTime, emissionMultiplier);
         emission.rateOverDistance = ScaleCurve(cache.baseRateOverDistance, emissionMultiplier);
+        ApplyBursts(cache, emissionMultiplier);
 
         var main = cache.ps.main;
         main.maxParticles = Mathf.Max(1, Mathf.RoundToInt(cache.baseMaxParticles * maxParticlesMultiplier));
@@ -255,6 +275,29 @@ public class DistanceParticleLOD : MonoBehaviour
         {
             cache.psRenderer.enabled = cache.baseRendererEnabled && rendererOn;
         }
+    }
+
+    // 버스트 개수를 원본 × 배율로 재계산해서 적용. 시각(time)/반복(cycleCount·repeatInterval)/확률은 원본 그대로 둠.
+    // 폭발·머즐플래시 같은 원샷 이펙트는 rateOverTime이 0이고 버스트로만 뿜기 때문에 이걸 안 건드리면 LOD가 무효임.
+    // ⚠️ 버스트는 PS가 재생을 시작하는 순간 한 번에 나가므로, 이 값은 재생 전에 정해져 있어야 함
+    //    (OnEnable에서 즉시 재평가하는 이유 — 풀에서 꺼내 재생되기 전에 레벨이 확정됨).
+    private void ApplyBursts(ParticleCache cache, float multiplier)
+    {
+        int count = cache.baseBursts.Length;
+        if (count == 0)
+        {
+            return;
+        }
+
+        for (int i = 0; i < count; i++)
+        {
+            ParticleSystem.Burst burst = cache.baseBursts[i];
+            burst.count = ScaleBurstCount(burst.count, multiplier);
+            _burstScratch[i] = burst;
+        }
+
+        var emission = cache.ps.emission;
+        emission.SetBursts(_burstScratch, count);
     }
 
     private void ApplyOff(ParticleCache cache)
@@ -278,6 +321,39 @@ public class DistanceParticleLOD : MonoBehaviour
             cache.stoppedByLOD = false;
             cache.ps.Play(false);
         }
+    }
+
+    // 버스트 개수 전용 배율 — 배율이 0보다 크면 최소 1개는 남김(원본이 1개 이상일 때).
+    // 안 그러면 3개짜리 작은 버스트가 LOW(0.2배)에서 0.6 → 0이 돼 그 파티클만 통째로 사라져 이펙트가 어색해짐.
+    // maxParticles에 Mathf.Max(1, ...)을 두는 것과 같은 취지.
+    private static ParticleSystem.MinMaxCurve ScaleBurstCount(ParticleSystem.MinMaxCurve original, float multiplier)
+    {
+        ParticleSystem.MinMaxCurve scaled = ScaleCurve(original, multiplier);
+
+        // OFF(배율 0)는 진짜로 0개여야 하므로 하한을 적용하지 않음
+        if (multiplier <= 0f)
+        {
+            return scaled;
+        }
+
+        switch (original.mode)
+        {
+            case ParticleSystemCurveMode.Constant:
+                if (original.constant >= 1f && scaled.constant < 1f)
+                {
+                    scaled.constant = 1f;
+                }
+                break;
+
+            case ParticleSystemCurveMode.TwoConstants:
+                if (original.constantMax >= 1f && scaled.constantMax < 1f)
+                {
+                    scaled.constantMax = 1f;
+                }
+                break;
+        }
+
+        return scaled;
     }
 
     // MinMaxCurve 모드별 배율 적용 — 원본 struct 복사본에 배율만 반영 (곡선 에셋 자체는 공유, 수정 안 함)
