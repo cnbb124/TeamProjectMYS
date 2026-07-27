@@ -114,15 +114,26 @@ public class Player : Unit
 	[Header("")]
 	[Space(10)]
 	[Header("<size=22>플레이어 설정<size>")]
-	[Header("마우스 감도")]
-	[Tooltip("마우스 좌우 회전(Yaw) 감도")]
-	public float xSensitivity = 120f;
+	// 마우스 예민도(조종간이 얼마나 쉽게 기울어지나)는 InputManager 소관 — 여기 값들은 장치와 무관한
+	// 기체 자체의 선회 성능임. 패드로 조종해도 똑같이 적용됨.
+	[Header("기체 선회 성능")]
+	[Tooltip("좌우 선회(Yaw) 최고 속도(도/초). 조종간을 최대로 꺾었을 때의 회전 속도임.")]
+	public float yawSpeed = 120f;
 
-	[Tooltip("마우스 상하 회전(Pitch) 감도")]
-	public float ySensitivity = 120f;
+	[Tooltip("상하 선회(Pitch) 최고 속도(도/초).")]
+	public float pitchSpeed = 120f;
 
-	[Tooltip("Q/E 롤(Z축 회전) 감도")]
-	public float rollSensitivity = 120f;
+	[Tooltip("Q/E 롤(Z축 회전) 최고 속도(도/초).")]
+	public float rollSpeed = 120f;
+
+	[Tooltip("조종간을 최대로 꺾었을 때 최고 회전속도에 도달하기까지 걸리는 시간(초).\n" +
+			 "기체 관성에 해당함 — 클수록 묵직하게 늦게 돌기 시작하고, 되돌릴 때도 서서히 멈춤.\n" +
+			 "0.4~0.8 권장. 0이면 예전처럼 즉시 최고속도로 돎.")]
+	public float timeToMaxTurn = 0.5f;
+
+	// 현재 각속도(도/초). x=Pitch  y=Yaw  z=Roll
+	// 조종간 기울기는 '목표' 각속도일 뿐이고, 실제 회전은 이 값이 목표를 따라잡으면서 일어남.
+	private Vector3 _angularVelocity;
 
 
 	// ==================플레이어용==================
@@ -296,6 +307,7 @@ public class Player : Unit
 		{
 			CurState = UNIT_STATE.DODGE;
 		}
+
 	}
 
 	protected override void FixedUpdate()
@@ -315,13 +327,17 @@ public class Player : Unit
 			return;
 		}
 
+		// 회전은 반드시 여기(FixedUpdate)에서 — Rigidbody Interpolate가 매 프레임 트랜스폼을 보간값으로
+		// 덮어쓰기 때문에, Update에서 transform.Rotate로 직접 돌리면 그 결과가 지워졌다 다시 더해지길
+		// 반복하며 심하게 떨림. 물리 동기화 직전인 여기서 돌려야 충돌이 없음.
 		//항상 회전이먼저!!!
 		RotateByInput();
 		MovingByInput();
+
+		// 파티클 온오프는 50Hz면 충분하고 눈에 차이가 없음 — 매 프레임 돌릴 이유가 없어 여기 둠.
 		UpdateBoostEffect();
 		UpdateRcsEffect();
 		UpdateReverseInputEffect();
-
 	}
 
 
@@ -537,8 +553,13 @@ public class Player : Unit
 	// ==================회전 (FixedUpdate에서 호출)==================
 
 
-	// 마우스/키보드 입력으로 오브젝트 자체를 3축 회전.
+	// 조종간 입력으로 오브젝트 자체를 3축 회전.
 	// Rigidbody.freezeRotation = true이므로 transform.Rotate 직접 사용.
+	//
+	// lookInput은 '조종간을 얼마나 기울였나'(-1~1)임 — 마우스 이동량이 아님.
+	// 마우스는 InputManager가 델타를 누적해 가상 조종간 위치로 바꿔서 넘겨주고, 패드 스틱은 원래 그 값이라
+	// 여기서는 장치를 구분할 필요가 없음. 기울인 만큼의 속도로 계속 회전하고, 중앙으로 되돌려야 멈춤.
+	// 그래서 yawSpeed/pitchSpeed는 '최대로 기울였을 때의 회전 속도(도/초)' 의미가 됨.
 	//
 	// Yaw  (Y축): 마우스 X → 좌우 회전. Space.World 기준
 	// Pitch(X축): 마우스 Y → 상하 회전. Space.Self 기준
@@ -552,15 +573,26 @@ public class Player : Unit
 
 	private void RotateByInput()
 	{
-		float yaw = _input.lookInput.x * xSensitivity * Time.fixedDeltaTime;
-		float pitch = -_input.lookInput.y * ySensitivity * Time.fixedDeltaTime;
+		float dt = Time.fixedDeltaTime;
+
+		// 조종간 기울기 → '목표' 각속도(도/초). 최대로 꺾으면 감도값이 그대로 최고 회전속도가 됨.
+		float targetYaw = _input.lookInput.x * yawSpeed;
+		float targetPitch = -_input.lookInput.y * pitchSpeed;
 		// lookInput.y 반전: 마우스 위로 올리면 기수가 올라가야 하므로
-		float roll = -_input.rollInput * rollSensitivity * Time.fixedDeltaTime;
+		float targetRoll = -_input.rollInput * rollSpeed;
 		// rollInput 반전: E키 눌렀을 때 오른쪽으로 기우는 방향
 
-		transform.Rotate(transform.up, yaw, Space.World);
-		transform.Rotate(Vector3.right, pitch, Space.Self);
-		transform.Rotate(Vector3.forward, roll, Space.Self);
+		// 기체 관성 — 조종간을 꺾어도 기수가 즉시 안 돌고 목표 속도까지 서서히 붙음.
+		// 조종간을 중앙으로 되돌리면 목표가 0이 되어 같은 비율로 서서히 멈춤(관성으로 지나치지 않음).
+		// 축마다 최고 속도가 달라서, 전부 timeToMaxTurn 안에 자기 최고치에 닿도록 축별로 가속도를 나눠 냄.
+		float ramp = Mathf.Max(0.01f, timeToMaxTurn);
+		_angularVelocity.y = Mathf.MoveTowards(_angularVelocity.y, targetYaw, (yawSpeed / ramp) * dt);
+		_angularVelocity.x = Mathf.MoveTowards(_angularVelocity.x, targetPitch, (pitchSpeed / ramp) * dt);
+		_angularVelocity.z = Mathf.MoveTowards(_angularVelocity.z, targetRoll, (rollSpeed / ramp) * dt);
+
+		transform.Rotate(transform.up, _angularVelocity.y * dt, Space.World);
+		transform.Rotate(Vector3.right, _angularVelocity.x * dt, Space.Self);
+		transform.Rotate(Vector3.forward, _angularVelocity.z * dt, Space.Self);
 	}
 
 
@@ -865,15 +897,67 @@ public class Player : Unit
 		return list.ToArray();
 	}
 
+	// RCS 입력 방향 캐시(-1/0/+1). 값이 안 바뀌면 파티클을 다시 훑지 않기 위함.
+	// RcsCacheInvalid는 "캐시를 믿을 수 없음" 표식 — 닷지/브레이크가 파티클을 직접 갈아치운 뒤에 씀.
+	private const int RcsCacheInvalid = -99;
+	private int _lastRcsRoll = RcsCacheInvalid;
+	private int _lastRcsStrafe = RcsCacheInvalid;
+
+	// RCS 파티클 전부 정지. 사망 처리처럼 입력과 무관하게 싹 꺼야 할 때 씀.
+	private void StopAllRcs()
+	{
+		if (_rcsRoll != null)
+		{
+			foreach (var arr in _rcsRoll)
+			{
+				StopAll(arr);
+			}
+		}
+		StopAll(_strafeL);
+		StopAll(_strafeR);
+	}
+
 	// 롤 입력(Q/E)에 따라 대각 RCS 루프 재생·정지
 	// E(우롤): 우측 날개 위 + 좌측 날개 아래 → 기체 우측으로 기울어짐
 	// Q(좌롤): 우측 날개 아래 + 좌측 날개 위 → 기체 좌측으로 기울어짐
 	private void UpdateRcsEffect()
 	{
+		// 죽으면 분사가 남아있으면 안 되므로 전부 끄고 종료. 캐시도 초기화해서 부활 시 다시 적용되게 함.
+		if (CurState == UNIT_STATE.DIE)
+		{
+			if (_lastRcsRoll != 0 || _lastRcsStrafe != 0)
+			{
+				StopAllRcs();
+				_lastRcsRoll = 0;
+				_lastRcsStrafe = 0;
+			}
+			return;
+		}
+
 		// 닷지 중 Roll RCS, 브레이크 중 Strafe RCS는 각각 OnStateEnter/OnStateExit에서 전담 처리 — 여기서 건드리면 충돌남
-		if (curState == UNIT_STATE.DODGE || curState == UNIT_STATE.BRAKE) return;
+		if (curState == UNIT_STATE.DODGE || curState == UNIT_STATE.BRAKE)
+		{
+			// 그 상태들이 파티클을 직접 갈아치우므로, 빠져나온 뒤엔 캐시가 실제 상태와 다름 →
+			// 무효화해둬야 다음 프레임에 입력대로 다시 세팅됨(안 하면 같은 입력이라고 판단해 건너뜀).
+			_lastRcsRoll = RcsCacheInvalid;
+			_lastRcsStrafe = RcsCacheInvalid;
+			return;
+		}
 
 		float roll = _input.rollInput;
+		float strafeInput = _input.moveInput.x;
+
+		// 입력을 -1/0/+1 방향으로만 압축해서 비교 — 값이 그대로면 파티클도 그대로라 훑을 필요가 없음.
+		// (Play/Stop 호출 자체는 싸지만 배열 6~8개를 매번 순회하는 게 낭비라 가드로 막음)
+		int rollDir = roll > 0.01f ? 1 : (roll < -0.01f ? -1 : 0);
+		int strafeDir = strafeInput > 0.01f ? 1 : (strafeInput < -0.01f ? -1 : 0);
+
+		if (rollDir == _lastRcsRoll && strafeDir == _lastRcsStrafe)
+		{
+			return;
+		}
+		_lastRcsRoll = rollDir;
+		_lastRcsStrafe = strafeDir;
 
 		if (roll > 0.01f)       // E키 → 우측 롤
 		{
@@ -891,7 +975,7 @@ public class Player : Unit
 		}
 
 		// 측면 이동(Strafe) 분사 — A키(좌측, x<0) → 우측(R) 분사, D키(우측, x>0) → 좌측(L) 분사
-		float strafe = _input.moveInput.x;
+		float strafe = strafeInput;
 		if (strafe < -0.01f)        // A키 → 우측 분사
 		{
 			PlayAllIfStopped(_strafeR);
@@ -1035,6 +1119,70 @@ public class Player : Unit
 	public void RpcReceiveKillReward(int expAmount, int goldAmount)
 	{
 		ReceiveKillReward(expAmount, goldAmount);
+	}
+
+	//
+	// 적 처치 드랍 아이템 수신. 호출: GameManager.GiveItemDropToKiller(로컬 킬) / RpcReceiveItemDrops(원격 킬).
+	//
+	// 월드에 픽업이 스폰되는 게 아니라, 여기서 내 로컬 풀에서 연출용 오브젝트를 꺼내 나에게 날린다.
+	// 다른 클라에는 이 오브젝트가 존재하지 않는다(연출이라 동기화 불필요).
+	// 실제 인벤토리 지급은 연출이 도착하는 시점에 ItemPickupVisual이 처리한다 —
+	// 숫자가 먼저 오르고 아이콘이 나중에 도착하면 연출이 겉돌기 때문.
+	//
+	// <param name="poolTypes">드랍 픽업 프리팹의 풀 타입 목록(POOL_TYPE을 int로 받음 — RPC가 enum을 못 보냄)</param>
+	// <param name="center">연출이 출발할 중심 위치(적이 죽은 자리)</param>
+	// <param name="spreadRadius">출발 지점을 흩뿌릴 반경</param>
+	//
+	public void ReceiveItemDrops(int[] poolTypes, Vector3 center, float spreadRadius)
+	{
+		if (poolTypes == null || PoolManager.Instance == null)
+		{
+			return;
+		}
+
+		for (int i = 0; i < poolTypes.Length; i++)
+		{
+			// 흩뿌릴 좌표는 각 클라가 알아서 뽑음 — 이 오브젝트는 내 화면에만 있는 연출이라 동기화가 필요 없음
+			SpawnItemDropVisual((POOL_TYPE)poolTypes[i], center + Random.insideUnitSphere * spreadRadius);
+		}
+	}
+
+	// 드랍 1개분 연출 오브젝트를 로컬 풀에서 꺼내 나에게 날림.
+	private void SpawnItemDropVisual(POOL_TYPE dropType, Vector3 dropPos)
+	{
+		GameObject obj = PoolManager.Instance.Get(dropType);
+		if (obj == null)
+		{
+			return;   // 풀 없음 경고는 PoolManager가 이미 냄
+		}
+
+		obj.transform.SetPositionAndRotation(dropPos, Quaternion.identity);
+
+		ItemPickupVisual visual = obj.GetComponent<ItemPickupVisual>();
+		if (visual != null)
+		{
+			visual.StartChase(transform);
+			return;
+		}
+
+		// 연출 컴포넌트가 아직 안 붙은 프리팹 대비 — 아이템을 잃지 않게 즉시 지급하고 오브젝트는 반납.
+		// (연출용 오브젝트를 그대로 두면 나만 보이는 유령 픽업이 씬에 남음)
+		Debug.LogWarning($"[Player] {dropType} 프리팹에 ItemPickupVisual이 없음 — 연출 없이 즉시 지급함.");
+		ItemPickup pickup = obj.GetComponent<ItemPickup>();
+		if (pickup != null && InventoryManager.Instance != null)
+		{
+			InventoryManager.Instance.AddItem(pickup.ItemData, pickup.Amount);
+		}
+		PoolManager.Instance.Return(obj);
+	}
+
+	//
+	// 원격 킬 드랍 수신 — 적 소유자(방장)가 killer 소유 클라 한 곳으로만 보냄(GameManager.GiveItemDropToKiller).
+	//
+	[PunRPC]
+	public void RpcReceiveItemDrops(int[] poolTypes, Vector3 center, float spreadRadius)
+	{
+		ReceiveItemDrops(poolTypes, center, spreadRadius);
 	}
 
 	// 

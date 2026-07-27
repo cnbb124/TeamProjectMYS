@@ -100,7 +100,7 @@ SphereCollider:
     serializedVersion: 2
     m_Bits: 0
   m_LayerOverridePriority: 0
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
@@ -136,8 +136,8 @@ GameObject:
   m_Component:
   - component: {fileID: 939003836881889935}
   - component: {fileID: 4821687758624945600}
+  - component: {fileID: 5074684954412691132}
   - component: {fileID: 9164182871978731907}
-  - component: {fileID: -6842426030679190763}
   m_Layer: 0
   m_Name: TestItemPickup_HPkit
   m_TagString: Item
@@ -175,6 +175,22 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   itemData: {fileID: 11400000, guid: d33ee684ea2d5a948bc81c911a601dce, type: 2}
   amount: 1
+--- !u!114 &5074684954412691132
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5370120471822735445}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 83545572c01c48546aa8e1a9b993e6e3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _chaseDuration: 0.45
+  _spinSpeed: 540
+  _itemData: {fileID: 11400000, guid: d33ee684ea2d5a948bc81c911a601dce, type: 2}
+  _amount: 1
 --- !u!54 &9164182871978731907
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -198,29 +214,7 @@ Rigidbody:
   m_ImplicitCom: 1
   m_ImplicitTensor: 1
   m_UseGravity: 0
-  m_IsKinematic: 0
+  m_IsKinematic: 1
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
---- !u!114 &-6842426030679190763
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5370120471822735445}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: aa584fbee541324448dd18d8409c7a41, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  ObservedComponentsFoldoutOpen: 1
-  Group: 0
-  prefixField: -1
-  Synchronization: 3
-  OwnershipTransfer: 0
-  observableSearch: 2
-  ObservedComponents: []
-  sceneViewId: 0
-  InstantiationId: 0
-  isRuntimeInstantiated: 0

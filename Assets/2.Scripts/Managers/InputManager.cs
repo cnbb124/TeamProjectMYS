@@ -248,6 +248,28 @@ public class InputManager : MonoBehaviour
     public GamepadConfig gamepadConfig = new GamepadConfig();
 
     // =====================================================================
+    // 마우스 가상 조종간 (에버스페이스/엘리트 데인저러스 방식)
+    //
+    // 마우스는 '움직인 양'만 보고하는 장치라, 그대로 쓰면 마우스를 멈추는 순간 회전도 멈춤.
+    // 그래서 델타를 누적해서 화면 중앙에 조종간이 하나 있는 것처럼 취급함 —
+    // 기울여두면 되돌리기 전까지 계속 그 방향으로 돌게 됨(스틱과 같은 성격).
+    // 이렇게 해야 lookInput의 의미가 패드 스틱과 통일돼서 Player가 장치를 구분할 필요가 없어짐.
+    // =====================================================================
+    [Space(5)]
+    [Header("━━━━━━ 마우스 가상 조종간 ━━━━━━")]
+    [Tooltip("마우스를 조금만 움직여도 조종간이 얼마나 기울어지는지. 클수록 예민함.\n" +
+             "0.1~0.2 권장 — 너무 크면 조준이 튀고, 너무 작으면 최대 기울기까지 한참 밀어야 함.")]
+    public float mouseStickSensitivity = 0.15f;
+
+    [Tooltip("마우스를 멈췄을 때 조종간이 중앙으로 돌아오는 속도(초당 기울기량).\n" +
+             "0이면 안 돌아옴(엘리트 방식 — 직접 되돌려야 멈춤). 1~2면 손 떼면 서서히 수평 복귀.")]
+    public float mouseStickAutoCenter = 0f;
+
+    // 현재 가상 조종간 기울기(-1~1). UI로 조종간 위치를 그려주려면 이 값을 읽으면 됨.
+    public Vector2 MouseStick => _mouseStick;
+    private Vector2 _mouseStick;
+
+    // =====================================================================
     // 출력 필드 (외부 스크립트는 읽기만)
     // =====================================================================
     [Space(10)]
@@ -435,6 +457,8 @@ public class InputManager : MonoBehaviour
         moveInput = Vector3.zero;
         lookInput = Vector2.zero;
         rollInput = 0f;
+        // 조종간도 같이 수평으로 — 안 그러면 메뉴를 닫는 순간 기울어져 있던 값으로 기수가 계속 돌아감
+        _mouseStick = Vector2.zero;
         isBoosting = false;
         isDodging = false;
         fireBullet = false;
@@ -508,9 +532,21 @@ public class InputManager : MonoBehaviour
         rollInput = (Input.GetKey(km.rollRight) ? 1f  : 0f)
                   + (Input.GetKey(km.rollLeft)  ? -1f : 0f);
 
-        // 시야 (마우스 이동량) — 커서가 풀려있는 동안(UI/Alt)은 카메라 조종 안 함
-        lookInput = IsGameplayInputLocked()? Vector2.zero
-            : new Vector2(Input.GetAxisRaw(AxisMouseX), Input.GetAxisRaw(AxisMouseY));
+        // 시야 — 마우스 이동량을 그대로 쓰지 않고 가상 조종간에 누적함(위 필드 설명 참고).
+        // 커서가 풀려있는 동안(UI/Alt)은 조종간을 안 건드림 — 메뉴에서 마우스를 움직여도 기수가 안 돌게.
+        if (!IsGameplayInputLocked())
+        {
+            Vector2 mouseDelta = new Vector2(Input.GetAxisRaw(AxisMouseX), Input.GetAxisRaw(AxisMouseY));
+            _mouseStick += mouseDelta * mouseStickSensitivity;
+            // 원형으로 제한 — 대각선이 축별로 잘려서 더 빨라지는 현상 방지
+            _mouseStick = Vector2.ClampMagnitude(_mouseStick, 1f);
+
+            if (mouseStickAutoCenter > 0f && mouseDelta.sqrMagnitude <= 0f)
+            {
+                _mouseStick = Vector2.MoveTowards(_mouseStick, Vector2.zero, mouseStickAutoCenter * Time.deltaTime);
+            }
+        }
+        lookInput = _mouseStick;
 
         // 부스트 / 회피
         isBoosting = Input.GetKey(km.boost);

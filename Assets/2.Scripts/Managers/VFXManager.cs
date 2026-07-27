@@ -12,6 +12,14 @@
 //     → 유닛에 부착되는 이펙트 (머즐플래시 등). unitTr을 부모로 SetParent되어
 //       이후 유닛이 움직이면 같이 따라감. pos/rot은 생성 시점 위치(총구 등) 기준.
 //
+//   ScheduleEffect(EFFECT_TYPE, Vector3 worldPos, float delay, Vector3 scale = default)
+//     → delay초 뒤 그 좌표에서 재생. 좌표 고정이라 예약 후 유닛이 움직여도 그 자리에서 터짐.
+//     → 사망 시 연속 폭발처럼 시간차를 두고 여러 번 터뜨릴 때 사용.
+//
+//   ScheduleEffectFollow(EFFECT_TYPE, Transform followTr, Vector3 localOffset, float delay, Vector3 scale = default)
+//     → delay초 뒤 followTr의 그때 위치 기준으로 재생. localOffset은 followTr 기준 로컬 좌표.
+//     → SetParent가 아니라 재생 시점에 좌표만 계산하는 방식이라 이펙트가 유닛에 끌려가지 않음.
+//
 //   예시)
 //   // 미사일 폭발 (위치 고정)
 //   VFXManager.Instance.PlayEffectAtPosition(EFFECT_TYPE.VFX_EXPLOSION_MISSILE, transform.position, Quaternion.identity);
@@ -89,6 +97,7 @@ public class VFXManager : MonoBehaviour
     // _allObjects       : 생성된 전체 오브젝트 ↔ 타입 매핑 (ReturnAll용)
     // _autoReturnCache  : EffectAutoReturn 컴포넌트 캐시 (생성 시 1회만 GetComponent)
     // _timedEffects     : duration 기반 반납 대기 목록 (머즐플래시 등)
+    // _pendingEffects   : 지연 재생 대기 목록 (사망 연속 폭발 등)
     // =====================================================================
     private Dictionary<EFFECT_TYPE, Queue<GameObject>> _pools= new Dictionary<EFFECT_TYPE, Queue<GameObject>>();
 
@@ -103,6 +112,21 @@ public class VFXManager : MonoBehaviour
         public GameObject obj;
         public EFFECT_TYPE type;
         public float returnAt;
+    }
+
+    private List<PendingEffect> _pendingEffects = new List<PendingEffect>();
+
+    // 지연 재생 예약 1건. 시간을 절대시각(Time.time 기준)이 아니라 남은 시간으로 들고 있는 이유는
+    // 이 프로젝트의 일시정지가 timeScale이 아니라 플래그 방식이기 때문임 — Update가 멈추면 카운트다운도
+    // 같이 멈춰서, 일시정지가 풀린 순간 밀린 예약이 한꺼번에 터지는 걸 막음.
+    private struct PendingEffect
+    {
+        public EFFECT_TYPE type;
+        public Vector3 pos;             // followTr이 없거나 비활성일 때 쓸 월드 좌표
+        public Transform followTr;      // null이면 좌표 고정
+        public Vector3 localOffset;     // followTr 기준 로컬 오프셋
+        public Vector3 scale;
+        public float remainingTime;
     }
 
     // =====================================================================
@@ -154,7 +178,7 @@ public class VFXManager : MonoBehaviour
     }
 
     // =====================================================================
-    // Update — duration 기반 자동 반납 처리
+    // Update — duration 기반 자동 반납 처리 + 지연 재생 예약 처리
     // =====================================================================
     private void Update()
     {
@@ -178,6 +202,34 @@ public class VFXManager : MonoBehaviour
                 _timedEffects.RemoveAt(i);
             }
         }
+
+        for (int i = _pendingEffects.Count - 1; i >= 0; i--)
+        {
+            PendingEffect pending = _pendingEffects[i];
+            pending.remainingTime -= Time.deltaTime;
+
+            if (pending.remainingTime > 0f)
+            {
+                // struct라 복사본이 수정됨 — 리스트에 되돌려 넣어야 깎인 시간이 반영됨
+                _pendingEffects[i] = pending;
+                continue;
+            }
+
+            _pendingEffects.RemoveAt(i);
+            PlayEffectAtPosition(pending.type, ResolvePendingPos(pending), Quaternion.identity, 0f, pending.scale);
+        }
+    }
+
+    // 예약된 이펙트가 실제로 터질 좌표를 결정함.
+    // 따라가기 대상이 살아있고 활성일 때만 현재 위치를 씀 — 풀에 반납(비활성)된 뒤엔 그 유닛이
+    // 다른 곳에서 재사용될 수 있어서, 그 경우엔 예약 시점에 저장해둔 좌표로 고정함.
+    private Vector3 ResolvePendingPos(PendingEffect pending)
+    {
+        if (pending.followTr != null && pending.followTr.gameObject.activeInHierarchy)
+        {
+            return pending.followTr.TransformPoint(pending.localOffset);
+        }
+        return pending.pos;
     }
 
     // =====================================================================
@@ -229,6 +281,62 @@ public class VFXManager : MonoBehaviour
             te.returnAt = Time.time + duration;
             _timedEffects.Add(te);
         }
+    }
+
+    // =====================================================================
+    // ScheduleEffect / ScheduleEffectFollow — 지연 재생 예약
+    //
+    // delay초 뒤 PlayEffectAtPosition으로 재생됨. 사망 시 연속 폭발처럼 시간차를 두고 여러 번
+    // 터뜨릴 때 사용. 예약은 매니저가 들고 있어서 예약한 유닛이 풀에 반납돼도 끊기지 않음
+    // (코루틴으로 하면 유닛이 비활성화되는 순간 중단돼서 남은 재생이 유실됨).
+    // =====================================================================
+    /// <summary>
+    /// 지정 월드 좌표에서 delay초 뒤 이펙트 재생. 좌표 고정이라 예약 후 유닛이 움직여도 그 자리에서 터짐.
+    /// </summary>
+    public void ScheduleEffect(EFFECT_TYPE type, Vector3 worldPos, float delay, Vector3 scale = default)
+    {
+        if (delay <= 0f)
+        {
+            PlayEffectAtPosition(type, worldPos, Quaternion.identity, 0f, scale);
+            return;
+        }
+
+        PendingEffect pending;
+        pending.type = type;
+        pending.pos = worldPos;
+        pending.followTr = null;
+        pending.localOffset = Vector3.zero;
+        pending.scale = scale;
+        pending.remainingTime = delay;
+        _pendingEffects.Add(pending);
+    }
+
+    /// <summary>
+    /// followTr을 따라다니며 delay초 뒤 이펙트 재생. 재생 시점의 followTr 위치/회전 기준으로 좌표가 정해짐.
+    /// </summary>
+    /// <param name="localOffset">followTr 기준 로컬 오프셋. 기체 여기저기서 터뜨릴 때 사용.</param>
+    public void ScheduleEffectFollow(EFFECT_TYPE type, Transform followTr, Vector3 localOffset, float delay, Vector3 scale = default)
+    {
+        if (followTr == null)
+        {
+            return;
+        }
+
+        if (delay <= 0f)
+        {
+            PlayEffectAtPosition(type, followTr.TransformPoint(localOffset), Quaternion.identity, 0f, scale);
+            return;
+        }
+
+        PendingEffect pending;
+        pending.type = type;
+        // 따라갈 대상이 비활성이 됐을 때 대신 쓸 좌표를 예약 시점에 저장해둠
+        pending.pos = followTr.TransformPoint(localOffset);
+        pending.followTr = followTr;
+        pending.localOffset = localOffset;
+        pending.scale = scale;
+        pending.remainingTime = delay;
+        _pendingEffects.Add(pending);
     }
 
     /// <summary>
@@ -363,6 +471,8 @@ public class VFXManager : MonoBehaviour
     public void ReturnAll()
     {
         _timedEffects.Clear();
+        // 씬을 떠나면 예약도 무효 — 안 지우면 다음 씬에서 엉뚱한 좌표에 터짐
+        _pendingEffects.Clear();
 
         // 큐 비우기
         foreach (var pair in _pools)

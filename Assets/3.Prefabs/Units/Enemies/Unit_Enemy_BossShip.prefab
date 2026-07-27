@@ -1137,6 +1137,14 @@ MonoBehaviour:
   criChance: 0
   criDamageMultiplier: 0
   _deathSequenceDuration: 4
+  _deathVfxType: 3
+  _deathVfxCount: 24
+  _deathVfxScale: 6
+  _deathVfxSpread: 0.95
+  _deathVfxFollowUnit: 0
+  _deathVfxRadius: 3
+  _deathVfxFinalType: 4
+  _deathVfxFinalScale: 15
   curState: 0
   curHpRemaining: 0
   curShieldRemaining: 0
@@ -1144,9 +1152,9 @@ MonoBehaviour:
   curSpeed: 0
   curBoostRemaining: 0
   _playSoundType: 0
-  baseMoveSpeed: 10
-  boostSpeed: 15
-  maxSpeed: 15
+  baseMoveSpeed: 14
+  boostSpeed: 18
+  maxSpeed: 18
   timeToMaxSpeed: 0.4
   timeToStop: 0.4
   brakeEnterSpeedRatio: 0.65
@@ -1167,6 +1175,8 @@ MonoBehaviour:
   goldRewardMax: 3000
   dropPoolTypes: ca000000cb000000cc000000
   dropChance: 1
+  dropAmount: 5
+  dropSpreadRadius: 5
   detectRange: 4000
   rotateSpeed: 10
   rotateDeadZone: 80

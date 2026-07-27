@@ -116,9 +116,16 @@ public abstract class Projectile : MonoBehaviour
 	protected float _critMultiplier = 1f;
 
 
+	// 콜라이더 캐시. 물리 충돌 판정에 쓰이는 레이어는 '콜라이더가 붙은 오브젝트'의 레이어라서 따로 들고 있어야 함.
+	// gameObject.layer는 루트만 바꾸고 자식으로 전파되지 않으므로, 콜라이더가 자식(CollisionBox 등)에 있으면
+	// 루트만 바꿔봐야 물리는 계속 옛 레이어로 판정함.
+	// 이름(transform.Find)이 아니라 컴포넌트로 잡음 — 오브젝트 이름이 바뀌거나 오타가 있어도 안 깨짐.
+	protected Collider[] _colliders;
+
     protected virtual void Awake()
     {
-
+		// 비활성 자식 포함 — 나중에 켜지는 콜라이더도 대상에 들어감
+		_colliders = GetComponentsInChildren<Collider>(true);
     }
     // Start is called before the first frame update
     protected virtual void Start()
@@ -179,11 +186,33 @@ public abstract class Projectile : MonoBehaviour
 		if (attacker.gameObject.layer == (int)LAYER_TYPE.Unit_Player)
 
 		{
-			gameObject.layer = (int)LAYER_TYPE.Projectile_Player;
+			ApplyTeamLayer((int)LAYER_TYPE.Projectile_Player);
 		}
 		else
 		{
-			gameObject.layer = (int)LAYER_TYPE.Projectile_Enemy;
+			ApplyTeamLayer((int)LAYER_TYPE.Projectile_Enemy);
+		}
+	}
+
+	// 루트 + 콜라이더가 붙은 오브젝트 전부에 팀 레이어를 적용.
+	// 콜라이더 쪽까지 안 바꾸면 레이어 충돌 매트릭스가 통째로 무시되고 프리팹 기본 레이어(Default)로 판정됨.
+	// 매 발사(Init)마다 다시 적용함 — 풀에서 재사용될 때 이전 발사자의 팀 레이어가 남지 않게 하기 위함.
+	protected void ApplyTeamLayer(int layer)
+	{
+		gameObject.layer = layer;
+
+		if (_colliders == null)
+		{
+			return;
+		}
+
+		for (int i = 0; i < _colliders.Length; i++)
+		{
+			// 풀 오브젝트가 파괴된 콜라이더를 들고 있을 수 있어 널가드
+			if (_colliders[i] != null)
+			{
+				_colliders[i].gameObject.layer = layer;
+			}
 		}
 	}
 

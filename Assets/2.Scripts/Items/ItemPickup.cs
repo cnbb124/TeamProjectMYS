@@ -1,5 +1,4 @@
 using UnityEngine;
-using Photon.Pun;
 
 
 
@@ -27,6 +26,11 @@ public class ItemPickup : MonoBehaviour
     [Tooltip("아이템 획득 시 증가할 갯수")]
     [SerializeField]
     private int amount = 1;
+
+    // 같은 프리팹에 붙은 ItemPickupVisual이 "무엇을 몇 개 줄지" 읽어가기 위한 getter.
+    // 데이터를 양쪽에 중복 입력하지 않도록 이 필드를 단일 출처로 씀.
+    public ItemData ItemData => itemData;
+    public int Amount => amount;
     //[SerializeField]
     //private float _turnRate;
     //[SerializeField]
@@ -37,21 +41,14 @@ public class ItemPickup : MonoBehaviour
     private int _amount;
     private int _goldAmount;
 
-    private PhotonView _photonView;
-    private bool _requested;  // 로컬: 픽업 요청 이미 보냈나 (중복 RPC 방지)
-    private bool _consumed;   // Master: 이미 누가 먹었나 (선착순 중복지급 방지)
-
-    private void Awake()
-    {
-        _photonView = GetComponent<PhotonView>();
-    }
+    // 플레이어 히트박스가 여러 개라 같은 프레임에 OnTriggerEnter가 여러 번 들어옴 — 중복 획득 방지용.
+    private bool _requested;
 
     // 풀에서 꺼낼 때(SetActive true)마다 프리팹에 설정된 itemData로 자기 초기화 + 픽업 플래그 리셋.
     // itemData 미설정(골드 픽업 등)이면 스킵 — 그 경우 외부에서 Init(gold)로 세팅.
     private void OnEnable()
     {
         _requested = false;
-        _consumed = false;
         if (itemData != null)
         {
             _data = itemData;
@@ -76,46 +73,10 @@ public class ItemPickup : MonoBehaviour
         _goldAmount = goldAmount;
     }
 
- //   public void TracePlayerForPickup(Transform targetTr, Vector3 targetVelocity)
- //   {
-	//	Vector3 toTarget = targetTr.position - transform.position;
-	//	float dist = toTarget.magnitude;
 
-	//	//타겟과 일정 거리 이내로 좁혀지면 미사일이 맴도는 현상 방지
-	//	//거리가 가까울 때는 복잡한 예측을 버리고 타겟을 향해 즉시 내리꽂도록 강제
-	//	if (dist < 5.0f)
-	//	{
-	//		Vector3 finalDir = Vector3.RotateTowards(transform.forward, toTarget.normalized, _turnRate * 2f * Mathf.Deg2Rad * Time.deltaTime, 0f);
-	//		transform.forward = finalDir;
-	//		transform.position += transform.forward * _speed * Time.deltaTime;
-	//		return;
-	//	}
-
-	//	Vector3 desiredDir = toTarget.normalized;
-
-	//	// 타겟의 위치를 계산하는 예측 추적(Predictive Pursuit) 알고리즘
-	//	if (targetVelocity.sqrMagnitude > 0.1f)
-	//	{
-	//		// 현재 속도로 타겟까지 도달하는 데 걸리는 예상 시간(ETA)
-	//		float timeToHit = dist / Mathf.Max(_speed, 1f);
-
-	//		// 거리가 너무 멀 때 예측 좌표가 우주로 튀는 것을 막기 위해 최대 1.5초 후의 위치까지만 예측
-	//		timeToHit = Mathf.Min(timeToHit, 1.5f);
-
-	//		// 타겟의 미래 예측 위치 도출
-	//		Vector3 predictedPos = targetTr.position + (targetVelocity * timeToHit);
-
-	//		desiredDir = (predictedPos - transform.position).normalized;
-	//	}
-
-	//	// 예측된 방향으로 부드럽게 회전 및 전진
-	//	Vector3 newDir = Vector3.RotateTowards(transform.forward, desiredDir, _turnRate * Mathf.Deg2Rad * Time.deltaTime, 0f);
-	//	transform.forward = newDir;
-	//	transform.position += transform.forward * _speed * Time.deltaTime;
-	//}
-    // 픽업 판정. 멀티에선 소유자(Master)가 선착순으로 1명에게만 지급하고 전원에게서 제거한다.
-    // (예전엔 IsMine 게이트 없이 로컬에서 바로 먹고 로컬 반납만 해서, 남 함선이 밟아도 내가 먹거나
-    //  여러 명이 같은 드랍을 중복 획득하고 남 화면엔 유령으로 남는 버그가 있었음)
+    // 픽업 판정. 이 픽업들은 전부 로컬 오브젝트(PoolManager/Instantiate로 생성, PhotonView 없음)라
+    // 다른 클라에는 존재하지 않는다 — 그래서 "누가 먼저 먹었나" 중재가 필요 없고, 밟은 사람이 바로 가진다.
+    // (적 처치 드랍은 이 경로를 안 탐 — 획득자가 이미 정해져 있어 ItemPickupVisual이 날아가서 직접 지급함)
     private void OnTriggerEnter(Collider other)
     {
         if (_requested)
@@ -128,46 +89,9 @@ public class ItemPickup : MonoBehaviour
             return;
         }
 
-        // 싱글/오프라인 또는 비네트워크 드랍(ViewID 없음) — 즉시 로컬 획득 + 로컬 반납(기존 동작).
-        bool isNetworked = _photonView != null && _photonView.ViewID != 0 && PhotonNetwork.InRoom;
-        if (!isNetworked)
-        {
-            _requested = true;
-            GrantToLocalInventory();
-            PoolManager.Instance.Return(gameObject);
-            return;
-        }
-
-        // 멀티 — 소유자(Master)에게 선착순 판정 요청(내 ActorNumber 전달).
         _requested = true;
-        _photonView.RPC(nameof(RpcRequestPickup), RpcTarget.MasterClient, PhotonNetwork.LocalPlayer.ActorNumber);
-    }
-
-    // Master에서만 실행 — 선착순 1명에게만 지급하고 전원에게서 제거.
-    [PunRPC]
-    private void RpcRequestPickup(int requesterActorNumber)
-    {
-        if (!PhotonNetwork.IsMasterClient || _consumed)
-        {
-            return;
-        }
-        _consumed = true;
-
-        // 요청자 클라에만 지급 알림 — 그 사람 인벤토리에 추가됨.
-        Photon.Realtime.Player requester = PhotonNetwork.CurrentRoom.GetPlayer(requesterActorNumber);
-        if (requester != null)
-        {
-            _photonView.RPC(nameof(RpcConfirmPickup), requester);
-        }
-        // 전원에게서 제거 — 어댑터가 로컬 풀 반납으로 라우팅.
-        PhotonNetwork.Destroy(gameObject);
-    }
-
-    // 지급 승인받은 요청자 클라에서만 실행.
-    [PunRPC]
-    private void RpcConfirmPickup()
-    {
         GrantToLocalInventory();
+        PoolManager.Instance.Return(gameObject);
     }
 
     // 로컬 인벤토리 지급. 데이터는 OnEnable/Init으로 이미 세팅돼 있음.
@@ -189,6 +113,5 @@ public class ItemPickup : MonoBehaviour
         _amount = 0;
         _goldAmount = 0;
         _requested = false;
-        _consumed = false;
     }
 }

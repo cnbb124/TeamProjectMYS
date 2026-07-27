@@ -676,6 +676,45 @@ public class GameManager : MonoBehaviourPunCallbacks
     }
 
     /// <summary>
+    /// 적 처치 드랍 아이템을 '죽인 사람'에게 지급. Enemy.DropItem()에서 사망 연출이 끝난 뒤 호출됨.
+    /// 월드에 픽업을 스폰하지 않고 획득자 클라로만 보냄 — 네트워크 오브젝트가 생기지 않고,
+    /// 획득자가 이미 정해져 있어 "누가 먼저 먹었나" 중재도 필요 없음.
+    /// 연출(아이템이 날아오는 자석 효과)과 실제 지급은 받은 쪽 Player가 처리함.
+    /// 멀티 분기는 GiveRewardToPlayer와 동일 — killer가 원격이면 그 소유 클라로만 RPC.
+    /// </summary>
+    /// <param name="killer">마지막으로 때린 오브젝트(Unit의 _lastAttacker)</param>
+    /// <param name="dropTypes">드랍할 픽업 프리팹의 풀 타입 목록. 개수만큼 한 번에 넘김(RPC 1회로 끝내려고).</param>
+    /// <param name="center">연출이 출발할 중심 위치(적이 죽은 자리)</param>
+    /// <param name="spreadRadius">출발 지점을 흩뿌릴 반경. 실제 좌표는 받는 쪽이 계산함(연출이라 동기화 불필요).</param>
+    public void GiveItemDropToKiller(GameObject killer, POOL_TYPE[] dropTypes, Vector3 center, float spreadRadius)
+    {
+        if (killer == null || dropTypes == null || dropTypes.Length == 0)
+        {
+            return;
+        }
+        Player player = killer.GetComponentInParent<Player>();
+        if (player == null)
+        {
+            return;   // 플레이어가 죽인 게 아니면 드랍 없음
+        }
+
+        // POOL_TYPE은 enum이라 RPC로 못 보냄 → int 배열로 변환해서 전달
+        int[] poolTypes = new int[dropTypes.Length];
+        for (int i = 0; i < dropTypes.Length; i++)
+        {
+            poolTypes[i] = (int)dropTypes[i];
+        }
+
+        PhotonView killerView = player.GetComponent<PhotonView>();
+        if (PhotonNetwork.InRoom && killerView != null && !killerView.IsMine)
+        {
+            killerView.RPC(nameof(Player.RpcReceiveItemDrops), killerView.Owner, poolTypes, center, spreadRadius);
+            return;
+        }
+        player.ReceiveItemDrops(poolTypes, center, spreadRadius);
+    }
+
+    /// <summary>
     /// 보스 처치 시 보스 오브젝트에서 호출.
     /// 킬카운트 누적 + onBossKilled 이벤트 발행.
     /// </summary>

@@ -100,7 +100,7 @@ SphereCollider:
     serializedVersion: 2
     m_Bits: 0
   m_LayerOverridePriority: 0
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
@@ -136,8 +136,8 @@ GameObject:
   m_Component:
   - component: {fileID: 2154249172072730532}
   - component: {fileID: 5878844923818811113}
+  - component: {fileID: 8878645094549226718}
   - component: {fileID: 4284715039158635333}
-  - component: {fileID: 2050105831087845632}
   m_Layer: 0
   m_Name: TestItemPickup_Shieldkit
   m_TagString: Item
@@ -175,6 +175,22 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   itemData: {fileID: 11400000, guid: 0de0645e33aa6204b981955f2face52c, type: 2}
   amount: 1
+--- !u!114 &8878645094549226718
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6114423550263913415}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 83545572c01c48546aa8e1a9b993e6e3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _chaseDuration: 0.45
+  _spinSpeed: 540
+  _itemData: {fileID: 11400000, guid: 0de0645e33aa6204b981955f2face52c, type: 2}
+  _amount: 1
 --- !u!54 &4284715039158635333
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -198,29 +214,7 @@ Rigidbody:
   m_ImplicitCom: 1
   m_ImplicitTensor: 1
   m_UseGravity: 0
-  m_IsKinematic: 0
+  m_IsKinematic: 1
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
---- !u!114 &2050105831087845632
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6114423550263913415}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: aa584fbee541324448dd18d8409c7a41, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  ObservedComponentsFoldoutOpen: 1
-  Group: 0
-  prefixField: -1
-  Synchronization: 3
-  OwnershipTransfer: 0
-  observableSearch: 2
-  ObservedComponents: []
-  sceneViewId: 0
-  InstantiationId: 0
-  isRuntimeInstantiated: 0

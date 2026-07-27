@@ -150,13 +150,43 @@ public abstract class Unit : MonoBehaviour, IDamageable, IPunObservable
 	// =====================================================================
 	// 사망 시퀀스
 	// =====================================================================
-	[Header("<size=14>5. 사망 처리 시간</size>")]
+	[Header("<size=14>5. 사망 처리</size>")]
 	[Tooltip("사망 애니 재생 후 정리(풀 반납 등)까지 대기 시간(초). 이 시간 동안 죽는 모션이 재생됨.")]
 	[SerializeField] protected float _deathSequenceDuration = 1.5f;
 
 	[Tooltip("사망 시 재생할 VFX. VFX_NONE이면 재생 안 함.\n" +
 			 "VFXManager 인스펙터에 해당 타입이 등록돼 있어야 함.")]
 	[SerializeField] protected EFFECT_TYPE _deathVfxType = EFFECT_TYPE.VFX_NONE;
+
+	[Tooltip("사망 시 터뜨릴 폭발 개수. 1이면 1회만 재생됨.")]
+	[SerializeField] protected int _deathVfxCount = 1;
+
+	[Tooltip("위 폭발들의 크기 배율. 1이면 프리팹 원본 크기임.")]
+	[SerializeField] protected float _deathVfxScale = 1f;
+
+	[Tooltip("폭발이 퍼지는 구간. 위 사망 처리 시간 대비 비율임(0.7이면 앞 70% 동안 나눠서 터짐).\n" +
+			 "1에 가깝게 두면 마지막 폭발이 풀 반납 직전에 터짐.")]
+	[SerializeField, Range(0.1f, 1f)] protected float _deathVfxSpread = 0.7f;
+
+	[Tooltip("켜면 폭발이 유닛을 따라다님.\n" +
+			 "끄면 사망 순간의 좌표에 고정돼서, 유닛은 관성으로 나아가고 폭발은 그 자리에 남음.")]
+	[SerializeField] protected bool _deathVfxFollowUnit = false;
+
+	[Tooltip("폭발이 흩어질 반경. 위 본체 HitBox가 연결돼 있으면 그 위치를 쓰므로 무시됨.")]
+	[SerializeField] protected float _deathVfxRadius = 3f;
+
+	[Tooltip("마지막에 터질 대형 폭발. VFX_NONE이면 안 씀.\n" +
+			 "유닛이 사라지기 직전에 터짐.")]
+	[SerializeField] protected EFFECT_TYPE _deathVfxFinalType = EFFECT_TYPE.VFX_NONE;
+
+	[Tooltip("위 대형 폭발의 크기 배율.")]
+	[SerializeField] protected float _deathVfxFinalScale = 2f;
+
+	// 대형 폭발이 터지는 시점(사망 처리 시간 대비 비율). 유닛이 사라지는 순간에 맞춰야 자연스러움.
+	private const float DeathVfxFinalTiming = 0.9f;
+
+	// 히트박스 안에서 폭발 위치를 흩뿌릴 범위(히트박스 크기 대비 비율).
+	private const float DeathVfxHitboxJitter = 0.6f;
 
 	//[HideInInspector]
 	//public Transform curFirePos;//밑에서 총구스위칭용 
@@ -1174,15 +1204,68 @@ public abstract class Unit : MonoBehaviour, IDamageable, IPunObservable
 	}
 
 	// 사망 VFX 재생. DIE 상태 진입 시 1회 호출됨(OnStateEnter) — 어느 경로로 죽든 여기로 모임.
-	// 위치 고정(PlayEffectAtPosition)으로 재생함 — 유닛에 부착하면 _deathSequenceDuration 뒤 풀 반납될 때
+	// 부착(SetParent)이 아니라 좌표로만 재생함 — 유닛에 부착하면 _deathSequenceDuration 뒤 풀 반납될 때
 	// 이펙트도 같이 끌려가 사라지기 때문(폭발 VFX가 월드 고정인 것과 같은 이유).
+	// _deathVfxFollowUnit을 켜도 부착은 안 하고, 재생 시점의 좌표만 유닛 기준으로 계산함.
+	//
+	// 시간차 재생은 VFXManager가 예약으로 들고 감 — 여기서 코루틴을 돌리면 풀 반납(비활성) 순간
+	// 중단돼서 남은 폭발이 유실되고, 플래그 방식 일시정지도 무시됨.
 	protected virtual void PlayDeathVFX()
 	{
-		if (_deathVfxType == EFFECT_TYPE.VFX_NONE)
+		if (VFXManager.Instance == null)
 		{
 			return;
 		}
-		VFXManager.Instance?.PlayEffectAtPosition(_deathVfxType, transform.position, Quaternion.identity);
+
+		if (_deathVfxType != EFFECT_TYPE.VFX_NONE)
+		{
+			int count = Mathf.Max(1, _deathVfxCount);
+			// 개수가 1이면 간격 0 → 지연 없이 즉시 1발만 나감(기존 동작과 동일)
+			float interval = count > 1 ? (_deathSequenceDuration * _deathVfxSpread) / (count - 1) : 0f;
+			Vector3 vfxScale = Vector3.one * _deathVfxScale;
+
+			for (int i = 0; i < count; i++)
+			{
+				ScheduleDeathVfx(_deathVfxType, GetRandomDeathVfxLocalPos(), interval * i, vfxScale);
+			}
+		}
+
+		if (_deathVfxFinalType != EFFECT_TYPE.VFX_NONE)
+		{
+			float finalDelay = _deathSequenceDuration * DeathVfxFinalTiming;
+			ScheduleDeathVfx(_deathVfxFinalType, Vector3.zero, finalDelay, Vector3.one * _deathVfxFinalScale);
+		}
+	}
+
+	// 사망 폭발 1발 예약. _deathVfxFollowUnit에 따라 유닛 추적/좌표 고정을 갈라줌.
+	private void ScheduleDeathVfx(EFFECT_TYPE type, Vector3 localPos, float delay, Vector3 scale)
+	{
+		if (_deathVfxFollowUnit)
+		{
+			VFXManager.Instance.ScheduleEffectFollow(type, transform, localPos, delay, scale);
+		}
+		else
+		{
+			VFXManager.Instance.ScheduleEffect(type, transform.TransformPoint(localPos), delay, scale);
+		}
+	}
+
+	// 폭발이 터질 로컬 좌표 1개를 뽑음. 본체 HitBox가 연결돼 있으면 그중 하나를 골라 그 안에서 뽑아
+	// 기체 형상대로 번지게 하고, 연결이 없으면 _deathVfxRadius 구 안에서 무작위로 뽑음.
+	private Vector3 GetRandomDeathVfxLocalPos()
+	{
+		if (_bodyHitboxColliders != null && _bodyHitboxColliders.Length > 0)
+		{
+			Collider col = _bodyHitboxColliders[Random.Range(0, _bodyHitboxColliders.Length)];
+			if (col != null)
+			{
+				// 히트박스가 1개뿐인 유닛도 폭발이 한 점에 겹치지 않게 범위 안에서 흩뿌림
+				Vector3 ext = col.bounds.extents * DeathVfxHitboxJitter;
+				Vector3 jitter = new Vector3(Random.Range(-ext.x, ext.x), Random.Range(-ext.y, ext.y), Random.Range(-ext.z, ext.z));
+				return transform.InverseTransformPoint(col.bounds.center + jitter);
+			}
+		}
+		return Random.insideUnitSphere * _deathVfxRadius;
 	}
 
 	//bool isCritical()

@@ -1,4 +1,5 @@
 using Photon.Pun;
+using System.Collections;
 using UnityEngine;
 
 // ================================================================
@@ -28,36 +29,45 @@ public class Enemy : Unit
 {
 	[Header("<size=14>==========================================</size>")]
 	[Header("<size=18>Enemy 보상 설정</size>")]
-    [Tooltip("경험치 보상 최소치")]
-    public int expRewardMin;
-    [Tooltip("경험치 보상 최대치 (최소~최대 사이에서 랜덤 지급)")]
-    public int expRewardMax;
-    [Tooltip("골드 보상 최소치")]
-    public int goldRewardMin;
-    [Tooltip("골드 보상 최대치 (최소~최대 사이에서 랜덤 지급)")]
-    public int goldRewardMax;
-    [Tooltip("드랍 후보 아이템의 풀 타입 목록. 죽을 때 이 중 랜덤 하나를 풀에서 꺼내 드랍.\n" +
-             "각 픽업 프리팹에 ItemData가 직렬화돼 있어 Init 없이 자동 세팅됨. PoolManager.poolConfigs에 등록 필요.")]
-    public POOL_TYPE[] dropPoolTypes;
-    [Tooltip("아이템이 드랍될 확률 (0~1). 1=항상 드랍, 0.3=30% 확률. 실패하면 아무것도 안 나옴.\n" +
-             "드랍이 결정되면 위 목록 중 랜덤 하나가 나옴.")]
-    [Range(0f, 1f)]
-    public float dropChance = 1f;
-    [Header("<size=18>Enemy AI 공통 설정</size>")]
-   
-    [Header("<size=14>1. 탐지 관련 설정</size>")]
-    [Tooltip("이 범위 안에 타겟이 들어오면 추격 시작. 공격 진입은 LockOnSystem의 lockOnRange 기준.")]
-    public float detectRange = 500f;
-    [Tooltip("선회 속도 (도/초). 90 = 1초에 90도 회전.")]
-    public float rotateSpeed = 180f;
-    [Tooltip("이 각도(도) 이내에 타겟이 있으면 회전하지 않음. 0이면 비활성화.\n" +
-             "전함/대형 유닛처럼 세밀한 조준을 안 하는 느낌에 적합.")]
-    public float rotateDeadZone = 0f;
+	[Tooltip("경험치 보상 최소치")]
+	public int expRewardMin;
+	[Tooltip("경험치 보상 최대치 (최소~최대 사이에서 랜덤 지급)")]
+	public int expRewardMax;
+	[Tooltip("골드 보상 최소치")]
+	public int goldRewardMin;
+	[Tooltip("골드 보상 최대치 (최소~최대 사이에서 랜덤 지급)")]
+	public int goldRewardMax;
+	[Tooltip("드랍 후보 아이템의 풀 타입 목록. 죽을 때 이 중 랜덤 하나를 풀에서 꺼내 드랍.\n" +
+			 "각 픽업 프리팹에 ItemData가 직렬화돼 있어 Init 없이 자동 세팅됨. PoolManager.poolConfigs에 등록 필요.")]
+	public POOL_TYPE[] dropPoolTypes;
+	[Tooltip("아이템이 드랍될 확률 (0~1). 1=항상 드랍, 0.3=30% 확률. 실패하면 아무것도 안 나옴.\n" +
+			 "드랍이 결정되면 위 목록 중 랜덤 하나가 나옴.")]
+	[Range(0f, 1f)]
+	public float dropChance = 1f;
+
+	[Tooltip("드랍이 결정됐을 때 나올 아이템 개수. 개수만큼 위 목록에서 매번 새로 뽑으므로\n" +
+			 "여러 종류가 섞여 나올 수 있음. 0이면 아무것도 안 나옴.")]
+	public int dropAmount = 1;
+
+	[Tooltip("드랍이 여러 개일 때 출발 지점을 흩뿌릴 반경. 0이면 전부 같은 자리에서 출발해 1개처럼 겹쳐 보임.")]
+	public float dropSpreadRadius = 3f;
+
+	
+	[Header("<size=18>Enemy AI 공통 설정</size>")]
+
+	[Header("<size=14>1. 탐지 관련 설정</size>")]
+	[Tooltip("이 범위 안에 타겟이 들어오면 추격 시작. 공격 진입은 LockOnSystem의 lockOnRange 기준.")]
+	public float detectRange = 500f;
+	[Tooltip("선회 속도 (도/초). 90 = 1초에 90도 회전.")]
+	public float rotateSpeed = 180f;
+	[Tooltip("이 각도(도) 이내에 타겟이 있으면 회전하지 않음. 0이면 비활성화.\n" +
+			 "전함/대형 유닛처럼 세밀한 조준을 안 하는 느낌에 적합.")]
+	public float rotateDeadZone = 0f;
 	[Header("AI 상태 (참고용, 입력X)")]
 	public AI_STATE aiState = AI_STATE.STANDBY;
 
 	[Header("<size=14>2. 공격 관련 설정</size>")]
-    [Header("예측 사격 (Bullet 전용 — 미사일은 락온이라 영향 없음)")]
+	[Header("예측 사격 (Bullet 전용 — 미사일은 락온이라 영향 없음)")]
 	[Tooltip("0 = 예측 안 함(타겟 현재 위치 그대로 조준), 1 = 완전 예측(타겟 속도 기준 정확히 선조준).\n" +
 			 "weaponSystem.curBulletData가 없으면(미사일 전용 함선 등) 값과 무관하게 예측 안 함.")]
 	[Range(0f, 1f)]
@@ -80,7 +90,7 @@ public class Enemy : Unit
 
 
 
-    // ======================AI설정용============================
+	// ======================AI설정용============================
 	protected Transform _target;
 	// _target의 Velocity(Rigidbody.velocity) 참조용. UpdateTarget()에서 _target과 함께 갱신.
 	protected Unit _targetUnit;
@@ -97,35 +107,37 @@ public class Enemy : Unit
 	// 가지며 Master가 소유(IsMine=true)해 AI를 돌린다. 남(비Master) 클라에선 IsMine=false라 AI를 안 돌리고,
 	// 위치는 PhotonTransformView 동기화로만 갱신됨.
 
-    // 적은 공회전/가속/부스트 엔진 루프 사운드를 등록하지 않음 —
-    // 유닛당 루프 3개라 적이 늘수록 Unity의 동시재생 보이스(기본 32개) 한도를 넘겨
-    // 총소리·폭발음 같은 중요한 소리가 밀려나기 때문. 엔진음은 플레이어만 가짐.
-    protected override bool HasEngineSound
-    {
-        get
-        {
-            return false;
-        }
-    }
+	// 적은 공회전/가속/부스트 엔진 루프 사운드를 등록하지 않음 —
+	// 유닛당 루프 3개라 적이 늘수록 Unity의 동시재생 보이스(기본 32개) 한도를 넘겨
+	// 총소리·폭발음 같은 중요한 소리가 밀려나기 때문. 엔진음은 플레이어만 가짐.
+	protected override bool HasEngineSound
+	{
+		get
+		{
+			return false;
+		}
+	}
 
-    protected override void Awake()
-    {
-        base.Awake();
-    }
+	protected override void Awake()
+	{
+		base.Awake();
+		
+	}
 
-    // OnEnable이 Start보다 항상 먼저 호출되므로, 등록은 여기서 — 죽어서 Unregister된 뒤
-    // 풀에서 재사용(SetActive(true))될 때도 매번 다시 등록됨. RegisterEnemy는 중복등록 가드 있어 안전.
-    // aiState는 STANDBY로 리셋 — 서브클래스(EnemyShip/EnemyTurretBase)가 각자 OnAIStandby/STANDBY 케이스에서
-    // 실제 시작 상태(PATROL/RELOAD 등)로 알아서 전환함.
-    protected override void OnEnable()
-    {
-        base.OnEnable();
-        aiState = AI_STATE.STANDBY;
-        // 캐시된 것만 씀 — 여기서 .Instance를 새로 부르면 매니저 Awake보다 먼저 instance를 선점해
-        // 매니저 초기화를 통째로 스킵시킬 수 있음(project_singleton_pattern 규칙).
-        // 최초 1회는 아직 null이라 그냥 넘어가고, 바로 뒤의 Start가 등록을 마무리함.
-        _unitManager?.RegisterEnemy(this);
-    }
+	// OnEnable이 Start보다 항상 먼저 호출되므로, 등록은 여기서 — 죽어서 Unregister된 뒤
+	// 풀에서 재사용(SetActive(true))될 때도 매번 다시 등록됨. RegisterEnemy는 중복등록 가드 있어 안전.
+	// aiState는 STANDBY로 리셋 — 서브클래스(EnemyShip/EnemyTurretBase)가 각자 OnAIStandby/STANDBY 케이스에서
+	// 실제 시작 상태(PATROL/RELOAD 등)로 알아서 전환함.
+	protected override void OnEnable()
+	{
+		base.OnEnable();
+		aiState = AI_STATE.STANDBY;
+		// 캐시된 것만 씀 — 여기서 .Instance를 새로 부르면 매니저 Awake보다 먼저 instance를 선점해
+		// 매니저 초기화를 통째로 스킵시킬 수 있음(project_singleton_pattern 규칙).
+		// 최초 1회는 아직 null이라 그냥 넘어가고, 바로 뒤의 Start가 등록을 마무리함.
+		_unitManager?.RegisterEnemy(this);
+		
+	}
 
 	protected override void Start()
 	{
@@ -176,154 +188,154 @@ public class Enemy : Unit
 
 
 
-    // 위치를 직접 배치하는 스폰 호출부(SpawnManager 등)가 transform.position을 옮긴 직후 호출.
-    // OnEnable은 Get() 직후(=재배치 이전) 호출돼서 거기서 캡처하면 죽기 전 위치가 잡혀버림 —
-    // 그래서 재배치가 끝난 다음 이 메서드로 명시적으로 갱신함.
-    public void RefreshSpawnAnchor()
-    {
-        _spawnPosition = transform.position;
-    }
+	// 위치를 직접 배치하는 스폰 호출부(SpawnManager 등)가 transform.position을 옮긴 직후 호출.
+	// OnEnable은 Get() 직후(=재배치 이전) 호출돼서 거기서 캡처하면 죽기 전 위치가 잡혀버림 —
+	// 그래서 재배치가 끝난 다음 이 메서드로 명시적으로 갱신함.
+	public void RefreshSpawnAnchor()
+	{
+		_spawnPosition = transform.position;
+	}
 
-    
 
-   
 
-    
 
-    // 자식이 override해 발사 종류 지정.
-    protected virtual void ShootWeapons() { }
 
-    // 타겟의 후방(등 뒤)에서 공격 중이면 rearAttackSkipChance 확률로 true.
-    // 호출부에서 true면 ShootWeapons()/ShootWeaponsOnPass() 호출을 건너뜀.
-    protected bool ShouldSkipAttackFromBehind()
-    {
-        if (_target == null)
-        {
-            return false;
-        }
-        Vector3 toEnemy = (transform.position - _target.position).normalized;
-        float dot = Vector3.Dot(_target.forward, toEnemy);
-        float dotThreshold = Mathf.Cos(rearAttackAngleThreshold * Mathf.Deg2Rad);
-        if (dot >= dotThreshold)
-        {
-            return false;
-        }
-        return Random.value < rearAttackSkipChance;
-    }
 
-    // 미사일 쏘는 서브클래스(MissileShip/FighterShip/터렛 등)가 발사 전에 호출.
-    // 락온이 필요한 타입인데 락온이 안 되어 있으면 false — Enemy AI만 이 체크를 거침, Player는 자유 발사.
-    protected bool CanFireMissile()
-    {
-        return weaponSystem.lockOnSystem == null || weaponSystem.HasValidLockOn();
-    }
 
-    private void UpdateTarget()
-    {
-        if (UnitManager.Instance == null)
-        {
-            return;
-        }
-        _target = UnitManager.Instance.GetNearestPlayer(transform.position);
-        _targetUnit = _target != null ? _target.GetComponent<Unit>() : null;
-    }
+	// 자식이 override해 발사 종류 지정.
+	protected virtual void ShootWeapons() { }
 
-    // 타겟의 현재 위치 + (속도 * 도달시간)으로 예측 조준점 계산.
-    // leadAccuracy로 보정(0=예측없음~1=완전예측). bulletSpeed가 0 이하면 예측 안 함(미사일 전용 함선 대비).
-    protected Vector3 GetPredictedAimPoint()
-    {
-        if (_target == null)
-        {
-            return Vector3.zero;
-        }
-        if (leadAccuracy <= 0f || _targetUnit == null || weaponSystem == null || weaponSystem.curBulletData == null)
-        {
-            return _target.position;
-        }
-        float bulletSpeed = weaponSystem.curBulletData.speed;
-        if (bulletSpeed <= 0f)
-        {
-            return _target.position;
-        }
+	// 타겟의 후방(등 뒤)에서 공격 중이면 rearAttackSkipChance 확률로 true.
+	// 호출부에서 true면 ShootWeapons()/ShootWeaponsOnPass() 호출을 건너뜀.
+	protected bool ShouldSkipAttackFromBehind()
+	{
+		if (_target == null)
+		{
+			return false;
+		}
+		Vector3 toEnemy = (transform.position - _target.position).normalized;
+		float dot = Vector3.Dot(_target.forward, toEnemy);
+		float dotThreshold = Mathf.Cos(rearAttackAngleThreshold * Mathf.Deg2Rad);
+		if (dot >= dotThreshold)
+		{
+			return false;
+		}
+		return Random.value < rearAttackSkipChance;
+	}
 
-        // 반복 수렴 예측: leadTime을 '현재 위치'가 아니라 '예측 명중점'까지의 거리로 다시 계산하는 걸
-        // 몇 번 반복한다. 타겟이 비행 중 이동해 명중점까지 거리가 현재 거리와 달라지는 오차를 없앤다.
-        // (1회만 하면 crossing/고속 타겟에서 덜 앞서 조준해 뒤로 빗나감 — 3회면 사실상 참값에 수렴)
-        Vector3 predictedPos = _target.position;
-        for (int i = 0; i < 3; i++)
-        {
-            float leadTime = Vector3.Distance(transform.position, predictedPos) / bulletSpeed;
-            predictedPos = _target.position + _targetUnit.Velocity * leadTime;
-        }
-        return Vector3.Lerp(_target.position, predictedPos, leadAccuracy);
-    }
+	// 미사일 쏘는 서브클래스(MissileShip/FighterShip/터렛 등)가 발사 전에 호출.
+	// 락온이 필요한 타입인데 락온이 안 되어 있으면 false — Enemy AI만 이 체크를 거침, Player는 자유 발사.
+	protected bool CanFireMissile()
+	{
+		return weaponSystem.lockOnSystem == null || weaponSystem.HasValidLockOn();
+	}
 
-    protected bool IsTargetInRange(float range)
-    {
-        if (_target == null)
-        {
-            return false;
-        }
-        return Vector3.Distance(transform.position, _target.position) <= range;
-    }
+	private void UpdateTarget()
+	{
+		if (UnitManager.Instance == null)
+		{
+			return;
+		}
+		_target = UnitManager.Instance.GetNearestPlayer(transform.position);
+		_targetUnit = _target != null ? _target.GetComponent<Unit>() : null;
+	}
 
-    protected bool HasTargetInAttackRange()
-    {
-        if (weaponSystem == null || weaponSystem.lockOnSystem == null)
-        {
-            return false;
-        }
-        return weaponSystem.lockOnSystem.TargetsInLockonRange.Count > 0;
-    }
+	// 타겟의 현재 위치 + (속도 * 도달시간)으로 예측 조준점 계산.
+	// leadAccuracy로 보정(0=예측없음~1=완전예측). bulletSpeed가 0 이하면 예측 안 함(미사일 전용 함선 대비).
+	protected Vector3 GetPredictedAimPoint()
+	{
+		if (_target == null)
+		{
+			return Vector3.zero;
+		}
+		if (leadAccuracy <= 0f || _targetUnit == null || weaponSystem == null || weaponSystem.curBulletData == null)
+		{
+			return _target.position;
+		}
+		float bulletSpeed = weaponSystem.curBulletData.speed;
+		if (bulletSpeed <= 0f)
+		{
+			return _target.position;
+		}
 
-    // 터렛은 swivel/mount 방식으로 override.
-    protected virtual void RotateTowardTarget()
-    {
-        if (_target == null)
-        {
-            return;
-        }
-        RotateTowardPosition(GetPredictedAimPoint());
-    }
+		// 반복 수렴 예측: leadTime을 '현재 위치'가 아니라 '예측 명중점'까지의 거리로 다시 계산하는 걸
+		// 몇 번 반복한다. 타겟이 비행 중 이동해 명중점까지 거리가 현재 거리와 달라지는 오차를 없앤다.
+		// (1회만 하면 crossing/고속 타겟에서 덜 앞서 조준해 뒤로 빗나감 — 3회면 사실상 참값에 수렴)
+		Vector3 predictedPos = _target.position;
+		for (int i = 0; i < 3; i++)
+		{
+			float leadTime = Vector3.Distance(transform.position, predictedPos) / bulletSpeed;
+			predictedPos = _target.position + _targetUnit.Velocity * leadTime;
+		}
+		return Vector3.Lerp(_target.position, predictedPos, leadAccuracy);
+	}
 
-    // rotateSpeed 도/초 기준 일정 선회 속도. 즉시 스냅 없음.
-    protected void RotateTowardPosition(Vector3 worldPos)
-    {
-        Vector3 dir = (worldPos - transform.position).normalized;
-        if (dir == Vector3.zero)
-        {
-            return;
-        }
-        if (rotateDeadZone > 0f && Vector3.Angle(transform.forward, dir) <= rotateDeadZone)
-        {
-            return;
-        }
-        Quaternion targetRot = Quaternion.LookRotation(dir);
-        transform.rotation = Quaternion.RotateTowards(
-            transform.rotation, targetRot, rotateSpeed * Time.fixedDeltaTime);
-    }
+	protected bool IsTargetInRange(float range)
+	{
+		if (_target == null)
+		{
+			return false;
+		}
+		return Vector3.Distance(transform.position, _target.position) <= range;
+	}
 
-    protected void MoveTowardTarget()
-    {
-        if (_target == null)
-        {
-            return;
-        }
-        MoveTowardPosition(_target.position);
-    }
+	protected bool HasTargetInAttackRange()
+	{
+		if (weaponSystem == null || weaponSystem.lockOnSystem == null)
+		{
+			return false;
+		}
+		return weaponSystem.lockOnSystem.TargetsInLockonRange.Count > 0;
+	}
 
-    protected void MoveTowardPosition(Vector3 worldPos)
-    {
-        Vector3 dir = (worldPos - transform.position).normalized;
-        float multiplier = speedMultiPlier > 0f ? speedMultiPlier : 1f;
-        float speed = _isBoosting ? boostSpeed : baseMoveSpeed;
-        if (_rb == null) return;
-        _rb.AddForce(dir * speed * multiplier, ForceMode.Acceleration);
-        if (_rb.velocity.magnitude > maxSpeed)
-        {
-            _rb.velocity = _rb.velocity.normalized * maxSpeed;
-        }
-    }
+	// 터렛은 swivel/mount 방식으로 override.
+	protected virtual void RotateTowardTarget()
+	{
+		if (_target == null)
+		{
+			return;
+		}
+		RotateTowardPosition(GetPredictedAimPoint());
+	}
+
+	// rotateSpeed 도/초 기준 일정 선회 속도. 즉시 스냅 없음.
+	protected void RotateTowardPosition(Vector3 worldPos)
+	{
+		Vector3 dir = (worldPos - transform.position).normalized;
+		if (dir == Vector3.zero)
+		{
+			return;
+		}
+		if (rotateDeadZone > 0f && Vector3.Angle(transform.forward, dir) <= rotateDeadZone)
+		{
+			return;
+		}
+		Quaternion targetRot = Quaternion.LookRotation(dir);
+		transform.rotation = Quaternion.RotateTowards(
+			transform.rotation, targetRot, rotateSpeed * Time.fixedDeltaTime);
+	}
+
+	protected void MoveTowardTarget()
+	{
+		if (_target == null)
+		{
+			return;
+		}
+		MoveTowardPosition(_target.position);
+	}
+
+	protected void MoveTowardPosition(Vector3 worldPos)
+	{
+		Vector3 dir = (worldPos - transform.position).normalized;
+		float multiplier = speedMultiPlier > 0f ? speedMultiPlier : 1f;
+		float speed = _isBoosting ? boostSpeed : baseMoveSpeed;
+		if (_rb == null) return;
+		_rb.AddForce(dir * speed * multiplier, ForceMode.Acceleration);
+		if (_rb.velocity.magnitude > maxSpeed)
+		{
+			_rb.velocity = _rb.velocity.normalized * maxSpeed;
+		}
+	}
 	// 부모(전함/터렛 거치대 등)가 SetActive(false)되면 자식 터렛도 같이 비활성화되는데,
 	// 그 경우 자식 자신의 Die()는 호출되지 않아서 UnitManager 등록이 안 풀리는 문제가 있었음 —
 	// OnDisable은 비활성화 원인(자기 사망 vs 부모 cascade) 무관하게 항상 호출되므로 여기서 처리.
@@ -339,6 +351,9 @@ public class Enemy : Unit
 	// ※ Die()를 오버라이드하는 서브클래스는 반드시 base.Die()를 호출할 것 — 그래야 이 반납 타이머가 세팅됨.
 	private float _deathReturnTimer;
 
+	// 아이템 드랍 1회 보장용. 반납이 지연되는 경로에서 OnDying()이 계속 돌아도 중복 드랍 안 되게 막음.
+	private bool _deathItemDropped;
+
 	protected override void Die()
 	{
 		// 보상은 min~max 범위에서 랜덤 (같은 적이라도 매번 조금씩 다르게). Random.Range(int)는 max 미포함이라 +1.
@@ -347,37 +362,61 @@ public class Enemy : Unit
 		// 킬카운트 + 보상(경험치/골드)은 GameManager가 killer(_lastAttacker) 기준으로 분배.
 		GameManager.Instance?.OnEnemyKilled(_lastAttacker, exp, gold);
 
-		// 아이템 드랍 — dropChance 확률로 발생. 성공 시 후보 풀 타입 중 랜덤 하나를 꺼내 죽은 자리에 배치.
-		// (Random.value는 0~1이라 dropChance=1이면 사실상 항상, 0이면 절대 안 나옴)
-		// 픽업은 프리팹에 직렬화된 ItemData로 OnEnable에서 자기 초기화하므로 여기선 Init 불필요.
-		if (dropPoolTypes != null && dropPoolTypes.Length > 0 && Random.value < dropChance)
-		{
-			POOL_TYPE dropType = dropPoolTypes[Random.Range(0, dropPoolTypes.Length)];
-			// 아이템 드랍도 네트워크 오브젝트 — Master가 스폰하면 전원에게 동기화(어댑터가 로컬 풀로 라우팅).
-			// Die()는 적 소유자(Master, 오프라인은 자기 자신)에서만 도달하므로 여기서 스폰하면 됨.
-			// 드랍 픽업 프리팹에도 PhotonView 필요(적과 동일).
-			// 드랍은 '룸 종속' — RoomObject로 만들어야 방장이 나가도 안 사라짐(Instantiate는 만든 사람 이탈 시 파괴됨).
-			if (_photonView != null)
-			{
-				// 드랍도 적과 같은 씬 소속 — 다른 씬 클라에서 숨기려면 스폰 씬을 같이 보내야 함.
-				PhotonNetwork.InstantiateRoomObject(dropType.ToString(), transform.position, Quaternion.identity, 0,
-					new object[] { UnityEngine.SceneManagement.SceneManager.GetActiveScene().name });
-			}
-			else
-			{
-				// 비네트워크(PhotonView 없는 싱글 씬배치 적 등)는 기존처럼 로컬 풀 드랍.
-				GameObject drop = PoolManager.Instance?.Get(dropType);
-				if (drop != null)
-				{
-					drop.transform.SetPositionAndRotation(transform.position, Quaternion.identity);
-				}
-			}
+		// 풀 반납(SetActive(false))은 사망 애니가 재생되도록 지연 — OnDying()의 타이머로 처리.
+		// 아이템 드랍도 같은 타이머를 타서 사망 연출이 끝난 뒤에 나옴 — 실제 스폰은 DropItem()에서.
+		_deathReturnTimer = _deathSequenceDuration;
+		_deathItemDropped = false;
+		base.Die();
+	}
 
+	// 아이템 드랍 — dropChance 확률로 발생. 성공하면 dropAmount 개수만큼 후보 풀 타입에서 매번 새로 뽑아
+	// '죽인 사람'에게 보냄(월드에 스폰하지 않음 — 받은 클라가 연출용으로 로컬 풀에서 꺼내 씀).
+	// (Random.value는 0~1이라 dropChance=1이면 사실상 항상, 0이면 절대 안 나옴)
+	// 무엇을 몇 개 줄지는 픽업 프리팹에 직렬화된 ItemData를 ItemPickupVisual이 읽어가므로 여기선 Init 불필요.
+	//
+	// 호출 시점 = 사망 연출(VFX)이 다 끝나고 풀 반납 직전. 죽은 판정 즉시가 아니라 여기서 하는 이유는
+	// 폭발이 터지는 중에 아이템이 먼저 튀어나오면 연출이 끊겨 보이기 때문임.
+	private void DropItem()
+	{
+		if (_deathItemDropped)
+		{
+			return;
+		}
+		_deathItemDropped = true;
+
+		// 스폰은 소유자(Master, 오프라인은 자기 자신)만 — 비소유자도 하면 아이템이 중복 생성됨.
+		if (_photonView != null && !_photonView.IsMine)
+		{
+			return;
 		}
 
-		// 풀 반납(SetActive(false))은 사망 애니가 재생되도록 지연 — OnDying()의 타이머로 처리.
-		_deathReturnTimer = _deathSequenceDuration;
-		base.Die();
+		if (dropPoolTypes == null || dropPoolTypes.Length == 0 || dropAmount <= 0 || Random.value >= dropChance)
+		{
+			return;
+		}
+
+		
+		
+
+
+		// 받은 클라가 자기 로컬 풀에서 연출용 오브젝트를 꺼내 날리고, 도착 시점에 인벤토리에 넣음.
+		// 개수만큼 매번 새로 뽑음 — 같은 적이 여러 종류를 떨굴 수 있음.
+		POOL_TYPE[] dropTypes = new POOL_TYPE[dropAmount];
+		for (int i = 0; i < dropAmount; i++)
+		{
+			dropTypes[i] = dropPoolTypes[Random.Range(0, dropPoolTypes.Length)];
+		}
+
+		// 배열로 한 번에 넘김 — 개당 따로 보내면 원격 킬일 때 RPC가 개수만큼 나감.
+		// 흩뿌릴 좌표는 받는 쪽이 계산함(연출이라 클라마다 달라도 무방) — 좌표 배열까지 보낼 필요 없음.
+		GameManager.Instance?.GiveItemDropToKiller(_lastAttacker, dropTypes, transform.position, dropSpreadRadius);
+
+
+
+
+
+
+
 	}
 
 	// DIE 상태 동안 매 프레임 호출(Unit.UpdateFSM). 사망 애니 시간만큼 지난 뒤 풀에 반납.
@@ -388,6 +427,9 @@ public class Enemy : Unit
 		_deathReturnTimer -= Time.deltaTime;
 		if (_deathReturnTimer <= 0f)
 		{
+			// 사망 연출이 끝난 시점 — 반납/파괴보다 먼저 해야 드랍 위치(transform.position)를 읽을 수 있음.
+			DropItem();
+
 			// 네트워크 적(PhotonView 있음)은 소유자(Master)가 PhotonNetwork.Destroy로 전원에게서 반납한다.
 			// (PhotonPoolAdapter가 실제 파괴 대신 로컬 풀 SetActive(false)로 라우팅 → OnDisable에서 Unregister)
 			// 비네트워크 적(PhotonView 없음 — 싱글 씬배치 등)은 기존처럼 로컬 풀 반납.

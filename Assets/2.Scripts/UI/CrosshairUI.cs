@@ -1,23 +1,22 @@
 using UnityEngine;
 
 /// <summary>
-/// 크로스헤어 UI.
-/// 플레이어 기체의 forward 방향을 화면 좌표로 변환해 크로스헤어를 실제 조준점에 표시.
+/// 크로스헤어 UI — '내가 조종간으로 가리킨 방향'을 표시.
+/// 마우스/패드 스틱 기울기를 화면 중앙 기준 오프셋으로 그대로 찍는다. 보간 없이 즉시 반영됨.
 /// 기관총 발사 시 크로스헤어 확대, 투명도 변경.
 ///
+/// 기체가 실제로 향한 방향(기수)은 GimbalIndicatorUI가 표시한다 —
+/// 그쪽이 이 크로스헤어를 뒤늦게 쫓아오는 게 보여야 조종 지연이 눈에 드러남.
+///
 /// [인스펙터 연결]
-/// - crosshairRect : 크로스헤어 RectTransform
-/// - player        : 플레이어 기체 Transform
-/// - mainCam       : Main Camera
-/// - canvasGroup   : 투명도 제어용 CanvasGroup
-/// - aimDistance   : 조준점까지의 거리 (기본 500)
+/// - crosshairRect  : 크로스헤어 RectTransform
+/// - canvasGroup    : 투명도 제어용 CanvasGroup
+/// - aimScreenRange : 조종간을 최대로 꺾었을 때 화면 중앙에서 벗어나는 거리(px)
 /// </summary>
 public class CrosshairUI : MonoBehaviour
 {
     [Header("References")]
     [SerializeField] private RectTransform crosshairRect;
-    [SerializeField] private Transform     player;
-    [SerializeField] private Camera        mainCam;
 
     [Header("Scale")]
     [SerializeField] private float normalScale  = 1f;
@@ -30,11 +29,10 @@ public class CrosshairUI : MonoBehaviour
     [SerializeField] private float aimOpacity    = 1f;
 
     [Header("Aim")]
-    [SerializeField] private float aimDistance    = 500f; // 조준점까지 거리
-    [SerializeField] private float aimPitchOffset = 0f;   // 조준 피치 보정(도). +면 조준점이 위로,
-                                                          // 카메라/총구 오프셋 때문에 탄착이 안 맞을 때 미세 조정
+    [Tooltip("조종간을 최대로 꺾었을 때 화면 중앙에서 벗어나는 거리(픽셀).\n" +
+             "클수록 마우스 입력이 크게 보임. 화면 절반보다 크면 크로스헤어가 화면 밖으로 나감.")]
+    [SerializeField] private float aimScreenRange = 220f;
 
-    private Canvas _canvas;
     private float _targetScale;
     private float _targetOpacity;
 
@@ -43,7 +41,6 @@ public class CrosshairUI : MonoBehaviour
         if (crosshairRect == null)
             crosshairRect = GetComponent<RectTransform>();
 
-        _canvas        = GetComponentInParent<Canvas>();
         _targetScale   = normalScale;
         _targetOpacity = normalOpacity;
     }
@@ -66,38 +63,12 @@ public class CrosshairUI : MonoBehaviour
 
     private void UpdatePosition()
     {
-        // 인스펙터 연결 우선, 비어있으면 자동 폴백 (playerRef / Camera.main)
-        if (player == null && GameManager.Instance != null && GameManager.Instance.playerRef != null)
-            player = GameManager.Instance.playerRef.transform;
-        if (mainCam == null) mainCam = Camera.main;
-
-        if (player == null || mainCam == null || _canvas == null) return;
-
-        // 기수(forward)에 피치 보정을 적용한 조준 방향
-        // player.right 축으로 회전 → 위/아래로 살짝 기울여 탄착점에 맞춤
-        Vector3 aimDir = Quaternion.AngleAxis(-aimPitchOffset, player.right) * player.forward;
-
-        // 보정된 방향으로 aimDistance 만큼 앞의 월드 좌표
-        Vector3 aimWorldPos = player.position + aimDir * aimDistance;
-
-        // 월드 좌표 → 스크린 좌표
-        Vector3 screenPos = mainCam.WorldToScreenPoint(aimWorldPos);
-
-        // 기체가 카메라 뒤에 있으면 화면 중앙 유지
-        if (screenPos.z < 0f)
-        {
-            crosshairRect.anchoredPosition = Vector2.zero;
+        if (crosshairRect == null || InputManager.Instance == null)
             return;
-        }
 
-        // 스크린 좌표 → Canvas 로컬 좌표
-        RectTransformUtility.ScreenPointToLocalPointInRectangle(
-            _canvas.GetComponent<RectTransform>(),
-            screenPos,
-            _canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : mainCam,
-            out Vector2 localPos);
-
-        // anchoredPosition으로 통일 (카메라 뒤 경로·GimbalIndicator 기준점과 일치시킴)
-        crosshairRect.anchoredPosition = localPos;
+        // 조종간 기울기(-1~1)를 화면 중앙 기준 오프셋으로 변환.
+        // Lerp를 걸지 않음 — 이건 '입력 그 자체'라 한 프레임도 늦으면 안 됨.
+        // 월드 좌표 변환도 필요 없음(입력은 애초에 화면 기준 값이라 카메라 뒤 문제도 없음).
+        crosshairRect.anchoredPosition = InputManager.Instance.MouseStick * aimScreenRange;
     }
 }
