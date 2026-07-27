@@ -32,9 +32,10 @@ using UnityEngine.Networking;
 //   로드 시 서버가 SaveData와 똑같은 모양의 JSON으로 돌려줌 → FromJson으로 복원.
 //
 // 사용법:
-//   1. 씬에 빈 오브젝트 만들고 이 스크립트 부착 (GameManager 옆 권장)
-//   2. serverUrl 확인 (내 PC 테스트면 localhost, 미니PC면 그 IP)
-//   3. 로그인 UI가 아직 없으므로 autoLoginOnStart 체크하면
+//   1. 씬에 ServerApi 프리팹 배치 (Assets/3.Prefabs/Network/ServerApi.prefab)
+//   2. 서버 주소는 건드릴 필요 없음 — 게임 시작 시 Tailscale 주소와 LAN 주소를
+//      순서대로 확인해서 되는 쪽을 자동으로 씀 (집=Tailscale, 학원=둘 중 되는 쪽)
+//   3. 로그인 UI가 아직 없으면 autoLoginOnStart 체크하면
 //      시작 시 자동으로 로그인 (계정 없으면 자동 가입 후 로그인)
 //
 // 서버 켜는 법: Server/공부노트.md 7번 참고 (dotnet run)
@@ -49,9 +50,21 @@ public class ServerApi : MonoBehaviour
     // =====================================================================
     // 설정
     // =====================================================================
-    [Header("━━━━━━ 서버 주소 ━━━━━━")]
-    [Tooltip("API 서버 주소. 학원 내부망만 쓸 땐 http://192.168.0.8:5080, 집 등 외부에서도 접속하려면 Tailscale 주소(http://home-20251010.tail46e863.ts.net:5080) 사용 — 접속하는 사람 전원이 Tailscale 설치 필요")]
-    [SerializeField] private string serverUrl = "http://home-20251010.tail46e863.ts.net:5080";
+    [Header("━━━━━━ 서버 주소 (자동 선택) ━━━━━━")]
+    [Tooltip("Tailscale 주소. 집 등 외부에서도 접속되지만 접속하는 PC에 Tailscale 설치·로그인이 되어 있어야 함")]
+    [SerializeField] private string serverUrlTailscale = "http://home-20251010.tail46e863.ts.net:5080";
+
+    [Tooltip("학원 내부망(LAN) 주소. Tailscale 없이도 되지만 미니PC와 같은 공유기에 있을 때만 됨")]
+    [SerializeField] private string serverUrlLan = "http://192.168.0.8:5080";
+
+    [Tooltip("연결 확인에 기다리는 시간(초). 이 시간 안에 응답 없으면 다른 주소로 넘어감")]
+    [SerializeField] private int probeTimeoutSec = 3;
+
+    /// <summary>실제로 쓰는 주소. 첫 요청 전에 두 주소를 확인해서 되는 쪽으로 정해짐.</summary>
+    private string serverUrl;
+
+    /// <summary>주소 자동 선택이 끝났는지. 끝나기 전에 요청이 오면 먼저 선택부터 함.</summary>
+    private bool _urlResolved;
 
     [Header("━━━━━━ 자동 로그인 (임시) ━━━━━━")]
     [Tooltip("로그인 UI가 생기기 전까지의 임시 기능. 켜두면 게임 시작 시 아래 계정으로 자동 로그인 (계정 없으면 자동 가입)")]
@@ -65,6 +78,9 @@ public class ServerApi : MonoBehaviour
     /// <summary>로그인 후 서버가 발급한 내 고유번호. 0이면 아직 로그인 안 됨.</summary>
     public long UserId { get; private set; }
     public bool IsLoggedIn => UserId > 0;
+
+    /// <summary>지금 실제로 쓰고 있는 서버 주소 (자동 선택 결과). 아직 미정이면 빈 문자열.</summary>
+    public string CurrentServerUrl => serverUrl ?? "";
 
     // =====================================================================
     // 초기화
@@ -82,10 +98,70 @@ public class ServerApi : MonoBehaviour
 
     private void Start()
     {
+        // 게임 켜지자마자 미리 주소를 정해둠 (로그인 버튼 눌렀을 때 기다리는 시간을 줄이려고)
+        StartCoroutine(ResolveThenAutoLoginCo());
+    }
+
+    private IEnumerator ResolveThenAutoLoginCo()
+    {
+        yield return ResolveServerUrlCo();
+
         if (autoLoginOnStart)
         {
-            StartCoroutine(AutoLoginCo());
+            yield return AutoLoginCo();
         }
+    }
+
+    // =====================================================================
+    // 서버 주소 자동 선택
+    //
+    // Tailscale 주소 → LAN 주소 순서로 /health 를 찔러보고, 먼저 응답하는 쪽을 씀.
+    // - 집/외부: Tailscale만 되므로 Tailscale로 결정
+    // - 학원에서 Tailscale 안 깐 PC: Tailscale 실패 → LAN으로 결정
+    // 둘 다 실패하면 Tailscale 주소를 기본값으로 두고 진행 (에러 메시지는 실제 요청에서 나옴)
+    // =====================================================================
+    private IEnumerator ResolveServerUrlCo()
+    {
+        if (_urlResolved) yield break;
+
+        foreach (string candidate in new[] { serverUrlTailscale, serverUrlLan })
+        {
+            if (string.IsNullOrWhiteSpace(candidate)) continue;
+
+            bool alive = false;
+            yield return ProbeCo(candidate, ok => alive = ok);
+
+            if (alive)
+            {
+                serverUrl    = candidate;
+                _urlResolved = true;
+                Debug.Log($"[ServerApi] 서버 주소 결정: {serverUrl}");
+                yield break;
+            }
+
+            Debug.Log($"[ServerApi] {candidate} 응답 없음 — 다음 주소 시도");
+        }
+
+        // 둘 다 실패 — 일단 Tailscale 주소로 두고, 실제 요청에서 에러가 보이게 함
+        serverUrl    = serverUrlTailscale;
+        _urlResolved = true;
+        Debug.LogWarning("[ServerApi] 두 주소 모두 응답 없음. 서버가 꺼져 있거나 네트워크 문제일 수 있음 " +
+                         $"(Tailscale: {serverUrlTailscale} / LAN: {serverUrlLan})");
+    }
+
+    /// <summary>그 주소의 /health 가 응답하는지 짧게 확인.</summary>
+    private IEnumerator ProbeCo(string baseUrl, Action<bool> onResult)
+    {
+        using UnityWebRequest req = UnityWebRequest.Get(baseUrl + "/health");
+        req.timeout = probeTimeoutSec;
+        yield return req.SendWebRequest();
+        onResult(req.result == UnityWebRequest.Result.Success);
+    }
+
+    /// <summary>요청 보내기 전에 주소가 정해졌는지 확인 (아직이면 지금 정함).</summary>
+    private IEnumerator EnsureUrlCo()
+    {
+        if (!_urlResolved) yield return ResolveServerUrlCo();
     }
 
     /// <summary>로그인 시도 → 계정이 없으면(401) 가입 후 다시 로그인.</summary>
@@ -111,6 +187,8 @@ public class ServerApi : MonoBehaviour
     public IEnumerator RegisterCo(string username, string password,
                                   Action<long> onSuccess = null, Action<string> onError = null)
     {
+        yield return EnsureUrlCo();
+
         string json = JsonUtility.ToJson(new AuthRequest { username = username, password = password });
         using UnityWebRequest req = MakeJsonPost("/register", json);
         yield return req.SendWebRequest();
@@ -132,6 +210,8 @@ public class ServerApi : MonoBehaviour
     public IEnumerator LoginCo(string username, string password,
                                Action<long> onSuccess = null, Action<string> onError = null)
     {
+        yield return EnsureUrlCo();
+
         string json = JsonUtility.ToJson(new AuthRequest { username = username, password = password });
         using UnityWebRequest req = MakeJsonPost("/login", json);
         yield return req.SendWebRequest();
@@ -161,6 +241,8 @@ public class ServerApi : MonoBehaviour
             yield break;
         }
 
+        yield return EnsureUrlCo();
+
         string json = JsonUtility.ToJson(data);   // 파일에 쓰던 그 JSON을 서버로 보낼 뿐
         using UnityWebRequest req = MakeJsonPost($"/save/{UserId}/{slot}", json);
         yield return req.SendWebRequest();
@@ -186,6 +268,8 @@ public class ServerApi : MonoBehaviour
             onError?.Invoke("로그인이 안 되어 있음 (UserId 없음)");
             yield break;
         }
+
+        yield return EnsureUrlCo();
 
         using UnityWebRequest req = UnityWebRequest.Get($"{serverUrl}/load/{UserId}/{slot}");
         yield return req.SendWebRequest();
@@ -214,6 +298,8 @@ public class ServerApi : MonoBehaviour
             yield break;
         }
 
+        yield return EnsureUrlCo();
+
         using UnityWebRequest req = UnityWebRequest.Get($"{serverUrl}/saves/{UserId}");
         yield return req.SendWebRequest();
 
@@ -239,6 +325,8 @@ public class ServerApi : MonoBehaviour
             onError?.Invoke("로그인이 안 되어 있음 (UserId 없음)");
             yield break;
         }
+
+        yield return EnsureUrlCo();
 
         using UnityWebRequest req = UnityWebRequest.Delete($"{serverUrl}/save/{UserId}/{slot}");
         req.downloadHandler = new DownloadHandlerBuffer();
