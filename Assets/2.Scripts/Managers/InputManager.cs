@@ -239,6 +239,11 @@ public class InputManager : MonoBehaviour
              "(둘 다 동시 사용, 동시 입력 시 패드 우선). 현재 사용 중인 장치는 LastUsedDevice로 확인.")]
     public INPUT_CONTROL_TYPE controlType = INPUT_CONTROL_TYPE.KEYBOARD_MOUSE;
 
+    [Tooltip("VR(XR) 실행 중에는 게임패드 축을 읽지 않음. 퀘스트 등 VR 컨트롤러가 조이스틱으로 잡히면 " +
+             "패드용 축 번호에 엉뚱하게 걸려 트리거가 눌린 것처럼 들어옴(총이 계속 발사되는 증상). " +
+             "VR에서 실제 게임패드를 쓰려면 이 값을 꺼야 함.")]
+    public bool ignoreGamepadDuringXR = true;
+
     [Space(5)]
     [Header("━━━━━━ 키보드/마우스 키 설정 ━━━━━━")]
     public KeyboardMouseConfig keyboardMouseConfig = new KeyboardMouseConfig();
@@ -423,8 +428,10 @@ public class InputManager : MonoBehaviour
 
         // 패드가 연결됐을 때만 오버레이 — 연결 안 됐으면 패드 축을 읽지 않음.
         // (패드용 커스텀 축이 Project Settings에 없으면 GetAxisRaw가 예외를 던지므로, 키보드만 쓸 땐 아예 스킵)
+        // VR 실행 중에는 스킵 — VR 컨트롤러가 조이스틱으로 잡혀 패드 축에 엉뚱하게 걸리면
+        // 트리거가 계속 눌린 것처럼 들어와 총이 멈추지 않는다.
         _padActive = false;
-        if (IsGamepadConnected)
+        if (IsGamepadConnected && !(ignoreGamepadDuringXR && XRRuntimeManager.IsRunning))
         {
             OverlayGamepad(); // 패드 입력이 있으면 덮어씀(아날로그) / OR(버튼)
         }
