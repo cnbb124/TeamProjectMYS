@@ -77,11 +77,21 @@ public class ItemQuickSlotUI : MonoBehaviour
 
     private QuickSlot _quickSlot;
 
+    [Header("쿨타임 완료 연출 (UIEffect)")]
+    [Tooltip("쿨다운이 끝나는 순간 슬롯을 한 번 번쩍이게 함 (UIEffect Shiny 등). 슬롯 프리팹의 UIEffect 자동 탐색")]
+    [SerializeField] private bool  readyFlashEnabled = true;
+    [Tooltip("번쩍임 지속 시간(초). transitionRate가 0→1로 흐르는 시간")]
+    [SerializeField] private float readyFlashDuration = 0.4f;
+
     private RectTransform[] _slots;
     private Image[]         _frames;
     private Image[]         _icons;
     private TMP_Text[]      _counts;
     private Image[]         _cooldowns;
+
+    private Coffee.UIEffects.UIEffect[] _readyEffects; // 슬롯별 UIEffect(없으면 null)
+    private bool[]  _wasOnCooldown;   // 직전 프레임에 쿨다운 중이었는지 (완료 순간 감지용)
+    private float[] _readyFlashTimer; // 완료 번쩍임 남은 시간
 
     private float _targetAngle;
     private float _currentAngle;
@@ -282,6 +292,10 @@ public class ItemQuickSlotUI : MonoBehaviour
         _counts    = new TMP_Text[count];
         _cooldowns = new Image[count];
 
+        _readyEffects    = new Coffee.UIEffects.UIEffect[count];
+        _wasOnCooldown   = new bool[count];
+        _readyFlashTimer = new float[count];
+
         // slotSpacing 지정 시 인접 슬롯 간격 기준으로 반지름 자동 계산
         // (현의 길이 공식: spacing = 2 × r × sin(π/n) → r = spacing / (2 sin(π/n)))
         float r = slotSpacing > 0f && count > 1
@@ -301,6 +315,10 @@ public class ItemQuickSlotUI : MonoBehaviour
             _icons[i]     = go.transform.Find("Icon")?.GetComponent<Image>();
             _counts[i]    = go.transform.Find("Count")?.GetComponent<TMP_Text>();
             _cooldowns[i] = go.transform.Find("Cooldown")?.GetComponent<Image>();
+
+            // 쿨타임 완료 번쩍임용 UIEffect — 슬롯 어디에 붙어있든(자식 포함) 자동 탐색
+            _readyEffects[i] = go.GetComponentInChildren<Coffee.UIEffects.UIEffect>(true);
+            if (_readyEffects[i] != null) _readyEffects[i].transitionRate = 0f; // 평소엔 효과 꺼둠
 
             if (_cooldowns[i] != null) _cooldowns[i].fillAmount = 0f;
         }
@@ -347,12 +365,45 @@ public class ItemQuickSlotUI : MonoBehaviour
 
     private void UpdateCooldownGauges()
     {
-        if (_cooldowns == null) return;
+        if (_quickSlot == null) return;
 
-        for (int i = 0; i < _cooldowns.Length && i < _quickSlot.slots.Length; i++)
+        int n = _quickSlot.slots.Length;
+        for (int i = 0; i < n; i++)
         {
-            if (_cooldowns[i] == null) continue;
-            _cooldowns[i].fillAmount = _quickSlot.GetCooldownRatio(i);
+            float ratio = _quickSlot.GetCooldownRatio(i);   // 1=방금사용 ~ 0=준비완료
+
+            // 쿨다운 게이지
+            if (_cooldowns != null && i < _cooldowns.Length && _cooldowns[i] != null)
+                _cooldowns[i].fillAmount = ratio;
+
+            UpdateReadyFlash(i, ratio);
+        }
+    }
+
+    // 쿨다운이 "방금 막 끝난" 순간을 잡아 UIEffect를 한 번 번쩍인다(B안).
+    // 쿨다운 도는 동안엔 조용하고, 완료되는 프레임에만 트리거 → "사용 가능!" 신호.
+    private void UpdateReadyFlash(int i, float ratio)
+    {
+        if (!readyFlashEnabled || _readyEffects == null || _readyEffects[i] == null) return;
+
+        bool onCooldownNow = ratio > 0f;
+
+        // 직전엔 쿨다운 중이었는데 지금 0이 됨 = 방금 완료 → 번쩍임 시작.
+        // 빈 슬롯(GetCooldownRatio가 0 반환)은 _wasOnCooldown이 false라 오발되지 않음.
+        if (_wasOnCooldown[i] && !onCooldownNow && _quickSlot.slots[i] != null)
+            _readyFlashTimer[i] = readyFlashDuration;
+
+        _wasOnCooldown[i] = onCooldownNow;
+
+        // 번쩍임 진행: transitionRate를 0→1로 흘려 빛이 한 번 지나가게 함
+        if (_readyFlashTimer[i] > 0f)
+        {
+            _readyFlashTimer[i] -= Time.deltaTime;
+            float t = 1f - Mathf.Clamp01(_readyFlashTimer[i] / readyFlashDuration); // 0→1
+            _readyEffects[i].transitionRate = t;
+
+            if (_readyFlashTimer[i] <= 0f)
+                _readyEffects[i].transitionRate = 0f;   // 끝나면 효과 꺼서 평소 상태로
         }
     }
 
