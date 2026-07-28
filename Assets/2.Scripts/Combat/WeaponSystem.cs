@@ -187,6 +187,39 @@ public class WeaponSystem : MonoBehaviour
 	/// </summary>
 	public int SimultaneousFire { get { return _missileFirePositions.Count; } }
 
+	/// <summary>
+	/// 총구들의 가운데 위치. 조준 HUD가 '총알이 실제로 지나가는 선'을 그리는 데 씀.
+	/// 좌우 총구가 따로 있으면 총알도 두 갈래로 나가므로, 마커 하나로는 가운데가 최선임.
+	/// 총구가 하나도 없으면(무기 미장착) false — 부르는 쪽에서 폴백할 것.
+	/// </summary>
+	public bool TryGetMuzzleCenter(out Vector3 center)
+	{
+		center = Vector3.zero;
+		if (_bulletFirePositions.Count == 0)
+		{
+			return false;
+		}
+
+		int count = 0;
+		foreach (Transform pos in _bulletFirePositions)
+		{
+			if (pos == null)
+			{
+				continue;   // 파츠가 파괴되면 리스트에 null이 남을 수 있음
+			}
+			center += pos.position;
+			count++;
+		}
+
+		if (count == 0)
+		{
+			return false;
+		}
+
+		center /= count;
+		return true;
+	}
+
 
 	// ================== [초기화] ==================
 

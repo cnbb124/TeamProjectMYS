@@ -215,6 +215,66 @@ public enum GAMEPAD_BUTTON
 	DpadRight, // 게임패드 D패드 →
 	TouchpadClick, // 듀얼센스(PS4/5) 터치패드 '누르기' — 그 패드에만 있음. 물리 번호는 컨트롤러/드라이버별로 달라 아래 ToJoystickKey에서 조정 필요
 }
+
+// 게임패드 아날로그 축. 이름을 문자열로 들고 다니면 오타가 나도 실행 전까지 모르고,
+// Project Settings에 실제로 등록된 이름과 어긋나면 런타임 예외가 남 —
+// 그래서 enum으로 고정하고 실제 축 이름 변환은 InputManager가 표로 들고 있음.
+// ⚠ 여기 항목을 늘리면 InputManager.AxisNames 배열도 같은 순서로 늘려야 함.
+public enum GAMEPAD_AXIS
+{
+	None,          // 미배정 — 읽지 않고 0으로 취급함
+	LeftStickX,    // 왼쪽 스틱 좌우 (좌우 이동)
+	LeftStickY,    // 왼쪽 스틱 상하 (전후 이동)
+	RightStickX,   // 오른쪽 스틱 좌우 (Yaw)
+	RightStickY,   // 오른쪽 스틱 상하 (Pitch)
+	DPadX,         // D패드 좌우 (축으로 들어옴)
+	DPadY,         // D패드 상하 (축으로 들어옴)
+	LeftTrigger,   // L2 (축)
+	RightTrigger,  // R2 (축)
+	VerticalMove,  // 상승/하강 축
+}
+
+// 조합키에 붙일 수 있는 행동 목록.
+// 인스펙터에서 "이 키들을 같이 누르면 이 행동" 형태로 고르게 하려고 만든 것 —
+// InputManager.ApplyAction이 여기 값에 맞는 출력 필드를 세워줌.
+// ⚠ 항목을 늘리면 InputManager.ApplyAction의 switch에도 같이 추가할 것.
+public enum INPUT_ACTION
+{
+	None,
+
+	// 이동/회전 (누르는 동안 유지)
+	MoveForward,
+	MoveBack,
+	MoveLeft,
+	MoveRight,
+	MoveUp,
+	MoveDown,
+	RollLeft,
+	RollRight,
+	Boost,
+
+	// 즉발 (누른 순간 한 프레임)
+	Dodge,
+	FireBullet,      // 이것만 누르는 동안 유지됨(연사)
+	FireMissile,
+	LockOnPrev,
+	LockOnNext,
+	MissilePrev,
+	MissileNext,
+	MissileShootMode,
+	ToggleClusterLockMode,
+	SwitchConsumable,
+	UseConsumable,
+	SwitchSkillSlot,
+	UseSkill,
+
+	// UI
+	FuelGaugeToggle,
+	InventoryToggle,
+	PauseMenu,
+	MapToggle,
+	Interact,
+}
 public enum POOL_TYPE
 {
 	// 투사체 (DisableAllProjectiles 대상)

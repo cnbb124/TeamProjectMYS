@@ -33,6 +33,14 @@ public class CrosshairUI : MonoBehaviour
              "클수록 마우스 입력이 크게 보임. 화면 절반보다 크면 크로스헤어가 화면 밖으로 나감.")]
     [SerializeField] private float aimScreenRange = 220f;
 
+    [Tooltip("짐벌 인디케이터. 물려두면 총구 높이 차이만큼 크로스헤어도 자동으로 같이 내려감.\n" +
+             "비워두면 화면 중앙 기준으로만 움직여서, 짐벌이 따라잡아도 총알은 그보다 아래로 감.")]
+    [SerializeField] private GimbalIndicatorUI gimbal;
+
+    [Tooltip("추가 미세보정(픽셀). X=좌우, Y=상하(음수면 아래로).\n" +
+             "짐벌을 물려뒀으면 자동으로 맞으므로 보통 0으로 둘 것.")]
+    [SerializeField] private Vector2 aimScreenOffset = Vector2.zero;
+
     private float _targetScale;
     private float _targetOpacity;
 
@@ -69,6 +77,11 @@ public class CrosshairUI : MonoBehaviour
         // 조종간 기울기(-1~1)를 화면 중앙 기준 오프셋으로 변환.
         // Lerp를 걸지 않음 — 이건 '입력 그 자체'라 한 프레임도 늦으면 안 됨.
         // 월드 좌표 변환도 필요 없음(입력은 애초에 화면 기준 값이라 카메라 뒤 문제도 없음).
-        crosshairRect.anchoredPosition = InputManager.Instance.MouseStick * aimScreenRange;
+        // 짐벌이 계산해둔 '총구 높이 차이'를 그대로 받아서 같이 내려감 —
+        // 이래야 기수가 크로스헤어를 따라잡았을 때 총알이 정확히 크로스헤어로 감.
+        Vector2 muzzleOffset = gimbal != null ? gimbal.MuzzleParallaxOffset : Vector2.zero;
+
+        crosshairRect.anchoredPosition =
+            InputManager.Instance.MouseStick * aimScreenRange + muzzleOffset + aimScreenOffset;
     }
 }

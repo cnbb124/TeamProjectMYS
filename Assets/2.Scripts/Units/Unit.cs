@@ -1016,12 +1016,14 @@ public abstract class Unit : MonoBehaviour, IDamageable, IPunObservable
 		{
 			stream.SendNext(curHpRemaining);
 			stream.SendNext(curShieldRemaining);
+			stream.SendNext(curArmorRemaining);
 		}
 		else
 		{
 			bool hadShield = curShieldRemaining > 0;
 			curHpRemaining = (int)stream.ReceiveNext();
 			curShieldRemaining = (int)stream.ReceiveNext();
+			curArmorRemaining = (int)stream.ReceiveNext();
 			bool hasShield = curShieldRemaining > 0;
 
 			// 실드 유무가 바뀐 순간에만 콜라이더 갱신 — 피격 판정은 각 클라 로컬에서 나므로 비소유자도 콜라이더가 맞아야 함.

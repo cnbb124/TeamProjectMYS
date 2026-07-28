@@ -30,7 +30,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 6, y: 6, z: 6}
+  m_LocalScale: {x: 8, y: 8, z: 8}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 2154249172072730532}
@@ -104,7 +104,7 @@ SphereCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Radius: 1.5
+  m_Radius: 1.25
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!114 &1854254667163251502
 MonoBehaviour:
@@ -138,6 +138,7 @@ GameObject:
   - component: {fileID: 5878844923818811113}
   - component: {fileID: 8878645094549226718}
   - component: {fileID: 4284715039158635333}
+  - component: {fileID: 249168026261552979}
   m_Layer: 0
   m_Name: TestItemPickup_Shieldkit
   m_TagString: Item
@@ -189,8 +190,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _chaseDuration: 0.45
   _spinSpeed: 540
-  _itemData: {fileID: 11400000, guid: 0de0645e33aa6204b981955f2face52c, type: 2}
-  _amount: 1
 --- !u!54 &4284715039158635333
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -218,3 +217,17 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &249168026261552979
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6114423550263913415}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 27971c665aad53343a032118e9ebf86a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  minDistance: 3.49
+  maxDistance: 50

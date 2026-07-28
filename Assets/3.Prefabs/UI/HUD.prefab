@@ -2922,11 +2922,10 @@ MonoBehaviour:
   mainCam: {fileID: 0}
   indicatorRect: {fileID: 1390846155785286250}
   indicatorImage: {fileID: 8513804551842803565}
-  aimDistance: 500
+  aimDistance: 100
   aimPitchOffset: 0
+  aimScreenOffset: {x: 0, y: 0}
   normalColor: {r: 1, g: 0.88550174, b: 0, a: 0.5882353}
-  _debugLog: 0
-  _debugInterval: 0.5
 --- !u!1 &2713663403924760225
 GameObject:
   m_ObjectHideFlags: 0
@@ -4303,6 +4302,8 @@ MonoBehaviour:
   normalOpacity: 0.8
   aimOpacity: 1
   aimScreenRange: 220
+  gimbal: {fileID: 0}
+  aimScreenOffset: {x: 0, y: 0}
 --- !u!1 &3867751175471906866
 GameObject:
   m_ObjectHideFlags: 0
@@ -12572,6 +12573,8 @@ MonoBehaviour:
   flashTime: 0.15
   useInputManager: 1
   autoAssignFromInventory: 1
+  readyFlashEnabled: 1
+  readyFlashDuration: 0.4
 --- !u!224 &4182765010145051656 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 3568387093020325719, guid: ce710790cd4f4f7419301429beab47d1, type: 3}

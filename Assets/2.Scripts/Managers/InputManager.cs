@@ -109,6 +109,43 @@ public class KeyboardMouseConfig
 }
 
 // =====================================================================
+// 조합키 — 키 여러 개를 동시에 눌렀을 때만 나가는 입력.
+//
+// 키가 모자라서 한 키에 두 기능을 얹고 싶을 때 씀.
+// 예) Shift+Q = 스킬 사용   /   Ctrl+Space = 소모품 사용
+//
+// [인스펙터 사용법]
+//   Keys 에 같이 눌러야 할 키를 2개 이상 넣고, Action 에서 시킬 행동을 고르면 됨.
+//   행동 목록(INPUT_ACTION)은 InputManager가 내보내는 출력 필드와 1:1로 대응함.
+// =====================================================================
+[System.Serializable]
+public class ComboBinding
+{
+    [Tooltip("인스펙터에서 알아보기 위한 이름. 동작에는 영향 없음.")]
+    public string name = "새 조합키";
+
+    [Tooltip("동시에 누르고 있어야 하는 키들. 2개 이상 넣어야 동작함.\n" +
+             "여기 있는 키가 전부 눌려 있을 때만 아래 행동이 나감.")]
+    public List<KeyCode> keys = new List<KeyCode>();
+
+    [Tooltip("이 조합을 눌렀을 때 시킬 행동.")]
+    public INPUT_ACTION action = INPUT_ACTION.None;
+
+    [Tooltip("ON  : 누르고 있는 동안 계속 유지됨 (이동/부스트/연사용)\n" +
+             "OFF : 조합이 완성되는 순간 한 프레임만 (토글/사용/전환용)")]
+    public bool holdAction = false;
+
+    [Tooltip("ON: 조합이 성립하는 동안 그 키들의 원래 단독 기능을 막음.\n" +
+             "예) Shift+Q를 조합키로 쓸 때 Q의 좌롤이 같이 나가는 것을 방지.\n" +
+             "OFF: 단독 기능도 같이 나감(부스트+스킬처럼 겹쳐 쓰고 싶을 때).")]
+    public bool suppressSingleKeys = true;
+
+    // 직전 프레임에 조합이 성립해 있었는지 — '완성되는 순간'을 잡기 위한 것.
+    // 저장할 값이 아니라 실행 중 상태라 직렬화 대상에서 뺌.
+    [System.NonSerialized] public bool wasActive;
+}
+
+// =====================================================================
 // 게임패드 키 설정
 // 축 이름은 Unity Input Settings에서 직접 등록한 이름과 맞춰야 함
 //
@@ -167,25 +204,19 @@ public class GamepadConfig
     [Header("상호작용(STATION에서)")]
     public GAMEPAD_BUTTON interAct        = GAMEPAD_BUTTON.Cross; // 전투의 dodge와 씬 문맥이 달라 공유 무방
 
-    //[Header("Unity Input Settings 축 이름 (Project Settings에 등록 필요)")]
-    [HideInInspector]
-    public string axisLeftStickX   = "LeftStickX";
-	[HideInInspector]
-	public string axisLeftStickY   = "LeftStickY";
-	[HideInInspector] 
-    public string axisVerticalMove = "VerticalMove";
-	[HideInInspector]
-    public string axisRightStickX  = "RightStickX";
-	[HideInInspector] 
-    public string axisRightStickY  = "RightStickY";
-	[HideInInspector]
-    public string axisDPadX        = "DPadX";
-	[HideInInspector] 
-    public string axisDPadY        = "DPadY";
-	[HideInInspector] 
-    public string axisL2           = "LeftTrigger";  // L2 트리거(축)
-	[HideInInspector] 
-    public string axisR2           = "RightTrigger"; // R2 트리거(축)
+    // 축은 문자열이 아니라 GAMEPAD_AXIS로 지정 — 오타가 나면 컴파일에서 걸리고,
+    // Project Settings에 등록된 이름과의 대응은 InputManager.AxisNames 한 곳에서만 관리됨.
+    // None으로 두면 그 축은 아예 안 읽고 0으로 취급함(등록 안 한 축 때문에 예외 나는 것 방지).
+    [Header("게임패드 축 배정")]
+    public GAMEPAD_AXIS axisLeftStickX   = GAMEPAD_AXIS.LeftStickX;
+    public GAMEPAD_AXIS axisLeftStickY   = GAMEPAD_AXIS.LeftStickY;
+    public GAMEPAD_AXIS axisVerticalMove = GAMEPAD_AXIS.VerticalMove;
+    public GAMEPAD_AXIS axisRightStickX  = GAMEPAD_AXIS.RightStickX;
+    public GAMEPAD_AXIS axisRightStickY  = GAMEPAD_AXIS.RightStickY;
+    public GAMEPAD_AXIS axisDPadX        = GAMEPAD_AXIS.DPadX;
+    public GAMEPAD_AXIS axisDPadY        = GAMEPAD_AXIS.DPadY;
+    public GAMEPAD_AXIS axisL2           = GAMEPAD_AXIS.LeftTrigger;   // L2 트리거(축)
+    public GAMEPAD_AXIS axisR2           = GAMEPAD_AXIS.RightTrigger;  // R2 트리거(축)
 
     [Header("시야 옵션")]
     [Tooltip("오른쪽 스틱 상하(Y축) 반전. 켜면 스틱을 위로 밀 때 시야가 아래로 감(항공 스타일).")]
@@ -246,6 +277,12 @@ public class InputManager : MonoBehaviour
     [Space(5)]
     [Header("━━━━━━ 게임패드 키 설정 ━━━━━━")]
     public GamepadConfig gamepadConfig = new GamepadConfig();
+
+    [Space(5)]
+    [Header("━━━━━━ 조합키 (동시 입력) ━━━━━━")]
+    [Tooltip("키 2개 이상을 같이 눌렀을 때만 나가는 입력.\n" +
+             "키가 모자랄 때 한 키에 기능을 더 얹는 용도. 개수 제한 없음.")]
+    public List<ComboBinding> comboBindings = new List<ComboBinding>();
 
     // =====================================================================
     // 마우스 가상 조종간 (에버스페이스/엘리트 데인저러스 방식)
@@ -374,6 +411,35 @@ public class InputManager : MonoBehaviour
         }
     }
 
+    // GAMEPAD_AXIS → Project Settings에 등록된 실제 축 이름.
+    // enum 순서와 반드시 같아야 함(GAMEPAD_AXIS에 항목을 늘리면 여기도 같은 자리에 추가할 것).
+    // enum.ToString()을 안 쓰는 이유: ToString은 호출할 때마다 문자열을 새로 만들어서
+    // 매 프레임 축을 9개씩 읽는 이 코드에선 쓰레기가 계속 쌓임.
+    private static readonly string[] AxisNames =
+    {
+        string.Empty,     // None
+        "LeftStickX",
+        "LeftStickY",
+        "RightStickX",
+        "RightStickY",
+        "DPadX",
+        "DPadY",
+        "LeftTrigger",
+        "RightTrigger",
+        "VerticalMove",
+    };
+
+    // 배정된 축을 읽음. None이거나 표 밖의 값이면 0 — 등록 안 된 축을 읽어 예외 나는 것도 같이 막힘.
+    private static float ReadAxis(GAMEPAD_AXIS axis)
+    {
+        int index = (int)axis;
+        if (index <= 0 || index >= AxisNames.Length)
+        {
+            return 0f;
+        }
+        return Input.GetAxisRaw(AxisNames[index]);
+    }
+
     // 마우스 시야/휠 축 이름(Unity 기본값 — 안 바뀜).
     private const string AxisMouseX = "Mouse X";
     private const string AxisMouseY = "Mouse Y";
@@ -439,11 +505,164 @@ public class InputManager : MonoBehaviour
             LastUsedDevice = INPUT_CONTROL_TYPE.KEYBOARD_MOUSE;
         }
 
+        // 조합키는 키마+패드 병합이 '끝난 뒤'에 얹는다 —
+        // 단독 키 기능을 덮어써야 하는데, 병합 전에 처리하면 뒤이어 다시 켜져버림.
+        UpdateComboBindings();
+
         // UI/메뉴가 열려있으면(=입력 잠금) 키마+패드 병합이 끝난 최종 출력에서 게임플레이 입력만 무효화함.
         // 인벤토리/일시정지 등을 닫아야 하는 UI 토글 키는 살려둠(안 그러면 못 닫음).
         if (IsGameplayInputLocked())
         {
             ClearGameplayInput();
+        }
+    }
+
+    // =====================================================================
+    // 조합키 처리 — 등록된 조합들을 훑어서 성립한 것만 행동으로 바꿈.
+    //
+    // 판정 순서가 중요함:
+    //   1) 단독 키 기능을 먼저 끈다(suppressSingleKeys)
+    //   2) 그 다음에 조합 행동을 켠다
+    // 반대로 하면 1)이 2)를 지워버림. 조합 행동이 단독 기능과 같은 필드를 쓸 수 있기 때문.
+    // =====================================================================
+    private void UpdateComboBindings()
+    {
+        if (comboBindings == null)
+        {
+            return;
+        }
+
+        for (int i = 0; i < comboBindings.Count; i++)
+        {
+            ComboBinding combo = comboBindings[i];
+            if (combo == null || combo.action == INPUT_ACTION.None)
+            {
+                continue;
+            }
+
+            bool active = IsComboHeld(combo);
+            if (active)
+            {
+                if (combo.suppressSingleKeys)
+                {
+                    for (int k = 0; k < combo.keys.Count; k++)
+                    {
+                        ApplyAction(FindActionForKey(combo.keys[k]), false);
+                    }
+                }
+
+                // holdAction이면 누르는 동안 계속, 아니면 조합이 '막 성립한' 프레임에만.
+                if (combo.holdAction || !combo.wasActive)
+                {
+                    ApplyAction(combo.action, true);
+                }
+            }
+
+            combo.wasActive = active;
+        }
+    }
+
+    // 등록된 키가 전부 눌려 있는지. 2개 미만이면 조합키가 아니므로 성립 안 시킴
+    // (1개짜리를 허용하면 단독 키 설정과 겹쳐서 어느 쪽이 이겼는지 알 수 없게 됨).
+    private bool IsComboHeld(ComboBinding combo)
+    {
+        if (combo.keys == null || combo.keys.Count < 2)
+        {
+            return false;
+        }
+
+        for (int i = 0; i < combo.keys.Count; i++)
+        {
+            if (!Input.GetKey(combo.keys[i]))
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    // 이 키에 원래 물려 있던 단독 행동을 찾음. 없으면 None.
+    // 조합키가 성립했을 때 그 단독 기능을 꺼주기 위한 역참조라, 키보드 설정만 보면 됨.
+    private INPUT_ACTION FindActionForKey(KeyCode key)
+    {
+        var km = keyboardMouseConfig;
+
+        if (key == km.moveForward) return INPUT_ACTION.MoveForward;
+        if (key == km.moveBack)    return INPUT_ACTION.MoveBack;
+        if (key == km.moveLeft)    return INPUT_ACTION.MoveLeft;
+        if (key == km.moveRight)   return INPUT_ACTION.MoveRight;
+        if (key == km.moveUp)      return INPUT_ACTION.MoveUp;
+        if (key == km.moveDown)    return INPUT_ACTION.MoveDown;
+        if (key == km.rollLeft)    return INPUT_ACTION.RollLeft;
+        if (key == km.rollRight)   return INPUT_ACTION.RollRight;
+        if (key == km.boost)       return INPUT_ACTION.Boost;
+        if (key == km.dodge)       return INPUT_ACTION.Dodge;
+
+        if (key == km.fireBullet)  return INPUT_ACTION.FireBullet;
+        if (key == km.fireMissile) return INPUT_ACTION.FireMissile;
+
+        if (key == km.missilePrev) return INPUT_ACTION.MissilePrev;
+        if (key == km.missileNext) return INPUT_ACTION.MissileNext;
+
+        if (key == km.switchConsumable) return INPUT_ACTION.SwitchConsumable;
+        if (key == km.useConsumable)    return INPUT_ACTION.UseConsumable;
+
+        if (key == km.switchSkillSlot) return INPUT_ACTION.SwitchSkillSlot;
+        if (key == km.useSkill)        return INPUT_ACTION.UseSkill;
+
+        if (key == km.fuelGaugeToggle) return INPUT_ACTION.FuelGaugeToggle;
+        if (key == km.inventoryToggle) return INPUT_ACTION.InventoryToggle;
+        if (key == km.pauseMenu)       return INPUT_ACTION.PauseMenu;
+        if (key == km.mapToggle)       return INPUT_ACTION.MapToggle;
+
+        if (key == km.interAct)             return INPUT_ACTION.Interact;
+        if (key == km.toggleClusterLockMode) return INPUT_ACTION.ToggleClusterLockMode;
+
+        return INPUT_ACTION.None;
+    }
+
+    // 행동 하나를 출력 필드에 반영. on=false면 그 행동을 끔(조합키의 단독 기능 차단용).
+    // 이동은 축 성분이라 끌 때 해당 방향 성분만 0으로 되돌림 —
+    // 반대 방향 키를 같이 누르고 있을 수 있어서 통째로 0을 넣으면 안 됨.
+    private void ApplyAction(INPUT_ACTION action, bool on)
+    {
+        switch (action)
+        {
+            case INPUT_ACTION.None: break;
+
+            case INPUT_ACTION.MoveForward: if (on) moveInput.z = 1f;  else if (moveInput.z > 0f) moveInput.z = 0f; break;
+            case INPUT_ACTION.MoveBack:    if (on) moveInput.z = -1f; else if (moveInput.z < 0f) moveInput.z = 0f; break;
+            case INPUT_ACTION.MoveRight:   if (on) moveInput.x = 1f;  else if (moveInput.x > 0f) moveInput.x = 0f; break;
+            case INPUT_ACTION.MoveLeft:    if (on) moveInput.x = -1f; else if (moveInput.x < 0f) moveInput.x = 0f; break;
+            case INPUT_ACTION.MoveUp:      if (on) moveInput.y = 1f;  else if (moveInput.y > 0f) moveInput.y = 0f; break;
+            case INPUT_ACTION.MoveDown:    if (on) moveInput.y = -1f; else if (moveInput.y < 0f) moveInput.y = 0f; break;
+
+            case INPUT_ACTION.RollRight:   if (on) rollInput = 1f;  else if (rollInput > 0f) rollInput = 0f; break;
+            case INPUT_ACTION.RollLeft:    if (on) rollInput = -1f; else if (rollInput < 0f) rollInput = 0f; break;
+
+            case INPUT_ACTION.LockOnNext:  if (on) switchLockOnTarget = 1f;  else if (switchLockOnTarget > 0f) switchLockOnTarget = 0f; break;
+            case INPUT_ACTION.LockOnPrev:  if (on) switchLockOnTarget = -1f; else if (switchLockOnTarget < 0f) switchLockOnTarget = 0f; break;
+
+            case INPUT_ACTION.Boost:       isBoosting = on; break;
+            case INPUT_ACTION.Dodge:       isDodging = on; break;
+            case INPUT_ACTION.FireBullet:  fireBullet = on; break;
+            case INPUT_ACTION.FireMissile: fireMissile = on; break;
+
+            case INPUT_ACTION.MissilePrev:           switchMissilePrev = on; break;
+            case INPUT_ACTION.MissileNext:           switchMissileNext = on; break;
+            case INPUT_ACTION.MissileShootMode:      switchMissileShootMode = on; break;
+            case INPUT_ACTION.ToggleClusterLockMode: toggleClusterLockMode = on; break;
+
+            case INPUT_ACTION.SwitchConsumable: switchConsumable = on; break;
+            case INPUT_ACTION.UseConsumable:    useConsumable = on; break;
+            case INPUT_ACTION.SwitchSkillSlot:  switchSkillSlot = on; break;
+            case INPUT_ACTION.UseSkill:         useSkill = on; break;
+
+            case INPUT_ACTION.FuelGaugeToggle: fuelGaugeToggle = on; break;
+            case INPUT_ACTION.InventoryToggle: inventoryToggle = on; break;
+            case INPUT_ACTION.PauseMenu:       pauseMenu = on; break;
+            case INPUT_ACTION.MapToggle:       mapToggle = on; break;
+            case INPUT_ACTION.Interact:        interAct = on; break;
         }
     }
 
@@ -607,18 +826,18 @@ public class InputManager : MonoBehaviour
         var gp = gamepadConfig;
 
         // 축(트리거/D패드)을 이번 프레임 1번만 샘플 — GetPad/GetPadDown이 엣지 판정에 이 값을 씀.
-        _padDpadX = Input.GetAxisRaw(gp.axisDPadX);
-        _padDpadY = Input.GetAxisRaw(gp.axisDPadY);
-        _padL2    = Input.GetAxisRaw(gp.axisL2);
-        _padR2    = Input.GetAxisRaw(gp.axisR2);
+        _padDpadX = ReadAxis(gp.axisDPadX);
+        _padDpadY = ReadAxis(gp.axisDPadY);
+        _padL2    = ReadAxis(gp.axisL2);
+        _padR2    = ReadAxis(gp.axisR2);
 
         // --- 아날로그: 패드가 데드존 넘게 들어오면 키마 값을 덮어씀(패드 우선) ---
         // 이동 (왼쪽 스틱) — 스틱 크기가 그대로 반영돼 살짝=살살 / 확=빠르게(MovingByInput이 크기 보존).
         Vector3 padMove = new Vector3
         (
-            Input.GetAxisRaw(gp.axisLeftStickX),
-            Input.GetAxisRaw(gp.axisVerticalMove),
-            Input.GetAxisRaw(gp.axisLeftStickY)
+            ReadAxis(gp.axisLeftStickX),
+            ReadAxis(gp.axisVerticalMove),
+            ReadAxis(gp.axisLeftStickY)
         );
         bool padMoving = padMove.sqrMagnitude > StickActiveDeadzone * StickActiveDeadzone;
         if (padMoving)
@@ -627,10 +846,10 @@ public class InputManager : MonoBehaviour
         }
 
         // 시야 (오른쪽 스틱) — Y축 반전 옵션 반영
-        float rStickY = Input.GetAxisRaw(gp.axisRightStickY);
+        float rStickY = ReadAxis(gp.axisRightStickY);
         Vector2 padLook = new Vector2
         (
-            Input.GetAxisRaw(gp.axisRightStickX),
+            ReadAxis(gp.axisRightStickX),
             gp.invertRStickY ? -rStickY : rStickY
         );
         bool padLooking = padLook.sqrMagnitude > StickActiveDeadzone * StickActiveDeadzone;

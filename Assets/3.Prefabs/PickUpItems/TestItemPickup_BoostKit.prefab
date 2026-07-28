@@ -30,7 +30,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 6, y: 6, z: 6}
+  m_LocalScale: {x: 8, y: 8, z: 8}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 8872403265309721364}
@@ -104,7 +104,7 @@ SphereCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Radius: 1.5
+  m_Radius: 1.25
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!114 &3065090608718364734
 MonoBehaviour:
@@ -189,8 +189,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _chaseDuration: 0.45
   _spinSpeed: 540
-  _itemData: {fileID: 11400000, guid: 50ea5552842a26a41afca59741dbf174, type: 2}
-  _amount: 1
 --- !u!54 &2130444737279945078
 Rigidbody:
   m_ObjectHideFlags: 0

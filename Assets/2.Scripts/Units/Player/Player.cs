@@ -135,6 +135,24 @@ public class Player : Unit
 	// 조종간 기울기는 '목표' 각속도일 뿐이고, 실제 회전은 이 값이 목표를 따라잡으면서 일어남.
 	private Vector3 _angularVelocity;
 
+	// 마지막 물리 스텝 이후 흐른 시간(초). 0~fixedDeltaTime 사이를 오감.
+	// 회전이 FixedUpdate에서만 갱신되는 탓에 생기는 계단을 HUD 쪽에서 지우는 데 씀(AimRotation 참고).
+	//
+	// 직접 누적하지 않고 Unity 시계(Time.fixedTime)에서 뽑는 이유:
+	// 프레임당 몇 번의 물리 스텝이 도는지, Update가 중간에 걸러지는지에 전혀 영향받지 않음.
+	// 물리 스텝이 도는 순간 이 값이 딱 스텝 하나만큼 줄어서, 회전이 튄 양과 정확히 상쇄됨.
+	private float TurnExtrapTime
+	{
+		get
+		{
+			return Mathf.Clamp(Time.time - Time.fixedTime, 0f, Time.fixedDeltaTime);
+		}
+	}
+
+	// 카메라가 따라갈 분신. 위치는 기체와 같고 회전만 매 프레임 보정된 값이 들어감.
+	// 기체를 직접 따라가면 카메라가 물리 스텝 계단을 물려받아 떨리므로 한 겹 끼워둔 것(Start 참고).
+	private Transform _camAimProxy;
+
 
 	// ==================플레이어용==================
 	[Header("경험치/레벨")]
@@ -219,9 +237,26 @@ public class Player : Unit
 
 		// 내 함선만 게임플레이 카메라(vCam)가 따라오게 붙인다. 남 함선(IsMine=false)엔 안 붙음.
 		// 멀티에선 런타임 스폰이라 인스펙터로 미리 못 걸어서 여기서 자기 자신을 대상으로 등록.
-		if (IsMine && CameraManager.Instance != null)
+		//
+		// 단, 기체 트랜스폼을 직접 물리지 않고 '분신'을 물린다.
+		// 회전은 FixedUpdate(초당 50회)에서만 기록되는데 카메라는 매 프레임 갱신되므로,
+		// 기체를 직접 따라가게 하면 카메라가 그 계단을 그대로 물려받아 화면과 HUD가 떨림.
+		// 분신에는 매 프레임 보정된 회전(AimRotation)을 넣어주므로 카메라 입력이 매끄러워짐.
+		if (IsMine)
 		{
-			CameraManager.Instance.SetFollowTarget(transform);
+			_camAimProxy = new GameObject($"{name}_CameraAimProxy").transform;
+			_camAimProxy.SetPositionAndRotation(transform.position, transform.rotation);
+
+			// 함선이 씬을 넘어 살아남는 경우(네트워크 스폰) 분신도 같이 살아남아야 카메라가 안 끊김
+			if (_photonView != null)
+			{
+				DontDestroyOnLoad(_camAimProxy.gameObject);
+			}
+
+			if (CameraManager.Instance != null)
+			{
+				CameraManager.Instance.SetFollowTarget(_camAimProxy);
+			}
 		}
 		_input = InputManager.Instance;
 		// 게임 시작 시 1번 슬롯 무기로 초기화
@@ -265,10 +300,18 @@ public class Player : Unit
 			return;
 		}
 
+		// 카메라용 분신 갱신 — Cinemachine이 LateUpdate에서 읽으므로 반드시 그 전인 여기서 채워야 함.
+		// 위치는 물리가 이미 프레임 단위로 보간해주고 있어서 그대로 복사하면 되고, 회전만 보정값을 넣음.
+		if (_camAimProxy != null)
+		{
+			_camAimProxy.SetPositionAndRotation(transform.position, AimRotation);
+		}
+
 		if (_input == null)
 		{
 			return;
 		}
+
 		//==========혹여나 업뎃이 입력없을때도 필요한게ㅐ 있으면 이 위로 입력학ㄹ것=========
 		//미사일 장착 토글 처리(온오프) 상태변화 관련이므로 즉시 Update로
 		// 미사일 슬롯 전환 - WeaponSystem 위임
@@ -483,6 +526,15 @@ public class Player : Unit
 		CameraShaker.Instance?.ShakeDamage(info.hitPosition, info.damageAmount, info.isCritical);
 	}
 
+	// 함선이 사라지면 카메라용 분신도 같이 치움 — 안 그러면 빈 오브젝트가 씬에 남음
+	private void OnDestroy()
+	{
+		if (_camAimProxy != null)
+		{
+			Destroy(_camAimProxy.gameObject);
+		}
+	}
+
 	// 사망처리
 	protected override void Die()
 	{
@@ -593,6 +645,39 @@ public class Player : Unit
 		transform.Rotate(transform.up, _angularVelocity.y * dt, Space.World);
 		transform.Rotate(Vector3.right, _angularVelocity.x * dt, Space.Self);
 		transform.Rotate(Vector3.forward, _angularVelocity.z * dt, Space.Self);
+	}
+
+	// ==================HUD용 회전 보정==================
+	//
+	// 렌더 프레임 시점으로 맞춘 기수 회전. 매 프레임 카메라와 대조하는 쪽은
+	// transform.rotation/forward 대신 반드시 이 값을 쓸 것.
+	//
+	// [왜 필요한가]
+	// 회전은 FixedUpdate(50Hz)에서만 기록되고, freezeRotation 때문에 Rigidbody 보간 대상도 아님
+	// (Interpolate는 물리가 소유한 회전만 보간해 줌 — 여기선 transform에 직접 쓰므로 해당 없음).
+	// 반면 카메라는 Cinemachine이 렌더 프레임마다 부드럽게 갱신함.
+	// 그래서 '기수 방향과 카메라 방향의 각도차'로 화면 위치가 정해지는 마커에는
+	// 두 갱신 주기의 차이가 물리 스텝 계단(회전속도 × 0.02초)으로 그대로 드러남.
+	// 마우스 크로스헤어는 입력값을 매 프레임 그대로 읽어서 이 문제가 없음.
+	//
+	// 마지막 스텝 이후 경과시간만큼 현재 각속도로 앞질러 계산해 그 계단을 메움.
+	// 스텝이 진행되는 순간 경과시간도 같은 양만큼 줄어들어 값이 이어짐 — 지연이 늘지 않음.
+	public Quaternion AimRotation
+	{
+		get
+		{
+			return ApplyTurn(transform.rotation, _angularVelocity, TurnExtrapTime);
+		}
+	}
+
+	// 3축 회전을 dt만큼 적용한 결과를 돌려줌.
+	// 축과 적용 순서가 RotateByInput과 반드시 같아야 보정값이 실제 회전과 어긋나지 않음.
+	private Quaternion ApplyTurn(Quaternion rot, Vector3 angularVel, float dt)
+	{
+		rot = Quaternion.AngleAxis(angularVel.y * dt, rot * Vector3.up) * rot;  // Yaw   : 자기 up축 기준(Space.World)
+		rot = rot * Quaternion.AngleAxis(angularVel.x * dt, Vector3.right);     // Pitch : 로컬(Space.Self)
+		rot = rot * Quaternion.AngleAxis(angularVel.z * dt, Vector3.forward);   // Roll  : 로컬(Space.Self)
+		return rot;
 	}
 
 

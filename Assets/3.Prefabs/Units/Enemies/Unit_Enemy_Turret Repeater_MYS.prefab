@@ -1055,59 +1055,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 7066515395437098326}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &5571235010182943235
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 6401320456964261201}
-  - component: {fileID: 1662205398181795051}
-  m_Layer: 7
-  m_Name: LockOnBox_Turret_Reapeter_1
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &6401320456964261201
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5571235010182943235}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0.000000021855694, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 1.1260008, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 7674167247118832804}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!65 &1662205398181795051
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5571235010182943235}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1, y: 1, z: 1}
-  m_Center: {x: 0, y: 0, z: 0}
 --- !u!1 &5813316327158059153
 GameObject:
   m_ObjectHideFlags: 0
@@ -1462,6 +1409,14 @@ MonoBehaviour:
   criChance: 0
   criDamageMultiplier: 0
   _deathSequenceDuration: 1.5
+  _deathVfxType: 9999
+  _deathVfxCount: 1
+  _deathVfxScale: 1
+  _deathVfxSpread: 0.7
+  _deathVfxFollowUnit: 0
+  _deathVfxRadius: 3
+  _deathVfxFinalType: 9999
+  _deathVfxFinalScale: 2
   curState: 0
   curHpRemaining: 0
   curShieldRemaining: 0
@@ -1492,6 +1447,8 @@ MonoBehaviour:
   goldRewardMax: 0
   dropPoolTypes: 
   dropChance: 1
+  dropAmount: 1
+  dropSpreadRadius: 3
   detectRange: 700
   rotateSpeed: 180
   rotateDeadZone: 0
@@ -1595,7 +1552,6 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 6525197733636595973}
-  - {fileID: 6401320456964261201}
   m_Father: {fileID: 4115040892878811627}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &8601619411486094695
