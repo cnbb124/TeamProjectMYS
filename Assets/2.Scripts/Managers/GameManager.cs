@@ -154,7 +154,10 @@ public class GameManager : MonoBehaviourPunCallbacks
 
     // 파괴 목표(특정 오브젝트) 추적. BossSpawnTarget이 활성 시 등록, 파괴(비활성) 시 통지.
     private readonly HashSet<GameObject> _bossTargets = new HashSet<GameObject>();
+    [Header("디버그 확인용")]
+    [SerializeField]
     private int _bossTargetsTotal;
+    [SerializeField]
     private int _bossTargetsDestroyed;
 
     // Quest UI 참조용 진행도
@@ -360,6 +363,20 @@ public class GameManager : MonoBehaviourPunCallbacks
             Destroy(playerRef.gameObject);
         }
         playerRef = null;
+
+        // 게임오버로 빠질 때는 방에서도 나간다.
+        //
+        // 적은 룸 종속 오브젝트라 AI가 방장에서만 돌고, 방장이 전투씬을 떠나면서 적을 비활성화하면
+        // 남은 사람 화면에서 적이 그대로 멈춰버린다. 방장이 방에 남아 있는 한 Photon은 마스터를
+        // 넘기지 않으므로 SpawnManager.OnMasterClientSwitched(웨이브 인계)도 실행되지 않는다.
+        // 방을 나가야 마스터가 다음 사람에게 넘어가고 진행이 이어진다.
+        //
+        // 다른 씬 전환(스테이션↔스테이지 등)에서는 방을 유지해야 하므로 게임오버일 때만 나감.
+        // 함선 정리를 마친 뒤에 나가야 PhotonNetwork.Destroy가 정상 처리됨.
+        if (PhotonNetwork.InRoom && sceneName == SCENE_TYPE.GAME_OVER.ToString())
+        {
+            PhotonNetwork.LeaveRoom();
+        }
 
         // 씬 언로드 중 BossSpawnTarget들이 줄줄이 OnDisable을 맞는데, 그건 '파괴'가 아니라 정리 과정임 —
         // 목표 달성으로 세어버리면 씬 나가는 중에 보스 조건이 터짐. 로드 완료(OnSceneLoaded)에서 해제함.

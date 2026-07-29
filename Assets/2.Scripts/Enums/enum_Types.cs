@@ -194,26 +194,35 @@ public enum INPUT_CONTROL_TYPE
 //    여기의 L3/R3은 '스틱 누르기(클릭)'만 뜻함(방향 아님).
 // ※ Dpad*는 게임패드 방향패드임 — 키보드 화살표(그건 KeyboardMouseConfig에서 KeyCode.UpArrow 등)와 전혀 별개.
 // ※ L2/R2·Dpad는 버튼이 아니라 축이라 InputManager가 축으로 읽음.
+// 패드 버튼 — 이름은 PS/Xbox 표기를 같이 적어 인스펙터에서 어느 패드든 바로 알아보게 함.
+// 실제 판정은 이름이 아니라 '자리'(buttonSouth 등)로 하므로 어떤 패드를 꽂아도 같은 자리 버튼이 잡힘.
+//
+// ⚠ 번호를 명시하는 이유: 이 값이 프리팹과 설정 저장(InputSettings)에 숫자로 들어감.
+//    번호를 안 박으면 항목을 중간에 끼워넣는 순간 그 아래가 전부 밀려서 배정이 뒤섞임.
+//    한 번 정한 번호는 바꾸지 말 것. 항목을 지워도 그 번호는 비워두고 재사용하지 않는다.
 public enum GAMEPAD_BUTTON
 {
-	None,
-	Cross,    // ✕  (Xbox A)
-	Circle,   // ○  (Xbox B)
-	Square,   // □  (Xbox X)
-	Triangle, // △  (Xbox Y)
-	L1,       // 왼쪽 범퍼 (Xbox LB)
-	R1,       // 오른쪽 범퍼 (Xbox RB)
-	L2,       // 왼쪽 트리거 (축) (Xbox LT)
-	R2,       // 오른쪽 트리거 (축) (Xbox RT)
-	L3,       // 왼쪽 스틱 '누르기(클릭)' — 스틱 방향 아님
-	R3,       // 오른쪽 스틱 '누르기(클릭)' — 스틱 방향 아님
-	Options,  // 시작 (Xbox Start/Menu)
-	Share,    // 선택 (Xbox Back/View)
-	DpadUp,    // 게임패드 D패드 ↑ (키보드 화살표 아님)
-	DpadDown,  // 게임패드 D패드 ↓
-	DpadLeft,  // 게임패드 D패드 ←
-	DpadRight, // 게임패드 D패드 →
-	TouchpadClick, // 듀얼센스(PS4/5) 터치패드 '누르기' — 그 패드에만 있음. 물리 번호는 컨트롤러/드라이버별로 달라 아래 ToJoystickKey에서 조정 필요
+	None = 0,
+	PsCross_XboxA    = 1,   // ✕ / A
+	PsCircle_XboxB   = 2,   // ○ / B
+	PsSquare_XboxX   = 3,   // □ / X
+	PsTriangle_XboxY = 4,   // △ / Y
+	PsL1_XboxLB      = 5,   // 왼쪽 범퍼
+	PsR1_XboxRB      = 6,   // 오른쪽 범퍼
+	PsL2_XboxLT      = 7,   // 왼쪽 트리거
+	PsR2_XboxRT      = 8,   // 오른쪽 트리거
+	PsL3_XboxLS      = 9,   // 왼쪽 스틱 누르기(클릭) — 스틱 방향 아님
+	PsR3_XboxRS      = 10,  // 오른쪽 스틱 누르기(클릭) — 스틱 방향 아님
+	PsOptions_XboxMenu = 11, // 시작 (PS Options / Xbox Menu)
+	PsShare_XboxView   = 12, // 선택 (PS Share·Create / Xbox View)
+	DpadUp    = 13,  // 게임패드 D패드 ↑ (키보드 화살표 아님)
+	DpadDown  = 14,
+	DpadLeft  = 15,
+	DpadRight = 16,
+
+	// 아래는 한쪽 패드에만 있는 버튼 — 없는 패드에서는 눌리지 않음(안 잡히면 그냥 무시됨).
+	TouchpadClick = 17,  // 듀얼쇽/듀얼센스 터치패드 누르기. Xbox엔 없음
+	PsButton      = 18,  // PS 버튼(홈). Xbox의 가이드 버튼에 해당하나 OS가 가로채는 경우가 많음
 }
 
 // 게임패드 아날로그 축. 이름을 문자열로 들고 다니면 오타가 나도 실행 전까지 모르고,
@@ -241,42 +250,46 @@ public enum STICK_DIR
 // 인스펙터에서 "이 키들을 같이 누르면 이 행동" 형태로 고르게 하려고 만든 것 —
 // InputManager.ApplyAction이 여기 값에 맞는 출력 필드를 세워줌.
 // ⚠ 항목을 늘리면 InputManager.ApplyAction의 switch에도 같이 추가할 것.
+// ⚠ 번호를 명시하는 이유: 이 값이 키 배정/조합키 설정으로 저장됨(InputSettings).
+//    번호를 안 박으면 중간에 항목을 하나 끼워넣는 순간 그 아래 값이 전부 밀려서,
+//    저장해둔 설정이 엉뚱한 행동으로 읽힌다(예: 부스트가 회피로).
+//    한 번 정한 번호는 바꾸지 말 것. 항목을 지워도 그 번호는 비워두고 재사용하지 않는다.
 public enum INPUT_ACTION
 {
-	None,
+	None = 0,
 
 	// 이동/회전 (누르는 동안 유지)
-	MoveForward,
-	MoveBack,
-	MoveLeft,
-	MoveRight,
-	MoveUp,
-	MoveDown,
-	RollLeft,
-	RollRight,
-	Boost,
+	MoveForward = 1,
+	MoveBack = 2,
+	MoveLeft = 3,
+	MoveRight = 4,
+	MoveUp = 5,
+	MoveDown = 6,
+	RollLeft = 7,
+	RollRight = 8,
+	Boost = 9,
 
 	// 즉발 (누른 순간 한 프레임)
-	Dodge,
-	FireBullet,      // 이것만 누르는 동안 유지됨(연사)
-	FireMissile,
-	LockOnPrev,
-	LockOnNext,
-	MissilePrev,
-	MissileNext,
-	MissileShootMode,
-	ToggleClusterLockMode,
-	SwitchConsumable,
-	UseConsumable,
-	SwitchSkillSlot,
-	UseSkill,
+	Dodge = 10,
+	FireBullet = 11,      // 이것만 누르는 동안 유지됨(연사)
+	FireMissile = 12,
+	LockOnPrev = 13,
+	LockOnNext = 14,
+	MissilePrev = 15,
+	MissileNext = 16,
+	MissileShootMode = 17,
+	ToggleClusterLockMode = 18,
+	SwitchConsumable = 19,
+	UseConsumable = 20,
+	SwitchSkillSlot = 21,
+	UseSkill = 22,
 
 	// UI
-	FuelGaugeToggle,
-	InventoryToggle,
-	PauseMenu,
-	MapToggle,
-	Interact,
+	FuelGaugeToggle = 23,
+	InventoryToggle = 24,
+	PauseMenu = 25,
+	MapToggle = 26,
+	Interact = 27,
 }
 public enum POOL_TYPE
 {

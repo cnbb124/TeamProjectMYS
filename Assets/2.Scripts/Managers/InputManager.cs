@@ -216,10 +216,10 @@ public class GamepadConfig
     // 물리 입력이 액션 수보다 적어 몇 개는 기본 None임 — 필요한 것만 인스펙터에서 배정하면 됨.
 
     [Header("이동/회전")]
-    public GAMEPAD_BUTTON rollLeft  = GAMEPAD_BUTTON.Square;
-    public GAMEPAD_BUTTON rollRight = GAMEPAD_BUTTON.Circle;
-    public GAMEPAD_BUTTON boost     = GAMEPAD_BUTTON.L1;
-    public GAMEPAD_BUTTON dodge     = GAMEPAD_BUTTON.Cross;
+    public GAMEPAD_BUTTON rollLeft  = GAMEPAD_BUTTON.PsSquare_XboxX;
+    public GAMEPAD_BUTTON rollRight = GAMEPAD_BUTTON.PsCircle_XboxB;
+    public GAMEPAD_BUTTON boost     = GAMEPAD_BUTTON.PsL1_XboxLB;
+    public GAMEPAD_BUTTON dodge     = GAMEPAD_BUTTON.PsCross_XboxA;
 	[Tooltip("상승. 기본 None = 배정 안 함(패드로 상승 안 됨).")]
 	public GAMEPAD_BUTTON moveUp = GAMEPAD_BUTTON.None;
 
@@ -231,8 +231,8 @@ public class GamepadConfig
 	public bool invertRStickY = false;
 
 	[Header("사격")]
-    public GAMEPAD_BUTTON fireBullet  = GAMEPAD_BUTTON.R2;
-    public GAMEPAD_BUTTON fireMissile = GAMEPAD_BUTTON.L2;
+    public GAMEPAD_BUTTON fireBullet  = GAMEPAD_BUTTON.PsR2_XboxRT;
+    public GAMEPAD_BUTTON fireMissile = GAMEPAD_BUTTON.PsL2_XboxLT;
 
     [Header("미사일 슬롯 전환")]
     public GAMEPAD_BUTTON missilePrev = GAMEPAD_BUTTON.DpadLeft;
@@ -243,24 +243,24 @@ public class GamepadConfig
     public GAMEPAD_BUTTON useConsumable    = GAMEPAD_BUTTON.DpadDown;
 
     [Header("스킬")]
-    public GAMEPAD_BUTTON switchSkillSlot = GAMEPAD_BUTTON.R1;
-    public GAMEPAD_BUTTON useSkill        = GAMEPAD_BUTTON.Triangle;
+    public GAMEPAD_BUTTON switchSkillSlot = GAMEPAD_BUTTON.PsR1_XboxRB;
+    public GAMEPAD_BUTTON useSkill        = GAMEPAD_BUTTON.PsTriangle_XboxY;
 
     [Header("락온 모드 전환")]
-    public GAMEPAD_BUTTON toggleClusterLockMode = GAMEPAD_BUTTON.R3;
+    public GAMEPAD_BUTTON toggleClusterLockMode = GAMEPAD_BUTTON.PsR3_XboxRS;
 
     [Header("락온 대상 전환")]
-    public GAMEPAD_BUTTON lockOnPrev = GAMEPAD_BUTTON.L3;    // 이전 락온 대상 (키마 마우스휠 아래에 대응)
-    public GAMEPAD_BUTTON lockOnNext = GAMEPAD_BUTTON.Share; // 다음 락온 대상 (키마 마우스휠 위에 대응)
+    public GAMEPAD_BUTTON lockOnPrev = GAMEPAD_BUTTON.PsL3_XboxLS;    // 이전 락온 대상 (키마 마우스휠 아래에 대응)
+    public GAMEPAD_BUTTON lockOnNext = GAMEPAD_BUTTON.PsShare_XboxView; // 다음 락온 대상 (키마 마우스휠 위에 대응)
 
     [Header("UI 패널 토글")]
     public GAMEPAD_BUTTON fuelGaugeToggle = GAMEPAD_BUTTON.None; // 물리 버튼 부족 — 기본 미배정
     public GAMEPAD_BUTTON inventoryToggle = GAMEPAD_BUTTON.None; // 물리 버튼 부족 — 기본 미배정
-    public GAMEPAD_BUTTON pauseMenu       = GAMEPAD_BUTTON.Options;
+    public GAMEPAD_BUTTON pauseMenu       = GAMEPAD_BUTTON.PsOptions_XboxMenu;
     public GAMEPAD_BUTTON mapToggle       = GAMEPAD_BUTTON.None; // 물리 버튼 부족 — 기본 미배정
 
     [Header("상호작용(STATION에서)")]
-    public GAMEPAD_BUTTON interAct        = GAMEPAD_BUTTON.Cross; // 전투의 dodge와 씬 문맥이 달라 공유 무방
+    public GAMEPAD_BUTTON interAct        = GAMEPAD_BUTTON.PsCross_XboxA; // 전투의 dodge와 씬 문맥이 달라 공유 무방
 
     // 스틱은 배정 항목이 없음 — 왼쪽=이동, 오른쪽=시야로 고정임.
     // 패드 종류와 무관하게 '왼쪽 스틱'이라는 개념으로 바로 읽히므로 고를 이유가 없음.
@@ -458,25 +458,333 @@ public class InputManager : MonoBehaviour
     /// <summary>옵션 UI용 패드 조종 감도(1~100). 슬라이더 초기값에 씀.</summary>
     public int PadLookSensitivity => padLookSensitivity;
 
-    /// <summary>옵션 UI에서 호출. 범위를 벗어난 값은 잘라내고 저장까지 함.</summary>
+    /// <summary>옵션 UI에서 호출. 범위를 벗어난 값은 잘라내고 기록까지 함.</summary>
     public void SetMouseLookSensitivity(int value)
     {
         mouseLookSensitivity = Mathf.Clamp(value, MinSensitivity, MaxSensitivity);
-        PlayerPrefs.SetInt(MouseSensitivityKey, mouseLookSensitivity);
-        PlayerPrefs.Save();
+        WriteSettings();
     }
 
-    /// <summary>옵션 UI에서 호출. 범위를 벗어난 값은 잘라내고 저장까지 함.</summary>
+    /// <summary>옵션 UI에서 호출. 범위를 벗어난 값은 잘라내고 기록까지 함.</summary>
     public void SetPadLookSensitivity(int value)
     {
         padLookSensitivity = Mathf.Clamp(value, MinSensitivity, MaxSensitivity);
-        PlayerPrefs.SetInt(PadSensitivityKey, padLookSensitivity);
+        WriteSettings();
+    }
+
+    // =====================================================================
+    // 설정 저장 / 복원
+    //
+    // SoundSettingsUI와 같은 방식 — 값이 바뀌면 즉시 PlayerPrefs에 기록하고,
+    // 실제 디스크 확정(PlayerPrefs.Save)은 세팅창을 닫을 때 한 번만 한다.
+    // 슬라이더를 끄는 동안 매 프레임 디스크에 쓰면 렉이 걸리기 때문.
+    //
+    // 항목이 늘어도 이 코드는 안 늘어남 — InputSettings에 필드만 추가하면 됨.
+    // =====================================================================
+    private const string SettingsKey = "Input.Settings";
+
+    /// <summary>현재 설정을 PlayerPrefs에 기록. 디스크 확정은 CommitSettings()가 함.</summary>
+    public void WriteSettings()
+    {
+        PlayerPrefs.SetString(SettingsKey, JsonUtility.ToJson(BuildSettings()));
+    }
+
+    /// <summary>디스크에 확정 저장. 세팅창을 닫을 때 한 번 호출할 것.</summary>
+    public void CommitSettings()
+    {
+        WriteSettings();
         PlayerPrefs.Save();
     }
 
-    private const string MouseSensitivityKey = "Input.MouseLookSensitivity";
-    private const string PadSensitivityKey = "Input.PadLookSensitivity";
+    /// <summary>저장된 설정을 불러와 적용. 저장값이 없으면 프리팹 값을 그대로 씀(첫 실행).</summary>
+    public void LoadSettings()
+    {
+        if (!PlayerPrefs.HasKey(SettingsKey))
+        {
+            return;
+        }
 
+        InputSettings s = JsonUtility.FromJson<InputSettings>(PlayerPrefs.GetString(SettingsKey));
+        if (s == null)
+        {
+            return;
+        }
+
+        ApplySettings(s);
+    }
+
+    // 현재 상태 → 저장용 묶음
+    private InputSettings BuildSettings()
+    {
+        InputSettings s = new InputSettings
+        {
+            mouseLookSensitivity = mouseLookSensitivity,
+            padLookSensitivity   = padLookSensitivity,
+            padLookCurve         = padLookCurve,
+
+            mouseInvertLookY  = keyboardMouseConfig.invertLookY,
+            padInvertLookY    = gamepadConfig.invertRStickY,
+            mobileInvertLookY = mobileConfig.invertLookY,
+
+            mouseBoostToggle  = keyboardMouseConfig.boostToggle,
+            padBoostToggle    = gamepadConfig.boostToggle,
+            mobileBoostToggle = mobileConfig.boostToggle,
+        };
+
+        // 키 배정은 enum이라 int로 눕혀서 저장 — 순서가 곧 항목이므로 아래 Apply와 순서가 같아야 함.
+        s.keyboardBindings = CollectKeyboardBindings();
+        s.gamepadBindings  = CollectGamepadBindings();
+
+        if (comboBindings != null)
+        {
+            for (int i = 0; i < comboBindings.Count; i++)
+            {
+                ComboBinding c = comboBindings[i];
+                if (c == null)
+                {
+                    continue;
+                }
+
+                SavedCombo sc = new SavedCombo
+                {
+                    name               = c.name,
+                    action             = (int)c.action,
+                    holdAction         = c.holdAction,
+                    suppressSingleKeys = c.suppressSingleKeys,
+                    useStick           = c.useStick,
+                    stick              = (int)c.stick,
+                    stickDirection     = (int)c.stickDirection,
+                    stickThreshold     = c.stickThreshold,
+                };
+
+                if (c.buttons != null)
+                {
+                    for (int b = 0; b < c.buttons.Count; b++)
+                    {
+                        sc.buttons.Add((int)c.buttons[b]);
+                    }
+                }
+                s.combos.Add(sc);
+            }
+        }
+
+        return s;
+    }
+
+    // 저장 묶음 → 현재 상태
+    private void ApplySettings(InputSettings s)
+    {
+        mouseLookSensitivity = Mathf.Clamp(s.mouseLookSensitivity, MinSensitivity, MaxSensitivity);
+        padLookSensitivity   = Mathf.Clamp(s.padLookSensitivity,   MinSensitivity, MaxSensitivity);
+        padLookCurve         = Mathf.Clamp(s.padLookCurve, 1f, 3f);
+
+        keyboardMouseConfig.invertLookY  = s.mouseInvertLookY;
+        gamepadConfig.invertRStickY      = s.padInvertLookY;
+        mobileConfig.invertLookY         = s.mobileInvertLookY;
+
+        keyboardMouseConfig.boostToggle  = s.mouseBoostToggle;
+        gamepadConfig.boostToggle        = s.padBoostToggle;
+        mobileConfig.boostToggle         = s.mobileBoostToggle;
+
+        ApplyKeyboardBindings(s.keyboardBindings);
+        ApplyGamepadBindings(s.gamepadBindings);
+
+        // 조합키는 통째로 교체 — 저장된 목록이 곧 사용자가 만든 목록임.
+        comboBindings = new List<ComboBinding>();
+        if (s.combos == null)
+        {
+            return;
+        }
+
+        for (int i = 0; i < s.combos.Count; i++)
+        {
+            SavedCombo sc = s.combos[i];
+            ComboBinding c = new ComboBinding
+            {
+                name               = sc.name,
+                action             = (INPUT_ACTION)sc.action,
+                holdAction         = sc.holdAction,
+                suppressSingleKeys = sc.suppressSingleKeys,
+                useStick           = sc.useStick,
+                stick              = (GAMEPAD_STICK)sc.stick,
+                stickDirection     = (STICK_DIR)sc.stickDirection,
+                stickThreshold     = sc.stickThreshold,
+                buttons            = new List<GAMEPAD_BUTTON>(),
+            };
+
+            if (sc.buttons != null)
+            {
+                for (int b = 0; b < sc.buttons.Count; b++)
+                {
+                    c.buttons.Add((GAMEPAD_BUTTON)sc.buttons[b]);
+                }
+            }
+            comboBindings.Add(c);
+        }
+    }
+
+    // 키 배정 저장/복원.
+    //
+    // ⚠ Collect와 Apply의 순서가 반드시 같아야 함 — 목록에 순서로만 담기므로
+    //   한쪽에만 항목을 추가하면 그 아래 키들이 통째로 밀려서 엉뚱하게 배정됨.
+    //   항목을 추가할 때는 두 메서드의 '같은 자리'에 같이 넣을 것.
+    //   개수가 안 맞으면(설정 항목이 늘어난 구버전 저장값 등) 복원을 통째로 건너뛰어
+    //   프리팹 기본값을 쓰게 함 — 어긋난 채로 적용하는 것보다 안전함.
+    // 키 배정 저장/복원 — 어떤 행동인가(INPUT_ACTION)를 열쇠로 씀.
+    //
+    // 순서로 저장하지 않는 이유: 항목을 중간에 하나 끼워넣으면 그 아래가 전부 밀려서
+    // 저장해둔 키가 엉뚱한 행동에 들어감. 행동 값으로 짝지으면 항목이 늘든 순서가 바뀌든 안전하고,
+    // 저장값에 없는 항목은 프리팹 기본값 그대로 남음.
+    //
+    // 아래 두 표(Collect/Apply)에 같은 행동이 들어 있어야 그 키가 저장·복원됨.
+    // 새 조작을 추가하면 INPUT_ACTION에 항목을 만들고 두 표에 한 줄씩 넣으면 됨.
+    private List<SavedBind> CollectKeyboardBindings()
+    {
+        var km = keyboardMouseConfig;
+        return new List<SavedBind>
+        {
+            Bind(INPUT_ACTION.MoveForward,  (int)km.moveForward),
+            Bind(INPUT_ACTION.MoveBack,     (int)km.moveBack),
+            Bind(INPUT_ACTION.MoveLeft,     (int)km.moveLeft),
+            Bind(INPUT_ACTION.MoveRight,    (int)km.moveRight),
+            Bind(INPUT_ACTION.MoveUp,       (int)km.moveUp),
+            Bind(INPUT_ACTION.MoveDown,     (int)km.moveDown),
+            Bind(INPUT_ACTION.RollLeft,     (int)km.rollLeft),
+            Bind(INPUT_ACTION.RollRight,    (int)km.rollRight),
+            Bind(INPUT_ACTION.Boost,        (int)km.boost),
+            Bind(INPUT_ACTION.Dodge,        (int)km.dodge),
+            Bind(INPUT_ACTION.FireBullet,   (int)km.fireBullet),
+            Bind(INPUT_ACTION.FireMissile,  (int)km.fireMissile),
+            Bind(INPUT_ACTION.MissilePrev,  (int)km.missilePrev),
+            Bind(INPUT_ACTION.MissileNext,  (int)km.missileNext),
+            Bind(INPUT_ACTION.SwitchConsumable, (int)km.switchConsumable),
+            Bind(INPUT_ACTION.UseConsumable,    (int)km.useConsumable),
+            Bind(INPUT_ACTION.SwitchSkillSlot,  (int)km.switchSkillSlot),
+            Bind(INPUT_ACTION.UseSkill,         (int)km.useSkill),
+            Bind(INPUT_ACTION.FuelGaugeToggle,  (int)km.fuelGaugeToggle),
+            Bind(INPUT_ACTION.InventoryToggle,  (int)km.inventoryToggle),
+            Bind(INPUT_ACTION.PauseMenu,        (int)km.pauseMenu),
+            Bind(INPUT_ACTION.MapToggle,        (int)km.mapToggle),
+            Bind(INPUT_ACTION.Interact,         (int)km.interAct),
+            Bind(INPUT_ACTION.ToggleClusterLockMode, (int)km.toggleClusterLockMode),
+        };
+    }
+
+    private void ApplyKeyboardBindings(List<SavedBind> list)
+    {
+        if (list == null)
+        {
+            return;
+        }
+
+        var km = keyboardMouseConfig;
+        for (int i = 0; i < list.Count; i++)
+        {
+            KeyCode code = (KeyCode)list[i].code;
+            switch ((INPUT_ACTION)list[i].action)
+            {
+                case INPUT_ACTION.MoveForward:  km.moveForward = code; break;
+                case INPUT_ACTION.MoveBack:     km.moveBack = code; break;
+                case INPUT_ACTION.MoveLeft:     km.moveLeft = code; break;
+                case INPUT_ACTION.MoveRight:    km.moveRight = code; break;
+                case INPUT_ACTION.MoveUp:       km.moveUp = code; break;
+                case INPUT_ACTION.MoveDown:     km.moveDown = code; break;
+                case INPUT_ACTION.RollLeft:     km.rollLeft = code; break;
+                case INPUT_ACTION.RollRight:    km.rollRight = code; break;
+                case INPUT_ACTION.Boost:        km.boost = code; break;
+                case INPUT_ACTION.Dodge:        km.dodge = code; break;
+                case INPUT_ACTION.FireBullet:   km.fireBullet = code; break;
+                case INPUT_ACTION.FireMissile:  km.fireMissile = code; break;
+                case INPUT_ACTION.MissilePrev:  km.missilePrev = code; break;
+                case INPUT_ACTION.MissileNext:  km.missileNext = code; break;
+                case INPUT_ACTION.SwitchConsumable: km.switchConsumable = code; break;
+                case INPUT_ACTION.UseConsumable:    km.useConsumable = code; break;
+                case INPUT_ACTION.SwitchSkillSlot:  km.switchSkillSlot = code; break;
+                case INPUT_ACTION.UseSkill:         km.useSkill = code; break;
+                case INPUT_ACTION.FuelGaugeToggle:  km.fuelGaugeToggle = code; break;
+                case INPUT_ACTION.InventoryToggle:  km.inventoryToggle = code; break;
+                case INPUT_ACTION.PauseMenu:        km.pauseMenu = code; break;
+                case INPUT_ACTION.MapToggle:        km.mapToggle = code; break;
+                case INPUT_ACTION.Interact:         km.interAct = code; break;
+                case INPUT_ACTION.ToggleClusterLockMode: km.toggleClusterLockMode = code; break;
+            }
+        }
+    }
+
+    private List<SavedBind> CollectGamepadBindings()
+    {
+        var gp = gamepadConfig;
+        return new List<SavedBind>
+        {
+            Bind(INPUT_ACTION.RollLeft,     (int)gp.rollLeft),
+            Bind(INPUT_ACTION.RollRight,    (int)gp.rollRight),
+            Bind(INPUT_ACTION.Boost,        (int)gp.boost),
+            Bind(INPUT_ACTION.Dodge,        (int)gp.dodge),
+            Bind(INPUT_ACTION.MoveUp,       (int)gp.moveUp),
+            Bind(INPUT_ACTION.MoveDown,     (int)gp.moveDown),
+            Bind(INPUT_ACTION.FireBullet,   (int)gp.fireBullet),
+            Bind(INPUT_ACTION.FireMissile,  (int)gp.fireMissile),
+            Bind(INPUT_ACTION.MissilePrev,  (int)gp.missilePrev),
+            Bind(INPUT_ACTION.MissileNext,  (int)gp.missileNext),
+            Bind(INPUT_ACTION.SwitchConsumable, (int)gp.switchConsumable),
+            Bind(INPUT_ACTION.UseConsumable,    (int)gp.useConsumable),
+            Bind(INPUT_ACTION.SwitchSkillSlot,  (int)gp.switchSkillSlot),
+            Bind(INPUT_ACTION.UseSkill,         (int)gp.useSkill),
+            Bind(INPUT_ACTION.ToggleClusterLockMode, (int)gp.toggleClusterLockMode),
+            Bind(INPUT_ACTION.LockOnPrev,   (int)gp.lockOnPrev),
+            Bind(INPUT_ACTION.LockOnNext,   (int)gp.lockOnNext),
+            Bind(INPUT_ACTION.FuelGaugeToggle,  (int)gp.fuelGaugeToggle),
+            Bind(INPUT_ACTION.InventoryToggle,  (int)gp.inventoryToggle),
+            Bind(INPUT_ACTION.PauseMenu,        (int)gp.pauseMenu),
+            Bind(INPUT_ACTION.MapToggle,        (int)gp.mapToggle),
+            Bind(INPUT_ACTION.Interact,         (int)gp.interAct),
+        };
+    }
+
+    private void ApplyGamepadBindings(List<SavedBind> list)
+    {
+        if (list == null)
+        {
+            return;
+        }
+
+        var gp = gamepadConfig;
+        for (int i = 0; i < list.Count; i++)
+        {
+            GAMEPAD_BUTTON b = (GAMEPAD_BUTTON)list[i].code;
+            switch ((INPUT_ACTION)list[i].action)
+            {
+                case INPUT_ACTION.RollLeft:     gp.rollLeft = b; break;
+                case INPUT_ACTION.RollRight:    gp.rollRight = b; break;
+                case INPUT_ACTION.Boost:        gp.boost = b; break;
+                case INPUT_ACTION.Dodge:        gp.dodge = b; break;
+                case INPUT_ACTION.MoveUp:       gp.moveUp = b; break;
+                case INPUT_ACTION.MoveDown:     gp.moveDown = b; break;
+                case INPUT_ACTION.FireBullet:   gp.fireBullet = b; break;
+                case INPUT_ACTION.FireMissile:  gp.fireMissile = b; break;
+                case INPUT_ACTION.MissilePrev:  gp.missilePrev = b; break;
+                case INPUT_ACTION.MissileNext:  gp.missileNext = b; break;
+                case INPUT_ACTION.SwitchConsumable: gp.switchConsumable = b; break;
+                case INPUT_ACTION.UseConsumable:    gp.useConsumable = b; break;
+                case INPUT_ACTION.SwitchSkillSlot:  gp.switchSkillSlot = b; break;
+                case INPUT_ACTION.UseSkill:         gp.useSkill = b; break;
+                case INPUT_ACTION.ToggleClusterLockMode: gp.toggleClusterLockMode = b; break;
+                case INPUT_ACTION.LockOnPrev:   gp.lockOnPrev = b; break;
+                case INPUT_ACTION.LockOnNext:   gp.lockOnNext = b; break;
+                case INPUT_ACTION.FuelGaugeToggle:  gp.fuelGaugeToggle = b; break;
+                case INPUT_ACTION.InventoryToggle:  gp.inventoryToggle = b; break;
+                case INPUT_ACTION.PauseMenu:        gp.pauseMenu = b; break;
+                case INPUT_ACTION.MapToggle:        gp.mapToggle = b; break;
+                case INPUT_ACTION.Interact:         gp.interAct = b; break;
+            }
+        }
+    }
+
+    // 저장 한 줄 만들기 — 위 표를 짧게 쓰기 위한 도우미.
+    private static SavedBind Bind(INPUT_ACTION action, int code)
+    {
+        return new SavedBind { action = (int)action, code = code };
+    }
     // 슬라이더 값(1~100) → 50 기준 배율. 50이면 1배, 25칸마다 2배.
     private static float SensitivityScale(int value)
     {
@@ -639,17 +947,8 @@ public class InputManager : MonoBehaviour
             instance = this;
             DontDestroyOnLoad(gameObject);
 
-            // 저장해둔 감도 복원. 없으면 인스펙터 값을 그대로 씀(첫 실행).
-            if (PlayerPrefs.HasKey(MouseSensitivityKey))
-            {
-                mouseLookSensitivity = Mathf.Clamp(PlayerPrefs.GetInt(MouseSensitivityKey),
-                                                   MinSensitivity, MaxSensitivity);
-            }
-            if (PlayerPrefs.HasKey(PadSensitivityKey))
-            {
-                padLookSensitivity = Mathf.Clamp(PlayerPrefs.GetInt(PadSensitivityKey),
-                                                 MinSensitivity, MaxSensitivity);
-            }
+            // 저장해둔 입력 설정 복원. 없으면 프리팹 값을 그대로 씀(첫 실행).
+            LoadSettings();
         }
         else if (instance != this)
         {
@@ -1257,18 +1556,18 @@ public class InputManager : MonoBehaviour
 
         switch (b)
         {
-            case GAMEPAD_BUTTON.Cross:     return pad.buttonSouth;
-            case GAMEPAD_BUTTON.Circle:    return pad.buttonEast;
-            case GAMEPAD_BUTTON.Square:    return pad.buttonWest;
-            case GAMEPAD_BUTTON.Triangle:  return pad.buttonNorth;
-            case GAMEPAD_BUTTON.L1:        return pad.leftShoulder;
-            case GAMEPAD_BUTTON.R1:        return pad.rightShoulder;
-            case GAMEPAD_BUTTON.L2:        return pad.leftTrigger;
-            case GAMEPAD_BUTTON.R2:        return pad.rightTrigger;
-            case GAMEPAD_BUTTON.L3:        return pad.leftStickButton;
-            case GAMEPAD_BUTTON.R3:        return pad.rightStickButton;
-            case GAMEPAD_BUTTON.Options:   return pad.startButton;
-            case GAMEPAD_BUTTON.Share:     return pad.selectButton;
+            case GAMEPAD_BUTTON.PsCross_XboxA:     return pad.buttonSouth;
+            case GAMEPAD_BUTTON.PsCircle_XboxB:    return pad.buttonEast;
+            case GAMEPAD_BUTTON.PsSquare_XboxX:    return pad.buttonWest;
+            case GAMEPAD_BUTTON.PsTriangle_XboxY:  return pad.buttonNorth;
+            case GAMEPAD_BUTTON.PsL1_XboxLB:        return pad.leftShoulder;
+            case GAMEPAD_BUTTON.PsR1_XboxRB:        return pad.rightShoulder;
+            case GAMEPAD_BUTTON.PsL2_XboxLT:        return pad.leftTrigger;
+            case GAMEPAD_BUTTON.PsR2_XboxRT:        return pad.rightTrigger;
+            case GAMEPAD_BUTTON.PsL3_XboxLS:        return pad.leftStickButton;
+            case GAMEPAD_BUTTON.PsR3_XboxRS:        return pad.rightStickButton;
+            case GAMEPAD_BUTTON.PsOptions_XboxMenu:   return pad.startButton;
+            case GAMEPAD_BUTTON.PsShare_XboxView:     return pad.selectButton;
             case GAMEPAD_BUTTON.DpadUp:    return pad.dpad.up;
             case GAMEPAD_BUTTON.DpadDown:  return pad.dpad.down;
             case GAMEPAD_BUTTON.DpadLeft:  return pad.dpad.left;
@@ -1278,6 +1577,13 @@ public class InputManager : MonoBehaviour
             case GAMEPAD_BUTTON.TouchpadClick:
                 DualShockGamepad ds = pad as DualShockGamepad;
                 return ds != null ? ds.touchpadButton : null;
+
+            // PS 버튼(홈). 패드에 따라 컨트롤 이름이 없을 수 있어 이름으로 조회하고, 없으면 null.
+            // ⚠ OS(스팀/윈도우 게임바)가 이 버튼을 가로채는 경우가 많아 게임까지 안 오는 일이 흔함 —
+            //    중요한 기능을 여기 배정하지 말 것.
+            case GAMEPAD_BUTTON.PsButton:
+                // 인덱서(pad["..."])는 없는 이름이면 예외를 던지므로 Try 계열로 조회함.
+                return pad.TryGetChildControl<ButtonControl>("systemButton");
 
             default: return null;
         }
