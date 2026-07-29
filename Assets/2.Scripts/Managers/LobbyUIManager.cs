@@ -54,8 +54,8 @@ public class LobbyUIManager : MonoBehaviour
         // 기존(서버 리스트 경유) — 나중에 매치메이킹 붙으면 복구
         // GameManager.Instance.LoadScene("ServerListUI");
 
-        HangarExitButton.launchSceneName = "MULTIPLAYER"; // 격납고 나가면 갈 곳
-        LoadingManager.NextScene = "BASE_LANDING";
+        HangarExitButton.launchSceneName = "MULTIPLAYER"; // 격납고쪽에 다음 갈곳 저장
+        LoadingManager.NextScene = "BASE_LANDING"; // 격납고 이동
         GameManager.Instance.LoadScene(SCENE_TYPE.LOADING_SEQUENCE);
     }
 
