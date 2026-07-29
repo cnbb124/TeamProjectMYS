@@ -410,6 +410,14 @@ public class InputManager : MonoBehaviour
     [Range(MinSensitivity, MaxSensitivity)]
     [SerializeField] private int padLookSensitivity = DefaultSensitivity;
 
+    [Tooltip("패드 스틱 응답 곡선. 스틱을 살짝 민 구간을 얼마나 둔하게 만들지.\n" +
+             "1 = 곡선 없음(기울기 그대로 — 살짝만 밀어도 확 움직임)\n" +
+             "2 = 권장. 중앙 근처가 둔해져 미세 조준이 쉬워짐\n" +
+             "3 = 아주 둔함. 끝으로 갈수록 급격해짐\n" +
+             "끝까지 밀었을 때의 최대치는 값과 무관하게 그대로임 — 최대 선회 속도는 안 깎임.")]
+    [Range(1f, 3f)]
+    [SerializeField] private float padLookCurve = 2f;
+
     public const int MinSensitivity = 1;
     public const int MaxSensitivity = 100;
     public const int DefaultSensitivity = 50;
@@ -466,6 +474,23 @@ public class InputManager : MonoBehaviour
     private float PadLookFactor
     {
         get { return SensitivityScale(padLookSensitivity); }
+    }
+
+    // 스틱 응답 곡선 — 기울기 '크기'에만 지수를 먹임. 방향은 그대로 유지.
+    //
+    // 축별로 따로 먹이면 대각선에서 크기가 줄어 방향이 틀어짐(원이 사각형처럼 찌그러짐).
+    // 크기에만 적용하면 방향이 보존되고, 크기 1(끝까지 밀기)은 1의 거듭제곱이라 그대로 1 —
+    // 즉 최대 선회 속도는 곡선을 아무리 세게 줘도 안 깎이고, 중앙 근처만 둔해짐.
+    private Vector2 ApplyLookCurve(Vector2 stick)
+    {
+        float magnitude = stick.magnitude;
+        if (magnitude <= 0.0001f || padLookCurve <= 1f)
+        {
+            return stick;
+        }
+
+        float curved = Mathf.Pow(Mathf.Min(magnitude, 1f), padLookCurve);
+        return stick / magnitude * curved;
     }
 
     [Tooltip("마우스를 멈췄을 때 조종간이 중앙으로 돌아오는 속도(초당 기울기량).\n" +
@@ -1104,9 +1129,11 @@ public class InputManager : MonoBehaviour
         }
 
         // 시야 (오른쪽 스틱) — Y축 반전 옵션 반영
-        // 감도 배율을 곱한 뒤 원형으로 제한 — 마우스 조종간과 같은 규칙(최대 기울기 1).
-        // 배율이 크면 스틱을 덜 밀어도 최대에 닿고, 작으면 끝까지 밀어도 최대에 못 미침.
-        Vector2 rStick = Vector2.ClampMagnitude(Gamepad.current.rightStick.ReadValue() * PadLookFactor, 1f);
+        // 응답 곡선 → 감도 배율 → 원형 제한 순서.
+        // 곡선으로 스틱의 '모양'을 먼저 잡고, 그 위에 감도로 크기를 조절함.
+        // 마지막 제한은 마우스 조종간과 같은 규칙(최대 기울기 1).
+        Vector2 rStick = ApplyLookCurve(Gamepad.current.rightStick.ReadValue());
+        rStick = Vector2.ClampMagnitude(rStick * PadLookFactor, 1f);
         Vector2 padLook = new Vector2
         (
             rStick.x,
