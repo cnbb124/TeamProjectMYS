@@ -44,64 +44,99 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 21ed71377ca65bb40ab9afc8346ac96b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  controlType: 1
+  controlType: 0
+  ignoreGamepadDuringXR: 0
   keyboardMouseConfig:
     moveForward: 119
     moveBack: 115
     moveLeft: 97
     moveRight: 100
-    moveUp: 327
-    moveDown: 326
+    moveUp: 121
+    moveDown: 104
     rollLeft: 113
     rollRight: 101
     boost: 304
     dodge: 32
     fireBullet: 323
     fireMissile: 324
-    missilePrev: 122
-    missileNext: 120
-    switchConsumable: 114
-    useConsumable: 116
-    switchSkillSlot: 9
+    missilePrev: 326
+    missileNext: 327
+    switchConsumable: 122
+    useConsumable: 9
+    switchSkillSlot: 120
     useSkill: 102
     fuelGaugeToggle: 103
     inventoryToggle: 105
     pauseMenu: 27
     mapToggle: 109
+    invertLookY: 0
+    boostToggle: 0
     interAct: 101
     toggleClusterLockMode: 99
   gamepadConfig:
     rollLeft: 7
     rollRight: 8
-    boost: 6
-    dodge: 5
-    fireBullet: 3
-    fireMissile: 4
-    missilePrev: 15
-    missileNext: 16
+    boost: 9
+    dodge: 1
+    fireBullet: 6
+    fireMissile: 2
+    missilePrev: 3
+    missileNext: 4
     switchConsumable: 13
     useConsumable: 14
-    switchSkillSlot: 2
-    useSkill: 1
-    toggleClusterLockMode: 330
-    lockOnPrev: 343
-    lockOnNext: 344
+    switchSkillSlot: 15
+    useSkill: 16
+    toggleClusterLockMode: 10
+    lockOnPrev: 0
+    lockOnNext: 0
     fuelGaugeToggle: 345
     inventoryToggle: 12
     pauseMenu: 11
     mapToggle: 17
     interAct: 1
-    axisLeftStickX: 0
-    axisLeftStickY: 0
-    axisVerticalMove: 0
-    axisRightStickX: 0
-    axisRightStickY: 0
-    axisDPadX: 0
-    axisDPadY: 0
-    axisL2: 0
-    axisR2: 0
-    invertRStickY: 0
-  comboBindings: []
+    boostToggle: 1
+    verticalMoveSource: 0
+    invertRStickY: 1
+  mobileConfig:
+    invertLookY: 0
+    boostToggle: 0
+  comboBindings:
+  - name: 
+    buttons: 05000000
+    useStick: 1
+    stick: 1
+    stickDirection: 2
+    stickThreshold: 0.9
+    action: 13
+    holdAction: 0
+    suppressSingleKeys: 1
+  - name: 
+    buttons: 05000000
+    useStick: 1
+    stick: 1
+    stickDirection: 3
+    stickThreshold: 0.9
+    action: 14
+    holdAction: 0
+    suppressSingleKeys: 1
+  - name: 
+    buttons: 05000000
+    useStick: 1
+    stick: 1
+    stickDirection: 0
+    stickThreshold: 0.7
+    action: 5
+    holdAction: 0
+    suppressSingleKeys: 1
+  - name: 
+    buttons: 05000000
+    useStick: 1
+    stick: 1
+    stickDirection: 1
+    stickThreshold: 0.7
+    action: 6
+    holdAction: 0
+    suppressSingleKeys: 1
   mouseStickSensitivity: 0.02
   mouseStickAutoCenter: 0.6
   moveInput: {x: 0, y: 0, z: 0}

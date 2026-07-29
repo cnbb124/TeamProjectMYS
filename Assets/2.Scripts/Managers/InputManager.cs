@@ -1,6 +1,9 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.DualShock;
 
 // ================================================================
 // [InputManager — 외부 참조 / 사용 가이드]
@@ -96,6 +99,16 @@ public class KeyboardMouseConfig
     public KeyCode pauseMenu        = KeyCode.Escape; // 일시정지 메뉴
     public KeyCode mapToggle        = KeyCode.M; // 전체맵
 
+    [Header("시야 옵션")]
+    [Tooltip("마우스 상하(Y) 반전. 켜면 마우스를 위로 밀 때 기수가 아래로 감(항공 스타일).")]
+    public bool invertLookY = false;
+
+    [Header("부스트 방식")]
+    [Tooltip("OFF: 누르고 있는 동안만 부스트(기본)\n" +
+             "ON : 한 번 누르면 켜지고 다시 누르면 꺼짐(토글)\n" +
+             "장치마다 따로 설정됨 — 키보드는 꾹, 패드는 토글처럼 다르게 쓸 수 있음.")]
+    public bool boostToggle = false;
+
     [Header("상호작용(STATION에서)")]
     public KeyCode interAct         = KeyCode.E; // 상호작용(맵에서만)
 	//[Header("모드 전환")]
@@ -105,17 +118,37 @@ public class KeyboardMouseConfig
     public KeyCode toggleClusterLockMode = KeyCode.C; // 클러스터 미사일 단일/다중 락온 전환
 
     // 이동(WASD)은 위 KeyCode로 직접 읽음(축 아님). 마우스 시야/휠 축 이름은 값이 고정이라
-    // InputManager의 const(AxisMouseX/Y/ScrollWheel)로 옮김 — 인스펙터에 노출할 필요 없음.
+    // 이동(WASD)은 위 KeyCode로 직접 읽음(축 아님). 마우스 이동량은 장치에서 직접 읽고,
+    // 휠 축 이름만 InputManager의 const(AxisScrollWheel)로 둠 — 인스펙터에 노출할 필요 없음.
 }
 
 // =====================================================================
-// 조합키 — 키 여러 개를 동시에 눌렀을 때만 나가는 입력.
+// 모바일 설정.
+// 가상 조이스틱/버튼은 아직 미구현(InputManager.ReadMobile)이라 지금은 부스트 방식만 있음.
+// 구현할 때 여기에 감도/버튼 배치 등을 추가하면 됨.
+// =====================================================================
+[System.Serializable]
+public class MobileConfig
+{
+    [Header("시야 옵션")]
+    [Tooltip("터치 드래그 상하(Y) 반전. 켜면 위로 쓸어올릴 때 기수가 아래로 감(항공 스타일).")]
+    public bool invertLookY = false;
+
+    [Header("부스트 방식")]
+    [Tooltip("OFF: 누르고 있는 동안만 부스트(기본)\n" +
+             "ON : 한 번 누르면 켜지고 다시 누르면 꺼짐(토글)\n" +
+             "터치는 계속 누르고 있기 불편해서 토글이 나을 수 있음.")]
+    public bool boostToggle = false;
+}
+
+// =====================================================================
+// 패드 조합키 — 패드 버튼 여러 개를 동시에 눌렀을 때만 나가는 입력.
 //
-// 키가 모자라서 한 키에 두 기능을 얹고 싶을 때 씀.
-// 예) Shift+Q = 스킬 사용   /   Ctrl+Space = 소모품 사용
+// 패드는 버튼 수가 모자라서 한 버튼에 두 기능을 얹어야 할 때가 생김.
+// 예) L1 + △ = 스킬 사용   /   R1 + ✕ = 소모품 사용
 //
 // [인스펙터 사용법]
-//   Keys 에 같이 눌러야 할 키를 2개 이상 넣고, Action 에서 시킬 행동을 고르면 됨.
+//   Buttons 에 같이 눌러야 할 패드 버튼을 2개 이상 넣고, Action 에서 시킬 행동을 고르면 됨.
 //   행동 목록(INPUT_ACTION)은 InputManager가 내보내는 출력 필드와 1:1로 대응함.
 // =====================================================================
 [System.Serializable]
@@ -124,9 +157,25 @@ public class ComboBinding
     [Tooltip("인스펙터에서 알아보기 위한 이름. 동작에는 영향 없음.")]
     public string name = "새 조합키";
 
-    [Tooltip("동시에 누르고 있어야 하는 키들. 2개 이상 넣어야 동작함.\n" +
-             "여기 있는 키가 전부 눌려 있을 때만 아래 행동이 나감.")]
-    public List<KeyCode> keys = new List<KeyCode>();
+    [Tooltip("같이 누르고 있어야 하는 패드 버튼들.\n" +
+             "여기 있는 버튼이 전부 눌려 있어야 아래 행동이 나감.\n" +
+             "예) L1 + Triangle")]
+    public List<GAMEPAD_BUTTON> buttons = new List<GAMEPAD_BUTTON>();
+
+    [Tooltip("스틱 방향도 조건에 넣을지.\n" +
+             "켜면 '버튼을 누른 채로 스틱을 특정 방향으로 민 상태'여야 성립함.\n" +
+             "같은 버튼에 방향별로 다른 행동을 붙일 때 씀 — 예) L1+↑=스킬1, L1+↓=스킬2")]
+    public bool useStick = false;
+
+    [Tooltip("조건으로 볼 스틱. Left=이동 스틱, Right=시야 스틱")]
+    public GAMEPAD_STICK stick = GAMEPAD_STICK.Left;
+
+    [Tooltip("그 스틱을 어느 쪽으로 밀어야 하는지")]
+    public STICK_DIR stickDirection = STICK_DIR.Up;
+
+    [Tooltip("얼마나 밀어야 '민 것'으로 볼지(0~1). 낮으면 살짝만 기울여도 걸려서 오발동함.")]
+    [Range(0.2f, 1f)]
+    public float stickThreshold = 0.5f;
 
     [Tooltip("이 조합을 눌렀을 때 시킬 행동.")]
     public INPUT_ACTION action = INPUT_ACTION.None;
@@ -135,8 +184,8 @@ public class ComboBinding
              "OFF : 조합이 완성되는 순간 한 프레임만 (토글/사용/전환용)")]
     public bool holdAction = false;
 
-    [Tooltip("ON: 조합이 성립하는 동안 그 키들의 원래 단독 기능을 막음.\n" +
-             "예) Shift+Q를 조합키로 쓸 때 Q의 좌롤이 같이 나가는 것을 방지.\n" +
+    [Tooltip("ON: 조합이 성립하는 동안 그 버튼들의 원래 단독 기능을 막음.\n" +
+             "예) L1+△를 조합키로 쓸 때 L1의 부스트가 같이 나가는 것을 방지.\n" +
              "OFF: 단독 기능도 같이 나감(부스트+스킬처럼 겹쳐 쓰고 싶을 때).")]
     public bool suppressSingleKeys = true;
 
@@ -147,23 +196,23 @@ public class ComboBinding
 
 // =====================================================================
 // 게임패드 키 설정
-// 축 이름은 Unity Input Settings에서 직접 등록한 이름과 맞춰야 함
 //
-// [JoystickButton 번호 ↔ 실제 버튼] — Xbox 컨트롤러 / Windows 기준(레거시 Input)
-//   Button0 = A        Button1 = B        Button2 = X        Button3 = Y
-//   Button4 = LB(L1)   Button5 = RB(R1)
-//   Button6 = Back(View)   Button7 = Start(Menu)
-//   Button8 = L3(왼쪽 스틱 누름)   Button9 = R3(오른쪽 스틱 누름)
-//   ※ LT/RT(=L2/R2)는 버튼이 아니라 '축(아날로그 트리거)'임 — JoystickButton으로 안 잡힘.
-//      쓰려면 Project Settings > Input Manager에 축으로 등록해 axis 이름으로 읽어야 함.
-//   ※ Xbox/Windows는 버튼 0~9만 존재함 — Button10 이상은 이 조합에서 안 눌림.
-//   ※ PlayStation 패드/다른 OS는 번호 체계가 다름 — 위는 Xbox+Windows 기준.
+// 버튼은 번호가 아니라 '자리'로 잡힌다 — 패드마다 내부 버튼 번호가 달라서
+// (같은 아래쪽 버튼이 Xbox는 0번, DualSense는 1번) 번호로 잡으면 패드를 바꿀 때마다 어긋남.
+//
+// [이름 ↔ 실제 위치] — 이름은 PS 표기지만 자리 기준이라 어느 패드든 같은 자리에 붙음
+//   Cross(✕)=아래  Circle(○)=오른쪽  Square(□)=왼쪽  Triangle(△)=위    (Xbox면 A/B/X/Y)
+//   L1/R1 = 위쪽 범퍼        L2/R2 = 아래쪽 트리거
+//   L3/R3 = 스틱 누르기      Options=시작   Share=선택
+//   Dpad* = 십자키
+//   TouchpadClick = 듀얼쇽/듀얼센스 전용. 다른 패드에서는 안 눌림
+//
+// 축(스틱/트리거)도 장치에서 직접 읽으므로 Project Settings에 축을 등록할 필요가 없음.
 // =====================================================================
 [System.Serializable]
 public class GamepadConfig
 {
-    // 버튼 액션은 GAMEPAD_BUTTON(PS 명칭)으로 지정 — 인스펙터에 R2/Square 등으로 직관적으로 뜸.
-    // 실제 KeyCode/축 변환은 InputManager가 함. None이면 이 패드엔 미배정(안 눌림).
+    // None이면 이 패드엔 미배정(안 눌림).
     // 물리 입력이 액션 수보다 적어 몇 개는 기본 None임 — 필요한 것만 인스펙터에서 배정하면 됨.
 
     [Header("이동/회전")]
@@ -204,19 +253,20 @@ public class GamepadConfig
     [Header("상호작용(STATION에서)")]
     public GAMEPAD_BUTTON interAct        = GAMEPAD_BUTTON.Cross; // 전투의 dodge와 씬 문맥이 달라 공유 무방
 
-    // 축은 문자열이 아니라 GAMEPAD_AXIS로 지정 — 오타가 나면 컴파일에서 걸리고,
-    // Project Settings에 등록된 이름과의 대응은 InputManager.AxisNames 한 곳에서만 관리됨.
-    // None으로 두면 그 축은 아예 안 읽고 0으로 취급함(등록 안 한 축 때문에 예외 나는 것 방지).
-    [Header("게임패드 축 배정")]
-    public GAMEPAD_AXIS axisLeftStickX   = GAMEPAD_AXIS.LeftStickX;
-    public GAMEPAD_AXIS axisLeftStickY   = GAMEPAD_AXIS.LeftStickY;
-    public GAMEPAD_AXIS axisVerticalMove = GAMEPAD_AXIS.VerticalMove;
-    public GAMEPAD_AXIS axisRightStickX  = GAMEPAD_AXIS.RightStickX;
-    public GAMEPAD_AXIS axisRightStickY  = GAMEPAD_AXIS.RightStickY;
-    public GAMEPAD_AXIS axisDPadX        = GAMEPAD_AXIS.DPadX;
-    public GAMEPAD_AXIS axisDPadY        = GAMEPAD_AXIS.DPadY;
-    public GAMEPAD_AXIS axisL2           = GAMEPAD_AXIS.LeftTrigger;   // L2 트리거(축)
-    public GAMEPAD_AXIS axisR2           = GAMEPAD_AXIS.RightTrigger;  // R2 트리거(축)
+    // 스틱은 배정 항목이 없음 — 왼쪽=이동, 오른쪽=시야로 고정임.
+    // 패드 종류와 무관하게 '왼쪽 스틱'이라는 개념으로 바로 읽히므로 고를 이유가 없음.
+
+    [Header("부스트 방식")]
+    [Tooltip("OFF: 누르고 있는 동안만 부스트(기본)\n" +
+             "ON : 한 번 누르면 켜지고 다시 누르면 꺼짐(토글)\n" +
+             "키보드 설정과 별개로 동작함 — 패드만 토글로 쓸 수 있음.")]
+    public bool boostToggle = false;
+
+    [Header("상하이동")]
+    [Tooltip("패드로 상승/하강을 무엇으로 할지. 기본 None = 패드로는 상하이동 안 함.\n" +
+             "Triggers: R2=상승 / L2=하강\n" +
+             "Dpad: 십자키 ↑=상승 / ↓=하강 (십자키에 다른 기능을 배정했으면 겹치니 주의)")]
+    public InputManager.VERTICAL_MOVE_SOURCE verticalMoveSource = InputManager.VERTICAL_MOVE_SOURCE.None;
 
     [Header("시야 옵션")]
     [Tooltip("오른쪽 스틱 상하(Y축) 반전. 켜면 스틱을 위로 밀 때 시야가 아래로 감(항공 스타일).")]
@@ -284,6 +334,54 @@ public class InputManager : MonoBehaviour
     public GamepadConfig gamepadConfig = new GamepadConfig();
 
     [Space(5)]
+    [Header("━━━━━━ 모바일 설정 ━━━━━━")]
+    public MobileConfig mobileConfig = new MobileConfig();
+
+    // 부스트 토글 상태(래치). 장치별로 따로 둠 —
+    // 키보드는 꾹 누르기, 패드는 토글처럼 서로 다른 방식으로 쓸 수 있어야 하므로
+    // 한 개를 공유하면 한쪽에서 켠 게 다른 쪽 설정에 끌려다니게 됨.
+    private bool _kbBoostLatch;
+    private bool _padBoostLatch;
+    private bool _mobileBoostLatch;
+
+    // 부스트 입력 해석. 장치마다 같은 규칙이라 한 곳에 모음.
+    // 토글이면 '누른 순간'마다 켜고 끄고, 아니면 누르고 있는 동안만 true.
+    // 토글이 아닐 땐 래치를 비워둠 — 안 그러면 토글로 켜둔 채 설정을 바꿨을 때 그 값이 남음.
+    // 전진 입력이 없으면 켜둔 부스트 토글을 해제함.
+    // 부스트는 전진 중에만 걸리므로(Player.MovingByInput), 가속을 멈춘 순간 토글도 풀리는 게 맞음.
+    // 안 그러면 켜둔 채 손을 뗐다가 다시 밀 때 예고 없이 부스트로 튀어나감.
+    private void ReleaseBoostToggleIfNotThrusting()
+    {
+        if (moveInput.z > ThrustReleaseThreshold)
+        {
+            return;
+        }
+
+        _kbBoostLatch = false;
+        _padBoostLatch = false;
+        _mobileBoostLatch = false;
+        isBoosting = false;
+    }
+
+    // 전진을 '놓았다'고 볼 기준. 스틱이 완전히 0으로 안 돌아오는 것을 감안한 여유값.
+    private const float ThrustReleaseThreshold = 0.1f;
+
+    private static bool ResolveBoost(bool toggleMode, bool pressed, bool pressedDown, ref bool latch)
+    {
+        if (!toggleMode)
+        {
+            latch = false;
+            return pressed;
+        }
+
+        if (pressedDown)
+        {
+            latch = !latch;
+        }
+        return latch;
+    }
+
+    [Space(5)]
     [Header("━━━━━━ 조합키 (동시 입력) ━━━━━━")]
     [Tooltip("키 2개 이상을 같이 눌렀을 때만 나가는 입력.\n" +
              "키가 모자랄 때 한 키에 기능을 더 얹는 용도. 개수 제한 없음.")]
@@ -298,10 +396,75 @@ public class InputManager : MonoBehaviour
     // 이렇게 해야 lookInput의 의미가 패드 스틱과 통일돼서 Player가 장치를 구분할 필요가 없어짐.
     // =====================================================================
     [Space(5)]
-    [Header("━━━━━━ 마우스 가상 조종간 ━━━━━━")]
-    [Tooltip("마우스를 조금만 움직여도 조종간이 얼마나 기울어지는지. 클수록 예민함.\n" +
-             "0.1~0.2 권장 — 너무 크면 조준이 튀고, 너무 작으면 최대 기울기까지 한참 밀어야 함.")]
-    public float mouseStickSensitivity = 0.15f;
+    [Header("━━━━━━ 조종 감도━━━━━━")]
+    [Tooltip("마우스 시야 감도(1~100). 옵션 UI 슬라이더가 그대로 쓰는 값.\n" +
+             "50 = 조종간을 끝까지 꺾는 데 마우스 약 500px. 25씩 오를 때마다 두 배 예민해짐.\n" +
+             "1=약 2000px(아주 둔함) / 100=약 125px(아주 예민함)")]
+    [Range(MinSensitivity, MaxSensitivity)]
+    [SerializeField] private int mouseLookSensitivity = DefaultSensitivity;
+
+    [Tooltip("패드 시야 감도(1~100). 오른쪽 스틱이 마우스와 같은 조종간 역할이라 같은 방식으로 맞춤.\n" +
+             "50 = 스틱 기울기 그대로(끝까지 밀어야 최대 선회).\n" +
+             "100 = 스틱을 1/4만 밀어도 최대 선회 / 1 = 끝까지 밀어도 최대의 1/4만 선회")]
+    [Range(MinSensitivity, MaxSensitivity)]
+    [SerializeField] private int padLookSensitivity = DefaultSensitivity;
+
+    public const int MinSensitivity = 1;
+    public const int MaxSensitivity = 100;
+    public const int DefaultSensitivity = 50;
+
+    // 감도 슬라이더 값 → 실제 계수 환산.
+    //
+    // 선형으로 하지 않는 이유: 50을 현재 감도로 잡고 선형으로 펴면 1이 현재의 1/50이 되어
+    // 조종간을 끝까지 꺾는 데 25,000px이 필요해짐 — 아래쪽 절반이 통째로 못 쓰게 됨.
+    // 배율로 두면 25칸마다 두 배씩 변해서 1~100이 고르게 쓰임(양끝 16배 차이).
+    private const float SensitivityAtMid = 0.002f;  // 슬라이더 50일 때의 계수
+    private const float SensitivityRange = 4f;      // 50→100이 4배, 50→1이 1/4배
+
+    /// <summary>옵션 UI용 마우스 조종 감도(1~100).</summary>
+    public int MouseLookSensitivity => mouseLookSensitivity;
+
+    /// <summary>옵션 UI용 패드 조종 감도(1~100).</summary>
+    public int PadLookSensitivity => padLookSensitivity;
+
+    /// <summary>옵션 UI에서 호출. 범위를 벗어난 값은 잘라내고 저장까지 함.</summary>
+    public void SetMouseLookSensitivity(int value)
+    {
+        mouseLookSensitivity = Mathf.Clamp(value, MinSensitivity, MaxSensitivity);
+        PlayerPrefs.SetInt(MouseSensitivityKey, mouseLookSensitivity);
+        PlayerPrefs.Save();
+    }
+
+    /// <summary>옵션 UI에서 호출. 범위를 벗어난 값은 잘라내고 저장까지 함.</summary>
+    public void SetPadLookSensitivity(int value)
+    {
+        padLookSensitivity = Mathf.Clamp(value, MinSensitivity, MaxSensitivity);
+        PlayerPrefs.SetInt(PadSensitivityKey, padLookSensitivity);
+        PlayerPrefs.Save();
+    }
+
+    private const string MouseSensitivityKey = "Input.MouseLookSensitivity";
+    private const string PadSensitivityKey = "Input.PadLookSensitivity";
+
+    // 슬라이더 값(1~100) → 50 기준 배율. 50이면 1배, 25칸마다 2배.
+    private static float SensitivityScale(int value)
+    {
+        return Mathf.Pow(SensitivityRange, (value - DefaultSensitivity) / 50f);
+    }
+
+    // 마우스 이동량(픽셀)에 곱해지는 계수
+    private float MouseSensitivityFactor
+    {
+        get { return SensitivityAtMid * SensitivityScale(mouseLookSensitivity); }
+    }
+
+    // 패드 스틱 기울기에 곱해지는 배율.
+    // 스틱은 이미 -1~1로 들어오므로 마우스처럼 픽셀 환산이 필요 없고 배율만 곱함 —
+    // 50이면 스틱 그대로, 크면 덜 밀어도 최대에 닿고, 작으면 끝까지 밀어도 최대에 못 미침.
+    private float PadLookFactor
+    {
+        get { return SensitivityScale(padLookSensitivity); }
+    }
 
     [Tooltip("마우스를 멈췄을 때 조종간이 중앙으로 돌아오는 속도(초당 기울기량).\n" +
              "0이면 안 돌아옴(엘리트 방식 — 직접 되돌려야 멈춤). 1~2면 손 떼면 서서히 수평 복귀.")]
@@ -389,11 +552,6 @@ public class InputManager : MonoBehaviour
     [Tooltip("상호작용 - 누른 순간 한 프레임만 true ")]
     public bool interAct;
 
-    // 게임패드 축(트리거/D패드)을 매 프레임 1번만 샘플해두는 값 — GetPad/GetPadDown이 이걸 봄.
-    // 축은 버튼이 아니라 "누른 순간"을 이전 프레임과 비교해 판정하므로 현재/직전 값을 같이 보관함.
-    private float _padDpadX, _padDpadY, _padL2, _padR2;
-    private float _prevPadDpadX, _prevPadDpadY, _prevPadL2, _prevPadR2;
-    private const float TriggerThreshold = 0.5f; // 트리거를 "눌림"으로 볼 임계값(축)
 
     // === 키마+패드 자동 병합/전환 ===
     // 마지막으로 실제 입력한 장치. UI가 이 값을 구독해 프롬프트(키/패드) 아이콘을 바꾸면 됨.
@@ -402,52 +560,40 @@ public class InputManager : MonoBehaviour
     // 패드가 하나라도 연결돼 있는지(자동 인식용).
     public bool IsGamepadConnected
     {
-        get
-        {
-            string[] names = Input.GetJoystickNames();
-            for (int i = 0; i < names.Length; i++)
-            {
-                if (!string.IsNullOrEmpty(names[i]))
-                {
-                    return true;
-                }
-            }
-            return false;
-        }
+        get { return Gamepad.current != null; }
     }
 
-    // GAMEPAD_AXIS → Project Settings에 등록된 실제 축 이름.
-    // enum 순서와 반드시 같아야 함(GAMEPAD_AXIS에 항목을 늘리면 여기도 같은 자리에 추가할 것).
-    // enum.ToString()을 안 쓰는 이유: ToString은 호출할 때마다 문자열을 새로 만들어서
-    // 매 프레임 축을 9개씩 읽는 이 코드에선 쓰레기가 계속 쌓임.
-    private static readonly string[] AxisNames =
+    // 상하이동 입력원. 패드에는 남는 스틱이 없어서 무엇에 붙일지 직접 골라야 함.
+    // 기본은 None — 고르지 않으면 패드로는 상하이동이 아예 안 됨(설정 안 한 기능이
+    // 트리거 같은 데 멋대로 붙는 것을 막기 위해 기본값을 껐음).
+    public enum VERTICAL_MOVE_SOURCE
     {
-        string.Empty,     // None
-        "LeftStickX",
-        "LeftStickY",
-        "RightStickX",
-        "RightStickY",
-        "DPadX",
-        "DPadY",
-        "LeftTrigger",
-        "RightTrigger",
-        "VerticalMove",
-    };
+        None,      // 안 씀
+        Triggers,  // R2=상승 / L2=하강
+        Dpad,      // 십자키 ↑=상승 / ↓=하강
+    }
 
-    // 배정된 축을 읽음. None이거나 표 밖의 값이면 0 — 등록 안 된 축을 읽어 예외 나는 것도 같이 막힘.
-    private static float ReadAxis(GAMEPAD_AXIS axis)
+    // 상하이동 축 읽기. 위 설정에 따라 정해진 곳에서만 읽고, None이면 0.
+    private static float ReadVerticalMove(VERTICAL_MOVE_SOURCE source)
     {
-        int index = (int)axis;
-        if (index <= 0 || index >= AxisNames.Length)
+        Gamepad pad = Gamepad.current;
+        if (pad == null)
         {
             return 0f;
         }
-        return Input.GetAxisRaw(AxisNames[index]);
+
+        switch (source)
+        {
+            case VERTICAL_MOVE_SOURCE.Triggers:
+                return pad.rightTrigger.ReadValue() - pad.leftTrigger.ReadValue();
+            case VERTICAL_MOVE_SOURCE.Dpad:
+                return pad.dpad.y.ReadValue();
+            default:
+                return 0f;
+        }
     }
 
     // 마우스 시야/휠 축 이름(Unity 기본값 — 안 바뀜).
-    private const string AxisMouseX = "Mouse X";
-    private const string AxisMouseY = "Mouse Y";
     private const string AxisScrollWheel = "Mouse ScrollWheel";
     // 스틱이 이 값을 넘으면 '패드로 조작 중'으로 보고 키마 이동/시야를 덮어씀(패드 우선).
     private const float StickActiveDeadzone = 0.2f;
@@ -464,6 +610,18 @@ public class InputManager : MonoBehaviour
         {
             instance = this;
             DontDestroyOnLoad(gameObject);
+
+            // 저장해둔 감도 복원. 없으면 인스펙터 값을 그대로 씀(첫 실행).
+            if (PlayerPrefs.HasKey(MouseSensitivityKey))
+            {
+                mouseLookSensitivity = Mathf.Clamp(PlayerPrefs.GetInt(MouseSensitivityKey),
+                                                   MinSensitivity, MaxSensitivity);
+            }
+            if (PlayerPrefs.HasKey(PadSensitivityKey))
+            {
+                padLookSensitivity = Mathf.Clamp(PlayerPrefs.GetInt(PadSensitivityKey),
+                                                 MinSensitivity, MaxSensitivity);
+            }
         }
         else if (instance != this)
         {
@@ -512,6 +670,11 @@ public class InputManager : MonoBehaviour
             LastUsedDevice = INPUT_CONTROL_TYPE.KEYBOARD_MOUSE;
         }
 
+        // 부스트 토글 자동 해제 — 전진을 놓으면 켜둔 토글도 같이 풀린다.
+        // 병합이 끝난 뒤에 봐야 함(키마로 놓고 패드로 밀고 있는 경우까지 합쳐진 최종 입력 기준).
+        // 이게 없으면 전진을 놓아도 토글이 계속 켜져 있다가, 다시 밀 때 갑자기 부스트로 튀어나감.
+        ReleaseBoostToggleIfNotThrusting();
+
         // 조합키는 키마+패드 병합이 '끝난 뒤'에 얹는다 —
         // 단독 키 기능을 덮어써야 하는데, 병합 전에 처리하면 뒤이어 다시 켜져버림.
         UpdateComboBindings();
@@ -527,10 +690,7 @@ public class InputManager : MonoBehaviour
     // =====================================================================
     // 조합키 처리 — 등록된 조합들을 훑어서 성립한 것만 행동으로 바꿈.
     //
-    // 판정 순서가 중요함:
-    //   1) 단독 키 기능을 먼저 끈다(suppressSingleKeys)
-    //   2) 그 다음에 조합 행동을 켠다
-    // 반대로 하면 1)이 2)를 지워버림. 조합 행동이 단독 기능과 같은 필드를 쓸 수 있기 때문.
+    
     // =====================================================================
     private void UpdateComboBindings()
     {
@@ -552,9 +712,9 @@ public class InputManager : MonoBehaviour
             {
                 if (combo.suppressSingleKeys)
                 {
-                    for (int k = 0; k < combo.keys.Count; k++)
+                    for (int k = 0; k < combo.buttons.Count; k++)
                     {
-                        ApplyAction(FindActionForKey(combo.keys[k]), false);
+                        ApplyAction(FindActionForPadButton(combo.buttons[k]), false);
                     }
                 }
 
@@ -569,61 +729,127 @@ public class InputManager : MonoBehaviour
         }
     }
 
-    // 등록된 키가 전부 눌려 있는지. 2개 미만이면 조합키가 아니므로 성립 안 시킴
-    // (1개짜리를 허용하면 단독 키 설정과 겹쳐서 어느 쪽이 이겼는지 알 수 없게 됨).
+    // 등록된 조건(버튼 + 스틱 방향)이 전부 성립하는지.
+    //
+    // 조건이 2개 미만이면 조합키가 아니므로 성립 안 시킴 —
+    // 1개짜리를 허용하면 단독 버튼 설정과 겹쳐서 어느 쪽이 이겼는지 알 수 없게 됨.
+    // 스틱 조건도 조건 1개로 셈함(버튼 1개 + 스틱 1개면 조합으로 인정).
     private bool IsComboHeld(ComboBinding combo)
     {
-        if (combo.keys == null || combo.keys.Count < 2)
+        if (Gamepad.current == null || combo.buttons == null)
         {
             return false;
         }
 
-        for (int i = 0; i < combo.keys.Count; i++)
+        int conditionCount = combo.buttons.Count + (combo.useStick ? 1 : 0);
+        if (conditionCount < 2)
         {
-            if (!Input.GetKey(combo.keys[i]))
+            return false;
+        }
+
+        for (int i = 0; i < combo.buttons.Count; i++)
+        {
+            if (!GetPad(combo.buttons[i]))
             {
                 return false;
             }
         }
+
+        if (combo.useStick && !IsStickPushed(combo.stick, combo.stickDirection, combo.stickThreshold, combo.action))
+        {
+            return false;
+        }
+
         return true;
     }
 
-    // 이 키에 원래 물려 있던 단독 행동을 찾음. 없으면 None.
-    // 조합키가 성립했을 때 그 단독 기능을 꺼주기 위한 역참조라, 키보드 설정만 보면 됨.
-    private INPUT_ACTION FindActionForKey(KeyCode key)
+    // 스틱이 지정한 방향으로 밀려 있는지.
+    //
+    // [우세축 방식]
+    // X와 Y 중 더 많이 민 쪽 하나만 방향으로 인정함. 십자키처럼 한 번에 한 방향만 성립함.
+    // 성분을 따로 보면 대각선(↗)에서 Up과 Right가 동시에 성립해서, 같은 버튼에 방향별
+    // 조합을 걸어두면 두 행동이 같이 나가버림.
+    // 크기도 같이 봐서 살짝 기울인 것은 무시함(성분만 보면 거의 안 밀어도 걸림).
+    //
+    // [반전 연동]
+    // 오른쪽 스틱 상하 반전(invertRStickY)을 켜면 기체 조종이 뒤집히므로, 상하이동 조합도
+    // 같은 손놀림이 되도록 같이 뒤집음 — 배정은 그대로 두고 '밀어야 하는 방향'만 반대가 됨.
+    //   예) L1+Up → MoveUp 배정 시   반전 OFF=위로 밀기 / 반전 ON=아래로 밀기
+    // 상하이동(MoveUp/MoveDown)에만 적용함. 스킬 같은 다른 행동까지 뒤집으면
+    // 인스펙터에 적힌 방향과 손이 따로 놀아 헷갈리기만 함.
+    private bool IsStickPushed(GAMEPAD_STICK stick, STICK_DIR dir, float threshold, INPUT_ACTION action)
     {
-        var km = keyboardMouseConfig;
+        Gamepad pad = Gamepad.current;
+        if (pad == null)
+        {
+            return false;
+        }
 
-        if (key == km.moveForward) return INPUT_ACTION.MoveForward;
-        if (key == km.moveBack)    return INPUT_ACTION.MoveBack;
-        if (key == km.moveLeft)    return INPUT_ACTION.MoveLeft;
-        if (key == km.moveRight)   return INPUT_ACTION.MoveRight;
-        if (key == km.moveUp)      return INPUT_ACTION.MoveUp;
-        if (key == km.moveDown)    return INPUT_ACTION.MoveDown;
-        if (key == km.rollLeft)    return INPUT_ACTION.RollLeft;
-        if (key == km.rollRight)   return INPUT_ACTION.RollRight;
-        if (key == km.boost)       return INPUT_ACTION.Boost;
-        if (key == km.dodge)       return INPUT_ACTION.Dodge;
+        Vector2 v = stick == GAMEPAD_STICK.Left
+            ? pad.leftStick.ReadValue()
+            : pad.rightStick.ReadValue();
 
-        if (key == km.fireBullet)  return INPUT_ACTION.FireBullet;
-        if (key == km.fireMissile) return INPUT_ACTION.FireMissile;
+        bool invertVertical = gamepadConfig.invertRStickY
+                           && stick == GAMEPAD_STICK.Right
+                           && (action == INPUT_ACTION.MoveUp || action == INPUT_ACTION.MoveDown);
+        if (invertVertical)
+        {
+            v.y = -v.y;
+        }
 
-        if (key == km.missilePrev) return INPUT_ACTION.MissilePrev;
-        if (key == km.missileNext) return INPUT_ACTION.MissileNext;
+        // 살짝 기울인 것은 방향으로 안 봄
+        if (v.sqrMagnitude < threshold * threshold)
+        {
+            return false;
+        }
 
-        if (key == km.switchConsumable) return INPUT_ACTION.SwitchConsumable;
-        if (key == km.useConsumable)    return INPUT_ACTION.UseConsumable;
+        // 더 많이 민 축으로만 판정 — 부호 반전은 크기를 안 바꾸므로 우세축 결과에 영향 없음
+        if (Mathf.Abs(v.x) > Mathf.Abs(v.y))
+        {
+            return dir == (v.x > 0f ? STICK_DIR.Right : STICK_DIR.Left);
+        }
+        return dir == (v.y > 0f ? STICK_DIR.Up : STICK_DIR.Down);
+    }
 
-        if (key == km.switchSkillSlot) return INPUT_ACTION.SwitchSkillSlot;
-        if (key == km.useSkill)        return INPUT_ACTION.UseSkill;
+    // 이 패드 버튼에 원래 물려 있던 단독 행동을 찾음. 없으면 None.
+    // 조합키가 성립했을 때 그 단독 기능을 꺼주기 위한 역참조라, 패드 설정만 보면 됨.
+    private INPUT_ACTION FindActionForPadButton(GAMEPAD_BUTTON b)
+    {
+        // None끼리 비교되면 미배정 항목에 전부 걸려버리므로 먼저 걸러냄
+        if (b == GAMEPAD_BUTTON.None)
+        {
+            return INPUT_ACTION.None;
+        }
 
-        if (key == km.fuelGaugeToggle) return INPUT_ACTION.FuelGaugeToggle;
-        if (key == km.inventoryToggle) return INPUT_ACTION.InventoryToggle;
-        if (key == km.pauseMenu)       return INPUT_ACTION.PauseMenu;
-        if (key == km.mapToggle)       return INPUT_ACTION.MapToggle;
+        var gp = gamepadConfig;
 
-        if (key == km.interAct)             return INPUT_ACTION.Interact;
-        if (key == km.toggleClusterLockMode) return INPUT_ACTION.ToggleClusterLockMode;
+        if (b == gp.rollLeft)  return INPUT_ACTION.RollLeft;
+        if (b == gp.rollRight) return INPUT_ACTION.RollRight;
+        if (b == gp.boost)     return INPUT_ACTION.Boost;
+        if (b == gp.dodge)     return INPUT_ACTION.Dodge;
+
+        if (b == gp.fireBullet)  return INPUT_ACTION.FireBullet;
+        if (b == gp.fireMissile) return INPUT_ACTION.FireMissile;
+
+        if (b == gp.missilePrev) return INPUT_ACTION.MissilePrev;
+        if (b == gp.missileNext) return INPUT_ACTION.MissileNext;
+
+        if (b == gp.lockOnPrev) return INPUT_ACTION.LockOnPrev;
+        if (b == gp.lockOnNext) return INPUT_ACTION.LockOnNext;
+
+        if (b == gp.switchConsumable) return INPUT_ACTION.SwitchConsumable;
+        if (b == gp.useConsumable)    return INPUT_ACTION.UseConsumable;
+
+        if (b == gp.switchSkillSlot) return INPUT_ACTION.SwitchSkillSlot;
+        if (b == gp.useSkill)        return INPUT_ACTION.UseSkill;
+
+        if (b == gp.fuelGaugeToggle) return INPUT_ACTION.FuelGaugeToggle;
+        if (b == gp.inventoryToggle) return INPUT_ACTION.InventoryToggle;
+        if (b == gp.pauseMenu)       return INPUT_ACTION.PauseMenu;
+        if (b == gp.mapToggle)       return INPUT_ACTION.MapToggle;
+
+        if (b == gp.interAct)              return INPUT_ACTION.Interact;
+        if (b == gp.toggleClusterLockMode) return INPUT_ACTION.ToggleClusterLockMode;
 
         return INPUT_ACTION.None;
     }
@@ -685,6 +911,10 @@ public class InputManager : MonoBehaviour
         rollInput = 0f;
         // 조종간도 같이 수평으로 — 안 그러면 메뉴를 닫는 순간 기울어져 있던 값으로 기수가 계속 돌아감
         _mouseStick = Vector2.zero;
+        // 토글로 켜둔 부스트도 같이 해제 — 메뉴 열었다 닫으면 계속 부스트가 걸려 있게 되므로
+        _kbBoostLatch = false;
+        _padBoostLatch = false;
+        _mobileBoostLatch = false;
         isBoosting = false;
         isDodging = false;
         fireBullet = false;
@@ -762,8 +992,18 @@ public class InputManager : MonoBehaviour
         // 커서가 풀려있는 동안(UI/Alt)은 조종간을 안 건드림 — 메뉴에서 마우스를 움직여도 기수가 안 돌게.
         if (!IsGameplayInputLocked())
         {
-            Vector2 mouseDelta = new Vector2(Input.GetAxisRaw(AxisMouseX), Input.GetAxisRaw(AxisMouseY));
-            _mouseStick += mouseDelta * mouseStickSensitivity;
+            // 마우스 이동량은 장치에서 직접(픽셀 단위) 읽음.
+            // 레거시 GetAxisRaw("Mouse X")는 Project Settings의 축 sensitivity(0.1)가 한 번 더
+            // 곱해져서 감도 손잡이가 두 군데로 갈라짐 — 그쪽을 건드리면 이 감도값 의미가 통째로 바뀜.
+            // 장치에서 바로 읽으면 곱하는 곳이 여기 하나뿐이라 값이 흔들리지 않음.
+            Vector2 mouseDelta = Mouse.current != null ? Mouse.current.delta.ReadValue() : Vector2.zero;
+            // 상하 반전은 누적 단계에서 적용 — 조종간(크로스헤어) 위치까지 같이 뒤집혀야
+            // 손이 미는 방향과 화면에 보이는 조종간이 어긋나지 않음.
+            if (km.invertLookY)
+            {
+                mouseDelta.y = -mouseDelta.y;
+            }
+            _mouseStick += mouseDelta * MouseSensitivityFactor;
             // 원형으로 제한 — 대각선이 축별로 잘려서 더 빨라지는 현상 방지
             _mouseStick = Vector2.ClampMagnitude(_mouseStick, 1f);
 
@@ -775,7 +1015,10 @@ public class InputManager : MonoBehaviour
         lookInput = _mouseStick;
 
         // 부스트 / 회피
-        isBoosting = Input.GetKey(km.boost);
+        isBoosting = ResolveBoost(km.boostToggle,
+                                  Input.GetKey(km.boost),
+                                  Input.GetKeyDown(km.boost),
+                                  ref _kbBoostLatch);
         isDodging  = Input.GetKeyDown(km.dodge);
 
         // 사격
@@ -832,19 +1075,17 @@ public class InputManager : MonoBehaviour
     {
         var gp = gamepadConfig;
 
-        // 축(트리거/D패드)을 이번 프레임 1번만 샘플 — GetPad/GetPadDown이 엣지 판정에 이 값을 씀.
-        _padDpadX = ReadAxis(gp.axisDPadX);
-        _padDpadY = ReadAxis(gp.axisDPadY);
-        _padL2    = ReadAxis(gp.axisL2);
-        _padR2    = ReadAxis(gp.axisR2);
-
         // --- 아날로그: 패드가 데드존 넘게 들어오면 키마 값을 덮어씀(패드 우선) ---
         // 이동 (왼쪽 스틱) — 스틱 크기가 그대로 반영돼 살짝=살살 / 확=빠르게(MovingByInput이 크기 보존).
+        // 스틱은 장치에서 바로 읽음 — 왼쪽=이동, 오른쪽=시야로 고정.
+        // (예전엔 어느 축을 쓸지 인스펙터에서 고르게 했는데, 이제 패드 종류와 무관하게
+        //  '왼쪽 스틱'이라는 개념 자체로 읽히므로 고를 이유가 없음)
+        Vector2 lStick = Gamepad.current.leftStick.ReadValue();
         Vector3 padMove = new Vector3
         (
-            ReadAxis(gp.axisLeftStickX),
-            ReadAxis(gp.axisVerticalMove),
-            ReadAxis(gp.axisLeftStickY)
+            lStick.x,
+            ReadVerticalMove(gp.verticalMoveSource),
+            lStick.y
         );
         bool padMoving = padMove.sqrMagnitude > StickActiveDeadzone * StickActiveDeadzone;
         if (padMoving)
@@ -853,11 +1094,13 @@ public class InputManager : MonoBehaviour
         }
 
         // 시야 (오른쪽 스틱) — Y축 반전 옵션 반영
-        float rStickY = ReadAxis(gp.axisRightStickY);
+        // 감도 배율을 곱한 뒤 원형으로 제한 — 마우스 조종간과 같은 규칙(최대 기울기 1).
+        // 배율이 크면 스틱을 덜 밀어도 최대에 닿고, 작으면 끝까지 밀어도 최대에 못 미침.
+        Vector2 rStick = Vector2.ClampMagnitude(Gamepad.current.rightStick.ReadValue() * PadLookFactor, 1f);
         Vector2 padLook = new Vector2
         (
-            ReadAxis(gp.axisRightStickX),
-            gp.invertRStickY ? -rStickY : rStickY
+            rStick.x,
+            gp.invertRStickY ? -rStick.y : rStick.y
         );
         bool padLooking = padLook.sqrMagnitude > StickActiveDeadzone * StickActiveDeadzone;
         if (padLooking)
@@ -880,7 +1123,10 @@ public class InputManager : MonoBehaviour
         }
 
         // --- 버튼: 키마 결과에 OR ---
-        bool padBoost    = GetPad(gp.boost);
+        bool padBoost    = ResolveBoost(gp.boostToggle,
+                                        GetPad(gp.boost),
+                                        GetPadDown(gp.boost),
+                                        ref _padBoostLatch);
         bool padFire     = GetPad(gp.fireBullet);
         bool padDodge    = GetPadDown(gp.dodge);
         bool padMissile  = GetPadDown(gp.fireMissile);
@@ -920,72 +1166,74 @@ public class InputManager : MonoBehaviour
             || padFuel || padInv || padPause || padMap || padInter;
         _padActive = padMoving || padLooking || padRoll != 0f || padLockOn != 0f || padButton;
 
-        // 다음 프레임 엣지 판정용으로 이번 축값 보관
-        _prevPadDpadX = _padDpadX;
-        _prevPadDpadY = _padDpadY;
-        _prevPadL2    = _padL2;
-        _prevPadR2    = _padR2;
     }
 
     // =====================================================================
-    // 게임패드 버튼 매핑/판정 — GAMEPAD_BUTTON(PS 명칭)을 실제 입력으로 변환.
-    // 페이스/범퍼/스틱/메뉴 버튼은 KeyCode.JoystickButton, L2/R2·D패드는 축으로 읽음.
-    // 물리 번호는 Xbox+Windows(레거시 Input) 기준 — 다른 패드/OS면 ToJoystickKey만 고치면 됨.
+    // 게임패드 버튼 판정 — GAMEPAD_BUTTON을 패드의 실제 컨트롤로 바꿔서 읽음.
+    // 트리거·십자키도 전부 버튼처럼 눌림 판정이 되므로 축으로 따로 읽거나
+    // 직전 프레임과 비교해 '누른 순간'을 직접 계산할 필요가 없음.
     // =====================================================================
 
     // 누르는 동안 true
     private bool GetPad(GAMEPAD_BUTTON b)
     {
-        switch (b)
-        {
-            case GAMEPAD_BUTTON.None:      return false;
-            case GAMEPAD_BUTTON.L2:        return _padL2 > TriggerThreshold;
-            case GAMEPAD_BUTTON.R2:        return _padR2 > TriggerThreshold;
-            case GAMEPAD_BUTTON.DpadUp:    return _padDpadY >  0.5f;
-            case GAMEPAD_BUTTON.DpadDown:  return _padDpadY < -0.5f;
-            case GAMEPAD_BUTTON.DpadLeft:  return _padDpadX < -0.5f;
-            case GAMEPAD_BUTTON.DpadRight: return _padDpadX >  0.5f;
-            default:                       return Input.GetKey(ToJoystickKey(b));
-        }
+        ButtonControl c = GetPadControl(b);
+        return c != null && c.isPressed;
     }
 
-    // 누른 순간 한 프레임만 true (축은 이전 프레임과 비교해 엣지 판정)
+    // 누른 순간 한 프레임만 true
     private bool GetPadDown(GAMEPAD_BUTTON b)
     {
+        ButtonControl c = GetPadControl(b);
+        return c != null && c.wasPressedThisFrame;
+    }
+
+    // GAMEPAD_BUTTON → 실제 패드 컨트롤.
+    //
+    // 번호(JoystickButton0~)가 아니라 '자리'로 잡는다:
+    //   buttonSouth = 아래쪽 버튼 = PS ✕ = Xbox A
+    //   buttonWest  = 왼쪽 버튼   = PS □ = Xbox X
+    // 이렇게 하면 DualSense/Xbox처럼 내부 버튼 번호가 다른 패드를 꽂아도
+    // 같은 자리 버튼이 같은 기능으로 잡힌다(번호로 잡으면 패드마다 어긋남).
+    //
+    // 트리거·D패드도 여기서 같이 처리됨 — 새 입력 시스템에서는 둘 다 버튼처럼 눌림 판정이 되므로
+    // 예전처럼 축으로 따로 읽고 직접 엣지 판정할 필요가 없다.
+    private ButtonControl GetPadControl(GAMEPAD_BUTTON b)
+    {
+        Gamepad pad = Gamepad.current;
+        if (pad == null)
+        {
+            return null;
+        }
+
         switch (b)
         {
-            case GAMEPAD_BUTTON.None:      return false;
-            case GAMEPAD_BUTTON.L2:        return _padL2 > TriggerThreshold && _prevPadL2 <= TriggerThreshold;
-            case GAMEPAD_BUTTON.R2:        return _padR2 > TriggerThreshold && _prevPadR2 <= TriggerThreshold;
-            case GAMEPAD_BUTTON.DpadUp:    return _padDpadY >  0.5f && _prevPadDpadY <=  0.5f;
-            case GAMEPAD_BUTTON.DpadDown:  return _padDpadY < -0.5f && _prevPadDpadY >= -0.5f;
-            case GAMEPAD_BUTTON.DpadLeft:  return _padDpadX < -0.5f && _prevPadDpadX >= -0.5f;
-            case GAMEPAD_BUTTON.DpadRight: return _padDpadX >  0.5f && _prevPadDpadX <=  0.5f;
-            default:                       return Input.GetKeyDown(ToJoystickKey(b));
+            case GAMEPAD_BUTTON.Cross:     return pad.buttonSouth;
+            case GAMEPAD_BUTTON.Circle:    return pad.buttonEast;
+            case GAMEPAD_BUTTON.Square:    return pad.buttonWest;
+            case GAMEPAD_BUTTON.Triangle:  return pad.buttonNorth;
+            case GAMEPAD_BUTTON.L1:        return pad.leftShoulder;
+            case GAMEPAD_BUTTON.R1:        return pad.rightShoulder;
+            case GAMEPAD_BUTTON.L2:        return pad.leftTrigger;
+            case GAMEPAD_BUTTON.R2:        return pad.rightTrigger;
+            case GAMEPAD_BUTTON.L3:        return pad.leftStickButton;
+            case GAMEPAD_BUTTON.R3:        return pad.rightStickButton;
+            case GAMEPAD_BUTTON.Options:   return pad.startButton;
+            case GAMEPAD_BUTTON.Share:     return pad.selectButton;
+            case GAMEPAD_BUTTON.DpadUp:    return pad.dpad.up;
+            case GAMEPAD_BUTTON.DpadDown:  return pad.dpad.down;
+            case GAMEPAD_BUTTON.DpadLeft:  return pad.dpad.left;
+            case GAMEPAD_BUTTON.DpadRight: return pad.dpad.right;
+
+            // 터치패드 클릭은 듀얼쇽/듀얼센스에만 있음. 다른 패드면 null(안 눌림).
+            case GAMEPAD_BUTTON.TouchpadClick:
+                DualShockGamepad ds = pad as DualShockGamepad;
+                return ds != null ? ds.touchpadButton : null;
+
+            default: return null;
         }
     }
 
-    // 실제 버튼(페이스/범퍼/스틱/메뉴)만 KeyCode로 변환. 축(L2/R2/D패드)은 위에서 처리하므로 여기 안 옴.
-    // Xbox+Windows 레거시 Input 기준 번호. 다른 패드/OS면 이 표만 교체하면 됨.
-    private KeyCode ToJoystickKey(GAMEPAD_BUTTON b)
-    {
-        switch (b)
-        {
-            case GAMEPAD_BUTTON.Cross:    return KeyCode.JoystickButton0;
-            case GAMEPAD_BUTTON.Circle:   return KeyCode.JoystickButton1;
-            case GAMEPAD_BUTTON.Square:   return KeyCode.JoystickButton2;
-            case GAMEPAD_BUTTON.Triangle: return KeyCode.JoystickButton3;
-            case GAMEPAD_BUTTON.L1:       return KeyCode.JoystickButton4;
-            case GAMEPAD_BUTTON.R1:       return KeyCode.JoystickButton5;
-            case GAMEPAD_BUTTON.Share:    return KeyCode.JoystickButton6;
-            case GAMEPAD_BUTTON.Options:  return KeyCode.JoystickButton7;
-            case GAMEPAD_BUTTON.L3:       return KeyCode.JoystickButton8;
-            case GAMEPAD_BUTTON.R3:       return KeyCode.JoystickButton9;
-            // 듀얼센스 터치패드 클릭 — 드라이버/OS마다 번호가 달라 확정값이 아님. 실기기에서 눌리는 번호로 조정할 것.
-            case GAMEPAD_BUTTON.TouchpadClick: return KeyCode.JoystickButton13;
-            default:                      return KeyCode.None;
-        }
-    }
 
     // =====================================================================
     // 모바일 입력 (미구현 - 추후 가상 조이스틱/버튼 연동 시 작성)

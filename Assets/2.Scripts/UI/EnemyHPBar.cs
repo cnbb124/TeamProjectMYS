@@ -20,16 +20,15 @@ using UnityEngine.UI;
 public class EnemyHPBar : MonoBehaviour
 {
     [Header("References")]
-    [Tooltip("HP 게이지 Image. Image Type을 Filled로 둘 것.")]
+	[Tooltip("실드 게이지 Image. 비워두면 실드는 표시 안 함.")]
+	[SerializeField] private Image shieldFill;
+
+	[Tooltip("아머 게이지 Image. 비워두면 아머는 표시 안 함.")]
+	[SerializeField] private Image armorFill;
+	[Tooltip("HP 게이지 Image. Image Type을 Filled로 둘 것.")]
     [SerializeField] private Image hpFill;
 
-    [Tooltip("실드 게이지 Image. 비워두면 실드는 표시 안 함.")]
-    [SerializeField] private Image shieldFill;
-
-    [Tooltip("아머 게이지 Image. 비워두면 아머는 표시 안 함.\n" +
-             "아머는 실드 다음, HP 앞에서 데미지를 먹는 층이라 안 보여주면\n" +
-             "'맞히는데 피가 안 깎인다'로 보임.")]
-    [SerializeField] private Image armorFill;
+  
 
     [Header("Settings")]
     [Tooltip("HP도 실드도 가득 차 있으면 숨김. 하나라도 깎이면 다시 나타남.")]

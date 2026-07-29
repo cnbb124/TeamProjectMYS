@@ -220,18 +220,21 @@ public enum GAMEPAD_BUTTON
 // Project Settings에 실제로 등록된 이름과 어긋나면 런타임 예외가 남 —
 // 그래서 enum으로 고정하고 실제 축 이름 변환은 InputManager가 표로 들고 있음.
 // ⚠ 여기 항목을 늘리면 InputManager.AxisNames 배열도 같은 순서로 늘려야 함.
-public enum GAMEPAD_AXIS
+// 조합키에서 '스틱을 어느 쪽으로 민 상태'를 조건으로 걸 때 씀.
+// 버튼은 눌림/안눌림이 명확하지만 스틱은 아날로그라, 어느 스틱을 어느 방향으로
+// 얼마나 밀었을 때를 '누른 것'으로 볼지 따로 정해줘야 함.
+public enum GAMEPAD_STICK
 {
-	None,          // 미배정 — 읽지 않고 0으로 취급함
-	LeftStickX,    // 왼쪽 스틱 좌우 (좌우 이동)
-	LeftStickY,    // 왼쪽 스틱 상하 (전후 이동)
-	RightStickX,   // 오른쪽 스틱 좌우 (Yaw)
-	RightStickY,   // 오른쪽 스틱 상하 (Pitch)
-	DPadX,         // D패드 좌우 (축으로 들어옴)
-	DPadY,         // D패드 상하 (축으로 들어옴)
-	LeftTrigger,   // L2 (축)
-	RightTrigger,  // R2 (축)
-	VerticalMove,  // 상승/하강 축
+	Left,   // 왼쪽 스틱 (이동)
+	Right,  // 오른쪽 스틱 (시야)
+}
+
+public enum STICK_DIR
+{
+	Up,
+	Down,
+	Left,
+	Right,
 }
 
 // 조합키에 붙일 수 있는 행동 목록.
