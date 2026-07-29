@@ -220,8 +220,17 @@ public class GamepadConfig
     public GAMEPAD_BUTTON rollRight = GAMEPAD_BUTTON.Circle;
     public GAMEPAD_BUTTON boost     = GAMEPAD_BUTTON.L1;
     public GAMEPAD_BUTTON dodge     = GAMEPAD_BUTTON.Cross;
+	[Tooltip("상승. 기본 None = 배정 안 함(패드로 상승 안 됨).")]
+	public GAMEPAD_BUTTON moveUp = GAMEPAD_BUTTON.None;
 
-    [Header("사격")]
+	[Tooltip("하강. 기본 None = 배정 안 함(패드로 하강 안 됨).")]
+	public GAMEPAD_BUTTON moveDown = GAMEPAD_BUTTON.None;
+
+	[Header("시야 옵션")]
+	[Tooltip("오른쪽 스틱 상하(Y축) 반전. 켜면 스틱을 위로 밀 때 시야가 아래로 감(항공 스타일).")]
+	public bool invertRStickY = false;
+
+	[Header("사격")]
     public GAMEPAD_BUTTON fireBullet  = GAMEPAD_BUTTON.R2;
     public GAMEPAD_BUTTON fireMissile = GAMEPAD_BUTTON.L2;
 
@@ -262,15 +271,7 @@ public class GamepadConfig
              "키보드 설정과 별개로 동작함 — 패드만 토글로 쓸 수 있음.")]
     public bool boostToggle = false;
 
-    [Header("상하이동")]
-    [Tooltip("패드로 상승/하강을 무엇으로 할지. 기본 None = 패드로는 상하이동 안 함.\n" +
-             "Triggers: R2=상승 / L2=하강\n" +
-             "Dpad: 십자키 ↑=상승 / ↓=하강 (십자키에 다른 기능을 배정했으면 겹치니 주의)")]
-    public InputManager.VERTICAL_MOVE_SOURCE verticalMoveSource = InputManager.VERTICAL_MOVE_SOURCE.None;
-
-    [Header("시야 옵션")]
-    [Tooltip("오른쪽 스틱 상하(Y축) 반전. 켜면 스틱을 위로 밀 때 시야가 아래로 감(항공 스타일).")]
-    public bool invertRStickY = false;
+    
 }
 
 // =====================================================================
@@ -619,35 +620,6 @@ public class InputManager : MonoBehaviour
         get { return Gamepad.current != null; }
     }
 
-    // 상하이동 입력원. 패드에는 남는 스틱이 없어서 무엇에 붙일지 직접 골라야 함.
-    // 기본은 None — 고르지 않으면 패드로는 상하이동이 아예 안 됨(설정 안 한 기능이
-    // 트리거 같은 데 멋대로 붙는 것을 막기 위해 기본값을 껐음).
-    public enum VERTICAL_MOVE_SOURCE
-    {
-        None,      // 안 씀
-        Triggers,  // R2=상승 / L2=하강
-        Dpad,      // 십자키 ↑=상승 / ↓=하강
-    }
-
-    // 상하이동 축 읽기. 위 설정에 따라 정해진 곳에서만 읽고, None이면 0.
-    private static float ReadVerticalMove(VERTICAL_MOVE_SOURCE source)
-    {
-        Gamepad pad = Gamepad.current;
-        if (pad == null)
-        {
-            return 0f;
-        }
-
-        switch (source)
-        {
-            case VERTICAL_MOVE_SOURCE.Triggers:
-                return pad.rightTrigger.ReadValue() - pad.leftTrigger.ReadValue();
-            case VERTICAL_MOVE_SOURCE.Dpad:
-                return pad.dpad.y.ReadValue();
-            default:
-                return 0f;
-        }
-    }
 
     // 마우스 시야/휠 축 이름(Unity 기본값 — 안 바뀜).
     private const string AxisScrollWheel = "Mouse ScrollWheel";
@@ -886,6 +858,8 @@ public class InputManager : MonoBehaviour
 
         var gp = gamepadConfig;
 
+        if (b == gp.moveUp)    return INPUT_ACTION.MoveUp;
+        if (b == gp.moveDown)  return INPUT_ACTION.MoveDown;
         if (b == gp.rollLeft)  return INPUT_ACTION.RollLeft;
         if (b == gp.rollRight) return INPUT_ACTION.RollRight;
         if (b == gp.boost)     return INPUT_ACTION.Boost;
@@ -1146,10 +1120,13 @@ public class InputManager : MonoBehaviour
         // (예전엔 어느 축을 쓸지 인스펙터에서 고르게 했는데, 이제 패드 종류와 무관하게
         //  '왼쪽 스틱'이라는 개념 자체로 읽히므로 고를 이유가 없음)
         Vector2 lStick = Gamepad.current.leftStick.ReadValue();
+        // 상하이동은 배정한 버튼으로 — 키보드(Mouse4/Mouse3)와 같은 디지털 입력임.
+        // 배정 안 하면(None) 양쪽 다 false라 0이 되어 아무 일도 안 일어남.
+        float padVertical = (GetPad(gp.moveUp) ? 1f : 0f) + (GetPad(gp.moveDown) ? -1f : 0f);
         Vector3 padMove = new Vector3
         (
             lStick.x,
-            ReadVerticalMove(gp.verticalMoveSource),
+            padVertical,
             lStick.y
         );
         bool padMoving = padMove.sqrMagnitude > StickActiveDeadzone * StickActiveDeadzone;
