@@ -9,9 +9,13 @@ using UnityEngine.UI;
 //   부모 쪽에서 Unit을 찾으므로 자식이 아니면 아무것도 안 뜬다.
 //
 // [멀티플레이]
-//   별도 처리 없음. curHpRemaining/curShieldRemaining이 Unit.OnPhotonSerializeView로
-//   모든 클라에 흘러오므로, 각자 로컬에서 그 값을 읽어 그리기만 하면 그대로 맞는다.
+//   HP/실드/아머 현재값은 Unit.OnPhotonSerializeView로 모든 클라에 흘러오므로,
+//   각자 로컬에서 그 값을 읽어 그리기만 하면 맞는다. 최대치는 프리팹 값이라 클라마다 동일함
+//   (적 프리팹에 UnitParts가 없어서 런타임에 최대치가 바뀌지 않음 — 바뀌게 되면 최대치도 같이 보내야 함).
 //   (⚠ 적 프리팹 PhotonView의 Observed Components에 Enemy 계열 컴포넌트가 들어 있어야 값이 옴)
+//
+//   단, '상태'는 안 흘러온다 — 데미지 계산이 소유자 전용이라 비소유자 클라의 적은
+//   DIE 상태가 되지 않는다. 그래서 사망 판정은 상태가 아니라 HP로 해야 양쪽이 같아진다.
 // =====================================================================
 public class EnemyHPBar : MonoBehaviour
 {
@@ -71,7 +75,14 @@ public class EnemyHPBar : MonoBehaviour
 
         // 죽었으면 무조건 숨김 — 사망 연출 중에 빈 게이지가 남아 떠다니는 것 방지.
         // (풀 반납 전까지 오브젝트가 살아있으므로 여기서 직접 꺼야 함)
-        if (_unit.CurState == UNIT_STATE.DIE)
+        //
+        // 상태와 HP를 둘 다 보는 이유:
+        // CurState를 DIE로 바꾸는 경로는 Unit.calculTakeDamage 하나뿐이고, 그 앞단
+        // TakeDamage가 비소유자면 소유자에게 RPC로 넘기고 빠져나간다. 즉 멀티에서
+        // 비소유자 클라의 적은 DIE 상태에 들어가지 않는다.
+        // 반면 curHpRemaining은 스트리밍으로 모든 클라에 0이 도달하므로, 이걸 같이 봐야
+        // 소유자든 아니든 같은 시점에 게이지가 사라진다.
+        if (_unit.CurState == UNIT_STATE.DIE || _unit.curHpRemaining <= 0)
         {
             SetShown(false);
             return;
