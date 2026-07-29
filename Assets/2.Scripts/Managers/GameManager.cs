@@ -332,7 +332,9 @@ public class GameManager : MonoBehaviourPunCallbacks
         // 남아있는 투사체는 미리 정지(페이드 동안 날아다니거나 데미지 주지 않게).
         // BGM은 여기서 끊지 않는다 — FadeOut이 화면과 함께 BGM 볼륨을 페이드다운한다.
         PoolManager.Instance.DisableAllProjectiles();
-		PoolManager.Instance.DisableAllEnemies();   
+		PoolManager.Instance.DisableAllEnemies();
+		// 드랍된 아이템/골드도 같이 정리 — 이것도 풀 오브젝트라 DDOL에 남아 다음 씬까지 떠다님
+		PoolManager.Instance.DisableAllItems();
 
 		yield return StartCoroutine(FadeOut());
 
@@ -344,12 +346,20 @@ public class GameManager : MonoBehaviourPunCallbacks
         SoundManager.Instance.StopSFXAll();
         VFXManager.Instance.ReturnAll();
 
-        // 전투씬을 벗어나므로 내 네트워크 함선을 제거(DDOL이라 씬 로드로는 안 죽음).
-        // 방에 있을 때만 의미 있음(오프라인 방 포함) — 순수 싱글 테스트씬(네트워크 없음)은 스킵.
-        if (PhotonNetwork.InRoom && NetworkManager.Instance != null)
+        // 전투씬을 벗어나므로 내 함선을 제거(PhotonView가 있으면 DDOL이라 씬 로드로는 안 죽음).
+        //
+        // 방 여부로 판단하면 안 됨 — 살아남는 조건은 'PhotonView 있음'인데 방 조건으로 지우면
+        // 방 밖 테스트에서 기체가 게임오버 씬까지 따라온다.
+        // NetworkManager가 스폰한 함선이 아니면 LocalPlayerShip이 비어 있으므로 playerRef로 폴백.
+        if (NetworkManager.Instance != null && NetworkManager.Instance.HasLocalPlayerShip)
         {
             NetworkManager.Instance.DestroyLocalPlayerShip();
         }
+        else if (playerRef != null)
+        {
+            Destroy(playerRef.gameObject);
+        }
+        playerRef = null;
 
         // 씬 언로드 중 BossSpawnTarget들이 줄줄이 OnDisable을 맞는데, 그건 '파괴'가 아니라 정리 과정임 —
         // 목표 달성으로 세어버리면 씬 나가는 중에 보스 조건이 터짐. 로드 완료(OnSceneLoaded)에서 해제함.
@@ -607,6 +617,7 @@ public class GameManager : MonoBehaviourPunCallbacks
         ChangeState(GAME_STATE.GAME_OVER);
         PoolManager.Instance.DisableAllProjectiles();//현재 투사체 모두 비활성화
         SoundManager.Instance.StopSFXAll();//모든 나고있던 효과음 중지
+        LoadScene(SCENE_TYPE.GAME_OVER);
         //기타 필요한 ui연출이나 사운드, 이펙트연출은 추가로 작성필요
     }
 

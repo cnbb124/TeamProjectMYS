@@ -302,9 +302,20 @@ public class Player : Unit
 
 		// 카메라용 분신 갱신 — Cinemachine이 LateUpdate에서 읽으므로 반드시 그 전인 여기서 채워야 함.
 		// 위치는 물리가 이미 프레임 단위로 보간해주고 있어서 그대로 복사하면 되고, 회전만 보정값을 넣음.
+		//
+		// 아래 사망 가드보다 위에 있어야 함 — 죽은 뒤에도 카메라는 잔해를 계속 따라가야
+		// 폭발 연출이 화면에 보인다. 여기서 멈추면 기체만 관성으로 날아가고 카메라는 제자리에 남는다.
 		if (_camAimProxy != null)
 		{
 			_camAimProxy.SetPositionAndRotation(transform.position, AimRotation);
+		}
+
+		// 죽었으면 조종 불가. base.Update()는 위에서 이미 돌렸으므로 사망 타이머(OnDying)는 계속 진행됨.
+		// ShouldPause는 IsGameOver를 보는데 게임오버는 연출이 끝나야 켜지므로,
+		// 이 가드가 없으면 폭발하는 동안 기체가 그대로 조종된다.
+		if (curState == UNIT_STATE.DIE)
+		{
+			return;
 		}
 
 		if (_input == null)
@@ -360,6 +371,15 @@ public class Player : Unit
 		{
 			return;
 		}
+		// 죽었으면 입력 기반 이동/회전을 돌리지 않는다.
+		// MovingByInput()이 끝에서 속도를 보고 CurState를 IDLE/MOVING/BRAKE로 다시 세팅하는데,
+		// 그 분기가 걸러내는 건 DODGE뿐이라 DIE도 덮어써버린다. 그러면 상태가 DIE에서 빠져나가
+		// UpdateFSM이 OnDying()을 더 이상 호출하지 않고, 사망 타이머가 멈춰 게임오버로 못 넘어간다.
+		if (curState == UNIT_STATE.DIE)
+		{
+			return;
+		}
+
 		// 남의 함선(멀티)이면 입력 기반 이동/회전을 돌리지 않는다. 위치는 PhotonView 동기화로만.
 		if (!IsMine)
 		{
@@ -502,7 +522,34 @@ public class Player : Unit
 	protected override void OnMoving() { }
 	protected override void OnBoosting() { }
 	protected override void OnDodge() { base.OnDodge(); }
-	protected override void OnDying() { }
+	// 사망 연출이 끝나면 게임오버로 넘어감.
+	// Die()에서 바로 GameOver()를 부르면 폭발이 터지는 순간 게임오버 UI가 같이 떠서 연출이 안 보임.
+	// Enemy가 풀 반납을 미루는 것과 같은 자리·같은 방식이고, 시간도 같은 _deathSequenceDuration을 씀.
+	//
+	// 코루틴이 아니라 타이머인 이유: 이 프로젝트의 일시정지가 timeScale이 아니라 플래그 방식이라
+	// 멈춘 동안 Update가 안 돌아야 카운트다운도 같이 멈춤(Enemy.OnDying과 동일).
+	// GameOver 전까지는 IsGameOver가 false라 ShouldPause에 안 걸려 타이머가 정상 진행됨.
+	protected override void OnDying()
+	{
+		if (_gameOverTriggered)
+		{
+			return;
+		}
+
+		_deathTimer -= Time.deltaTime;
+		if (_deathTimer > 0f)
+		{
+			return;
+		}
+
+		_gameOverTriggered = true;
+		GameManager.Instance.GameOver();
+	}
+
+	// 사망 연출 잔여시간. Die()에서 세팅하고 OnDying()이 깎음.
+	private float _deathTimer;
+	// GameOver를 한 번만 부르기 위한 표식 — OnDying은 사망 상태 동안 매 프레임 돌기 때문.
+	private bool _gameOverTriggered;
 
 	// UI팀 구독용 — 피격 시 공격자의 월드 방향 벡터 전달 (정규화).
 	// HUD 피격 방향 인디케이터에서 이 이벤트를 구독하면 됨.
@@ -539,7 +586,10 @@ public class Player : Unit
 	protected override void Die()
 	{
 		UnitManager.Instance.UnregisterPlayer(this);
-		GameManager.Instance.GameOver();
+		// 게임오버는 여기서 바로 부르지 않음 — 사망 연출(폭발/사망모션)이 다 나온 뒤
+		// OnDying()이 타이머를 다 깎으면 그때 호출함.
+		_deathTimer = _deathSequenceDuration;
+		_gameOverTriggered = false;
 		//기타 필요한거 반납??여기서해야하나
 	}
 

@@ -2,10 +2,10 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
+// 레이더도 전투씬 전용 HUD 구성요소임 — 씬과 함께 생기고 사라진다.
+// 밖에서 부를 일이 없어 싱글톤을 두지 않는다(두면 씬에 두 개일 때 한쪽이 조용히 파괴됨).
 public class TargettingRadarSystem : MonoBehaviour
 {
-    public static TargettingRadarSystem Instance { get; private set; }
-
     [Header("References")]
     [SerializeField] private LockOnSystem lockOnSystem;
     [SerializeField] private Transform player;
@@ -28,16 +28,6 @@ public class TargettingRadarSystem : MonoBehaviour
 
     private List<Image> _dotPool = new List<Image>();
     private int _activeDotCount = 0;
-
-    private void Awake()
-    {
-        if (Instance != null && Instance != this)
-        {
-            Destroy(gameObject);
-            return;
-        }
-        Instance = this;
-    }
 
     void Update()
 {

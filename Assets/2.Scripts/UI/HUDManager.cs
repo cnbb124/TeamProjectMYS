@@ -2,10 +2,11 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
+// HUD는 전투씬 전용임 — 씬마다 HUD 프리팹이 배치돼 있고, 그릴 대상(플레이어)도 그 씬에만 있다.
+// 그래서 싱글톤도 DontDestroyOnLoad도 쓰지 않는다.
+// (예전엔 DDOL이라 게임오버/로비 씬까지 HUD가 따라가고, 새 씬의 HUD는 중복이라 파괴됐다)
 public class HUDManager : MonoBehaviour
 {
-    public static HUDManager Instance { get; private set; }
-
     [Header("Target")]
     [SerializeField] private Player player;
 
@@ -37,17 +38,6 @@ public class HUDManager : MonoBehaviour
     [SerializeField] private Image xpFill;
     [SerializeField] private TMP_Text xpText;
     [SerializeField] private TMP_Text levelDisplay;
-
-    private void Awake()
-    {
-        if (Instance != null && Instance != this)
-        {
-            Destroy(gameObject);
-            return;
-        }
-        Instance = this;
-        DontDestroyOnLoad(gameObject);
-    }
 
     // 인스펙터 연결 우선, 비어있으면 GameManager.playerRef에서 자동 폴백 (찾으면 캐싱)
     private Player GetPlayer()

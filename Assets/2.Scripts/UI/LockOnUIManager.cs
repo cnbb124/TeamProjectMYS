@@ -1,10 +1,10 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+// 락온 마커도 전투씬 전용임 — HUD 프리팹 안에 들어 있어 씬과 함께 생기고 사라진다.
+// 싱글톤/DontDestroyOnLoad를 쓰지 않는 이유는 HUDManager와 같음.
 public class LockOnUIManager : MonoBehaviour
 {
-    public static LockOnUIManager Instance { get; private set; }
-
     [Header("References")]
     [SerializeField] private LockOnSystem lockOnSystem;
     [SerializeField] private GameObject lockOnUIPrefab;
@@ -13,13 +13,6 @@ public class LockOnUIManager : MonoBehaviour
     private List<LockOnTargetUI> _pool = new List<LockOnTargetUI>();
     private int _activeCount;
 
-    private void Awake()
-    {
-        if (Instance != null && Instance != this) { Destroy(gameObject); return; }
-        Instance = this;
-        DontDestroyOnLoad(gameObject);
-    }
-
     private void Start()
     {
         _mainCamera = Camera.main; // 한 번만 캐싱
@@ -27,8 +20,8 @@ public class LockOnUIManager : MonoBehaviour
 
     private void Update()
     {
-        // 인스펙터 연결 우선, 비어있으면 자동 폴백
-        // (DontDestroyOnLoad라 씬 전환 시 씬 오브젝트 참조가 끊기므로 매번 확인 필수)
+        // 인스펙터 연결 우선, 비어있으면 자동 폴백.
+        // 플레이어가 런타임 스폰(네트워크)이라 Start 시점엔 아직 없을 수 있어 매번 확인함.
         if (lockOnSystem == null && GameManager.Instance != null && GameManager.Instance.playerRef != null)
             lockOnSystem = GameManager.Instance.playerRef.GetComponent<LockOnSystem>();
         if (_mainCamera == null) _mainCamera = Camera.main;

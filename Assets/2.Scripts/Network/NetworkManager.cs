@@ -268,9 +268,17 @@ public class NetworkManager : MonoBehaviourPunCallbacks
             return;
         }
         PhotonView pv = LocalPlayerShip.GetComponent<PhotonView>();
-        if (pv != null && pv.IsMine)
+        // PhotonNetwork.Destroy는 '방 안의 네트워크 오브젝트'에만 통함 —
+        // 방 밖(오프라인 단독 테스트 등)에서 부르면 실패하고 오브젝트가 그대로 살아남는다.
+        // 함선은 PhotonView만 있으면 DDOL이라(Player.Start) 씬 로드로도 안 죽으므로,
+        // 방이 아니면 로컬 파괴로 폴백해야 게임오버 씬까지 따라오지 않는다.
+        if (pv != null && pv.IsMine && PhotonNetwork.InRoom)
         {
             PhotonNetwork.Destroy(LocalPlayerShip);
+        }
+        else
+        {
+            Destroy(LocalPlayerShip);
         }
         LocalPlayerShip = null;
     }
