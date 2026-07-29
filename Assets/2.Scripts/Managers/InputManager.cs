@@ -397,17 +397,13 @@ public class InputManager : MonoBehaviour
     // =====================================================================
     [Space(5)]
     [Header("━━━━━━ 조종 감도━━━━━━")]
-    [Tooltip("마우스 시야 감도(1~100). 옵션 UI 슬라이더가 그대로 쓰는 값.\n" +
-             "50 = 조종간을 끝까지 꺾는 데 마우스 약 500px. 25씩 오를 때마다 두 배 예민해짐.\n" +
-             "1=약 2000px(아주 둔함) / 100=약 125px(아주 예민함)")]
+    [Tooltip("조종 감도(1~100). 마우스와 패드 오른쪽 스틱에 같이 적용됨.\n" +
+             "둘 다 '조종간을 얼마나 쉽게 끝까지 꺾느냐'를 정하는 값이라 하나로 묶어둠.\n" +
+             "50 기준 25칸마다 두 배씩 변함.\n" +
+             "  마우스 — 50: 끝까지 꺾는 데 약 500px / 100: 약 125px / 1: 약 2000px\n" +
+             "  패드   — 50: 스틱 기울기 그대로 / 100: 1/4만 밀어도 최대 / 1: 끝까지 밀어도 1/4")]
     [Range(MinSensitivity, MaxSensitivity)]
-    [SerializeField] private int mouseLookSensitivity = DefaultSensitivity;
-
-    [Tooltip("패드 시야 감도(1~100). 오른쪽 스틱이 마우스와 같은 조종간 역할이라 같은 방식으로 맞춤.\n" +
-             "50 = 스틱 기울기 그대로(끝까지 밀어야 최대 선회).\n" +
-             "100 = 스틱을 1/4만 밀어도 최대 선회 / 1 = 끝까지 밀어도 최대의 1/4만 선회")]
-    [Range(MinSensitivity, MaxSensitivity)]
-    [SerializeField] private int padLookSensitivity = DefaultSensitivity;
+    [SerializeField] private int lookSensitivity = DefaultSensitivity;
 
     public const int MinSensitivity = 1;
     public const int MaxSensitivity = 100;
@@ -421,49 +417,38 @@ public class InputManager : MonoBehaviour
     private const float SensitivityAtMid = 0.002f;  // 슬라이더 50일 때의 계수
     private const float SensitivityRange = 4f;      // 50→100이 4배, 50→1이 1/4배
 
-    /// <summary>옵션 UI용 마우스 조종 감도(1~100).</summary>
-    public int MouseLookSensitivity => mouseLookSensitivity;
-
-    /// <summary>옵션 UI용 패드 조종 감도(1~100).</summary>
-    public int PadLookSensitivity => padLookSensitivity;
+    /// <summary>옵션 UI용 조종 감도(1~100). 슬라이더 초기값에 씀.</summary>
+    public int LookSensitivity => lookSensitivity;
 
     /// <summary>옵션 UI에서 호출. 범위를 벗어난 값은 잘라내고 저장까지 함.</summary>
-    public void SetMouseLookSensitivity(int value)
+    public void SetLookSensitivity(int value)
     {
-        mouseLookSensitivity = Mathf.Clamp(value, MinSensitivity, MaxSensitivity);
-        PlayerPrefs.SetInt(MouseSensitivityKey, mouseLookSensitivity);
+        lookSensitivity = Mathf.Clamp(value, MinSensitivity, MaxSensitivity);
+        PlayerPrefs.SetInt(LookSensitivityKey, lookSensitivity);
         PlayerPrefs.Save();
     }
 
-    /// <summary>옵션 UI에서 호출. 범위를 벗어난 값은 잘라내고 저장까지 함.</summary>
-    public void SetPadLookSensitivity(int value)
-    {
-        padLookSensitivity = Mathf.Clamp(value, MinSensitivity, MaxSensitivity);
-        PlayerPrefs.SetInt(PadSensitivityKey, padLookSensitivity);
-        PlayerPrefs.Save();
-    }
-
-    private const string MouseSensitivityKey = "Input.MouseLookSensitivity";
-    private const string PadSensitivityKey = "Input.PadLookSensitivity";
+    private const string LookSensitivityKey = "Input.LookSensitivity";
 
     // 슬라이더 값(1~100) → 50 기준 배율. 50이면 1배, 25칸마다 2배.
-    private static float SensitivityScale(int value)
+    private float SensitivityScale
     {
-        return Mathf.Pow(SensitivityRange, (value - DefaultSensitivity) / 50f);
+        get { return Mathf.Pow(SensitivityRange, (lookSensitivity - DefaultSensitivity) / 50f); }
     }
 
-    // 마우스 이동량(픽셀)에 곱해지는 계수
+    // 마우스 이동량(픽셀)에 곱해지는 계수.
+    // 픽셀을 조종간 기울기로 환산해야 해서 기준 계수가 따로 필요함.
     private float MouseSensitivityFactor
     {
-        get { return SensitivityAtMid * SensitivityScale(mouseLookSensitivity); }
+        get { return SensitivityAtMid * SensitivityScale; }
     }
 
     // 패드 스틱 기울기에 곱해지는 배율.
-    // 스틱은 이미 -1~1로 들어오므로 마우스처럼 픽셀 환산이 필요 없고 배율만 곱함 —
+    // 스틱은 이미 -1~1로 들어오므로 픽셀 환산이 필요 없고 배율만 곱함 —
     // 50이면 스틱 그대로, 크면 덜 밀어도 최대에 닿고, 작으면 끝까지 밀어도 최대에 못 미침.
     private float PadLookFactor
     {
-        get { return SensitivityScale(padLookSensitivity); }
+        get { return SensitivityScale; }
     }
 
     [Tooltip("마우스를 멈췄을 때 조종간이 중앙으로 돌아오는 속도(초당 기울기량).\n" +
@@ -612,15 +597,10 @@ public class InputManager : MonoBehaviour
             DontDestroyOnLoad(gameObject);
 
             // 저장해둔 감도 복원. 없으면 인스펙터 값을 그대로 씀(첫 실행).
-            if (PlayerPrefs.HasKey(MouseSensitivityKey))
+            if (PlayerPrefs.HasKey(LookSensitivityKey))
             {
-                mouseLookSensitivity = Mathf.Clamp(PlayerPrefs.GetInt(MouseSensitivityKey),
-                                                   MinSensitivity, MaxSensitivity);
-            }
-            if (PlayerPrefs.HasKey(PadSensitivityKey))
-            {
-                padLookSensitivity = Mathf.Clamp(PlayerPrefs.GetInt(PadSensitivityKey),
-                                                 MinSensitivity, MaxSensitivity);
+                lookSensitivity = Mathf.Clamp(PlayerPrefs.GetInt(LookSensitivityKey),
+                                              MinSensitivity, MaxSensitivity);
             }
         }
         else if (instance != this)
