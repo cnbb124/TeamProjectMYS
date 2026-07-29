@@ -8,9 +8,14 @@ using UnityEngine;
 // beamDuration 동안 빔 유지. 빔 유지 중 damageInterval마다 전방 직선(RaycastNonAlloc)
 // 관통 판정으로 사거리 내 적에게 지속 데미지. 조준은 전방 고정.
 //
-// [관통/막힘] 거리순으로 순회하며 데미지. IHittable.BlocksBeam이 true인 대상
+// [관통/막힘] 거리순으로 순회하며 데미지. IHittable.BlocksLineOfSight가 true인 대상
 //   (거대몹/소행성 등)을 만나면 데미지를 준 뒤 관통을 멈추고 빔이 거기서 끝남.
-//   일반 적은 관통. 벽(IDamageable 아님, BlocksBeam만 true)은 데미지 없이 차폐.
+//   일반 적은 관통. 벽(IDamageable 아님, BlocksLineOfSight만 true)은 데미지 없이 차폐.
+//   실드가 켜진 유닛도 빔을 막음(BlocksThisBeam) — 실드 껍질에서 빔이 끊겨야 이펙트가 맞아 보이기 때문.
+//
+// [사운드] 차지음/발사음 모두 루프(PlaySFX3DLoop)로 재생하고 단계가 바뀔 때 끔.
+//   차지 종료 → 차지음 정지 + 발사음 시작, beamDuration 만료 → 발사음 정지.
+//   단발 재생이면 클립 길이에 묶여 chargeTime/beamDuration과 안 맞고 두 소리가 겹침.
 //
 // [시각] 판정 결과 길이를 LaserBeamVisual.SetLength()로 넘겨 빔 시각과 데미지 사거리를 일치시킴.
 //   빔 프리팹은 beamEffectType으로 VFXManager에서 꺼내며, LaserBeamVisual 컴포넌트를 가져야 함.
@@ -55,9 +60,10 @@ public class LaserSkill : ActiveSkill
 
 		// 차지 VFX/사운드//따로 차지 포지션만들것
 		_vfx.PlayEffectAtUnit(Data.chargeEffectType, _owner.transform, _owner.skillSystem.LaserChargePosition.position, _owner.transform.rotation, Data.chargeTime);
+		// 루프로 재생 — 단발이면 클립 길이대로 끝나버려서 chargeTime과 안 맞음. 차지 종료 시 StartFiring에서 끔
 		if (Data.chargeSoundType != SOUND_TYPE.SFX_NONE)
 		{
-			_sound.PlaySFX3DAtUnit(Data.chargeSoundType, _owner.transform);
+			_sound.PlaySFX3DLoop(Data.chargeSoundType, _owner.transform);
 		}
 	}
 
@@ -77,6 +83,7 @@ public class LaserSkill : ActiveSkill
 				{
 					_phase = Phase.None;
 					_beamVisual = null;   // 빔은 VFXManager duration 타이머로 자동 반납
+					StopFireSound();
 				}
 				else
 				{
@@ -102,9 +109,40 @@ public class LaserSkill : ActiveSkill
 			_beamVisual.SetWidth(Data.beamRadius * 2f);
 		}
 
+		// 차지음을 끄고 발사음으로 교체 — 겹쳐서 같이 울리지 않게 순서가 중요함
+		StopChargeSound();
 		if (Data.fireSoundType != SOUND_TYPE.SFX_NONE)
 		{
-			_sound.PlaySFX3DAtUnit(Data.fireSoundType, _owner.transform);
+			_sound.PlaySFX3DLoop(Data.fireSoundType, _owner.transform);
+		}
+	}
+
+	// 스킬 강제 중단 — SkillSystem.OnDisable()이 호출(유닛 사망/풀 반납).
+	// 루프 사운드는 명시적으로 꺼야 하고, 안 끄면 activeLoopSounds 등록이 그대로 남음.
+	// 빔 VFX는 VFXManager duration 타이머가 알아서 반납하므로 참조만 놓음.
+	public override void StopSkill()
+	{
+		StopChargeSound();
+		StopFireSound();
+		_phase = Phase.None;
+		_beamVisual = null;
+	}
+
+	// 차지음 정지. 차지가 끝났거나 스킬이 끊겼을 때 호출.
+	private void StopChargeSound()
+	{
+		if (Data.chargeSoundType != SOUND_TYPE.SFX_NONE)
+		{
+			_sound.StopSFX3DLoop(Data.chargeSoundType, _owner.transform);
+		}
+	}
+
+	// 발사음 정지. beamDuration 만료 시 호출 — 빔이 꺼졌는데 소리만 남는 것 방지.
+	private void StopFireSound()
+	{
+		if (Data.fireSoundType != SOUND_TYPE.SFX_NONE)
+		{
+			_sound.StopSFX3DLoop(Data.fireSoundType, _owner.transform);
 		}
 	}
 
@@ -133,7 +171,7 @@ public class LaserSkill : ActiveSkill
 		}
 
 		float beamEnd = Data.range;   // 막는 게 없으면 최대 사거리까지
-		bool blocked = false;         // BlocksBeam 대상에 실제로 막혔는지(허공 max range면 false → 빔끝 impact 끔)
+		bool blocked = false;         // 막는 대상에 실제로 막혔는지(허공 max range면 false → 빔끝 impact 끔)
 
 		for (int i = 0; i < count; i++)
 		{
@@ -198,7 +236,7 @@ public class LaserSkill : ActiveSkill
 			}
 
 			// 막는 대상이면 데미지 준 뒤 여기서 빔 끝 + 관통 중단
-			if (hittable.BlocksBeam)
+			if (BlocksThisBeam(hittable))
 			{
 				beamEnd = hit.distance;
 				blocked = true;
@@ -210,9 +248,24 @@ public class LaserSkill : ActiveSkill
 		if (_beamVisual != null)
 		{
 			_beamVisual.SetLength(beamEnd);
-			// 실제로 막힌 경우(BlocksBeam)만 빔끝 impact 표시. 허공 max range면 꺼서 공중에 안 뜨게.
+			// 실제로 막힌 경우(BlocksThisBeam)만 빔끝 impact 표시. 허공 max range면 꺼서 공중에 안 뜨게.
 			_beamVisual.SetImpactActive(blocked);
 		}
+	}
+
+	// 이 대상에서 빔이 멈추는지. 공통 차폐(BlocksLineOfSight)에 더해 실드가 켜진 유닛도 막음.
+	// 실드가 있으면 Unit.UpdateShieldHitboxState()가 본체 HitBox를 끄고 실드 콜라이더만 켜므로
+	// 레이가 먼저 맞는 게 실드 표면임 → 빔이 실드 껍질에서 끊기고 impact도 거기 찍힘.
+	// 락온 차폐(LockOnSystem)는 이 조건을 안 씀 — 실드 켠 적이 뒤의 적을 가리면 안 되기 때문.
+	private static bool BlocksThisBeam(IHittable hittable)
+	{
+		if (hittable.BlocksLineOfSight)
+		{
+			return true;
+		}
+
+		Unit unit = hittable as Unit;
+		return unit != null && unit.curShieldRemaining > 0;
 	}
 
 	// RaycastHit 거리 오름차순 비교자(관통 순회를 가까운 순으로)

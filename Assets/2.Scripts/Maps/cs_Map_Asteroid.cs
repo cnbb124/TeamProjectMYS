@@ -51,7 +51,7 @@ public class cs_Map_Asteroid : MonoBehaviour, IDamageable
     }
 
 
-    public bool BlocksBeam => true;
+    public bool BlocksLineOfSight => true;
 
     public void TakeDamage(float dmg)
     {

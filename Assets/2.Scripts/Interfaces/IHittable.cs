@@ -5,9 +5,11 @@ using UnityEngine;
 public interface IHittable
 {
 	void OnHitReaction(HitInfo info);
-	// 레이저 등 관통 판정에서 이 대상이 빔을 막는지. true면 데미지를 준 뒤 관통을 중단(뒤 대상 보호).
+	// 이 대상이 직선 판정(시야)을 막는지. 레이저 관통과 락온 차폐가 이 값을 같이 씀.
+	// 레이저: true면 데미지를 준 뒤 관통을 중단(뒤 대상 보호).
+	// 락온  : true면 이 대상 뒤에 있는 적은 락온 후보에서 제외됨.
 	// 벽/거대몹(보스·전함)/파괴가능 장애물 등. 일반 적은 false(관통됨).
-	bool BlocksBeam { get; }
+	bool BlocksLineOfSight { get; }
 }
 
 

@@ -67,10 +67,11 @@ public abstract class Unit : MonoBehaviour, IDamageable, IPunObservable
 	//외부(Enemy AI 예측사격 등)에서 실제 이동 속도벡터 참조용
 	public Vector3 Velocity => _rb != null ? _rb.velocity : Vector3.zero;
 
-	[Tooltip("레이저 등 관통 무기를 이 유닛이 막는지. 보스/전함 같은 거대몹만 체크. 일반 적은 꺼두면 관통됨.")]
-	[SerializeField] private bool _blocksBeam = false;
-	// IHittable 구현 — 관통 무기 차단 여부. 거대몹만 true.
-	public bool BlocksBeam => _blocksBeam;
+	[Header("직선 시야 차단 (레이저 관통 + 락온 차폐 공통)")]
+	[Tooltip("보스/전함/스테이션 같은 거대몹만 체크. 일반 적은 꺼두면 관통·락온 다 통과됨.")]
+	[SerializeField] private bool _blocksLineOfSight = false;
+	// IHittable 구현 — 직선 판정 차단 여부. 거대몹만 true.
+	public bool BlocksLineOfSight => _blocksLineOfSight;
 
 	//매니저 할당용 레퍼런스
 	protected SoundManager _sound;

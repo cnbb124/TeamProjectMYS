@@ -46,13 +46,16 @@ public enum AI_STATE
 	DODGE,
 	RELOAD,
 }
+// 게임 '진행 흐름'만 담당함. 어느 씬/장소인지는 SCENE_TYPE(GameManager.curSceneType)이 따로 들고 있음.
+// 여기에 STATION/STAGE 같은 장소를 섞으면 STATION_PAUSED, STAGE_PAUSED 식으로 조합이 곱해짐.
+// ⚠ 번호는 씬에 직렬화되므로 한 번 정한 값은 바꾸지 말 것. 항목을 빼도 번호는 비워두고 재사용 금지.
 public enum GAME_STATE
 {
-	MAIN_MENU,
-	UI_MENU,
-	PLAYING,
-	PAUSED,
-	GAME_OVER,
-	STAGE_CLEAR,
+	NONE = 0,       // 미설정. 구 MAIN_MENU 자리 — 장소는 SCENE_TYPE이 알려주므로 상태로 안 둠
+	// 1 = 구 UI_MENU. 쓰는 곳이 없어 제거함(번호는 비워둠)
+	PLAYING = 2,
+	PAUSED = 3,
+	GAME_OVER = 4,
+	STAGE_CLEAR = 5,
 }
 

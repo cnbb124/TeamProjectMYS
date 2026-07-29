@@ -4302,7 +4302,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 527b988271a66264ab28a1d8d177b0b7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _blocksBeam: 0
+  _blocksLineOfSight: 0
   weaponSystem: {fileID: 0}
   skillSystem: {fileID: 0}
   maxHpRemaining: 75
@@ -4363,7 +4363,7 @@ MonoBehaviour:
   aiState: 0
   leadAccuracy: 0
   rearAttackAngleThreshold: 110
-  rearAttackSkipChance: 0.95
+  rearAttackSkipChance: 0.8
   patrolRadius: 750
   patrolArriveDist: 10
   patrolHeightRange: 100
@@ -4371,7 +4371,7 @@ MonoBehaviour:
   attackChaseWeight: 0.2
   attackHoldWeight: 0.8
   evadeChance: 0.1
-  evadeCoolTime: 5
+  evadeCoolTime: 15
   dodgeProbability: 0
   attackChaseDuration: 2
   attackHoldDuration: 7
@@ -4434,6 +4434,12 @@ MonoBehaviour:
   currentLockMode: 0
   maxMultiLockCount: 4
   _targetInRadarRangeBufferSize: 64
+  _useLineOfSight: 1
+  _losBlockerMask:
+    serializedVersion: 2
+    m_Bits: 0
+  _losBufferSize: 32
+  _losGraceTime: 0.3
   lockOnRange: 850
   lockOnRequiredTime: 1.2
   targetLayerMask:

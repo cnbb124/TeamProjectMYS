@@ -25,7 +25,8 @@ using UnityEngine;
 // [작동 흐름]
 // ================================================================
 // Update()
-//   └── FindAllTargets()          OverlapSphere로 범위 내 LockOnBox 탐색 → 거리순 정렬
+//   └── FindAllTargets()          OverlapSphere로 범위 내 LockOnBox 탐색 → 지형지물 차폐 제외 → 거리순 정렬
+//                                 (신규 등록은 즉시 차폐, 기존 후보는 _losGraceTime만큼 버팀)
 //         UpdateDwellTimes()      타겟별 Angle 체류시간 갱신(벗어나면 리셋, 재진입 시 0부터)
 //         UpdateLockMode()        미사일 종류에 따라 SINGLE/MULTI/NONE 자동 전환
 //         UpdateSingleLockMode()  현재 후보 체류시간 >= lockOnRequiredTime 시 LockedTarget 확정
@@ -36,6 +37,8 @@ using UnityEngine;
 // ================================================================
 // SwitchTarget(int direction)   타겟 전환. +1=오른쪽  -1=왼쪽 (스크린 X 기준)
 // ClearLock()                   락온 전체 초기화
+// IsBlockedByObstacle(Transform) 대상까지 시야가 지형지물에 막혔는지. 락온 필터 본체이자
+//                                AI 사격 게이트용(Enemy.IsTargetBlocked이 이걸 씀)
 // ================================================================
 
 
@@ -55,7 +58,29 @@ public class LockOnSystem : MonoBehaviour
 	[SerializeField]
 	[Tooltip("유닛 동시감지 최대수(최적화용)")]
 	private int _targetInRadarRangeBufferSize = 64;
-	
+
+	[Header("지형지물 차폐(시야) 판정")]
+	[Tooltip("켜면 지형지물에 가려진 대상은 락온 후보에서 제외됨. 끄면 예전처럼 벽 너머도 락온됨.")]
+	[SerializeField]
+	private bool _useLineOfSight = true;
+	[Tooltip("시야를 막는지 검사할 레이어. 피격판정 콜라이더가 올라가 있는 HitBox를 지정할 것.\n" +
+			 "지정안할시 Hitbox로 자동지정됨,실제로 막는지는 대상의 IHittable.BlocksLineOfSight가 결정함(레이저 관통 판정과 같은 규칙).")]
+	[SerializeField]
+	private LayerMask _losBlockerMask;
+	[Tooltip("시야 판정 1회당 검사할 콜라이더 최대수(최적화용)")]
+	[SerializeField]
+	private int _losBufferSize = 32;
+	[Tooltip("이미 잡고 있던 대상이 가려졌을 때 버텨주는 시간(초). 이 시간 넘게 계속 가려져야 락온이 풀림.\n" +
+			 "0이면 한 프레임만 가려도 즉시 해제됨. 소행성이 스쳐 지나가며 락온 게이지가 리셋되는 걸 막는 용도.\n" +
+			 "새로 잡는 대상에는 적용 안 됨 — 가려진 적이 유예 때문에 락온되는 일은 없음.")]
+	[SerializeField]
+	private float _losGraceTime = 0.3f;
+
+	// 시야 판정용 레이캐스트 결과 버퍼. 매 판정마다 new 하지 않도록 Awake에서 1회만 잡음
+	private RaycastHit[] _losBuffer;
+	// 타겟별로 '언제부터 계속 가려져 있는지' 기록. 시야가 트이면 제거해 유예를 처음부터 다시 셈.
+	private Dictionary<Transform, float> _blockedSince = new Dictionary<Transform, float>();
+
 	private int _updateCount = 0;
 	private const int UPDATE_INTERVAL = 3; // 3프레임마다 탐색
 	[Header("락온 탐지 범위")]
@@ -122,12 +147,26 @@ public class LockOnSystem : MonoBehaviour
 		_ownerUnit = GetComponent<Unit>();
 		_weaponSystem = GetComponent<WeaponSystem>();
 		TargetsInRadarRange = new Collider[_targetInRadarRangeBufferSize];
+		_losBuffer = new RaycastHit[_losBufferSize];
 		// 설정 안할시 기본값
 		if (targetLayerMask == 0)
 		{
 			targetLayerMask = 1 << LayerMask.NameToLayer("LockOnBox");
 		}
-	
+		if (_losBlockerMask == 0)
+		{
+			_losBlockerMask = 1 << LayerMask.NameToLayer("HitBox");
+		}
+
+	}
+
+	// 풀에서 다시 꺼내 쓸 때 이전 생애의 락온 상태가 남지 않게 리셋함.
+	// Awake는 재호출되지 않으므로 재사용마다 초기화가 필요한 건 전부 여기서 처리할 것.
+	private void OnEnable()
+	{
+		TargetsInLockonRange.Clear();
+		RadarHitCount = 0;
+		ClearLock();
 	}
 
 	private void Update()
@@ -337,6 +376,93 @@ public class LockOnSystem : MonoBehaviour
 		LockOnProgress = MultiLockCandidates.Count > 0 ? GetDwellProgress(MultiLockCandidates[0]) : 0f;
 	}
 
+	/// <summary>
+	/// 대상까지의 직선 시야가 지형지물에 막혀 있으면 true.
+	/// 벽인지 적인지는 IHittable.BlocksLineOfSight로 갈림 — 일반 유닛은 기본 false라 서로를 안 가리고,
+	/// 벽(MapEnvironmentHit)·소행성·거대구조물은 true라 시야를 막음.
+	/// 자기 자신과 대상 본인이 소속된 구조물(루트)은 가림막에서 제외함.
+	/// </summary>
+	public bool IsBlockedByObstacle(Transform targetTf)
+	{
+		if (!_useLineOfSight || targetTf == null)
+		{
+			return false;
+		}
+
+		Vector3 origin = transform.position;
+		Vector3 diff = targetTf.position - origin;
+		float dist = diff.magnitude;
+		if (dist <= 0.01f)
+		{
+			return false;
+		}
+
+		// 피격판정 콜라이더는 트리거라 QueryTriggerInteraction.Collide가 필요함.
+		// 레이캐스트는 레이어 충돌 매트릭스를 안 보고 마스크만 보므로 HitBox 레이어도 그대로 잡힘.
+		int count = Physics.RaycastNonAlloc(origin, diff / dist, _losBuffer, dist, _losBlockerMask, QueryTriggerInteraction.Collide);
+		Transform ownRoot = transform.root;
+		Transform targetRoot = targetTf.root;
+
+		for (int i = 0; i < count; i++)
+		{
+			IHittable hittable = _losBuffer[i].collider.GetComponentInParent<IHittable>();
+			if (hittable == null)
+			{
+				continue;
+			}
+			if (!hittable.BlocksLineOfSight)
+			{
+				continue;
+			}
+
+			MonoBehaviour mono = hittable as MonoBehaviour;
+			if (mono == null)
+			{
+				continue;
+			}
+
+			// 같은 구조물(루트) 소속이면 가림막으로 안 침 — 스테이션 본체가 자기 터렛을,
+			// 또는 대상 본인의 몸체가 자기 자신을 가려 영영 락온이 안 되는 상황 방지.
+			Transform hitRoot = mono.transform.root;
+			if (hitRoot == ownRoot || hitRoot == targetRoot)
+			{
+				continue;
+			}
+
+			return true;
+		}
+
+		return false;
+	}
+
+	/// <summary>
+	/// 이미 후보로 잡고 있던 대상이 '유예시간을 넘겨' 계속 가려져 있는지.
+	/// 잠깐 스치는 차폐로 락온 게이지가 리셋되는 걸 막기 위해 기존 후보에만 씀.
+	/// 신규 등록은 유예 없이 IsBlockedByObstacle을 그대로 봄(가려진 적이 새로 잡히면 안 되므로).
+	/// </summary>
+	private bool IsBlockedBeyondGrace(Transform targetTf)
+	{
+		if (!IsBlockedByObstacle(targetTf))
+		{
+			// 시야가 트였으면 누적을 버려서 다음 차폐 때 유예를 처음부터 받게 함
+			_blockedSince.Remove(targetTf);
+			return false;
+		}
+
+		if (_losGraceTime <= 0f)
+		{
+			return true;
+		}
+
+		if (!_blockedSince.TryGetValue(targetTf, out float since))
+		{
+			_blockedSince[targetTf] = Time.time;
+			return false;
+		}
+
+		return Time.time - since >= _losGraceTime;
+	}
+
 	private void FindAllTargets()
 	{
 		////현재 유닛에서 락온사거리까지, 락온목표레이어를 저장
@@ -421,6 +547,12 @@ public class LockOnSystem : MonoBehaviour
 				continue;
 			}
 
+			// 지형지물에 가려져 있으면 후보에서 제외
+			if (IsBlockedByObstacle(lockOnBox.transform))
+			{
+				continue;
+			}
+
 			// 검증이 완료되면 HitBox의 좌표를 락온 대상으로 등록
 			if (!TargetsInLockonRange.Contains(lockOnBox.transform))
 			{
@@ -443,9 +575,10 @@ public class LockOnSystem : MonoBehaviour
 
 			float dist = Vector3.Distance(transform.position, t.position);
 			float angle = Vector3.Angle(transform.forward, (t.position - transform.position).normalized);
-			if (dist > lockOnRange || angle > lockOnAngle * 0.5f)
+			if (dist > lockOnRange || angle > lockOnAngle * 0.5f || IsBlockedBeyondGrace(t))
 			{
 				TargetsInLockonRange.RemoveAt(i);
+				_blockedSince.Remove(t);
 				if (i <= _currentTargetIndex && _currentTargetIndex > 0)
 				{
 					_currentTargetIndex--;
@@ -529,6 +662,8 @@ public class LockOnSystem : MonoBehaviour
 	{
 		// 공통 초기화
 		_dwellTimes.Clear();
+		// 파괴된 타겟이 키로 남아 계속 쌓이지 않게 여기서 같이 비움
+		_blockedSince.Clear();
 		LockOnProgress = 0f;
 		IsLocked = false;
 		_currentTargetIndex = 0;

@@ -62,7 +62,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 120491e114eaf54449edb1ede4eca701, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _blocksBeam: 0
+  _blocksLineOfSight: 0
   weaponSystem: {fileID: 0}
   skillSystem: {fileID: 0}
   maxHpRemaining: 700
@@ -179,6 +179,11 @@ MonoBehaviour:
   currentLockMode: 0
   maxMultiLockCount: 8
   _targetInRadarRangeBufferSize: 64
+  _useLineOfSight: 1
+  _losBlockerMask:
+    serializedVersion: 2
+    m_Bits: 0
+  _losBufferSize: 18
   lockOnRange: 1125
   lockOnRequiredTime: 0.8
   targetLayerMask:

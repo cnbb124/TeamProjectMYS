@@ -167,6 +167,7 @@ public enum MISSILE_TYPE
 // 현재 Build Settings 순서 확인 후 맞출것
 public enum SCENE_TYPE
 {
+	UNKNOWN = -1,   // 이 표에 없는 씬(작업씬 등). GameManager.curSceneType이 파싱 실패 시 쓰는 값
 	MAIN = 0,
 	STATION = 1,
 	STATION_1F,

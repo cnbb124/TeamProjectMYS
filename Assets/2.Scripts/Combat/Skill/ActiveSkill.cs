@@ -8,6 +8,7 @@ using UnityEngine;
 // UseSkill()					 실제 스킬 발동 로직 + 쿨다운/사용횟수 갱신. 자식 클래스에서 override 시 base.UseSkill() 호출 권장.
 //								 → TryUseSkill() 내부에서 canUseSkill() 통과 확인 후 호출됨
 // StopSkill()					 스킬 중단/취소 로직. 주로 채널링 자식 클래스에서 override.
+//								 → SkillSystem.OnDisable()이 슬롯 전체에 호출(유닛 사망/풀 반납 정리용)
 // _activeSkillData              쿨다운/사용횟수 데이터. 생성자가 ActiveSkillData 타입을 직접 받아서
 //                              캐스팅/null체크가 필요 없음(기존엔 skillData를 캐스팅하다가 잘못된 타입이면
 //                              null이 되는 문제가 있었는데, 생성자 시그니처로 원천 차단됨).
@@ -106,9 +107,12 @@ public abstract class ActiveSkill : Skill
 	}
 
 	/// <summary>
-	/// 스킬 정지(멈춰야하는 채널링 스킬일때)
+	/// 스킬 정지(멈춰야하는 채널링 스킬일때).
+	/// SkillSystem.OnDisable()이 슬롯 전체에 대해 호출함 — 유닛이 죽거나 풀로 반납될 때
+	/// 루프 사운드/빔 같은 진행 중인 연출이 남지 않게 하기 위함.
+	/// 언제 불려도 안전하도록(진행 중이 아닐 때 포함) 구현할 것.
 	/// </summary>
-	protected virtual void StopSkill()
+	public virtual void StopSkill()
 	{
 
 	}

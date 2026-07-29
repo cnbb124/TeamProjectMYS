@@ -18,6 +18,7 @@ using UnityEngine;
 // Die()                                  OnEnemyKilled(killer, exp, gold) 위임(킬카운트+보상) + 아이템 드랍 + base.Die() (Unregister는 OnDisable이 처리)
 // IsTargetInRange(float range)           단순 거리 비교
 // HasTargetInAttackRange()               LockOnSystem.TargetsInLockonRange 수 체크
+// IsTargetBlocked()                      타겟이 지형지물 뒤에 있는지 (ATTACK_PASS 사격 게이트용)
 // ShootWeapons()                         virtual — 자식이 override해 발사 종류 지정
 // RotateTowardTarget()                   virtual — 터렛은 swivel/mount 방식으로 override
 // RotateTowardPosition(Vector3)          RotateTowards 선회 (rotateSpeed = 도/초)
@@ -286,6 +287,23 @@ public class Enemy : Unit
 			return false;
 		}
 		return weaponSystem.lockOnSystem.TargetsInLockonRange.Count > 0;
+	}
+
+	// 타겟이 지형지물 뒤에 있으면 true. 호출부에서 true면 발사를 건너뜀.
+	// 락온 후보 목록은 LockOnSystem이 이미 차폐를 걸러내므로 HasTargetInAttackRange()를 보는 상태는
+	// 저절로 공격에서 빠짐. 그걸 안 보는 ATTACK_PASS만 이 함수를 직접 씀.
+	// 락온 시스템이 없는 적은 차폐 판정 수단이 없으므로 기존대로 발사함(false).
+	protected bool IsTargetBlocked()
+	{
+		if (_target == null)
+		{
+			return true;
+		}
+		if (weaponSystem == null || weaponSystem.lockOnSystem == null)
+		{
+			return false;
+		}
+		return weaponSystem.lockOnSystem.IsBlockedByObstacle(_target);
 	}
 
 	// 터렛은 swivel/mount 방식으로 override.

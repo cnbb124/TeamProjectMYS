@@ -841,7 +841,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e9e6ea5e11016074ab3bc72b55db0b5f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _blocksBeam: 0
+  _blocksLineOfSight: 0
   weaponSystem: {fileID: 0}
   skillSystem: {fileID: 0}
   maxHpRemaining: 350
@@ -856,6 +856,14 @@ MonoBehaviour:
   criChance: 0
   criDamageMultiplier: 0
   _deathSequenceDuration: 1.5
+  _deathVfxType: 9999
+  _deathVfxCount: 1
+  _deathVfxScale: 1
+  _deathVfxSpread: 0.7
+  _deathVfxFollowUnit: 0
+  _deathVfxRadius: 3
+  _deathVfxFinalType: 9999
+  _deathVfxFinalScale: 2
   curState: 0
   curHpRemaining: 0
   curShieldRemaining: 0
@@ -886,13 +894,15 @@ MonoBehaviour:
   goldRewardMax: 0
   dropPoolTypes: 
   dropChance: 1
+  dropAmount: 1
+  dropSpreadRadius: 3
   detectRange: 1000
   rotateSpeed: 180
   rotateDeadZone: 0
   aiState: 0
   leadAccuracy: 1
   rearAttackAngleThreshold: 110
-  rearAttackSkipChance: 0.7
+  rearAttackSkipChance: 0.2
   swivelTransform: {fileID: 2130963964683099636}
   mountTransform: {fileID: 9009722177532323082}
   attackHoldDuration: 60
@@ -912,6 +922,12 @@ MonoBehaviour:
   currentLockMode: 0
   maxMultiLockCount: 4
   _targetInRadarRangeBufferSize: 64
+  _useLineOfSight: 1
+  _losBlockerMask:
+    serializedVersion: 2
+    m_Bits: 0
+  _losBufferSize: 32
+  _losGraceTime: 0.3
   lockOnRange: 900
   lockOnRequiredTime: 1.2
   targetLayerMask:

@@ -121,6 +121,19 @@ public class SkillSystem : MonoBehaviour
 		}
 	}
 
+	// 유닛이 죽거나 풀로 반납되면 Update가 멈춰서 채널링 스킬이 진행 중인 채로 얼어붙음 —
+	// 루프 사운드/빔 같은 연출이 정지 호출을 못 받고 그대로 남으므로 여기서 전부 중단시킴.
+	private void OnDisable()
+	{
+		for (int i = 0; i < SLOT_COUNT; i++)
+		{
+			if (slots[i] != null)
+			{
+				slots[i].StopSkill();
+			}
+		}
+	}
+
 	public int CurrentSlotIndex
 	{
 		get

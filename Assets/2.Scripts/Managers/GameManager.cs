@@ -12,7 +12,9 @@ using PhotonHashtable = ExitGames.Client.Photon.Hashtable;
 // ▶ 전체 팀 공통 참조
 //   IsPaused   : 일시정지 여부. Update/FixedUpdate 첫 줄에서 ShouldPause로 체크.
 //   IsGameOver : 게임오버 여부
-//   curState   : 현재 게임 상태 (GAME_STATE enum)
+//   curState   : 현재 게임 진행 상태 (GAME_STATE enum — PLAYING/PAUSED/GAME_OVER/STAGE_CLEAR)
+//   curSceneType : 현재 씬 (SCENE_TYPE enum). 장소는 상태와 별개 축이라 따로 들고 감.
+//                  IsBattleScene / IsStationScene 프로퍼티로 조회 권장
 //   playerRef  : Player 레퍼런스. 씬 로드 후 자동 갱신.
 //
 // ▶ 적 / 스폰 참조용
@@ -98,6 +100,22 @@ public class GameManager : MonoBehaviourPunCallbacks
 
 
 	public GAME_STATE curState;
+
+	// 현재 어느 씬인지. curState(진행 흐름)와는 다른 축임 — "정거장에서 일시정지" 같은 조합을
+	// 상태 하나로 표현하려 들면 값이 곱해지므로 장소는 여기서 따로 들고 감.
+	// OnSceneLoaded에서 씬 이름을 SCENE_TYPE으로 파싱해 채움. 표에 없는 작업씬은 UNKNOWN.
+	[Header("현재 씬 (자동 갱신, 입력X)")]
+	public SCENE_TYPE curSceneType = SCENE_TYPE.UNKNOWN;
+
+	/// <summary>전투 스테이지 씬인지 (전투 전용 처리 분기용)</summary>
+	public bool IsBattleScene =>
+		curSceneType == SCENE_TYPE.STAGE1 || curSceneType == SCENE_TYPE.STAGE2;
+
+	/// <summary>정거장 계열 씬인지 (상점/격납고 등 비전투 거점)</summary>
+	public bool IsStationScene =>
+		curSceneType == SCENE_TYPE.STATION
+		|| curSceneType == SCENE_TYPE.STATION_1F
+		|| curSceneType == SCENE_TYPE.STATION_B2;
 
     // 상태 변화 시 UI에서 구독 (패널 전환 등)
     public GameStateHandler onGameStateChanged;
@@ -220,6 +238,8 @@ public class GameManager : MonoBehaviourPunCallbacks
             instance = this;
             DontDestroyOnLoad(gameObject);
             SceneManager.sceneLoaded += OnSceneLoaded;
+            // 처음 시작한 씬은 sceneLoaded가 안 오므로(구독 시점이 이미 로드 후) 여기서 직접 채움
+            curSceneType = ParseSceneType(SceneManager.GetActiveScene().name);
 			// 씬-BGM 매핑을 인스펙터 리스트에서 구성
 			_sceneBGMMap.Clear();
 			foreach (SceneBGM entry in _sceneBGMList)
@@ -278,6 +298,10 @@ public class GameManager : MonoBehaviourPunCallbacks
     {
         // 언로드 구간 종료 — 이제부터 오는 BossSpawnTarget OnDisable은 실제 파괴로 취급함.
         _isSceneUnloading = false;
+
+        // 현재 씬 기록. LoadSceneRoutine이 아니라 여기서 하는 이유는 에디터에서 씬을 직접 재생하거나
+        // 다른 경로로 씬이 바뀌어도 빠짐없이 잡히기 때문임.
+        curSceneType = ParseSceneType(scene.name);
 
         // Player 레퍼런스 갱신 — 멀티에선 원격 함선(DDOL로 씬 넘어와 공존)을 잡지 않도록 IsMine인 로컬만 채운다.
         RefreshPlayerRefToLocal();
@@ -797,6 +821,17 @@ public class GameManager : MonoBehaviourPunCallbacks
     // 내부 메서드
     // =====================================================================
     
+    // 씬 이름 → SCENE_TYPE. 이름이 정확히 일치할 때만 인정하고, 표에 없는 작업씬은 UNKNOWN을 돌려줌.
+    // SCENE_TYPE 이름 = 실제 씬 파일 이름 규칙에 기대는 건 _sceneBGMMap / CanSave와 동일함.
+    private SCENE_TYPE ParseSceneType(string sceneName)
+    {
+        if (System.Enum.TryParse(sceneName, false, out SCENE_TYPE parsed) && System.Enum.IsDefined(typeof(SCENE_TYPE), parsed))
+        {
+            return parsed;
+        }
+        return SCENE_TYPE.UNKNOWN;
+    }
+
     private void ChangeState(GAME_STATE state)
     {
         curState = state;

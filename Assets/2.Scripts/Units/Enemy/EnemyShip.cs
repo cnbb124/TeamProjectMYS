@@ -511,7 +511,8 @@ public class EnemyShip : Enemy
             return;
         }
         // 조준 사격 시간(_passAimTimer) 동안만 발사 — 그때 기수가 플레이어를 향하므로 총알이 맞는다.
-        if (_passAimTimer > 0f && !ShouldSkipAttackFromBehind())
+        // 이 상태는 HasTargetInAttackRange()를 안 보므로 지형지물 차폐를 여기서 직접 걸러야 함.
+        if (_passAimTimer > 0f && !ShouldSkipAttackFromBehind() && !IsTargetBlocked())
         {
             ShootWeaponsOnPass();
         }

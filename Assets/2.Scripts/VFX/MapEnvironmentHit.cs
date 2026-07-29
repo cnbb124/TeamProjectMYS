@@ -20,11 +20,12 @@ public class MapEnvironmentHit : MonoBehaviour, IHittable
 		"ON : Hit Sound Override 값을 사용(SFX_NONE으로 두면 이 오브젝트만 무음).")]
 	[SerializeField]
 	private bool _soundOverride = false;
-	[Tooltip("레이저 등 관통 판정에서 이 오브젝트가 빔을 막는지. 벽/구조물이면 켤 것.")]
-	[SerializeField] 
-	private bool _blocksBeam = true;
+	[Header("직선 시야 차단 (레이저 관통 + 락온 차폐 공통)")]
+	[Tooltip("벽/구조물이면 켤 것. 끄면 빔이 관통하고 뒤에 있는 적도 락온됨.")]
+	[SerializeField]
+	private bool _blocksLineOfSight = true;
 
-	public bool BlocksBeam => _blocksBeam;
+	public bool BlocksLineOfSight => _blocksLineOfSight;
 	
 	// 투사체가 HitInfo에 실어준 피격 지점/VFX 종류로 반응만 냄. 데미지 필드는 안 씀.
 	public void OnHitReaction(HitInfo info)

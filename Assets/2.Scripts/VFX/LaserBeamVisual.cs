@@ -135,7 +135,7 @@ public class LaserBeamVisual : MonoBehaviour
 
 	/// <summary>
 	/// 빔 끝(타격점) 이펙트 표시 여부. LaserSkill이 매 프레임 호출 —
-	/// BlocksBeam 대상에 실제로 막혔을 때만 true(허공 max range면 false로 공중에 안 뜨게).
+	/// 빔을 막는 대상에 실제로 막혔을 때만 true(허공 max range면 false로 공중에 안 뜨게).
 	/// 파티클 재시작을 막기 위해 상태가 바뀔 때만 SetActive.
 	/// </summary>
 	public void SetImpactActive(bool active)
