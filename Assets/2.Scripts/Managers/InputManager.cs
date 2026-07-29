@@ -397,13 +397,18 @@ public class InputManager : MonoBehaviour
     // =====================================================================
     [Space(5)]
     [Header("━━━━━━ 조종 감도━━━━━━")]
-    [Tooltip("조종 감도(1~100). 마우스와 패드 오른쪽 스틱에 같이 적용됨.\n" +
-             "둘 다 '조종간을 얼마나 쉽게 끝까지 꺾느냐'를 정하는 값이라 하나로 묶어둠.\n" +
-             "50 기준 25칸마다 두 배씩 변함.\n" +
-             "  마우스 — 50: 끝까지 꺾는 데 약 500px / 100: 약 125px / 1: 약 2000px\n" +
-             "  패드   — 50: 스틱 기울기 그대로 / 100: 1/4만 밀어도 최대 / 1: 끝까지 밀어도 1/4")]
+    // 마우스와 패드는 장치 성격이 달라 같은 숫자라도 체감이 다름 — 값을 따로 둠.
+    // 둘 다 의미는 같음: '조종간을 얼마나 쉽게 끝까지 꺾느냐'. 50 기준 25칸마다 두 배.
+
+    [Tooltip("마우스 조종 감도(1~100).\n" +
+             "50: 조종간을 끝까지 꺾는 데 약 500px / 100: 약 125px / 1: 약 2000px")]
     [Range(MinSensitivity, MaxSensitivity)]
-    [SerializeField] private int lookSensitivity = DefaultSensitivity;
+    [SerializeField] private int mouseLookSensitivity = DefaultSensitivity;
+
+    [Tooltip("패드 조종 감도(1~100). 오른쪽 스틱에 적용됨.\n" +
+             "50: 스틱 기울기 그대로 / 100: 1/4만 밀어도 최대 / 1: 끝까지 밀어도 최대의 1/4")]
+    [Range(MinSensitivity, MaxSensitivity)]
+    [SerializeField] private int padLookSensitivity = DefaultSensitivity;
 
     public const int MinSensitivity = 1;
     public const int MaxSensitivity = 100;
@@ -417,30 +422,42 @@ public class InputManager : MonoBehaviour
     private const float SensitivityAtMid = 0.002f;  // 슬라이더 50일 때의 계수
     private const float SensitivityRange = 4f;      // 50→100이 4배, 50→1이 1/4배
 
-    /// <summary>옵션 UI용 조종 감도(1~100). 슬라이더 초기값에 씀.</summary>
-    public int LookSensitivity => lookSensitivity;
+    /// <summary>옵션 UI용 마우스 조종 감도(1~100). 슬라이더 초기값에 씀.</summary>
+    public int MouseLookSensitivity => mouseLookSensitivity;
+
+    /// <summary>옵션 UI용 패드 조종 감도(1~100). 슬라이더 초기값에 씀.</summary>
+    public int PadLookSensitivity => padLookSensitivity;
 
     /// <summary>옵션 UI에서 호출. 범위를 벗어난 값은 잘라내고 저장까지 함.</summary>
-    public void SetLookSensitivity(int value)
+    public void SetMouseLookSensitivity(int value)
     {
-        lookSensitivity = Mathf.Clamp(value, MinSensitivity, MaxSensitivity);
-        PlayerPrefs.SetInt(LookSensitivityKey, lookSensitivity);
+        mouseLookSensitivity = Mathf.Clamp(value, MinSensitivity, MaxSensitivity);
+        PlayerPrefs.SetInt(MouseSensitivityKey, mouseLookSensitivity);
         PlayerPrefs.Save();
     }
 
-    private const string LookSensitivityKey = "Input.LookSensitivity";
+    /// <summary>옵션 UI에서 호출. 범위를 벗어난 값은 잘라내고 저장까지 함.</summary>
+    public void SetPadLookSensitivity(int value)
+    {
+        padLookSensitivity = Mathf.Clamp(value, MinSensitivity, MaxSensitivity);
+        PlayerPrefs.SetInt(PadSensitivityKey, padLookSensitivity);
+        PlayerPrefs.Save();
+    }
+
+    private const string MouseSensitivityKey = "Input.MouseLookSensitivity";
+    private const string PadSensitivityKey = "Input.PadLookSensitivity";
 
     // 슬라이더 값(1~100) → 50 기준 배율. 50이면 1배, 25칸마다 2배.
-    private float SensitivityScale
+    private static float SensitivityScale(int value)
     {
-        get { return Mathf.Pow(SensitivityRange, (lookSensitivity - DefaultSensitivity) / 50f); }
+        return Mathf.Pow(SensitivityRange, (value - DefaultSensitivity) / 50f);
     }
 
     // 마우스 이동량(픽셀)에 곱해지는 계수.
     // 픽셀을 조종간 기울기로 환산해야 해서 기준 계수가 따로 필요함.
     private float MouseSensitivityFactor
     {
-        get { return SensitivityAtMid * SensitivityScale; }
+        get { return SensitivityAtMid * SensitivityScale(mouseLookSensitivity); }
     }
 
     // 패드 스틱 기울기에 곱해지는 배율.
@@ -448,15 +465,23 @@ public class InputManager : MonoBehaviour
     // 50이면 스틱 그대로, 크면 덜 밀어도 최대에 닿고, 작으면 끝까지 밀어도 최대에 못 미침.
     private float PadLookFactor
     {
-        get { return SensitivityScale; }
+        get { return SensitivityScale(padLookSensitivity); }
     }
 
     [Tooltip("마우스를 멈췄을 때 조종간이 중앙으로 돌아오는 속도(초당 기울기량).\n" +
              "0이면 안 돌아옴(엘리트 방식 — 직접 되돌려야 멈춤). 1~2면 손 떼면 서서히 수평 복귀.")]
     public float mouseStickAutoCenter = 0f;
 
-    // 현재 가상 조종간 기울기(-1~1). UI로 조종간 위치를 그려주려면 이 값을 읽으면 됨.
+    // 마우스로 누적한 가상 조종간 기울기(-1~1). 마우스 전용 내부값임.
+    // UI에 조종간 위치를 그릴 때는 이걸 쓰면 안 됨 — 패드로 조종할 땐 0에 머물러서 안 움직임.
+    // 화면 표시는 아래 LookStick(장치 병합 결과)을 쓸 것.
     public Vector2 MouseStick => _mouseStick;
+
+    /// <summary>
+    /// 현재 조종간 기울기(-1~1). 마우스든 패드든 실제로 조종에 쓰이는 최종값.
+    /// 크로스헤어처럼 '지금 어디를 가리키고 있나'를 그리는 UI는 이 값을 읽을 것.
+    /// </summary>
+    public Vector2 LookStick => lookInput;
     private Vector2 _mouseStick;
 
     // =====================================================================
@@ -597,10 +622,15 @@ public class InputManager : MonoBehaviour
             DontDestroyOnLoad(gameObject);
 
             // 저장해둔 감도 복원. 없으면 인스펙터 값을 그대로 씀(첫 실행).
-            if (PlayerPrefs.HasKey(LookSensitivityKey))
+            if (PlayerPrefs.HasKey(MouseSensitivityKey))
             {
-                lookSensitivity = Mathf.Clamp(PlayerPrefs.GetInt(LookSensitivityKey),
-                                              MinSensitivity, MaxSensitivity);
+                mouseLookSensitivity = Mathf.Clamp(PlayerPrefs.GetInt(MouseSensitivityKey),
+                                                   MinSensitivity, MaxSensitivity);
+            }
+            if (PlayerPrefs.HasKey(PadSensitivityKey))
+            {
+                padLookSensitivity = Mathf.Clamp(PlayerPrefs.GetInt(PadSensitivityKey),
+                                                 MinSensitivity, MaxSensitivity);
             }
         }
         else if (instance != this)

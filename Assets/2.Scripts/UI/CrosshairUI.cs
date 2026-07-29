@@ -81,7 +81,9 @@ public class CrosshairUI : MonoBehaviour
         // 이래야 기수가 크로스헤어를 따라잡았을 때 총알이 정확히 크로스헤어로 감.
         Vector2 muzzleOffset = gimbal != null ? gimbal.MuzzleParallaxOffset : Vector2.zero;
 
+        // LookStick = 마우스·패드가 병합된 최종 조종간 기울기.
+        // 마우스 전용 값(MouseStick)을 읽으면 패드로 조종할 때 크로스헤어가 안 움직임.
         crosshairRect.anchoredPosition =
-            InputManager.Instance.MouseStick * aimScreenRange + muzzleOffset + aimScreenOffset;
+            InputManager.Instance.LookStick * aimScreenRange + muzzleOffset + aimScreenOffset;
     }
 }
