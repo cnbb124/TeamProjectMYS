@@ -347,6 +347,27 @@ public class InputManager : MonoBehaviour
     // 부스트 입력 해석. 장치마다 같은 규칙이라 한 곳에 모음.
     // 토글이면 '누른 순간'마다 켜고 끄고, 아니면 누르고 있는 동안만 true.
     // 토글이 아닐 땐 래치를 비워둠 — 안 그러면 토글로 켜둔 채 설정을 바꿨을 때 그 값이 남음.
+    // 이번 프레임에 시야 입력(마우스 이동 / 패드 오른쪽 스틱)이 있었는지.
+    // 자동 복귀를 걸어도 되는 시점인지 판단하는 데만 씀.
+    private bool _lookInputActive;
+
+    // 패드 스틱을 최대로 밀었을 때 조종간이 초당 얼마나 기울어지는지(감도 50 기준).
+    // 1.5면 약 0.67초 만에 최대까지 감. 감도를 올리면 이 값에 배율이 곱해짐.
+    private const float PadStickRateAtMid = 1.5f;
+
+    // 손을 뗀 조종간을 중앙으로 되돌림. 마우스·패드 어느 쪽도 입력이 없을 때만 동작.
+    // mouseStickAutoCenter가 0이면 안 돌아옴(엘리트 방식 — 직접 되돌려야 멈춤).
+    private void ApplyStickAutoCenter()
+    {
+        if (_lookInputActive || mouseStickAutoCenter <= 0f)
+        {
+            return;
+        }
+
+        _mouseStick = Vector2.MoveTowards(_mouseStick, Vector2.zero, mouseStickAutoCenter * Time.deltaTime);
+        lookInput = _mouseStick;
+    }
+
     // 전진 입력이 없으면 켜둔 부스트 토글을 해제함.
     // 부스트는 전진 중에만 걸리므로(Player.MovingByInput), 가속을 멈춘 순간 토글도 풀리는 게 맞음.
     // 안 그러면 켜둔 채 손을 뗐다가 다시 밀 때 예고 없이 부스트로 튀어나감.
@@ -683,6 +704,9 @@ public class InputManager : MonoBehaviour
             return;
         }
 
+        // 이번 프레임 시야 입력 여부는 매 프레임 새로 판정 — 두 장치가 각자 세움
+        _lookInputActive = false;
+
         ReadKeyboardMouse();  // 키보드/마우스 값으로 먼저 채움
 
         // 패드가 연결됐을 때만 오버레이 — 연결 안 됐으면 패드 축을 읽지 않음.
@@ -704,6 +728,10 @@ public class InputManager : MonoBehaviour
         {
             LastUsedDevice = INPUT_CONTROL_TYPE.KEYBOARD_MOUSE;
         }
+
+        // 조종간 자동 복귀 — 마우스도 패드도 손을 뗀 상태일 때만.
+        // 두 장치를 다 읽은 뒤에 해야 패드로 밀고 있는 중에 중앙으로 끌려가지 않음.
+        ApplyStickAutoCenter();
 
         // 부스트 토글 자동 해제 — 전진을 놓으면 켜둔 토글도 같이 풀린다.
         // 병합이 끝난 뒤에 봐야 함(키마로 놓고 패드로 밀고 있는 경우까지 합쳐진 최종 입력 기준).
@@ -1042,12 +1070,14 @@ public class InputManager : MonoBehaviour
             // 원형으로 제한 — 대각선이 축별로 잘려서 더 빨라지는 현상 방지
             _mouseStick = Vector2.ClampMagnitude(_mouseStick, 1f);
 
-            if (mouseStickAutoCenter > 0f && mouseDelta.sqrMagnitude <= 0f)
+            if (mouseDelta.sqrMagnitude > 0f)
             {
-                _mouseStick = Vector2.MoveTowards(_mouseStick, Vector2.zero, mouseStickAutoCenter * Time.deltaTime);
+                _lookInputActive = true;
             }
         }
         lookInput = _mouseStick;
+        // 자동 복귀는 여기서 하지 않음 — 패드를 읽기 전이라, 패드로 밀고 있는 중에도
+        // 중앙으로 끌어당겨 서로 싸우게 됨. 두 장치를 다 읽은 뒤 ApplyStickAutoCenter()가 처리함.
 
         // 부스트 / 회피
         isBoosting = ResolveBoost(km.boostToggle,
@@ -1128,21 +1158,26 @@ public class InputManager : MonoBehaviour
             moveInput = padMove;
         }
 
-        // 시야 (오른쪽 스틱) — Y축 반전 옵션 반영
-        // 응답 곡선 → 감도 배율 → 원형 제한 순서.
-        // 곡선으로 스틱의 '모양'을 먼저 잡고, 그 위에 감도로 크기를 조절함.
-        // 마지막 제한은 마우스 조종간과 같은 규칙(최대 기울기 1).
+        // 시야 (오른쪽 스틱) — 마우스와 같은 '가상 조종간 누적' 방식.
+        //
+        // 스틱 위치를 조종간에 바로 대입하면 끝까지 미는 순간 한 프레임에 최대가 돼서
+        // 마우스(500px 밀어야 최대)와 감각이 완전히 달라짐.
+        // 그래서 스틱 기울기를 '조종간이 움직이는 속도'로 쓰고 같은 _mouseStick에 누적함 —
+        // 밀고 있으면 계속 기울다가 최대에서 멈추고, 놓으면 자동 복귀가 중앙으로 되돌림.
+        // 응답 곡선은 그 속도에 걸림(중앙 근처에서 천천히 = 미세 조준).
         Vector2 rStick = ApplyLookCurve(Gamepad.current.rightStick.ReadValue());
-        rStick = Vector2.ClampMagnitude(rStick * PadLookFactor, 1f);
-        Vector2 padLook = new Vector2
-        (
-            rStick.x,
-            gp.invertRStickY ? -rStick.y : rStick.y
-        );
-        bool padLooking = padLook.sqrMagnitude > StickActiveDeadzone * StickActiveDeadzone;
+        if (gp.invertRStickY)
+        {
+            rStick.y = -rStick.y;
+        }
+
+        bool padLooking = rStick.sqrMagnitude > StickActiveDeadzone * StickActiveDeadzone;
         if (padLooking)
         {
-            lookInput = padLook;
+            _mouseStick += rStick * (PadStickRateAtMid * PadLookFactor) * Time.deltaTime;
+            _mouseStick = Vector2.ClampMagnitude(_mouseStick, 1f);
+            lookInput = _mouseStick;
+            _lookInputActive = true;
         }
 
         // 롤 (누르는 동안)
