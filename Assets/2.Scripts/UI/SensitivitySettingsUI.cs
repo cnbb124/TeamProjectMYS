@@ -36,6 +36,15 @@ public class SensitivitySettingsUI : MonoBehaviour
     [SerializeField] private TMP_Text mouseText;
     [SerializeField] private TMP_Text padText;
 
+    [Header("마우스 상하 반전 토글")]
+    [Tooltip("켜면 마우스를 위로 밀 때 기수가 아래로 감(항공 스타일)")]
+    [SerializeField] private Toggle invertYToggle;
+
+    // ★임시(A안): InputManager에 상하반전 저장 API가 아직 없어서 UI가 직접 PlayerPrefs로 저장.
+    //   나중에 팀장님이 SetInvertLookY(bool)/InvertLookY 같은 걸 만들면
+    //   아래 GetInvertY()/SetInvertY() 두 곳만 그 API로 바꾸면 됨(다른 코드는 그대로).
+    private const string KEY_INVERT_Y = "Ctrl_InvertLookY";
+
     private void Start()
     {
         // 슬라이더 범위를 InputManager 상수에 맞춰 강제 (인스펙터 실수 방지)
@@ -45,6 +54,7 @@ public class SensitivitySettingsUI : MonoBehaviour
         // 리스너 자동 연결 (OnValueChanged는 인스펙터에서 비워둘 것)
         if (mouseSlider != null) mouseSlider.onValueChanged.AddListener(OnMouseChanged);
         if (padSlider   != null) padSlider.onValueChanged.AddListener(OnPadChanged);
+        if (invertYToggle != null) invertYToggle.onValueChanged.AddListener(OnInvertYChanged);
     }
 
     private void OnEnable()
@@ -75,6 +85,11 @@ public class SensitivitySettingsUI : MonoBehaviour
 
         if (mouseText != null) mouseText.text = mouse.ToString();
         if (padText   != null) padText.text   = pad.ToString();
+
+        // 상하 반전: 저장값을 InputManager에 적용 + 토글 위치 복원
+        bool invertY = GetInvertY();
+        ApplyInvertY(invertY);
+        if (invertYToggle != null) invertYToggle.SetIsOnWithoutNotify(invertY);
     }
 
     // ── 슬라이더 콜백: InputManager에 위임(적용+저장은 그쪽이 함) ──
@@ -95,5 +110,34 @@ public class SensitivitySettingsUI : MonoBehaviour
             InputManager.Instance.SetPadLookSensitivity(value);
 
         if (padText != null) padText.text = value.ToString();
+    }
+
+    private void OnInvertYChanged(bool isOn)
+    {
+        ApplyInvertY(isOn);
+        SetInvertY(isOn);   // 저장
+    }
+
+    // ── 상하 반전: 적용/읽기/저장을 여기 3곳에만 모아둠 ──
+    //   팀장님이 InputManager에 저장 API를 만들면 이 3개 메서드만 그 API로 교체하면 됨.
+
+    // InputManager에 반영 (현재는 config의 public bool을 직접 씀)
+    private void ApplyInvertY(bool value)
+    {
+        if (InputManager.Instance != null)
+            InputManager.Instance.keyboardMouseConfig.invertLookY = value;
+    }
+
+    // 저장값 읽기 (현재는 PlayerPrefs)
+    private bool GetInvertY()
+    {
+        return PlayerPrefs.GetInt(KEY_INVERT_Y, 0) == 1;
+    }
+
+    // 저장 (현재는 PlayerPrefs)
+    private void SetInvertY(bool value)
+    {
+        PlayerPrefs.SetInt(KEY_INVERT_Y, value ? 1 : 0);
+        PlayerPrefs.Save();
     }
 }
