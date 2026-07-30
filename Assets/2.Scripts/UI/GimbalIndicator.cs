@@ -39,6 +39,9 @@ public class GimbalIndicatorUI : MonoBehaviour
              "그래도 눈으로 볼 때 조금 어긋나면 이걸로 밀면 됨.")]
     [SerializeField] private Vector2 aimScreenOffset = Vector2.zero;
 
+    [Tooltip("Limits muzzle parallax so a stale camera projection cannot push the reticle off-screen.")]
+    [SerializeField] private float maxMuzzleParallax = 160f;
+
     [Header("Color")]
     [SerializeField] private Color normalColor = new Color(0f, 1f, 0.8f, 0.8f);
 
@@ -93,11 +96,36 @@ public class GimbalIndicatorUI : MonoBehaviour
             _playerUnit = GameManager.Instance.playerRef;
             _weapons = GameManager.Instance.playerRef.weaponSystem;
         }
-        if (mainCam == null) mainCam = Camera.main;
+        RefreshCameraReference();
 
         if (player == null || mainCam == null || _canvas == null || indicatorRect == null || _parentRect == null) return;
 
         UpdatePosition();
+    }
+
+    private void RefreshCameraReference()
+    {
+        Camera hudCamera = _canvas != null &&
+                           _canvas.renderMode != RenderMode.ScreenSpaceOverlay
+            ? _canvas.worldCamera
+            : null;
+        Camera activeCamera = hudCamera != null &&
+                              hudCamera.isActiveAndEnabled
+            ? hudCamera
+            : Camera.main;
+
+        if (activeCamera != null &&
+            activeCamera.isActiveAndEnabled &&
+            activeCamera != mainCam)
+        {
+            mainCam = activeCamera;
+            MuzzleParallaxOffset = Vector2.zero;
+        }
+        else if (mainCam != null && !mainCam.isActiveAndEnabled)
+        {
+            mainCam = null;
+            MuzzleParallaxOffset = Vector2.zero;
+        }
     }
 
     private void UpdatePosition()
@@ -127,7 +155,8 @@ public class GimbalIndicatorUI : MonoBehaviour
         if (!TryProjectToLocal(muzzlePos + aimDir * aimDistance, out Vector2 localPos))
         {
             // 기수가 카메라 뒤를 향하면 x/y가 뒤집혀 나옴 — 그땐 화면 중앙 유지
-            // (보정 오프셋은 그대로 유지 — 안 그러면 이 순간에만 마커가 튐)
+            // 실패한 이전 프레임의 보정값이 크로스헤어를 화면 밖으로 밀지 않게 초기화.
+            MuzzleParallaxOffset = Vector2.zero;
             indicatorRect.anchoredPosition = aimScreenOffset;
             return;
         }
@@ -137,7 +166,9 @@ public class GimbalIndicatorUI : MonoBehaviour
         // 이 차이만큼 같이 내려줘야 둘이 겹친다.
         if (hasMuzzle && TryProjectToLocal(mainCam.transform.position + aimDir * aimDistance, out Vector2 camBasedPos))
         {
-            MuzzleParallaxOffset = localPos - camBasedPos;
+            MuzzleParallaxOffset = Vector2.ClampMagnitude(
+                localPos - camBasedPos,
+                Mathf.Max(0f, maxMuzzleParallax));
         }
         else
         {

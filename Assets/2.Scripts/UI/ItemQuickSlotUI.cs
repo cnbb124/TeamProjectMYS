@@ -314,7 +314,9 @@ public class ItemQuickSlotUI : MonoBehaviour
             _frames[i]    = go.GetComponent<Image>();
             _icons[i]     = go.transform.Find("Icon")?.GetComponent<Image>();
             _counts[i]    = go.transform.Find("Count")?.GetComponent<TMP_Text>();
-            _cooldowns[i] = go.transform.Find("Cooldown")?.GetComponent<Image>();
+            // 쿨타임 fill 이미지 — 프리팹 이름이 "Cooldown" 또는 "CoolTimeBG" 둘 다 허용
+            Transform cd = go.transform.Find("Cooldown") ?? go.transform.Find("CoolTimeBG");
+            _cooldowns[i] = cd != null ? cd.GetComponent<Image>() : null;
 
             // 쿨타임 완료 번쩍임용 UIEffect — 슬롯 어디에 붙어있든(자식 포함) 자동 탐색
             _readyEffects[i] = go.GetComponentInChildren<Coffee.UIEffects.UIEffect>(true);

@@ -10,12 +10,16 @@ public class LockOnUIManager : MonoBehaviour
     [SerializeField] private GameObject lockOnUIPrefab;
 
     private Camera _mainCamera;
+    private Canvas _canvas;
+    private RectTransform _indicatorRoot;
     private List<LockOnTargetUI> _pool = new List<LockOnTargetUI>();
     private int _activeCount;
 
     private void Start()
     {
-        _mainCamera = Camera.main; // 한 번만 캐싱
+        _canvas = GetComponentInParent<Canvas>();
+        _indicatorRoot = transform as RectTransform;
+        RefreshCameraReference();
     }
 
     private void Update()
@@ -24,9 +28,9 @@ public class LockOnUIManager : MonoBehaviour
         // 플레이어가 런타임 스폰(네트워크)이라 Start 시점엔 아직 없을 수 있어 매번 확인함.
         if (lockOnSystem == null && GameManager.Instance != null && GameManager.Instance.playerRef != null)
             lockOnSystem = GameManager.Instance.playerRef.GetComponent<LockOnSystem>();
-        if (_mainCamera == null) _mainCamera = Camera.main;
+        RefreshCameraReference();
 
-        if (lockOnSystem == null || _mainCamera == null) return;
+        if (lockOnSystem == null || _mainCamera == null || _indicatorRoot == null) return;
 
         _activeCount = 0;
 
@@ -64,13 +68,46 @@ public class LockOnUIManager : MonoBehaviour
 
     private void ShowIndicator(Vector3 worldPos, float progress, bool isLocked)
     {
-        Vector3 screenPos = _mainCamera.WorldToScreenPoint(worldPos);
+        Vector3 screenPos = _mainCamera.WorldToScreenPoint(
+            worldPos,
+            Camera.MonoOrStereoscopicEye.Mono);
         if (screenPos.z < 0f) return; // 카메라 뒤면 표시 안 함
+
+        Camera uiCamera = _canvas != null &&
+                          _canvas.renderMode != RenderMode.ScreenSpaceOverlay
+            ? (_canvas.worldCamera != null ? _canvas.worldCamera : _mainCamera)
+            : null;
+
+        if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                _indicatorRoot,
+                screenPos,
+                uiCamera,
+                out Vector2 localPosition))
+        {
+            return;
+        }
 
         LockOnTargetUI ui = GetUI(_activeCount);
         ui.Show();
-        ui.UpdateUI(screenPos, progress, isLocked);
+        ui.UpdateUI(localPosition, progress, isLocked);
         _activeCount++;
+    }
+
+    private void RefreshCameraReference()
+    {
+        Camera activeMainCamera = Camera.main;
+        if (activeMainCamera != null &&
+            activeMainCamera.isActiveAndEnabled &&
+            activeMainCamera != _mainCamera)
+        {
+            _mainCamera = activeMainCamera;
+            return;
+        }
+
+        if (_mainCamera == null || !_mainCamera.isActiveAndEnabled)
+        {
+            _mainCamera = activeMainCamera;
+        }
     }
 
     private LockOnTargetUI GetUI(int index)
