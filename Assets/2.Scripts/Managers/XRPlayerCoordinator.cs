@@ -9,7 +9,10 @@ public sealed class XRPlayerCoordinator : MonoBehaviour
 
     private static XRPlayerCoordinator _instance;
     private readonly HashSet<int> _processedSwitchers = new HashSet<int>();
+    private readonly HashSet<int> _liveSwitcherIds = new HashSet<int>();
+    private readonly List<int> _staleSwitcherIds = new List<int>();
     private float _nextScanTime;
+    private bool _legacyScannersDisabled;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
     private static void Create()
@@ -38,7 +41,11 @@ public sealed class XRPlayerCoordinator : MonoBehaviour
 
     private void Update()
     {
-        DisableLegacyScanners();
+        if (!_legacyScannersDisabled)
+        {
+            DisableLegacyScanners();
+            _legacyScannersDisabled = true;
+        }
 
         if (Time.unscaledTime < _nextScanTime)
         {
@@ -68,14 +75,27 @@ public sealed class XRPlayerCoordinator : MonoBehaviour
     private void ProcessNewPlayerRigs()
     {
         CockpitViewSwitcher[] switchers =
-            FindObjectsOfType<CockpitViewSwitcher>(true);
+            FindObjectsByType<CockpitViewSwitcher>(
+                FindObjectsInactive.Include,
+                FindObjectsSortMode.None);
 
+        _liveSwitcherIds.Clear();
         for (int i = 0; i < switchers.Length; i++)
         {
             CockpitViewSwitcher switcher = switchers[i];
             int instanceId = switcher.GetInstanceID();
+            _liveSwitcherIds.Add(instanceId);
             if (_processedSwitchers.Contains(instanceId))
             {
+                continue;
+            }
+
+            // 권장 구조에서는 프리팹에 붙은 LocalPlayerGuard가 소유권을 직접
+            // 처리한다. 이 전역 스캐너는 아직 마이그레이션되지 않은 프리팹만
+            // 위한 호환 경로로 남긴다.
+            if (switcher.GetComponent<LocalPlayerGuard>() != null)
+            {
+                _processedSwitchers.Add(instanceId);
                 continue;
             }
 
@@ -101,6 +121,20 @@ public sealed class XRPlayerCoordinator : MonoBehaviour
             }
 
             _processedSwitchers.Add(instanceId);
+        }
+
+        _staleSwitcherIds.Clear();
+        foreach (int processedId in _processedSwitchers)
+        {
+            if (!_liveSwitcherIds.Contains(processedId))
+            {
+                _staleSwitcherIds.Add(processedId);
+            }
+        }
+
+        for (int i = 0; i < _staleSwitcherIds.Count; i++)
+        {
+            _processedSwitchers.Remove(_staleSwitcherIds[i]);
         }
     }
 

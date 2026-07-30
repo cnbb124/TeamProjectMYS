@@ -16,12 +16,9 @@ public class LockOnTargetUI : MonoBehaviour
         _rect = GetComponent<RectTransform>();
     }
 
-    public void UpdateUI(Vector3 screenPos, float progress, bool isLocked)
+    public void UpdateUI(Vector2 localPosition, float progress, bool isLocked)
     {
-        // 카메라 뒤에 있으면 숨기기
-        if (screenPos.z < 0f) { Hide(); return; }
-
-        _rect.position = new Vector2(screenPos.x, screenPos.y);
+        _rect.anchoredPosition = localPosition;
 
         Color color = isLocked ? ColorLocked : ColorCandidate;
 

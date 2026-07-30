@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.XR.Management;
@@ -6,6 +7,8 @@ public sealed class XRRuntimeManager : MonoBehaviour
 {
     private static XRRuntimeManager _instance;
     private bool _initializationStarted;
+
+    public static event Action Started;
 
     public static bool IsRunning
     {
@@ -50,8 +53,14 @@ public sealed class XRRuntimeManager : MonoBehaviour
 
     private IEnumerator InitializeXR()
     {
-        if (_initializationStarted || IsRunning)
+        if (_initializationStarted)
         {
+            yield break;
+        }
+
+        if (IsRunning)
+        {
+            NotifyStarted();
             yield break;
         }
 
@@ -75,6 +84,12 @@ public sealed class XRRuntimeManager : MonoBehaviour
 
         manager.StartSubsystems();
         Debug.Log($"[XRRuntimeManager] XR 실행 완료: {manager.activeLoader.name}");
+        NotifyStarted();
+    }
+
+    private static void NotifyStarted()
+    {
+        Started?.Invoke();
     }
 
     private void OnApplicationQuit()

@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using Cinemachine;
-using Photon.Pun;
 using UnityEngine;
 using UnityEngine.XR;
 
@@ -51,28 +50,28 @@ public sealed class CockpitViewSwitcher : MonoBehaviour
     [SerializeField] private CinemachineVirtualCamera _thirdPersonVirtualCamera;
 
     [Header("Optional")]
-    [Tooltip("3인칭 시점에서 숨길 콕핏 메시 루트. 비워 두면 항상 표시합니다.")]
-    [SerializeField] private GameObject _cockpitVisualRoot;
-    [SerializeField] private bool _hideCockpitInThirdPerson;
+    [Tooltip("카메라별 근거리 비주얼 표시 정책을 담당합니다.")]
+    [SerializeField] private CockpitVisibilityController _visibilityController;
     [SerializeField] private bool _logSetup = true;
 
     [Header("VR HUD")]
+    [SerializeField] private VrHudPresenter _vrHudPresenter;
+
     [Tooltip("VR HUD를 기체 정면에 고정할 때 CameraPoint로부터 떨어뜨릴 거리입니다.")]
-    [SerializeField] private float _vrHudDistance = 6f;
+    [SerializeField] private float _vrHudDistance = 1.5f;
 
     [Tooltip("1920x1080 HUD Canvas를 VR 월드 공간에 표시할 때 사용할 크기입니다.")]
-    [SerializeField] private float _vrHudScale = 0.004f;
+    [SerializeField] private float _vrHudScale = 0.001f;
 
     private AudioListener _vrListener;
     private AudioListener _thirdPersonListener;
     private bool _isCockpitView;
     private bool _initialized;
-    private Player _reverseThrusterOwner;
-    private readonly List<Renderer> _reverseThrusterRenderers = new List<Renderer>();
     private readonly List<XRInputSubsystem> _xrInputSubsystems = new List<XRInputSubsystem>();
     private readonly Dictionary<Canvas, HudCanvasState> _hudCanvasStates =
         new Dictionary<Canvas, HudCanvasState>();
-    private float _nextReverseThrusterRefreshTime;
+    private readonly List<Canvas> _hudCanvases = new List<Canvas>();
+    private Transform _vrHudAnchor;
     private float _nextHudRefreshTime;
     private Coroutine _seatedTrackingCoroutine;
 
@@ -80,28 +79,7 @@ public sealed class CockpitViewSwitcher : MonoBehaviour
 
     private void Awake()
     {
-        PhotonView photonView = GetComponentInParent<PhotonView>();
-        if (photonView != null && !photonView.IsMine)
-        {
-            DisableRemotePlayerCameras();
-            enabled = false;
-            return;
-        }
-
         Initialize();
-    }
-
-    private void DisableRemotePlayerCameras()
-    {
-        foreach (Camera cameraComponent in GetComponentsInChildren<Camera>(true))
-        {
-            cameraComponent.enabled = false;
-            AudioListener listener = cameraComponent.GetComponent<AudioListener>();
-            if (listener != null)
-            {
-                listener.enabled = false;
-            }
-        }
     }
 
     private void Update()
@@ -117,14 +95,6 @@ public sealed class CockpitViewSwitcher : MonoBehaviour
             RecenterView();
         }
 
-        Player localPlayer = GameManager.Instance != null ? GameManager.Instance.playerRef : null;
-        if (_initialized && (localPlayer != _reverseThrusterOwner ||
-            (_isCockpitView && Time.unscaledTime >= _nextReverseThrusterRefreshTime)))
-        {
-            CacheLocalReverseThrusters(localPlayer);
-            SetReverseThrusterRenderersVisible(!_isCockpitView);
-        }
-
         // HUD가 플레이어 생성 이후 늦게 만들어지는 씬도 있으므로 VR 중에는
         // 새 HUD Canvas를 주기적으로 찾아 XR 카메라에 연결한다.
         if (_initialized &&
@@ -134,6 +104,24 @@ public sealed class CockpitViewSwitcher : MonoBehaviour
             _nextHudRefreshTime = Time.unscaledTime + 1f;
             ConfigureHudForView(true);
         }
+    }
+
+    private void LateUpdate()
+    {
+        if (_initialized && _isCockpitView)
+        {
+            UpdateHudPose();
+        }
+    }
+
+    private void OnDisable()
+    {
+        RestoreHudState();
+    }
+
+    private void OnDestroy()
+    {
+        RestoreHudState();
     }
 
     private void Initialize()
@@ -305,13 +293,10 @@ public sealed class CockpitViewSwitcher : MonoBehaviour
             _thirdPersonBrain.enabled = !cockpitView;
         }
 
-        if (_cockpitVisualRoot != null && _hideCockpitInThirdPerson)
+        if (_visibilityController != null)
         {
-            _cockpitVisualRoot.SetActive(cockpitView);
+            _visibilityController.ApplyView(cockpitView);
         }
-
-        CacheLocalReverseThrusters(GameManager.Instance != null ? GameManager.Instance.playerRef : null);
-        SetReverseThrusterRenderersVisible(!cockpitView);
 
         OnViewChanged?.Invoke(cockpitView);
     }
@@ -319,15 +304,23 @@ public sealed class CockpitViewSwitcher : MonoBehaviour
     private void ConfigureHudForView(bool cockpitView)
     {
         _nextHudRefreshTime = Time.unscaledTime + 1f;
-        Transform vrHudAnchor = cockpitView ? FindVrHudAnchor() : null;
-        Canvas[] canvases = Resources.FindObjectsOfTypeAll<Canvas>();
-        for (int i = 0; i < canvases.Length; i++)
+        if (cockpitView && !HasValidHudCanvas())
         {
-            Canvas canvas = canvases[i];
-            if (canvas == null ||
-                !canvas.gameObject.scene.IsValid() ||
-                !canvas.name.Equals("HUD", StringComparison.OrdinalIgnoreCase))
+            CacheHudCanvases();
+        }
+
+        if (cockpitView && _vrHudAnchor == null)
+        {
+            _vrHudAnchor = FindVrHudAnchor();
+        }
+
+        for (int i = _hudCanvases.Count - 1; i >= 0; i--)
+        {
+            Canvas canvas = _hudCanvases[i];
+            if (canvas == null)
             {
+                _hudCanvasStates.Remove(canvas);
+                _hudCanvases.RemoveAt(i);
                 continue;
             }
 
@@ -359,16 +352,21 @@ public sealed class CockpitViewSwitcher : MonoBehaviour
                 canvas.overrideSorting = true;
                 canvas.sortingOrder = 100;
 
-                Transform anchor = vrHudAnchor != null ? vrHudAnchor : transform;
-                canvas.transform.SetParent(anchor, false);
-                canvas.transform.localPosition =
-                    Vector3.forward * Mathf.Max(0.5f, _vrHudDistance);
-                canvas.transform.localRotation = Quaternion.identity;
                 canvas.transform.localScale =
                     Vector3.one * Mathf.Max(0.0001f, _vrHudScale);
+
+                if (_vrHudPresenter != null)
+                {
+                    _vrHudPresenter.Show(_vrCamera, canvas);
+                }
             }
             else
             {
+                if (_vrHudPresenter != null)
+                {
+                    _vrHudPresenter.Restore(canvas);
+                }
+
                 HudCanvasState originalState = _hudCanvasStates[canvas];
                 canvas.renderMode = originalState.renderMode;
                 canvas.worldCamera = originalState.worldCamera;
@@ -382,6 +380,98 @@ public sealed class CockpitViewSwitcher : MonoBehaviour
                 canvas.transform.SetSiblingIndex(originalState.siblingIndex);
             }
         }
+
+        if (cockpitView)
+        {
+            UpdateHudPose();
+        }
+        else
+        {
+            _vrHudAnchor = null;
+        }
+    }
+
+    private bool HasValidHudCanvas()
+    {
+        bool found = false;
+        for (int i = _hudCanvases.Count - 1; i >= 0; i--)
+        {
+            Canvas canvas = _hudCanvases[i];
+            if (canvas == null)
+            {
+                _hudCanvasStates.Remove(canvas);
+                _hudCanvases.RemoveAt(i);
+                continue;
+            }
+
+            found = true;
+        }
+
+        return found;
+    }
+
+    private void CacheHudCanvases()
+    {
+        Canvas[] canvases = Resources.FindObjectsOfTypeAll<Canvas>();
+        for (int i = 0; i < canvases.Length; i++)
+        {
+            Canvas canvas = canvases[i];
+            if (canvas == null ||
+                !canvas.gameObject.scene.IsValid() ||
+                !canvas.name.Equals("HUD", StringComparison.OrdinalIgnoreCase) ||
+                _hudCanvases.Contains(canvas))
+            {
+                continue;
+            }
+
+            _hudCanvases.Add(canvas);
+        }
+    }
+
+    private void RestoreHudState()
+    {
+        if (_hudCanvases.Count > 0)
+        {
+            ConfigureHudForView(false);
+        }
+
+        if (_vrHudPresenter != null)
+        {
+            _vrHudPresenter.RestoreAll();
+        }
+    }
+
+    private void UpdateHudPose()
+    {
+        if (_vrHudAnchor == null)
+        {
+            _vrHudAnchor = FindVrHudAnchor();
+            if (_vrHudAnchor == null)
+            {
+                return;
+            }
+        }
+
+        Vector3 hudPosition =
+            _vrHudAnchor.position +
+            _vrHudAnchor.forward * Mathf.Max(0.5f, _vrHudDistance);
+        Quaternion hudRotation = _vrHudAnchor.rotation;
+        Vector3 hudScale =
+            Vector3.one * Mathf.Max(0.0001f, _vrHudScale);
+
+        for (int i = 0; i < _hudCanvases.Count; i++)
+        {
+            Canvas canvas = _hudCanvases[i];
+            if (canvas == null)
+            {
+                continue;
+            }
+
+            canvas.transform.SetPositionAndRotation(
+                hudPosition,
+                hudRotation);
+            canvas.transform.localScale = hudScale;
+        }
     }
 
     private Transform FindVrHudAnchor()
@@ -394,7 +484,8 @@ public sealed class CockpitViewSwitcher : MonoBehaviour
         Transform current = _vrCamera.transform;
         while (current != null)
         {
-            if (current.name.Equals("XRRig", StringComparison.OrdinalIgnoreCase))
+            if (current.name.Equals("XR Origin", StringComparison.OrdinalIgnoreCase) ||
+                current.name.Equals("XRRig", StringComparison.OrdinalIgnoreCase))
             {
                 // XRRig 자체는 HMD 원점 보정으로 움직일 수 있다.
                 // 그 부모인 CameraPoint는 cockpit/기체 좌표에 고정되어 있다.
@@ -475,16 +566,18 @@ public sealed class CockpitViewSwitcher : MonoBehaviour
 
         Transform xrRig = _vrCamera.transform;
         while (xrRig.parent != null &&
+               !xrRig.name.Equals("XR Origin", StringComparison.OrdinalIgnoreCase) &&
                !xrRig.name.Equals("XRRig", StringComparison.OrdinalIgnoreCase))
         {
             xrRig = xrRig.parent;
         }
 
-        if (!xrRig.name.Equals("XRRig", StringComparison.OrdinalIgnoreCase) ||
+        if ((!xrRig.name.Equals("XR Origin", StringComparison.OrdinalIgnoreCase) &&
+             !xrRig.name.Equals("XRRig", StringComparison.OrdinalIgnoreCase)) ||
             xrRig.parent == null)
         {
             Debug.LogWarning(
-                "[CockpitViewSwitcher] XRRig 또는 CameraPoint를 찾지 못해 " +
+                "[CockpitViewSwitcher] XR Origin 또는 CameraPoint를 찾지 못해 " +
                 "콕핏 정면 보정을 적용하지 못했습니다.",
                 this);
             return;
@@ -513,54 +606,6 @@ public sealed class CockpitViewSwitcher : MonoBehaviour
         // 평행이동해 실제 좌석 위치에서 보이게 맞춘다. (회전 보정 뒤에 해야 함)
         Vector3 positionOffset = cameraPoint.position - _vrCamera.transform.position;
         xrRig.position += positionOffset;
-    }
-
-    private void CacheLocalReverseThrusters(Player player)
-    {
-        _reverseThrusterOwner = player;
-        _nextReverseThrusterRefreshTime = Time.unscaledTime + 1f;
-        _reverseThrusterRenderers.Clear();
-        if (player == null)
-        {
-            return;
-        }
-
-        HashSet<Renderer> uniqueRenderers = new HashSet<Renderer>();
-        Transform[] transforms = player.GetComponentsInChildren<Transform>(true);
-        for (int i = 0; i < transforms.Length; i++)
-        {
-            string objectName = transforms[i].name;
-            bool isReverseRoot =
-                objectName.Equals("Thruster_Rev", StringComparison.OrdinalIgnoreCase) ||
-                objectName.StartsWith("Rev-Booster", StringComparison.OrdinalIgnoreCase) ||
-                objectName.StartsWith("Rev-Sub-Booster", StringComparison.OrdinalIgnoreCase);
-
-            if (!isReverseRoot)
-            {
-                continue;
-            }
-
-            Renderer[] childRenderers = transforms[i].GetComponentsInChildren<Renderer>(true);
-            for (int rendererIndex = 0; rendererIndex < childRenderers.Length; rendererIndex++)
-            {
-                if (childRenderers[rendererIndex] != null && uniqueRenderers.Add(childRenderers[rendererIndex]))
-                {
-                    _reverseThrusterRenderers.Add(childRenderers[rendererIndex]);
-                }
-            }
-        }
-    }
-
-    private void SetReverseThrusterRenderersVisible(bool visible)
-    {
-        for (int i = 0; i < _reverseThrusterRenderers.Count; i++)
-        {
-            Renderer renderer = _reverseThrusterRenderers[i];
-            if (renderer != null)
-            {
-                renderer.enabled = visible;
-            }
-        }
     }
 
     private static void SetCameraActive(
