@@ -1,4 +1,4 @@
-
+﻿
 //재생할 애니메이션 타입. 차후 유닛의 STATE에 따른 재생가능.
 //필요한만큼 추가가능
 //NONE을 0에넣을까?
@@ -183,6 +183,8 @@ public enum SCENE_TYPE
 	STAGE1 = 50,
 	STAGE2 = 51,
 
+	STAGE3 = 55,
+	STAGE4 = 60,
 	GAME_OVER = 999,   // 끝을 나타내는 값 — 신규 번호 계산에서 제외됨
 }
 public enum INPUT_CONTROL_TYPE

@@ -53,12 +53,15 @@ public partial class ProjectHubWindow : EditorWindow
 		PrefabTabOnEnable();
 		SceneTabOnEnable();
 		MapTabOnEnable();
+		SpherePlaceOnEnable();
 	}
 
 	private void OnDisable()
 	{
 		// 임베드한 인스펙터(Editor 인스턴스)를 안 버리면 누수됨
 		DataTabOnDisable();
+		// 씬 뷰 콜백을 안 떼면 창을 닫아도 계속 그려짐
+		SpherePlaceOnDisable();
 	}
 
 	private void OnGUI()

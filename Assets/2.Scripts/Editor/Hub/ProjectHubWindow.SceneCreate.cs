@@ -43,6 +43,9 @@ public partial class ProjectHubWindow
 	private readonly List<WaveData> _createWaves = new List<WaveData>();
 	private WaveData _createBossWave;
 
+	// 방금 만든 씬 경로. 맵 배치로 넘어가는 안내를 띄우는 데 씀
+	private string _justCreatedScene;
+
 	private bool _createRegisterToMap;
 	private MapListData _createMapList;
 	private int _createMapButtonIndex;
@@ -159,7 +162,7 @@ public partial class ProjectHubWindow
 		}
 
 		string scenePath = $"{_createFolder}/{_createSceneName}.unity";
-		bool alreadyExists = !string.IsNullOrEmpty(AssetDatabase.AssetPathToGUID(scenePath));
+		bool alreadyExists = SceneFileExists(scenePath);
 		if (alreadyExists)
 		{
 			EditorGUILayout.HelpBox($"이미 존재함: {scenePath}\n덮어쓰지 않음. 다른 종류를 고르거나 기존 씬을 열 것.", MessageType.Warning);
@@ -251,6 +254,24 @@ public partial class ProjectHubWindow
 			EditorApplication.delayCall += () => CreateScene(deferredPath);
 		}
 		EditorGUI.EndDisabledGroup();
+
+		if (!string.IsNullOrEmpty(_justCreatedScene))
+		{
+			EditorGUILayout.Space(4f);
+			EditorGUILayout.HelpBox($"생성 완료: {_justCreatedScene}\n이 씬이 열려 있으니 바로 맵을 배치할 수 있음.", MessageType.Info);
+			EditorGUILayout.BeginHorizontal();
+			if (GUILayout.Button("맵 배치 탭으로 이동", GUILayout.Height(22f)))
+			{
+				_tab = HubTab.Map;
+				_justCreatedScene = null;
+				GUI.FocusControl(null);
+			}
+			if (GUILayout.Button("닫기", GUILayout.Width(60f), GUILayout.Height(22f)))
+			{
+				_justCreatedScene = null;
+			}
+			EditorGUILayout.EndHorizontal();
+		}
 
 		EditorGUIUtility.labelWidth = prevLabelWidth;
 		EditorGUILayout.EndVertical();
@@ -430,6 +451,8 @@ public partial class ProjectHubWindow
 
 		AssetDatabase.SaveAssets();
 		RefreshSceneRows();
+		// 만든 씬이 열린 상태이므로 맵 배치로 바로 이어질 수 있게 표시함
+		_justCreatedScene = scenePath;
 		Debug.Log($"[Hub] 씬 생성 완료: {scenePath}");
 	}
 
@@ -800,9 +823,52 @@ public partial class ProjectHubWindow
 	}
 
 	// 씬 전용 참조 자동 연결.
-	// 지금은 WorldBoundary.vignetteImage 하나 — 경계 밖 화면효과용 Image를 씬에서 찾아 꽂음.
+	// 프리팹은 다른 씬 오브젝트를 참조할 수 없어서 이런 칸은 프리팹 상태에서 항상 비어 있음.
 	// 연결 대상이 늘면 여기에 항목을 추가할 것.
 	private static void WireSceneOnlyReferences()
+	{
+		WireWorldBoundaryVignette();
+		WireCameraManagerVirtualCamera();
+	}
+
+	// CameraManager._virtualCamera ← 씬의 CinemachineVirtualCamera.
+	// Awake에 FindObjectOfType 폴백이 있지만, vCam이 여러 개면 엉뚱한 걸 잡으므로 명시로 꽂아둠.
+	private static void WireCameraManagerVirtualCamera()
+	{
+		CameraManager[] managers = Object.FindObjectsOfType<CameraManager>(true);
+		if (managers.Length == 0)
+		{
+			return;
+		}
+
+		Cinemachine.CinemachineVirtualCamera[] cams =
+			Object.FindObjectsOfType<Cinemachine.CinemachineVirtualCamera>(true);
+
+		for (int i = 0; i < managers.Length; i++)
+		{
+			SerializedObject so = new SerializedObject(managers[i]);
+			SerializedProperty prop = so.FindProperty("_virtualCamera");
+			if (prop == null || prop.objectReferenceValue != null)
+			{
+				continue;
+			}
+			if (cams.Length == 0)
+			{
+				Debug.LogWarning("[Hub] 씬에 CinemachineVirtualCamera가 없어 CameraManager._virtualCamera를 못 채움.");
+				continue;
+			}
+			if (cams.Length > 1)
+			{
+				Debug.LogWarning($"[Hub] CinemachineVirtualCamera가 {cams.Length}개임 — 첫 번째({cams[0].name})를 연결함. 확인할 것.");
+			}
+			prop.objectReferenceValue = cams[0];
+			so.ApplyModifiedProperties();
+			Debug.Log($"[Hub] CameraManager._virtualCamera ← {cams[0].name} 자동 연결");
+		}
+	}
+
+	// WorldBoundary.vignetteImage ← 경계 밖 화면효과용 Image.
+	private static void WireWorldBoundaryVignette()
 	{
 		WorldBoundary[] boundaries = Object.FindObjectsOfType<WorldBoundary>(true);
 		if (boundaries.Length == 0)
@@ -849,6 +915,17 @@ public partial class ProjectHubWindow
 		}
 	}
 
+	// 씬 파일이 실제로 있는지. AssetDatabase.AssetPathToGUID는 지운 에셋의 GUID를 한동안 계속 돌려주므로
+	// 파일 시스템을 직접 본다.
+	private static bool SceneFileExists(string assetPath)
+	{
+		if (string.IsNullOrWhiteSpace(assetPath))
+		{
+			return false;
+		}
+		return System.IO.File.Exists(System.IO.Path.GetFullPath(assetPath));
+	}
+
 	// SCENE_TYPE에 새 멤버를 추가함.
 	// 번호는 5 단위로 띄워 붙이고, GAME_OVER(999)는 끝값이라 계산에서 제외됨.
 	private static void AddSceneTypeMember(string name)
@@ -861,7 +938,7 @@ public partial class ProjectHubWindow
 	// 같은 이름으로 다시 만들 때 그 값을 그대로 재사용할 수 있음.
 	private void DeleteScene(string scenePath, SCENE_TYPE sceneType)
 	{
-		if (string.IsNullOrEmpty(AssetDatabase.AssetPathToGUID(scenePath)))
+		if (!SceneFileExists(scenePath))
 		{
 			Debug.LogWarning($"[Hub] 없는 씬임: {scenePath}");
 			return;

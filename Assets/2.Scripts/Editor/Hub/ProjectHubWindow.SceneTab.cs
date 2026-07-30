@@ -222,12 +222,19 @@ public partial class ProjectHubWindow
 	{
 		_sceneRows.Clear();
 
-		// 씬 파일 전수 수집 (이름 → 경로)
-		Dictionary<string, string> sceneFiles = new Dictionary<string, string>();
+		// 씬 파일 전수 수집 (이름 → 경로).
+		// 이름 비교는 대소문자 무시 — SceneManager.LoadScene도 대소문자를 안 가림.
+		// FindAssets가 지운 에셋을 잠시 더 돌려주므로 파일 존재를 직접 확인해 걸러낸다.
+		Dictionary<string, string> sceneFiles =
+			new Dictionary<string, string>(System.StringComparer.OrdinalIgnoreCase);
 		string[] guids = AssetDatabase.FindAssets("t:Scene", new[] { "Assets" });
 		for (int i = 0; i < guids.Length; i++)
 		{
 			string path = AssetDatabase.GUIDToAssetPath(guids[i]);
+			if (!SceneFileExists(path))
+			{
+				continue;
+			}
 			string name = System.IO.Path.GetFileNameWithoutExtension(path);
 			if (!sceneFiles.ContainsKey(name))
 			{

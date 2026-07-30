@@ -181,6 +181,9 @@ public partial class ProjectHubWindow
 			Place();
 		}
 
+		// 씬 뷰에서 구 표면을 클릭해 놓는 방식. 좌표 입력 없이 보면서 배치할 때 씀
+		DrawSpherePlaceSection();
+
 		EditorGUILayout.EndVertical();
 	}
 
