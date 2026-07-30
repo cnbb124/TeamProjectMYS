@@ -13,6 +13,7 @@ using PhotonHashtable = ExitGames.Client.Photon.Hashtable;
 //   IsPaused   : 일시정지 여부. Update/FixedUpdate 첫 줄에서 ShouldPause로 체크.
 //   IsGameOver : 게임오버 여부
 //   curState   : 현재 게임 진행 상태 (GAME_STATE enum — PLAYING/PAUSED/GAME_OVER/STAGE_CLEAR)
+//                씬 도착(OnSceneLoaded)에서 자동 확정됨. 진입 경로마다 따로 세팅하지 말 것.
 //   curSceneType : 현재 씬 (SCENE_TYPE enum). 장소는 상태와 별개 축이라 따로 들고 감.
 //                  IsBattleScene / IsStationScene 프로퍼티로 조회 권장
 //   playerRef  : Player 레퍼런스. 씬 로드 후 자동 갱신.
@@ -86,7 +87,10 @@ public class GameManager : MonoBehaviourPunCallbacks
 	[SerializeField] private List<SceneBGM> _sceneBGMList = new List<SceneBGM>();
 
 	// 런타임 조회용. Awake에서 _sceneBGMList로 구성 (key = scene.ToString())
-	private Dictionary<string, SOUND_TYPE> _sceneBGMMap = new Dictionary<string, SOUND_TYPE>();
+	// 대소문자 무시 비교자 — 씬 파일명이 'Base_Landing'처럼 enum 표기(BASE_LANDING)와 달라도
+	// 조회가 되게 함. SceneManager.LoadScene도 대소문자를 안 가리므로 여기만 엄격하면 BGM이 조용히 누락됨.
+	private Dictionary<string, SOUND_TYPE> _sceneBGMMap =
+		new Dictionary<string, SOUND_TYPE>(System.StringComparer.OrdinalIgnoreCase);
 
 	[Header("보스 BGM 전환")]
 	[Tooltip("보스 등장 시 전환할 BGM. 보스 처치 시 현재 씬 BGM으로 복귀.")]
@@ -302,6 +306,26 @@ public class GameManager : MonoBehaviourPunCallbacks
         // 현재 씬 기록. LoadSceneRoutine이 아니라 여기서 하는 이유는 에디터에서 씬을 직접 재생하거나
         // 다른 경로로 씬이 바뀌어도 빠짐없이 잡히기 때문임.
         curSceneType = ParseSceneType(scene.name);
+
+        // 진행 상태도 도착 씬 기준으로 확정함 — 진입 경로(싱글 시작/불러오기, 멀티 대기실, 재시작)가
+        // 여러 갈래여도 씬 도착은 전부 이 지점을 지나므로 한 군데서 정하는 게 맞음.
+        // 게임오버 씬은 GameOver()가 정한 값을 그대로 유지해야 하므로 제외함
+        // (여기서 초기화하면 GameOverUI.Start의 IsGameOver 검사가 패널을 다시 꺼버림).
+        if (curSceneType != SCENE_TYPE.GAME_OVER)
+        {
+            // 게임오버 씬을 벗어나는 순간 정지 플래그도 같이 내림 — 안 내리면 IsGameplayFrozen이 계속 참이라
+            // 다음 플레이에서 유닛/퀵슬롯이 전부 멈춘 상태로 시작함.
+            IsGameOver = false;
+
+            if (IsGameplayScene(curSceneType))
+            {
+                ChangeState(GAME_STATE.PLAYING);
+            }
+            else
+            {
+                ChangeState(GAME_STATE.NONE);
+            }
+        }
 
         // Player 레퍼런스 갱신 — 멀티에선 원격 함선(DDOL로 씬 넘어와 공존)을 잡지 않도록 IsMine인 로컬만 채운다.
         RefreshPlayerRefToLocal();
@@ -781,16 +805,32 @@ public class GameManager : MonoBehaviourPunCallbacks
         onBossKilled?.Invoke();
     }
 
+    // 목표 카운터(Total/Destroyed)를 로컬에서 세도 되는지. 룸 안에서는 방장만 셈 —
+    // 게스트는 룸 프로퍼티로 받은 값이 진실이라 로컬에서 같이 세면 두 값이 어긋남.
+    // 실체 집합(_bossTargets)은 게스트도 유지함: 방장이 되면 그 시점부터 자기 파괴 통지를 세야 하므로.
+    private bool HasProgressAuthority
+    {
+        get
+        {
+            return !PhotonNetwork.InRoom || PhotonNetwork.IsMasterClient;
+        }
+    }
+
     /// <summary>BossSpawnTarget이 활성 시 자기 등록. 보스 스폰 '파괴 목표' 수에 포함.</summary>
     public void RegisterBossTarget(GameObject target)
     {
         if (target == null) return;
-        if (_bossTargets.Add(target))
+        if (!_bossTargets.Add(target))
         {
-            _bossTargetsTotal++;
-            onObjectiveChanged?.Invoke();
-            PublishBattleProgress();
+            return;
         }
+        if (!HasProgressAuthority)
+        {
+            return;
+        }
+        _bossTargetsTotal++;
+        onObjectiveChanged?.Invoke();
+        PublishBattleProgress();
     }
 
     /// <summary>BossSpawnTarget이 파괴(비활성) 시 통지. 남은 목표에서 제거 후 조건 체크.</summary>
@@ -799,13 +839,40 @@ public class GameManager : MonoBehaviourPunCallbacks
     {
         if (target == null) return;
         if (_isQuitting || _isSceneUnloading) return;
-        if (_bossTargets.Remove(target))
+        if (!_bossTargets.Remove(target))
         {
-            _bossTargetsDestroyed++;
-            onObjectiveChanged?.Invoke();
-            PublishBattleProgress();
-            CheckBossSpawnCondition();
+            return;
         }
+        if (!HasProgressAuthority)
+        {
+            return;
+        }
+        _bossTargetsDestroyed++;
+        onObjectiveChanged?.Invoke();
+        PublishBattleProgress();
+        CheckBossSpawnCondition();
+    }
+
+    // 방장 승계. 진행도 권위가 이쪽으로 넘어오므로 로컬 값을 즉시 룸에 다시 올려 확정함 —
+    // 안 올리면 다음 킬/파괴가 일어날 때까지 룸에는 떠난 방장의 마지막 값이 남음.
+    public override void OnMasterClientSwitched(Photon.Realtime.Player newMasterClient)
+    {
+        if (!PhotonNetwork.IsMasterClient)
+        {
+            return;
+        }
+
+        // 추적 대상이 로컬에 없는데 목표가 남아 있으면 그 목표는 영원히 달성되지 않음 —
+        // 조용히 넘기면 보스가 안 나오는 원인을 찾기 어려우므로 드러내 둠.
+        int remaining = _bossTargetsTotal - _bossTargetsDestroyed;
+        if (remaining > 0 && _bossTargets.Count < remaining)
+        {
+            Debug.LogWarning($"[GameManager] 방장 승계 — 남은 목표 {remaining}개 중 로컬 추적 가능한 것이 " +
+                             $"{_bossTargets.Count}개뿐임. 이 클라이언트에 목표 오브젝트가 생성되지 않았으면 " +
+                             $"보스 조건이 충족되지 않음.");
+        }
+
+        PublishBattleProgress();
     }
 
     // 씬 언로드/앱 종료 중인지. 이때 오는 OnDisable은 '파괴'가 아니라 정리 과정이므로 목표 달성으로 세면 안 됨.
@@ -821,11 +888,32 @@ public class GameManager : MonoBehaviourPunCallbacks
     // 내부 메서드
     // =====================================================================
     
+    // 게임플레이가 도는 씬인지. 메뉴/로딩/게임오버만 제외하고 나머지는 플레이 대상으로 봄 —
+    // 제외 목록 방식이라 스테이지를 새로 추가해도 여기 손댈 필요가 없고, SCENE_TYPE에 없는
+    // 작업씬(UNKNOWN)도 플레이 테스트용이므로 PLAYING으로 잡힘.
+    private bool IsGameplayScene(SCENE_TYPE scene)
+    {
+        switch (scene)
+        {
+            case SCENE_TYPE.MAIN:
+            case SCENE_TYPE.MULTIPLAYER:
+            case SCENE_TYPE.MAP_SELECT:
+            case SCENE_TYPE.LOADING_SEQUENCE:
+            case SCENE_TYPE.GAME_OVER:
+                return false;
+            default:
+                return true;
+        }
+    }
+
     // 씬 이름 → SCENE_TYPE. 이름이 정확히 일치할 때만 인정하고, 표에 없는 작업씬은 UNKNOWN을 돌려줌.
     // SCENE_TYPE 이름 = 실제 씬 파일 이름 규칙에 기대는 건 _sceneBGMMap / CanSave와 동일함.
     private SCENE_TYPE ParseSceneType(string sceneName)
     {
-        if (System.Enum.TryParse(sceneName, false, out SCENE_TYPE parsed) && System.Enum.IsDefined(typeof(SCENE_TYPE), parsed))
+        // 대소문자 무시 — SceneManager.LoadScene(string)이 대소문자를 안 가리므로 씬 파일명이
+        // 'Base_Landing'처럼 enum 표기(BASE_LANDING)와 달라도 정상 로드됨. 여기서만 구분하면
+        // 로드는 되는데 curSceneType이 UNKNOWN으로 잡히는 불일치가 생김.
+        if (System.Enum.TryParse(sceneName, true, out SCENE_TYPE parsed) && System.Enum.IsDefined(typeof(SCENE_TYPE), parsed))
         {
             return parsed;
         }
@@ -880,10 +968,17 @@ public class GameManager : MonoBehaviourPunCallbacks
     // 방장이 나가면 진행도가 통째로 날아감.
     // → 진행도는 특정 플레이어가 아니라 '방'에 속한 값이라 Room Custom Property에 올림.
     //   방장만 기록하고 나머지는 받아서 반영함. 방장이 바뀌어도 값이 남음.
+    //
+    // ⚠ 카운터를 로컬에서 올리는 것도 방장만 함(HasProgressAuthority). 게스트가 같이 세면
+    //   '받은 값'과 '자기가 센 값'이 섞여 어긋나고, 그 상태로 방장이 되면 어긋난 값이 권위가 됨.
+    //   방장 승계 시점에는 OnMasterClientSwitched가 로컬 값을 즉시 룸에 다시 올려 확정함.
     private const string KillCountPropertyKey = "StageKillCount";
     // 파괴 목표 진행도도 '방'에 속한 값 — 목표 등록/파괴는 방장 쪽에서만 일어나므로 게스트는 받아서 반영함.
     private const string BossTargetTotalPropertyKey = "StageBossTargetTotal";
     private const string BossTargetDonePropertyKey = "StageBossTargetDone";
+    // 보스가 이미 나왔는지도 '방'에 속한 값 — 이게 없으면 방장이 바뀐 뒤 새 방장의 로컬 플래그가
+    // 꺼져 있어서 조건이 다시 성립할 때 보스가 두 번 나올 수 있음.
+    private const string BossSpawnedPropertyKey = "StageBossSpawned";
 
     // 방장만 기록(권위 일원화). 싱글/오프라인은 룸이 없어 그냥 무시됨.
     private void PublishBattleProgress()
@@ -896,7 +991,8 @@ public class GameManager : MonoBehaviourPunCallbacks
         {
             { KillCountPropertyKey, killCount },
             { BossTargetTotalPropertyKey, _bossTargetsTotal },
-            { BossTargetDonePropertyKey, _bossTargetsDestroyed }
+            { BossTargetDonePropertyKey, _bossTargetsDestroyed },
+            { BossSpawnedPropertyKey, bossSpawned }
         };
         PhotonNetwork.CurrentRoom.SetCustomProperties(progress);
     }
@@ -940,13 +1036,20 @@ public class GameManager : MonoBehaviourPunCallbacks
             changed = true;
         }
 
-        if (!changed)
+        if (changed)
         {
-            return;
+            onObjectiveChanged?.Invoke();
+            // 게스트도 보스 조건을 돌려야 보스 BGM/연출을 같이 받음. 실제 보스 스폰은 SpawnManager가 방장만 하도록 막아둠.
+            CheckBossSpawnCondition();
         }
-        onObjectiveChanged?.Invoke();
-        // 게스트도 보스 조건을 돌려야 보스 BGM/연출을 같이 받음. 실제 보스 스폰은 SpawnManager가 방장만 하도록 막아둠.
-        CheckBossSpawnCondition();
+
+        // 보스 스폰 여부는 '미스폰 → 스폰' 한 방향으로만 받음.
+        // 조건 검사보다 뒤에 둬야 게스트가 자기 조건으로 BGM/연출을 먼저 받고, 그 뒤에 중복 스폰만 막힘.
+        if (props.TryGetValue(BossSpawnedPropertyKey, out object spawnedValue) && spawnedValue is bool syncedSpawned
+            && syncedSpawned && !bossSpawned)
+        {
+            bossSpawned = true;
+        }
     }
 
     // 방 입장 시점의 현재 진행도를 한 번 읽어옴(도중 합류 대비 — 프로퍼티 변경 콜백은 '변할 때'만 오므로).

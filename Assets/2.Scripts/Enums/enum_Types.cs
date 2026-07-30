@@ -167,19 +167,23 @@ public enum MISSILE_TYPE
 // 현재 Build Settings 순서 확인 후 맞출것
 public enum SCENE_TYPE
 {
+	// ⚠ 모든 항목에 번호를 명시함. 명시가 없으면 앞 항목을 지웠을 때 뒤 번호가 밀려
+	//    씬/프리팹에 직렬화된 값이 다른 의미로 읽힘. 새로 추가할 때도 반드시 번호를 붙일 것.
+	//    항목을 지워도 그 번호는 재사용하지 않음.
+	//    신규 번호는 사이에 끼워 넣을 여지를 두려고 5 단위로 띄움.
 	UNKNOWN = -1,   // 이 표에 없는 씬(작업씬 등). GameManager.curSceneType이 파싱 실패 시 쓰는 값
 	MAIN = 0,
 	STATION = 1,
-	STATION_1F,
-	STATION_B2,
-	BASE_LANDING,
-	LOADING_SEQUENCE = 20,   // ← 추가 (로딩 시퀀스 씬)
-	MULTIPLAYER = 25,   // ← 추가 (멀티 대기실 씬)
-	MAP_SELECT = 30,   // ← 추가 (맵 선택 화면)
-	STAGE1 = 50,   // ← 기존 인덱스 밀릴 수 있음
-	STAGE2,
+	STATION_1F = 2,
+	STATION_B2 = 3,
+	BASE_LANDING = 4,
+	LOADING_SEQUENCE = 20,   // 로딩 시퀀스 씬
+	MULTIPLAYER = 25,   // 멀티 대기실 씬
+	MAP_SELECT = 30,   // 맵 선택 화면
+	STAGE1 = 50,
+	STAGE2 = 51,
 
-	GAME_OVER = 999,   // ← 기존 인덱스 밀릴 수 있음
+	GAME_OVER = 999,   // 끝을 나타내는 값 — 신규 번호 계산에서 제외됨
 }
 public enum INPUT_CONTROL_TYPE
 {
@@ -393,19 +397,26 @@ public enum ITEM_CATEGORY
 /// STAT_TYPE(파츠/장비용)과 분리 — 인벤토리 슬롯 등 비전투 보너스 포함.
 /// LevelStatData에서 사용.
 /// </summary>
+// 레벨업 시 올려줄 항목. 값은 LevelStatData 에셋이 정하고, 종류는 여기서 정함 —
+// 코드가 실제로 읽어 쓰는 항목만 의미가 있으므로 데이터가 종류를 늘릴 수는 없음.
+// 새 항목 추가 절차: ①여기에 추가(맨 뒤에) ②Player.ApplyLevelBonus() switch에 case 추가
+// ⚠ 번호를 명시함 — 명시가 없으면 중간 항목을 지웠을 때 뒤 번호가 밀려
+//    LevelStatData 에셋에 저장된 값이 다른 의미로 읽힘. 지운 번호는 재사용하지 않음.
 public enum LEVEL_BONUS_TYPE
 {
-	HP_MAX,
-	SHIELD_MAX,
-	ARMOR_MAX,
-	ARMOR_DEF,
-	MOVE_SPEED_BASE,
-	MOVE_SPEED_MAX,
-	MOVE_SPEED_BOOST,
-	BOOST_MAX,
-	CRI_RATE,
-	CRI_DMG_MULT,
-	INVENTORY_SLOTS,    // 인벤토리 슬롯 수 증가
+	HP_MAX = 0,
+	SHIELD_MAX = 1,
+	ARMOR_MAX = 2,
+	ARMOR_DEF = 3,
+	MOVE_SPEED_BASE = 4,
+	MOVE_SPEED_MAX = 5,
+	MOVE_SPEED_BOOST = 6,
+	BOOST_MAX = 7,
+	CRI_RATE = 8,
+	CRI_DMG_MULT = 9,
+	INVENTORY_SLOTS = 10,           // 인벤토리 슬롯 수 증가
+	DODGE_COOLTIME_DECREASE = 11,   // 회피 쿨타임 감소(초). 감소값이라 양수를 넣으면 쿨이 줄어듦
+	MISSILE_SLOTS = 12,             // 미사일 슬롯 수 증가
 }
 
 public enum EFFECT_TYPE

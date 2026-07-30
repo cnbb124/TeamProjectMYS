@@ -18,7 +18,8 @@ using TMPro;
 /// - lockOnSystem : 플레이어의 LockOnSystem 참조
 /// - markerPrefab : EnemyMarker 프리팹
 /// - markerParent : 마커를 붙일 Canvas 하위 RectTransform
-/// - edgePadding  : 화면 가장자리 클램프 여백(px)
+/// - edgePadding  : 화면 가장자리 클램프 여백. 단위는 markerParent의 로컬 단위
+///                  (CanvasScaler 레퍼런스가 1920x1080이면 그 기준의 px와 같음)
 /// </summary>
 public class EnemyMarkerUI : MonoBehaviour
 {
@@ -91,18 +92,21 @@ public class EnemyMarkerUI : MonoBehaviour
     {
         Vector3 screenPos = mainCam.WorldToScreenPoint(target.position);
 
-        float halfW = Screen.width  * 0.5f;
-        float halfH = Screen.height * 0.5f;
-
+        // 화면 안/밖 판정은 픽셀 기준(screenPos가 픽셀이므로).
         bool isOnScreen = screenPos.z > 0f
             && screenPos.x > 0f && screenPos.x < Screen.width
             && screenPos.y > 0f && screenPos.y < Screen.height;
 
+        // 마커 좌표는 부모 사각형의 로컬 단위로 다룸 — CanvasScaler가 걸려 있으면 로컬 단위가
+        // 픽셀과 다르므로(레퍼런스 해상도 기준), 픽셀로 계산하면 다른 해상도에서 위치가 어긋남.
+        Rect parentRect = markerParent.rect;
+        Vector2 center = parentRect.center;
+        RectTransformUtility.ScreenPointToLocalPointInRectangle(
+            markerParent, screenPos, null, out Vector2 localPos);
+
         if (isOnScreen)
         {
             // 화면 내 → 실제 위치에 마커
-            RectTransformUtility.ScreenPointToLocalPointInRectangle(
-                markerParent, screenPos, null, out Vector2 localPos);
             m.rect.localPosition = localPos;
 
             m.arrow?.gameObject.SetActive(false);
@@ -111,25 +115,28 @@ public class EnemyMarkerUI : MonoBehaviour
         else
         {
             // 화면 밖 → 가장자리 클램프
-            Vector2 dir;
+            // 카메라 뒤면 투영이 반전돼 나오므로 사각형 중심 기준으로 되뒤집음
             if (screenPos.z < 0f)
             {
-                // 카메라 뒤 → 방향 반전
-                screenPos.x = Screen.width  - screenPos.x;
-                screenPos.y = Screen.height - screenPos.y;
+                localPos = center - (localPos - center);
             }
 
-            dir = new Vector2(screenPos.x - halfW, screenPos.y - halfH).normalized;
+            Vector2 dir = localPos - center;
+            if (dir.sqrMagnitude < 0.0001f)
+            {
+                // 정확히 중심이면 방향이 정해지지 않음 — 위쪽으로 몰아둠
+                dir = Vector2.up;
+            }
+            dir.Normalize();
 
-            // 화면 가장자리까지의 비율 계산 (직사각형 클램프)
-            float maxX = halfW - edgePadding;
-            float maxY = halfH - edgePadding;
+            // 부모 사각형 가장자리까지의 비율 중 작은 쪽이 실제 접점
+            float maxX = parentRect.width  * 0.5f - edgePadding;
+            float maxY = parentRect.height * 0.5f - edgePadding;
             float scaleX = dir.x != 0f ? maxX / Mathf.Abs(dir.x) : float.MaxValue;
             float scaleY = dir.y != 0f ? maxY / Mathf.Abs(dir.y) : float.MaxValue;
             float scale  = Mathf.Min(scaleX, scaleY);
 
-            Vector2 clampedPos = dir * scale;
-            m.rect.localPosition = clampedPos;
+            m.rect.localPosition = center + dir * scale;
 
             // 화살표 회전 (적 방향을 가리킴)
             if (m.arrow != null)

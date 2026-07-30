@@ -15,7 +15,8 @@
  * 5. lobbySceneName : 로비 씬 이름 입력
  *
  * ※ 테스트 씬에서 패널만 확인할 땐 panel을 켜두면 됨 (이벤트 없이도 버튼 동작 확인 가능)
- * ※ IsGameOver/curState 리셋은 RestartStage()가 처리 (IsGameOver=false, 상태 PLAYING 복귀).
+ * ※ IsGameOver/curState 리셋은 GameManager.OnSceneLoaded가 처리 — 게임오버 씬을 벗어나는
+ *    모든 경로(Restart / 로비 복귀)에서 자동으로 내려감. UI가 따로 되돌릴 필요 없음.
  */
 
 using UnityEngine;

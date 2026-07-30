@@ -11,36 +11,62 @@ public class MapSelectorUI : MonoBehaviourPunCallbacks, IOnEventCallback
 {
 	private const byte MapSelectEventCode = 72; // WaitingRoomUI(71)와 겹치지 않는 별도 코드
 
+	[Header("맵 목록 (버튼별 진입 씬)")]
+	[Tooltip("버튼 i가 진입시킬 씬을 담은 데이터. Hub의 씬 생성이 여기에 씬을 배정함.")]
+	[SerializeField] private MapListData mapList;
+
 	[Header("맵 버튼 (방장만 활성)")]
-	[Tooltip("여기 드래그한 버튼의 onClick은 코드(Awake)에서 연결함 → 인스펙터 onClick은 비워둘 것(중복 호출 방지). 비방장에겐 interactable=false로 잠김.")]
-	[SerializeField] private Button map1Button;
-	[SerializeField] private Button map2Button;
+	[Tooltip("순서대로 mapList.maps[i]에 대응됨(0번 버튼 = maps[0]).\n" +
+			 "onClick은 코드(Awake)에서 연결함 → 인스펙터 onClick은 비워둘 것(중복 호출 방지).\n" +
+			 "mapList에서 씬이 안 잡힌 버튼과 비방장은 interactable=false로 잠김.")]
+	[SerializeField] private Button[] mapButtons;
 
 	private bool isStartingGame;
 
 	private void Awake()
 	{
-		// onClick을 코드에서 연결(WaitingRoomUI.startButton과 동일 방식) — 인스펙터 onClick은 비워둠.
-		if (map1Button != null)
+		// 버튼마다 자기 인덱스를 캡처해 onClick에 연결 — 인스펙터 onClick은 비워둠.
+		// 씬 이름은 클릭 시점에 mapList에서 조회하므로, 배정이 바뀌어도 코드 수정이 필요 없음.
+		if (mapButtons == null)
 		{
-			map1Button.onClick.AddListener(OnClickButtonMap1);
+			return;
 		}
-		if (map2Button != null)
+		for (int i = 0; i < mapButtons.Length; i++)
 		{
-			map2Button.onClick.AddListener(OnClickButtonMap2);
+			if (mapButtons[i] == null)
+			{
+				continue;
+			}
+			int index = i;
+			mapButtons[i].onClick.AddListener(() => OnClickMapButton(index));
 		}
 	}
 
 	private void OnDestroy()
 	{
-		if (map1Button != null)
+		if (mapButtons == null)
 		{
-			map1Button.onClick.RemoveListener(OnClickButtonMap1);
+			return;
 		}
-		if (map2Button != null)
+		for (int i = 0; i < mapButtons.Length; i++)
 		{
-			map2Button.onClick.RemoveListener(OnClickButtonMap2);
+			if (mapButtons[i] != null)
+			{
+				mapButtons[i].onClick.RemoveAllListeners();
+			}
 		}
+	}
+
+	// 버튼 인덱스 → mapList에서 씬 이름 조회 → 진입 요청.
+	private void OnClickMapButton(int index)
+	{
+		string sceneName = mapList != null ? mapList.GetSceneName(index) : null;
+		if (string.IsNullOrWhiteSpace(sceneName))
+		{
+			Debug.LogWarning($"[MapSelectorUI] {index}번 버튼에 배정된 씬이 없음.");
+			return;
+		}
+		RequestMapStart(sceneName);
 	}
 
 	private void Start()
@@ -58,33 +84,7 @@ public class MapSelectorUI : MonoBehaviourPunCallbacks, IOnEventCallback
 		RefreshButtons();
 	}
 
-	// ==============버튼들===============
-	public void OnClickButtonMap1()
-	{
-		RequestMapStart("STAGE1");
-	}
-
-	public void OnClickButtonMap2()
-	{
-		// STAGE2 미구현 — 씬 준비되면 아래 줄 활성화.
-		//RequestMapStart("STAGE2");
-	}
-
-	
-    public void OnClickButtonMap3()
-    {
-        
-    }
-    public void OnClickButtonMap4()
-    {
-       
-    }
-    public void OnClickButtonMap5()
-    {
-        
-    }
-
-    // 방장만 실제 진입을 트리거함. 멀티면 RaiseEvent로 전원 동시 진입, 싱글(오프라인)이면 로컬 진입.
+	// 방장만 실제 진입을 트리거함. 멀티면 RaiseEvent로 전원 동시 진입, 싱글(오프라인)이면 로컬 진입.
     private void RequestMapStart(string sceneName)
 	{
 		if (isStartingGame || string.IsNullOrWhiteSpace(sceneName))
@@ -159,17 +159,23 @@ public class MapSelectorUI : MonoBehaviourPunCallbacks, IOnEventCallback
 	}
 
 	// 방장만 맵 버튼 활성. 싱글(오프라인)은 LocalPlayer가 곧 Master라 항상 활성됨.
+	// 추가로, mapList에서 씬이 배정되지 않은 버튼은 방장이라도 잠금(빈 버튼 클릭 방지).
 	private void RefreshButtons()
 	{
 		bool canSelect = !PhotonNetwork.InRoom || PhotonNetwork.IsMasterClient;
 
-		if (map1Button != null)
+		if (mapButtons == null)
 		{
-			map1Button.interactable = canSelect;
+			return;
 		}
-		if (map2Button != null)
+		for (int i = 0; i < mapButtons.Length; i++)
 		{
-			map2Button.interactable = canSelect;
+			if (mapButtons[i] == null)
+			{
+				continue;
+			}
+			bool hasScene = mapList != null && !string.IsNullOrWhiteSpace(mapList.GetSceneName(i));
+			mapButtons[i].interactable = canSelect && hasScene;
 		}
 	}
 }

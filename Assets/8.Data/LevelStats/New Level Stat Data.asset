@@ -12,4 +12,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f6a0d84cafd3c2241b269bf8f2c81d9f, type: 3}
   m_Name: New Level Stat Data
   m_EditorClassIdentifier: 
-  levels: []
+  expToNextIncrease: 75
+  perLevelBonuses:
+  - bonusType: 0
+    value: 50
+  - bonusType: 8
+    value: 5
+  - bonusType: 9
+    value: 0.1
+  - bonusType: 11
+    value: 0.3
+  periodicBonuses:
+  - bonusType: 12
+    value: 1
+    everyNLevels: 5
+  - bonusType: 10
+    value: 5
+    everyNLevels: 5

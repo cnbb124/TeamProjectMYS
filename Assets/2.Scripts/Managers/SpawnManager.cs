@@ -34,26 +34,12 @@ public class SpawnManager : MonoBehaviourPunCallbacks
 {
 
 	// ================================================================
-	// 싱글톤 (씬 전용 — DontDestroyOnLoad 없음)
+	// 싱글톤 없음 — 씬 종속 오브젝트라 전역 접근점을 두면 안 됨.
+	// static 참조는 씬을 넘어 살아남는데 이 오브젝트는 씬과 함께 사라지므로,
+	// 이전 씬의 파괴된 인스턴스가 남아 새 씬의 자기 자신을 중복으로 판정하고 파괴할 수 있음.
+	// 웨이브 시작은 자기 Start에서, 보스 웨이브는 GameManager.onBossSpawn 구독으로 처리하므로
+	// 외부에서 이 매니저를 찾아야 할 이유가 없음.
 	// ================================================================
-	private static SpawnManager instance;
-	// Awake에서만 세팅됨. Awake 전엔 null이므로 최초 접근은 Start부터 할 것.
-	// (예전엔 여기서 FindObjectOfType으로 찾아줬는데, 그게 매니저 자신의 Awake보다 먼저
-	//  instance를 채워버려서 Awake의 초기화 블록이 통째로 스킵되는 버그를 만들었음)
-	public static SpawnManager Instance => instance;
-
-	private void Awake()
-	{
-		if (instance == null)
-		{
-			instance = this;
-		}
-		else if (instance != this)
-		{
-			Debug.LogWarning("[SpawnManager] 중복 감지. 파괴 후 기존 유지");
-			Destroy(gameObject);
-		}
-	}
 
 	// ================================================================
 	// 인스펙터
@@ -114,7 +100,6 @@ public class SpawnManager : MonoBehaviourPunCallbacks
 
 	private void OnDestroy()
 	{
-		instance = null;
 		if (GameManager.Instance != null)
 		{
 			GameManager.Instance.onBossSpawn -= OnBossSpawnTriggered;

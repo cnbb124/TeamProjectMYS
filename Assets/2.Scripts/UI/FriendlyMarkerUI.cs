@@ -35,7 +35,8 @@ public class FriendlyMarkerUI : MonoBehaviour
     [SerializeField] private Transform playerTransform;
 
     [Header("설정")]
-    [Tooltip("화면 가장자리 클램프 여백(px)")]
+    [Tooltip("화면 가장자리 클램프 여백. 단위는 Marker Parent의 로컬 단위임\n" +
+             "(CanvasScaler 레퍼런스가 1920x1080이면 그 기준의 px와 같음)")]
     [SerializeField] private float edgePadding    = 20f;
     [SerializeField] private float onScreenScale  = 1f;
     [SerializeField] private float offScreenScale = 0.8f;
@@ -142,9 +143,7 @@ public class FriendlyMarkerUI : MonoBehaviour
 
         Vector3 screenPos = mainCam.WorldToScreenPoint(ally.transform.position);
 
-        float halfW = Screen.width  * 0.5f;
-        float halfH = Screen.height * 0.5f;
-
+        // 화면 안/밖 판정은 픽셀 기준(screenPos가 픽셀이므로).
         bool isOnScreen = screenPos.z > 0f
             && screenPos.x > 0f && screenPos.x < Screen.width
             && screenPos.y > 0f && screenPos.y < Screen.height;
@@ -157,10 +156,15 @@ public class FriendlyMarkerUI : MonoBehaviour
 
         m.gameObject.SetActive(true);
 
+        // 마커 좌표는 부모 사각형의 로컬 단위로 다룸 — CanvasScaler가 걸려 있으면 로컬 단위가
+        // 픽셀과 다르므로(레퍼런스 해상도 기준), 픽셀로 계산하면 다른 해상도에서 위치가 어긋남.
+        Rect parentRect = markerParent.rect;
+        Vector2 center = parentRect.center;
+        RectTransformUtility.ScreenPointToLocalPointInRectangle(
+            markerParent, screenPos, null, out Vector2 localPos);
+
         if (isOnScreen)
         {
-            RectTransformUtility.ScreenPointToLocalPointInRectangle(
-                markerParent, screenPos, null, out Vector2 localPos);
             m.Rect.localPosition = localPos;
 
             m.SetOffScreen(false, 0f);
@@ -168,22 +172,27 @@ public class FriendlyMarkerUI : MonoBehaviour
         }
         else
         {
-            // 카메라 뒤쪽이면 방향이 반전돼서 나오므로 뒤집어준다
+            // 카메라 뒤쪽이면 투영이 반전돼서 나오므로 사각형 중심 기준으로 되뒤집음
             if (screenPos.z < 0f)
             {
-                screenPos.x = Screen.width  - screenPos.x;
-                screenPos.y = Screen.height - screenPos.y;
+                localPos = center - (localPos - center);
             }
 
-            Vector2 dir = new Vector2(screenPos.x - halfW, screenPos.y - halfH).normalized;
+            Vector2 dir = localPos - center;
+            if (dir.sqrMagnitude < 0.0001f)
+            {
+                // 정확히 중심이면 방향이 정해지지 않음 — 위쪽으로 몰아둠
+                dir = Vector2.up;
+            }
+            dir.Normalize();
 
-            // 화면(직사각형) 가장자리까지 늘렸을 때의 배율 중 작은 쪽이 실제 접점
-            float maxX   = halfW - edgePadding;
-            float maxY   = halfH - edgePadding;
+            // 부모 사각형 가장자리까지 늘렸을 때의 배율 중 작은 쪽이 실제 접점
+            float maxX   = parentRect.width  * 0.5f - edgePadding;
+            float maxY   = parentRect.height * 0.5f - edgePadding;
             float scaleX = dir.x != 0f ? maxX / Mathf.Abs(dir.x) : float.MaxValue;
             float scaleY = dir.y != 0f ? maxY / Mathf.Abs(dir.y) : float.MaxValue;
 
-            m.Rect.localPosition = dir * Mathf.Min(scaleX, scaleY);
+            m.Rect.localPosition = center + dir * Mathf.Min(scaleX, scaleY);
             m.Rect.localScale    = Vector3.one * offScreenScale;
 
             float angle = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg - 90f;

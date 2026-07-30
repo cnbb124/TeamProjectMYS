@@ -162,12 +162,13 @@ public class Player : Unit
 	[Tooltip("현재 보유 경험치. 음수 불가")]
 	public int exp = 0;//차후 mathf.max치로 조정
 
-	[Tooltip("현재 레벨에서 다음 레벨까지 필요한 경험치")]
+	[Tooltip("현재 레벨에서 다음 레벨까지 필요한 경험치.\n" +
+		"levelStatData가 연결돼 있으면 레벨업 시 그 레벨의 expToNext로 덮어씀(0이면 유지).")]
 	public int expToNextLevel = 100;
 
-	[Tooltip("미사일 슬롯을 1칸 늘려줄 레벨 주기. 3이면 3/6/9레벨마다 +1칸.\n" +
-		"1이면 매 레벨 증가(과할 수 있음). 0 이하로 두면 슬롯 지급 안 함.")]
-	public int missileSlotGainInterval = 3;
+	[Tooltip("레벨별 스탯 증가/필요경험치 테이블. 연결하면 LevelUp()이 이 값으로 스탯을 올림.\n" +
+		"비워두면 아무 보너스도 안 오르고 필요경험치도 그대로 유지됨.")]
+	public LevelStatData levelStatData;
 
 
 
@@ -1333,29 +1334,92 @@ public class Player : Unit
 
 		level++;
 
-		// 다음 레벨 필요 경험치 증가 (예시: 레벨당 50씩 증가. 수치는 추후 조정)
-		expToNextLevel += 50;
-
 		Debug.Log($"[Player] 레벨업! 현재 레벨: {level}");
 
-		maxHpRemaining += 50;
-		criChance += 5;
-		criDamageMultiplier += 0.1f;
-		dodgeCoolTime -= 0.2f;
-
-		// 일정 레벨마다 미사일 슬롯 +1 (매 레벨은 과해서 주기로 지급).
-		// AddMissileSlot()은 빈 슬롯을 붙이는 것 — 실제 미사일은 인벤토리/상점에서 장착해 채움.
-		if (missileSlotGainInterval > 0 && level % missileSlotGainInterval == 0)
+		// 레벨업 효과는 levelStatData가 정함(하드코딩 제거). 미연결이면 스탯이 안 오름.
+		if (levelStatData != null)
 		{
-			weaponSystem?.AddMissileSlot();
+			// 다음 레벨 필요 경험치 증가
+			expToNextLevel += levelStatData.expToNextIncrease;
+
+			// 매 레벨 적용되는 보너스
+			for (int i = 0; i < levelStatData.perLevelBonuses.Count; i++)
+			{
+				LevelBonus b = levelStatData.perLevelBonuses[i];
+				ApplyLevelBonus(b.bonusType, b.value);
+			}
+
+			// N레벨마다만 적용되는 보너스(미사일 슬롯 등)
+			for (int i = 0; i < levelStatData.periodicBonuses.Count; i++)
+			{
+				PeriodicBonus p = levelStatData.periodicBonuses[i];
+				bool due = p.everyNLevels <= 1 || level % p.everyNLevels == 0;
+				if (due)
+				{
+					ApplyLevelBonus(p.bonusType, p.value);
+				}
+			}
 		}
 
 		// HP/실드/아머/부스트 + 파츠 HP까지 최대치로 회복(파츠 스탯 페널티도 함께 해제됨).
+		// 스탯 증가를 반영해야 하므로 보너스 적용 뒤에 호출.
 		RefillToMax();
 
-		// 레벨업 효과는 여기에 추가 예정:
-		//  - 인벤토리 사용 가능 슬롯 증가 (InventoryManager에 슬롯 상한 개념이 생기면 연결)
 		// (레벨업 연출/HUD 갱신이 필요하면 이벤트 훅을 여기서 발행)
+	}
+
+	// 레벨업 보너스 1건 적용. 새 LEVEL_BONUS_TYPE을 추가하면 여기에도 case를 추가할 것.
+	// max 계열을 올리므로 호출 뒤 RefillToMax()로 cur을 채워야 함(LevelUp이 처리).
+	private void ApplyLevelBonus(LEVEL_BONUS_TYPE bonusType, float v)
+	{
+		switch (bonusType)
+		{
+			case LEVEL_BONUS_TYPE.HP_MAX:
+				maxHpRemaining += Mathf.RoundToInt(v);
+				break;
+			case LEVEL_BONUS_TYPE.SHIELD_MAX:
+				maxShieldCapacity += Mathf.RoundToInt(v);
+				break;
+			case LEVEL_BONUS_TYPE.ARMOR_MAX:
+				maxArmor += Mathf.RoundToInt(v);
+				break;
+			case LEVEL_BONUS_TYPE.ARMOR_DEF:
+				defense += Mathf.RoundToInt(v);
+				break;
+			case LEVEL_BONUS_TYPE.MOVE_SPEED_BASE:
+				baseMoveSpeed += v;
+				break;
+			case LEVEL_BONUS_TYPE.MOVE_SPEED_MAX:
+				maxSpeed += v;
+				break;
+			case LEVEL_BONUS_TYPE.MOVE_SPEED_BOOST:
+				boostSpeed += v;
+				break;
+			case LEVEL_BONUS_TYPE.BOOST_MAX:
+				maxBoostCapacity += v;
+				break;
+			case LEVEL_BONUS_TYPE.CRI_RATE:
+				criChance += v;
+				break;
+			case LEVEL_BONUS_TYPE.CRI_DMG_MULT:
+				criDamageMultiplier += v;
+				break;
+			case LEVEL_BONUS_TYPE.INVENTORY_SLOTS:
+				// 인벤토리 슬롯 상한 개념이 아직 없음 — 생기면 여기서 InventoryManager에 연결.
+				break;
+			case LEVEL_BONUS_TYPE.DODGE_COOLTIME_DECREASE:
+				// 감소값이라 양수를 넣으면 쿨이 줄어듦. 0 미만으로는 안 내려가게 클램프.
+				dodgeCoolTime = Mathf.Max(0f, dodgeCoolTime - v);
+				break;
+			case LEVEL_BONUS_TYPE.MISSILE_SLOTS:
+				// 슬롯 수만큼 빈 슬롯 추가 — 실제 미사일은 인벤토리/상점에서 장착해 채움.
+				int count = Mathf.RoundToInt(v);
+				for (int i = 0; i < count; i++)
+				{
+					weaponSystem?.AddMissileSlot();
+				}
+				break;
+		}
 	}
 }
 
