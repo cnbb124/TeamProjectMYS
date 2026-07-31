@@ -68,6 +68,12 @@ public class LockOnUIManager : MonoBehaviour
 
     private void ShowIndicator(Vector3 worldPos, float progress, bool isLocked)
     {
+        if (_canvas != null && _canvas.renderMode == RenderMode.WorldSpace)
+        {
+            ShowWorldSpaceIndicator(worldPos, progress, isLocked);
+            return;
+        }
+
         Vector3 screenPos = _mainCamera.WorldToScreenPoint(
             worldPos,
             Camera.MonoOrStereoscopicEye.Mono);
@@ -86,6 +92,44 @@ public class LockOnUIManager : MonoBehaviour
         {
             return;
         }
+
+        LockOnTargetUI ui = GetUI(_activeCount);
+        ui.Show();
+        ui.UpdateUI(localPosition, progress, isLocked);
+        _activeCount++;
+    }
+
+    private void ShowWorldSpaceIndicator(
+        Vector3 worldPos,
+        float progress,
+        bool isLocked)
+    {
+        // XR render-target pixels can differ from Screen pixels. Map the
+        // camera viewport directly to the HUD rect to avoid movement drift.
+        Vector3 viewportPos = _mainCamera.WorldToViewportPoint(
+            worldPos,
+            Camera.MonoOrStereoscopicEye.Mono);
+        if (viewportPos.z < 0f)
+        {
+            return;
+        }
+
+        RectTransform canvasRect = _canvas.transform as RectTransform;
+        if (canvasRect == null)
+        {
+            return;
+        }
+
+        Rect rect = canvasRect.rect;
+        Vector3 canvasLocalPosition = new Vector3(
+            Mathf.LerpUnclamped(rect.xMin, rect.xMax, viewportPos.x),
+            Mathf.LerpUnclamped(rect.yMin, rect.yMax, viewportPos.y),
+            0f);
+        Vector3 indicatorLocalPosition = _indicatorRoot.InverseTransformPoint(
+            canvasRect.TransformPoint(canvasLocalPosition));
+        Vector2 localPosition = new Vector2(
+            indicatorLocalPosition.x,
+            indicatorLocalPosition.y);
 
         LockOnTargetUI ui = GetUI(_activeCount);
         ui.Show();
