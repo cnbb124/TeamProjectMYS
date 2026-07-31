@@ -6,6 +6,7 @@ public class ShipLanding : MonoBehaviour
 {
     /// <summary>이륙 연출이 완전히 끝났을 때 발생 (씬 전환 등에 사용)</summary>
     public event System.Action OnTakeoffComplete;
+    [SerializeField] private GameObject UI;
 
     [Header("플레이어")]
     [SerializeField] private Transform target;
@@ -91,6 +92,7 @@ public class ShipLanding : MonoBehaviour
             landedPose.position.y, landedPose.position.y + settleOffsetY,
             descendDuration, descendCurve);
 
+        UI.SetActive(true);
         currentState = State.Landed;
     }
 
@@ -108,6 +110,8 @@ public class ShipLanding : MonoBehaviour
     // Phase 2: 그 자리에서 정면 방향으로 이륙 (회전 고정)
     private IEnumerator TakeoffSequence()
     {
+        UI.SetActive(false);
+
         yield return MoveYOnly(
             landedPose.position.y + settleOffsetY, landedPose.position.y,
             descendDuration, descendCurve);
@@ -154,6 +158,7 @@ public class ShipLanding : MonoBehaviour
         float duration, AnimationCurve curve,
         System.Action onComplete = null)
     {
+
         float t = 0f;
         Vector3 pos = target.position;
         while (t < duration)
@@ -171,6 +176,8 @@ public class ShipLanding : MonoBehaviour
         pos.y = toY;
         target.position = pos;
         onComplete?.Invoke();
+
+        
     }
 
     // 이륙용: 회전은 고정, 위치만 이동
@@ -179,6 +186,7 @@ public class ShipLanding : MonoBehaviour
         float duration, AnimationCurve curve,
         System.Action onComplete = null)
     {
+        
         target.rotation = fixedRot;
         float t = 0f;
         while (t < duration)

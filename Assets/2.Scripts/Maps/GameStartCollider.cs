@@ -1,12 +1,14 @@
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
-public class ShopNPCInteraction : MonoBehaviour
+public class GameStartCollider : MonoBehaviour
 {
-    [SerializeField] private GameObject affinityUI;
+    [SerializeField] private GameObject UI;
     [SerializeField] private PlayerTestCtrl player;
 
     private bool _playerInRange;
-    private bool _isOpen;
+    private bool _UIOpen;
 
     private void OnTriggerEnter(Collider other)
     {
@@ -24,7 +26,7 @@ public class ShopNPCInteraction : MonoBehaviour
     {
         if (_playerInRange && Input.GetKeyDown(KeyCode.E))
         {
-            if (_isOpen)
+            if (_UIOpen)
             {
                 CloseInteraction();
             }
@@ -33,24 +35,30 @@ public class ShopNPCInteraction : MonoBehaviour
                 OpenInteraction();
             }
         }
+
+        //if (_UIOpen&&_playerInRange && Input.GetKeyDown(KeyCode.E))
+        //{
+          
+        //    CloseInteraction();
+        //}
     }
 
     private void OpenInteraction()
     {
         player.canControl = false;
-        _isOpen = true;
-        affinityUI.SetActive(true);
+        _UIOpen = true;
+        UI.SetActive(true);
 
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
-   
+
     }
 
     public void CloseInteraction()
     {
         player.canControl = true;
-        _isOpen = false;
-        affinityUI.SetActive(false);
+        _UIOpen = false;
+        UI.SetActive(false);
 
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;

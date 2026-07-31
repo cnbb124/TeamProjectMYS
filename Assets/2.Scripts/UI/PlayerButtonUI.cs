@@ -34,7 +34,8 @@ public class PlayerButtonUI : MonoBehaviour
             Debug.LogWarning("[PlayerButtonUI] NetworkManager 없음 — 씬에 배치 필요");
         }
 
-        LoadingManager.NextScene = SingleNextScene;
+        HangarExitButton.launchSceneName = "MAP_SELECT"; // 격납고쪽에 다음 갈곳 저장
+        LoadingManager.NextScene = "BASE_LANDING"; // 격납고 이동
         GameManager.Instance.LoadScene(SCENE_TYPE.LOADING_SEQUENCE);
     }
 
@@ -50,7 +51,8 @@ public class PlayerButtonUI : MonoBehaviour
             Debug.LogWarning("[PlayerButtonUI] NetworkManager 없음 — 씬에 배치 필요");
         }
 
-        LoadingManager.NextScene = MultiNextScene;
+        HangarExitButton.launchSceneName = "MULTIPLAYER"; // 격납고쪽에 다음 갈곳 저장
+        LoadingManager.NextScene = "BASE_LANDING"; // 격납고 이동
         GameManager.Instance.LoadScene(SCENE_TYPE.LOADING_SEQUENCE);
     }
 }
