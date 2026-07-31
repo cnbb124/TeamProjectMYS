@@ -436,14 +436,13 @@ public abstract class Unit : MonoBehaviour, IDamageable, IPunObservable
 	// 새 STAT_TYPE이 max와 별도의 cur 스냅샷을 갖는 스탯이라면 여기에도 추가할 것.
 	public virtual void RefillToMax()
 	{
+	
+		_unitParts?.RefillAllPartsHp();
+
 		curHpRemaining = maxHpRemaining;
 		curShieldRemaining = maxShieldCapacity;
 		curArmorRemaining = maxArmor;
 		curBoostRemaining = maxBoostCapacity;
-
-		// 파츠 HP도 같이 복구 — 안 그러면 깎인 파츠의 스탯 페널티(엔진/스러스터 등)가 남아
-		// '최대치로 회복'인데도 실제 성능은 덜 회복된 상태가 됨.
-		_unitParts?.RefillAllPartsHp();
 
 		UpdateShieldHitboxState();
 	}
