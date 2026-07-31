@@ -377,7 +377,6 @@ public class GameManager : MonoBehaviourPunCallbacks
         // 정작 목적지 씬에서는 복원이 안 됨.
         if (_restoreOnNextLoad && curSceneType != SCENE_TYPE.LOADING_SEQUENCE)
         {
-            _restoreOnNextLoad = false;
             StartCoroutine(RestoreAfterLoad(_lastSaveSlot));
         }
 
@@ -406,6 +405,10 @@ public class GameManager : MonoBehaviourPunCallbacks
         }
 
         yield return LoadDataRoutine(slot, null); // 서버/로컬 로드(비동기) 완료까지 대기
+
+        // 함선이 없는 씬(스테이션 등)에서는 골드·아이템만 복원되고 파츠·스킬·HP는 통째로 빠짐.
+        // 예약을 남겨서 함선이 생기는 씬(격납고)에서 한 번 더 복원함.
+        _restoreOnNextLoad = playerRef == null;
     }
 
     // =====================================================================
