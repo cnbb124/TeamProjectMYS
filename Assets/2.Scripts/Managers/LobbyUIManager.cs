@@ -23,7 +23,7 @@ public class LobbyUIManager : MonoBehaviour
     public void OnClickNewGame()
     {
         HangarExitButton.launchSceneName = "MAP_SELECT"; // 격납고쪽에 다음 갈곳 저장
-        LoadingManager.NextScene = "BASE_LANDING"; // 격납고 이동
+        LoadingManager.NextScene = "STATION"; // 스테이션 이동
         GameManager.Instance.LoadScene(SCENE_TYPE.LOADING_SEQUENCE);
     }
 
@@ -55,7 +55,7 @@ public class LobbyUIManager : MonoBehaviour
         // GameManager.Instance.LoadScene("ServerListUI");
 
         HangarExitButton.launchSceneName = "MULTIPLAYER"; // 격납고쪽에 다음 갈곳 저장
-        LoadingManager.NextScene = "BASE_LANDING"; // 격납고 이동
+        LoadingManager.NextScene = "STATION"; // 스테이션 이동
         GameManager.Instance.LoadScene(SCENE_TYPE.LOADING_SEQUENCE);
     }
 
