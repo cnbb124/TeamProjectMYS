@@ -42,13 +42,19 @@ public class ConfirmDialogUI : MonoBehaviour
         gameObject.SetActive(false);   // 평소엔 꺼둠
     }
 
-    /// <summary>확인 팝업 열기. Yes 누르면 onConfirm 실행.</summary>
+    /// <summary>확인 팝업 열기. Yes 누르면 onConfirm 실행.
+    /// message가 비어있으면 프리팹에 미리 써둔 문구를 그대로 사용한다.</summary>
     public void Open(string message, Action onConfirm)
     {
         _onConfirm = onConfirm;
-        if (messageText != null) messageText.text = message;
+        // 메시지를 넘겼을 때만 덮어씀 — 비우면 프리팹 원본 문구 유지
+        if (messageText != null && !string.IsNullOrEmpty(message))
+            messageText.text = message;
         gameObject.SetActive(true);
     }
+
+    /// <summary>메시지 없이 열기 — 프리팹에 써둔 문구 그대로 사용.</summary>
+    public void Open(Action onConfirm) => Open(null, onConfirm);
 
     /// <summary>팝업 닫기 (No 버튼 / 외부에서도 호출 가능).</summary>
     public void Close()

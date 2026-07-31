@@ -156,7 +156,8 @@ public class LoadGameUI : MonoBehaviour
         if (hasData && overwriteConfirm != null)
         {
             // 이미 데이터가 있으면 덮어쓰기 확인 팝업 → Yes일 때만 저장
-            overwriteConfirm.Open($"슬롯 {slot + 1}에 덮어쓸까요?", () => DoSave(slot));
+            // 문구는 SaveAlertUI 프리팹에 써둔 것을 그대로 사용(메시지 안 넘김)
+            overwriteConfirm.Open(() => DoSave(slot));
         }
         else
         {
