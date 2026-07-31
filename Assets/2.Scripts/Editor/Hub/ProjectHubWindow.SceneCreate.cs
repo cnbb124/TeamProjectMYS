@@ -1303,6 +1303,22 @@ public partial class ProjectHubWindow
 			return;
 		}
 
+		// SCENE_TYPE에서 사라진 값(주석 처리 등)이 남아 있으면 인스펙터에서 깨져 보임
+		int removed = 0;
+		for (int i = list.arraySize - 1; i >= 0; i--)
+		{
+			SerializedProperty sceneProp = list.GetArrayElementAtIndex(i).FindPropertyRelative("scene");
+			if (sceneProp == null)
+			{
+				continue;
+			}
+			if (!System.Enum.IsDefined(typeof(SCENE_TYPE), sceneProp.intValue))
+			{
+				list.DeleteArrayElementAtIndex(i);
+				removed++;
+			}
+		}
+
 		int added = 0;
 		int updated = 0;
 		foreach (SCENE_TYPE type in System.Enum.GetValues(typeof(SCENE_TYPE)))
@@ -1340,7 +1356,7 @@ public partial class ProjectHubWindow
 		so.ApplyModifiedProperties();
 		EditorUtility.SetDirty(prefab);
 		AssetDatabase.SaveAssets();
-		Debug.Log($"[Hub] 씬 설정표 정리 — 새 행 {added}개, 기존 행 {updated}개 갱신(씬 종류 추측 적용).");
+		Debug.Log($"[Hub] 씬 설정표 정리 — 추가 {added} / 갱신 {updated} / 삭제 {removed}");
 	}
 
 	private static SerializedProperty FindEntry(SerializedProperty list, SCENE_TYPE type)
