@@ -24,84 +24,89 @@ using TMPro;
 
 public class HangarRepairButton : MonoBehaviour
 {
-    [Header("References")]
-    [SerializeField] private Button   repairButton;
-    [SerializeField] private TMP_Text costText;      // (선택) 수리비 표시
+	[Header("References")]
+	[SerializeField] private Button repairButton;
+	[SerializeField] private TMP_Text costText;      // (선택) 수리비 표시
 
-    [Header("비용 설정")]
-    [Tooltip("깎인 HP 1당 수리비 골드. 0이면 무료")]
-    [SerializeField] private int costPerHp = 2;
+	[Header("비용 설정")]
+	[Tooltip("깎인 HP 1당 수리비 골드. 0이면 무료")]
+	[SerializeField] private int costPerHp = 2;
 
-    private void Start()
-    {
-        if (repairButton == null) repairButton = GetComponent<Button>();
-        if (repairButton != null)
-            repairButton.onClick.AddListener(OnRepairClicked);
-    }
+	private void Start()
+	{
+		if (repairButton == null) repairButton = GetComponent<Button>();
+		if (repairButton != null)
+			repairButton.onClick.AddListener(OnRepairClicked);
+	}
 
-    private void OnEnable()
-    {
-        RefreshState();
-    }
+	private void OnEnable()
+	{
+		RefreshState();
+	}
 
-    private void Update()
-    {
-        // 격납고 열려있는 동안 상태 갱신 (HP/골드 변동 반영). UI 하나라 비용 미미
-        RefreshState();
-    }
+	private void Update()
+	{
+		// 격납고 열려있는 동안 상태 갱신 (HP/골드 변동 반영). UI 하나라 비용 미미
+		RefreshState();
+	}
 
-    /// <summary>현재 수리비. 풀피면 0.</summary>
-    public int GetRepairCost()
-    {
-        Player p = GetPlayer();
-        if (p == null) return 0;
-        int missing = Mathf.Max(0, p.maxHpRemaining - p.curHpRemaining);
-        return missing * Mathf.Max(0, costPerHp);
-    }
+	/// <summary>현재 수리비. 풀피면 0.</summary>
+	public int GetRepairCost()
+	{
+		Player p = GetPlayer();
+		if (p == null) return 0;
+		int missing = Mathf.Max(0, p.maxHpRemaining - p.curHpRemaining);
+		return missing * Mathf.Max(0, costPerHp);
+	}
 
-    private void OnRepairClicked()
-    {
-        Player p = GetPlayer();
-        if (p == null) return;
+	private void OnRepairClicked()
+	{
+		Player p = GameManager.Instance.playerRef;
 
-        int missing = p.maxHpRemaining - p.curHpRemaining;
-        if (missing <= 0) return; // 풀피 — 할 것 없음
+		if (p != null)
+		{// Player p = GetPlayer();
+		 //if (p == null) return;
 
-        int cost = GetRepairCost();
+			int missing = p.maxHpRemaining - p.curHpRemaining;
+			if (missing <= 0) return; // 풀피 — 할 것 없음
 
-        // 비용 지불 (부족하면 SpendGold가 false 반환하고 경고 로그 출력)
-        if (cost > 0)
-        {
-            if (InventoryManager.Instance == null) return;
-            if (!InventoryManager.Instance.SpendGold(cost)) return;
-        }
+			int cost = GetRepairCost();
 
-        // 즉시 수리 — HP 완전 회복
-        p.curHpRemaining = p.maxHpRemaining;
-        Debug.Log($"[Repair] 수리 완료 (+{missing} HP, -{cost} G)");
+			// 비용 지불 (부족하면 SpendGold가 false 반환하고 경고 로그 출력)
+			if (cost > 0)
+			{
+				if (InventoryManager.Instance == null) return;
+				if (!InventoryManager.Instance.SpendGold(cost)) return;
+			}
 
-        RefreshState();
-    }
+			// 즉시 수리 — HP 완전 회복
+			p.RefillToMax();
+			// p.curHpRemaining = p.maxHpRemaining;
+			Debug.Log($"[Repair] 수리 완료 (+{missing} HP, -{cost} G)");
 
-    // 버튼 활성/비활성 + 비용 텍스트 갱신
-    private void RefreshState()
-    {
-        Player p = GetPlayer();
-        bool damaged = p != null && p.curHpRemaining < p.maxHpRemaining;
+			RefreshState();
+		}
+	}
 
-        if (repairButton != null)
-            repairButton.interactable = damaged;
+	// 버튼 활성/비활성 + 비용 텍스트 갱신
+	private void RefreshState()
+	{
+		Player p = GetPlayer();
+		bool damaged = p != null && p.curHpRemaining < p.maxHpRemaining;
 
-        if (costText != null)
-        {
-            if (!damaged)           costText.text = "REPAIR";
-            else if (costPerHp <= 0) costText.text = "REPAIR  FREE";
-            else                     costText.text = $"REPAIR  {GetRepairCost():N0}G";
-        }
-    }
+		if (repairButton != null)
+			repairButton.interactable = damaged;
 
-    private Player GetPlayer()
-    {
-        return GameManager.Instance != null ? GameManager.Instance.playerRef : null;
-    }
+		if (costText != null)
+		{
+			if (!damaged) costText.text = "REPAIR";
+			else if (costPerHp <= 0) costText.text = "REPAIR  FREE";
+			else costText.text = $"REPAIR  {GetRepairCost():N0}G";
+		}
+	}
+
+	private Player GetPlayer()
+	{
+		return GameManager.Instance != null ? GameManager.Instance.playerRef : null;
+	}
 }
