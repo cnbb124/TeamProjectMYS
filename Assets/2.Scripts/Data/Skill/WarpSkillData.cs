@@ -8,8 +8,8 @@ public class WarpSkillData : ActiveSkillData
 	public float warpDistance = 50f;
 	[Tooltip("워프하는데 걸리는 시간")]
 	public float warpSequenceTime = 1f;
-	[Tooltip("워프 사운드 SFX 재생 딜레이시간")]
-	public float warpSoundDelayTime = 1f;
+	[Tooltip("워프 시작 기준 사운드 재생 시점(초). 0=시작 즉시, 양수=그만큼 늦게, 음수=즉시 재생됨")]
+	public float warpSoundPlayTiming = 0f;
 	[Tooltip("워프 시 출력될 VFX 타입. 실제 출력할 프리팹은 VFXManager.vfxConfigs에 등록.")]
 	public EFFECT_TYPE warpInEffectType;
 	public EFFECT_TYPE warpOutEffectType;

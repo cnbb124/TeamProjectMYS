@@ -158,17 +158,21 @@ public class Player : Unit
 
 
 	// ==================플레이어용==================
-	[Header("경험치/레벨")]
-	[Tooltip("현재 레벨. 최소 1")]
-	public int level = 1;//차후 mathf.max치로 조정
+	[Header("<size=14>경험치/레벨</size> ")]
+	// 시작값은 새 게임이면 GameStartData.startLevel + LevelStatData.baseExpToNext,
+	// 이어하기면 세이브에서 옴. PlayerProfile.ApplyTo가 스폰 직후 덮어씀.
+	[Header("출력용 필드(입력X)")]
+	[Tooltip("현재 레벨. 플레이 중 확인용. 인스펙터 입력값은 무시.")]
+	public int level = 1;
 
-	[Tooltip("현재 보유 경험치. 음수 불가")]
-	public int exp = 0;//차후 mathf.max치로 조정
+	[Tooltip("현재 보유 경험치. 플레이 중 확인용. 인스펙터 입력값은 무시.")]
+	public int exp = 0;
 
-	[Tooltip("현재 레벨에서 다음 레벨까지 필요한 경험치.\n" +
-		"levelStatData가 연결돼 있으면 레벨업 시 그 레벨의 expToNext로 덮어씀(0이면 유지).")]
+	[Tooltip("다음 레벨까지 필요한 경험치. 플레이 중 확인용. 인스펙터 입력값은 무시.\n" +
+		"레벨업 시 levelStatData.expToNextIncrease만큼 늘어남.")]
 	public int expToNextLevel = 100;
 
+	[Header("입력용 필드")]
 	[Tooltip("레벨별 스탯 증가/필요경험치 테이블. 연결하면 LevelUp()이 이 값으로 스탯을 올림.\n" +
 		"비워두면 아무 보너스도 안 오르고 필요경험치도 그대로 유지됨.")]
 	public LevelStatData levelStatData;
@@ -915,6 +919,21 @@ public class Player : Unit
 	private IEnumerator InitParticlesNextFrame()
 	{
 		yield return null;
+
+		// 파티클 수집보다 로드아웃 적용이 먼저여야 함.
+		// ReloadLoadout이 파츠 프리팹을 파괴하고 다시 만들기 때문에, 순서가 뒤바뀌면
+		// 파괴된 ParticleSystem을 캐시한 채로 Play()를 호출하게 됨.
+		if (IsMine)
+		{
+			PlayerProfile.ApplyTo(this, GameManager.Instance != null ? GameManager.Instance.itemDatabase : null);
+		}
+
+		CollectParticles();
+	}
+
+	/// <summary>파츠 프리팹이 다시 생성되면(로드아웃 변경 등) 캐시가 죽으므로 다시 수집해야 함.</summary>
+	public void CollectParticles()
+	{
 		_step1Particles = FindParticlesByName("Step1_Slow");
 		_step2Particles = FindParticlesByName("Step2_Normal");
 		_step3Particles = FindParticlesByNameExclude("Step3_Boost", "fire_3-3");
@@ -952,12 +971,21 @@ public class Player : Unit
 
 		// Play On Awake가 켜진 파티클은 시작 시 자동 1회 재생됨 — 첫 조작 때 같이 터져 보이는
 		// 문제 방지를 위해 부스트 버스트(fire_3-3)와 역추진 파티클을 초기에 전부 정지/클리어.
-		if (_boostBurstParticles != null) foreach (var ps in _boostBurstParticles) ps?.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
-		if (_reverseMainL != null) foreach (var ps in _reverseMainL) ps?.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
-		if (_reverseMainR != null) foreach (var ps in _reverseMainR) ps?.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
-		if (_reverseSubs  != null) foreach (var ps in _reverseSubs)  ps?.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
-		if (_strafeL != null) foreach (var ps in _strafeL) ps?.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
-		if (_strafeR != null) foreach (var ps in _strafeR) ps?.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+		StopAndClearAll(_boostBurstParticles);
+		StopAndClearAll(_reverseMainL);
+		StopAndClearAll(_reverseMainR);
+		StopAndClearAll(_reverseSubs);
+		StopAndClearAll(_strafeL);
+		StopAndClearAll(_strafeR);
+	}
+
+	private void StopAndClearAll(ParticleSystem[] arr)
+	{
+		if (arr == null) return;
+		foreach (var ps in arr)
+		{
+			if (ps != null) ps.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+		}
 	}
 
 	// 이름이 일치하는 첫 번째 ParticleSystem 1개만 반환. 없으면 null + 경고 로그.
@@ -1158,10 +1186,15 @@ public class Player : Unit
 		if (ps != null && ps.isPlaying) ps.Stop(true, ParticleSystemStopBehavior.StopEmitting);
 	}
 
+	// ?. 는 파괴된 UnityEngine.Object를 못 걸러냄(C# 참조는 살아 있어서 그대로 호출됨).
+	// 파츠 교체로 파티클이 파괴될 수 있으므로 반드시 != null 로 검사할 것.
 	private void PlayAll(ParticleSystem[] arr)
 	{
 		if (arr == null) return;
-		foreach (var ps in arr) ps?.Play();
+		foreach (var ps in arr)
+		{
+			if (ps != null) ps.Play();
+		}
 	}
 
 	private void PlayAllIfStopped(ParticleSystem[] arr)
@@ -1232,7 +1265,13 @@ public class Player : Unit
 		exp += Mathf.Max(0, amount);
 
 		// 레벨업 체크 — while이라 한 번에 여러 레벨치 경험치를 받아도 연속 레벨업 처리됨.
-		// (expToNextLevel은 항상 양수라 무한루프 없음)
+		// 요구치가 0 이하로 들어오면 무한루프가 되므로 그때는 아예 레벨업을 안 함.
+		if (expToNextLevel <= 0)
+		{
+			Debug.LogWarning($"[Player] expToNextLevel이 {expToNextLevel}이라 레벨업을 건너뜀.");
+			return;
+		}
+
 		while (exp >= expToNextLevel)
 			LevelUp();
 	}

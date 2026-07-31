@@ -1277,19 +1277,22 @@ public class InputManager : MonoBehaviour
     // 신규 UI 패널도 게임 입력을 막고 싶으면, IsGameplayInputLocked()에 || 조건만 추가하면 됨.
     // (실제 게임플레이 필드 클리어는 Update 끝의 ClearGameplayInput가 함 — UI 토글 키는 살려둠)
     // =====================================================================
+    /// <summary>UI가 열려 조작을 막아야 하는 상태인지. 도보 컨트롤러 등이 참조.</summary>
+    public bool GameplayInputLocked => IsGameplayInputLocked();
+
     private bool IsGameplayInputLocked()
     {
-        // 정거장은 함선 대신 도보 컨트롤러가 조종 대상임 — playerRef만 보면 조종 중인데도 커서가 풀림.
-        bool hasController = GameManager.Instance != null
-                             && (GameManager.Instance.playerRef != null || GameManager.Instance.IsStationScene);
-        bool isPaused = GameManager.Instance != null && GameManager.Instance.IsPaused;
-        // 격납고·맵선택엔 함선이 서 있어 playerRef가 차 있음 — 안 풀면 커서가 잠겨 UI를 못 누름.
-        bool noControl = GameManager.Instance != null && GameManager.Instance.ShipControlDisabled;
+        // 조종 대상 — 정거장은 도보 컨트롤러, 그 외는 '조종이 허용된' 함선.
+        // 격납고·맵선택엔 함선이 있어도 조종이 막혀 있으므로 조종 대상이 아님(커서를 풀어 UI를 눌러야 함).
+        GameManager gm = GameManager.Instance;
+        bool hasController = gm != null
+                             && (gm.IsStationScene || (gm.playerRef != null && !gm.ShipControlDisabled));
+        bool isPaused = gm != null && gm.IsPaused;
         return !hasController
-            || noControl
             || Input.GetKey(KeyCode.LeftAlt) || Input.GetKey(KeyCode.RightAlt)
             || InventoryPanelUI.IsOpen
             || GameStartCollider.IsOpen
+            || ShopNPCInteraction.IsOpen
             || PauseMenuUI.IsOpen   // 멀티에선 IsPaused가 false라, 메뉴 열림 자체로 커서를 풀어야 클릭 가능
             || isPaused;
     }

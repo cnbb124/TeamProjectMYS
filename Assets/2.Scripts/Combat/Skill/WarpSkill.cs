@@ -53,9 +53,7 @@ public class WarpSkill : ActiveSkill
 		_isWarping = true;
 		_isWarpSoundPlayed = false;
 		_warpStartTime = Time.time;
-		// 딜레이가 채널링 시간을 넘으면 시작 시각보다 과거가 돼서 즉시 재생됨
-		float soundDelay = Mathf.Clamp(WarpSkillData.warpSoundDelayTime, 0f, WarpSkillData.warpSequenceTime);
-		_warpSoundPlayTime = _warpStartTime + WarpSkillData.warpSequenceTime - soundDelay;
+		_warpSoundPlayTime = _warpStartTime + WarpSkillData.warpSoundPlayTiming;
 	}
 
 	public override void UpdateSkill()

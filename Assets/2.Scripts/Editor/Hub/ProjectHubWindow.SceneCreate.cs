@@ -1244,17 +1244,17 @@ public partial class ProjectHubWindow
 		switch (category)
 		{
 			case SCENE_CATEGORY.STATION:
-				return "정거장 계열 + 저장 가능";
+				return "조종 불가 + 정거장 + 저장 가능";
 			case SCENE_CATEGORY.BATTLE:
-				return "전투 스테이지 + 함선 유지";
+				return "조종 가능 + 전투 + 함선 유지";
 			case SCENE_CATEGORY.HANGAR:
-				return "조종 불가 + 함선 유지 (기체는 보임)";
+				return "조종 불가 + 함선 유지 (기체 보임)";
 			case SCENE_CATEGORY.TRANSIT:
-				return "함선 숨김 + 조종 불가 + 함선 유지";
+				return "조종 불가 + 함선 유지 + 숨김";
 			case SCENE_CATEGORY.LOADING:
-				return "속성 없음";
+				return "조종 불가";
 			default:
-				return "속성 전부 off";
+				return "조종 불가";
 		}
 	}
 

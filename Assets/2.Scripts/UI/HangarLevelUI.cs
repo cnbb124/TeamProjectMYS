@@ -1,7 +1,7 @@
 /*
  * [HangarLevelUI]
  * 격납고 MenuBarPanel의 LevelUI — 플레이어 레벨/경험치 표시.
- * GameManager.Instance.playerRef의 level/exp/expToNextLevel을 읽어 게이지·텍스트 갱신.
+ * playerRef의 level/exp/expToNextLevel을 읽어 게이지·텍스트 갱신. 함선이 없으면 PlayerProfile.
  *
  * [부착 위치]
  * LevelUI에 부착.
@@ -40,18 +40,23 @@ public class HangarLevelUI : MonoBehaviour
     /// <summary>현재 플레이어의 레벨/경험치로 UI 갱신.</summary>
     public void Refresh()
     {
+        // 함선이 없는 씬(정거장)에서는 PlayerProfile 값으로 표시
         Player p = GameManager.Instance != null ? GameManager.Instance.playerRef : null;
-        if (p == null) return;
+        if (p == null && !PlayerProfile.HasData) return;
+
+        int level = p != null ? p.level : PlayerProfile.level;
+        int exp = p != null ? p.exp : PlayerProfile.exp;
+        int expToNext = p != null ? p.expToNextLevel : PlayerProfile.expToNextLevel;
 
         if (xpFill != null)
-            xpFill.fillAmount = p.expToNextLevel > 0
-                ? (float)p.exp / p.expToNextLevel
+            xpFill.fillAmount = expToNext > 0
+                ? (float)exp / expToNext
                 : 0f;
 
         if (levelText != null)
-            levelText.text = $"Lv. {p.level}";
+            levelText.text = $"Lv. {level}";
 
         if (xpText != null)
-            xpText.text = $"{p.exp} / {p.expToNextLevel}";
+            xpText.text = $"{exp} / {expToNext}";
     }
 }

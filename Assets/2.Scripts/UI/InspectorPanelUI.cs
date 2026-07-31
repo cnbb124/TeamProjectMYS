@@ -144,7 +144,16 @@ public class InspectorPanelUI : MonoBehaviour
         if (player == null && GameManager.Instance != null)
             player = GameManager.Instance.playerRef;
 
-        if (player == null) return;
+        // 함선이 없는 씬(정거장)에서는 파츠 색칠만 건너뛰고 수치는 PlayerProfile로 보여줌
+        if (player == null)
+        {
+            if (PlayerProfile.HasData)
+            {
+                UpdateHitPanel();
+                UpdateStatPanel();
+            }
+            return;
+        }
 
         UpdatePartImages();
         UpdateHitPanel();
@@ -225,21 +234,39 @@ public class InspectorPanelUI : MonoBehaviour
 
     private void UpdateHitPanel()
     {
+        int level = player != null ? player.level : PlayerProfile.level;
+        int curHp = player != null ? player.curHpRemaining : CurOrMax(PlayerProfile.curHp, PlayerProfile.GetMaxHp());
+        int maxHp = player != null ? player.maxHpRemaining : PlayerProfile.GetMaxHp();
+
         if (levelText != null)
-            levelText.text = $"Lv. {player.level}";
+            levelText.text = $"Lv. {level}";
 
         if (gaugeText != null)
-            gaugeText.text = $"{player.curHpRemaining} / {player.maxHpRemaining}";
+            gaugeText.text = $"{curHp} / {maxHp}";
     }
 
     // ── StatPanel 바 ──────────────────────────────────────────
 
     private void UpdateStatPanel()
     {
-        UpdateBar(hpFill,     hpText,     player.curHpRemaining,     player.maxHpRemaining);
-        UpdateBar(shieldFill, shieldText, player.curShieldRemaining, player.maxShieldCapacity);
-        UpdateBar(armorFill,  armorText,  player.curArmorRemaining,  player.maxArmor);
+        if (player != null)
+        {
+            UpdateBar(hpFill,     hpText,     player.curHpRemaining,     player.maxHpRemaining);
+            UpdateBar(shieldFill, shieldText, player.curShieldRemaining, player.maxShieldCapacity);
+            UpdateBar(armorFill,  armorText,  player.curArmorRemaining,  player.maxArmor);
+            return;
+        }
+
+        int maxHp = PlayerProfile.GetMaxHp();
+        int maxShield = PlayerProfile.GetMaxShield();
+        int maxArmor = PlayerProfile.GetMaxArmor();
+        UpdateBar(hpFill,     hpText,     CurOrMax(PlayerProfile.curHp,     maxHp),     maxHp);
+        UpdateBar(shieldFill, shieldText, CurOrMax(PlayerProfile.curShield, maxShield), maxShield);
+        UpdateBar(armorFill,  armorText,  CurOrMax(PlayerProfile.curArmor,  maxArmor),  maxArmor);
     }
+
+    // 새 게임 직후엔 현재치가 아직 0임 — 그때는 만땅으로 보여줌
+    private static int CurOrMax(int cur, int max) => cur > 0 ? cur : max;
 
     private void UpdateBar(Image fill, TMP_Text label, int cur, int max)
     {

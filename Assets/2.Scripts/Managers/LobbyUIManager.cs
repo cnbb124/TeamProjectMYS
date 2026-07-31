@@ -22,6 +22,7 @@ public class LobbyUIManager : MonoBehaviour
 
     public void OnClickNewGame()
     {
+        
         HangarExitButton.launchSceneName = "MAP_SELECT"; // 격납고쪽에 다음 갈곳 저장
         // NewGame이어야 ClearData + GameStartData(시작 골드/아이템/스킬) 지급이 돎.
         // 씬만 넘기면 시작 데이터가 통째로 빠짐.
@@ -35,8 +36,10 @@ public class LobbyUIManager : MonoBehaviour
 			Debug.Log("[LobbyUIManager] 자동 저장 없음");
 			return;
 		}
+		
 		GameManager.Instance.LoadGameWithLoading(GameManager.AutoSaveSlot, SCENE_TYPE.STATION);
 	}
+
 
 	public void OnClickSettings()
     {

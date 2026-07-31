@@ -447,8 +447,8 @@ public abstract class Unit : MonoBehaviour, IDamageable, IPunObservable
 
 		UpdateShieldHitboxState();
 	}
-	// 엔진 루프 사운드(SFX_IDLE/MOVING/BOOST) 등록. Start()(최초 1회차)와 OnEnable()(풀 재사용 2회차+) 양쪽에서 호출.
-	private void RegisterEngineSound()
+	// 엔진 루프 등록. Start / OnEnable / 씬 로드 후 호출.
+	public void RegisterEngineSound()
 	{
 		if (HasEngineSound)
 		{
@@ -499,7 +499,12 @@ public abstract class Unit : MonoBehaviour, IDamageable, IPunObservable
 	// Update is called once per frame
 	protected virtual void Update()
 	{
-		if (ShouldPause) return;
+		if (ShouldPause)
+		{
+			// 그냥 return하면 마지막 볼륨으로 루프가 계속 남음
+			UpdateEngineAudio();
+			return;
+		}
 		UpdateFSM();
 		//UpdateShieldRegen(); >>0516 코루틴으로변경
 		UpdateBoostRegen();
@@ -561,7 +566,7 @@ public abstract class Unit : MonoBehaviour, IDamageable, IPunObservable
 		{
 			return;
 		}
-		bool mute = CurState == UNIT_STATE.DIE || _rb == null;
+		bool mute = ShouldPause || CurState == UNIT_STATE.DIE || _rb == null;
 		float intensity = mute ? 0f : GetEngineIntensity();
 		_sound?.UpdateEngineLoopVolumes(transform, intensity, _isBoosting, mute);
 	}

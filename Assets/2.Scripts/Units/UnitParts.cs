@@ -49,11 +49,8 @@ public class UnitParts : MonoBehaviour
     // ENGINE, FRAME은 프레임과 무관하게 항상 존재하는 기본 슬롯
     private static PART_TYPE[] BASE_SLOT_TYPES = { PART_TYPE.ENGINE, PART_TYPE.FRAME };
 
-    [Header("<size=14>기본 로드아웃 (설정 시 인스펙터 파츠 슬롯 무시)</size>")]
-    [Tooltip("GameStartData.startParts를 장착함.")]
-    [SerializeField] private GameStartData _gameStartData;
-
-    [Tooltip("레거시 — GameStartData로 이관됨. 위가 비었을 때만 씀.")]
+    [Header("<size=14>기본 로드아웃 (씬 직접 재생용)</size>")]
+    [Tooltip("정상 흐름에선 PlayerProfile이 덮어씀. 씬을 단독 재생할 때만 쓰임.")]
     [SerializeField] private DefaultLoadout _defaultLoadout;
 
     // 스폰된 파츠 프리팹이 부착될 부모. 닷지/부스트 등 연출 애니메이션이 VIsual을 움직이므로,
@@ -137,18 +134,9 @@ public class UnitParts : MonoBehaviour
         _unit.RefillToMax();
     }
 
-    // 시작 파츠 목록. GameStartData 우선, 없으면 레거시 DefaultLoadout. 둘 다 없으면 null.
     private List<PartData> GetStartParts()
     {
-        if (_gameStartData != null && _gameStartData.startParts != null)
-        {
-            return _gameStartData.startParts;
-        }
-        if (_defaultLoadout != null)
-        {
-            return _defaultLoadout.defaultParts;
-        }
-        return null;
+        return _defaultLoadout != null ? _defaultLoadout.defaultParts : null;
     }
 
     /// <summary>

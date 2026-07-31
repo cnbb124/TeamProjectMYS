@@ -1,0 +1,375 @@
+using System.Collections.Generic;
+using UnityEngine;
+
+// =====================================================================
+// PlayerProfile — 플레이어 진행 데이터의 실제 주인.
+//
+// 함선(Player)은 이 데이터를 읽어 자기를 세팅하는 '표현'일 뿐임.
+// 함선이 Photon 오브젝트라 방을 나가면 파괴되는데, 데이터까지 같이 사라지면
+// 저장·스탯표시·멀티전환이 전부 함선 생존에 묶임. 그래서 데이터를 여기로 뺌.
+//
+// 골드/아이템은 InventoryManager(DDOL)가 계속 담당함 — 원래 함선과 무관했음.
+// =====================================================================
+public static class PlayerProfile
+{
+	/// <summary>새 게임/불러오기로 한 번이라도 채워졌는지.</summary>
+	public static bool HasData { get; private set; }
+
+	public static int level = 1;
+	public static int exp;
+	public static int expToNextLevel;
+
+	public static int curHp;
+	public static int curShield;
+	public static int curArmor;
+	public static float curBoost;
+	public static float curFuel;
+
+	public static readonly List<PartData> parts = new List<PartData>();
+	public static readonly List<SavedMissileSlot> missiles = new List<SavedMissileSlot>();
+	public static readonly List<SavedSkill> skills = new List<SavedSkill>();
+	public static ITEM_ID[] quickSlots = new ITEM_ID[0];
+
+	// 도메인 리로드 없이 플레이 모드를 다시 들어가면 이전 판 데이터가 남음
+	[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+	private static void ResetOnPlay()
+	{
+		Clear();
+	}
+
+	public static void Clear()
+	{
+		HasData = false;
+		level = 1;
+		exp = 0;
+		expToNextLevel = 0;
+		curHp = 0;
+		curShield = 0;
+		curArmor = 0;
+		curBoost = 0f;
+		curFuel = 0f;
+		parts.Clear();
+		missiles.Clear();
+		skills.Clear();
+		quickSlots = new ITEM_ID[0];
+	}
+
+	/// <summary>새 게임 초기 상태.</summary>
+	public static void InitFromStartData(GameStartData data)
+	{
+		Clear();
+		HasData = true;
+		if (data == null)
+		{
+			return;
+		}
+
+		level = Mathf.Max(1, data.startLevel);
+		CacheBaseStats(data.basePlayerPrefab);
+		expToNextLevel = _baseExpToNext;
+
+		foreach (PartData part in data.startParts)
+		{
+			if (part != null)
+			{
+				parts.Add(part);
+			}
+		}
+
+		foreach (SkillData skill in data.startSkills)
+		{
+			if (skill != null)
+			{
+				skills.Add(new SavedSkill { skillId = skill.id, slotIndex = -1 });
+			}
+		}
+
+		// 체력·미사일은 프리팹 기본값이 기준이라 여기서 안 정함.
+		// 함선이 처음 스폰될 때 그 값을 그대로 받아 CaptureFrom으로 채워짐.
+	}
+
+	/// <summary>세이브에서 복원.</summary>
+	public static void InitFromSave(SaveData data, ItemDatabase itemDatabase)
+	{
+		Clear();
+		if (data == null)
+		{
+			return;
+		}
+		HasData = true;
+
+		level = data.level;
+		exp = data.exp;
+		expToNextLevel = data.expToNextLevel;
+		curHp = data.curHp;
+		curShield = data.curShield;
+		curArmor = data.curArmor;
+		curBoost = data.curBoost;
+		curFuel = data.curFuel;
+
+		if (data.partSlots != null && itemDatabase != null)
+		{
+			foreach (SavedPartSlot saved in data.partSlots)
+			{
+				if (saved == null || saved.partId == 0)
+				{
+					continue;
+				}
+				PartData part = itemDatabase.Get<PartData>((ITEM_ID)saved.partId);
+				if (part != null)
+				{
+					parts.Add(part);
+				}
+			}
+		}
+
+		if (data.missileSlots != null)
+		{
+			missiles.AddRange(data.missileSlots);
+		}
+		if (data.skills != null)
+		{
+			skills.AddRange(data.skills);
+		}
+		if (data.quickSlotItemIds != null)
+		{
+			quickSlots = (ITEM_ID[])data.quickSlotItemIds.Clone();
+		}
+	}
+
+	/// <summary>함선의 현재 상태를 프로필로 끌어옴. 저장 직전·씬 이탈 직전에 호출.</summary>
+	public static void CaptureFrom(Player player)
+	{
+		if (player == null)
+		{
+			return;
+		}
+		HasData = true;
+
+		level = player.level;
+		exp = player.exp;
+		expToNextLevel = player.expToNextLevel;
+		curHp = player.curHpRemaining;
+		curShield = player.curShieldRemaining;
+		curArmor = player.curArmorRemaining;
+		curBoost = player.curBoostRemaining;
+		curFuel = player.curFuelRemaining;
+
+		parts.Clear();
+		UnitParts unitParts = player.GetComponent<UnitParts>();
+		if (unitParts != null)
+		{
+			foreach (PartSlotEntry slot in unitParts.partSlots)
+			{
+				if (slot.equippedPart != null)
+				{
+					parts.Add(slot.equippedPart);
+				}
+			}
+		}
+
+		// 파츠 목록을 갱신한 뒤에 계산해야 보너스가 맞음.
+		// 함선이 없는 씬에서도 같은 최대치가 나오게 밑값을 역산해 둠.
+		_baseMaxHp = player.maxHpRemaining - Mathf.RoundToInt(GetPartStatBonus(STAT_TYPE.HP_MAX));
+		_baseMaxShield = player.maxShieldCapacity - Mathf.RoundToInt(GetPartStatBonus(STAT_TYPE.SHIELD_MAX));
+		_baseMaxArmor = player.maxArmor - Mathf.RoundToInt(GetPartStatBonus(STAT_TYPE.ARMOR_MAX));
+		_baseCached = true;
+
+		missiles.Clear();
+		if (player.weaponSystem != null && player.weaponSystem.missileSlots != null)
+		{
+			foreach (MissileSlot src in player.weaponSystem.missileSlots)
+			{
+				missiles.Add(new SavedMissileSlot
+				{
+					type = src.type,
+					missileDataId = src.missileData != null ? (int)src.missileData.id : 0,
+					curAmmo = src.curAmmo,
+					maxAmmo = src.maxAmmo
+				});
+			}
+		}
+
+		skills.Clear();
+		if (player.skillSystem != null)
+		{
+			SavedSkill[] collected = player.skillSystem.CollectSaveData();
+			if (collected != null)
+			{
+				skills.AddRange(collected);
+			}
+		}
+
+		QuickSlot quickSlot = player.GetComponent<QuickSlot>();
+		if (quickSlot != null && quickSlot.slots != null)
+		{
+			quickSlots = new ITEM_ID[quickSlot.slots.Length];
+			for (int i = 0; i < quickSlot.slots.Length; i++)
+			{
+				quickSlots[i] = quickSlot.slots[i] != null ? quickSlot.slots[i].id : 0;
+			}
+		}
+	}
+
+	/// <summary>프로필을 함선에 씌움. 함선이 스폰된 뒤(모든 Start 종료 후) 호출.</summary>
+	public static void ApplyTo(Player player, ItemDatabase itemDatabase)
+	{
+		if (player == null || !HasData)
+		{
+			return;
+		}
+
+		player.level = level;
+		player.exp = exp;
+		// 새 게임이면 요구치가 아직 0임 — 함선 프리팹 값을 그대로 둬야 레벨업이 성립함
+		if (expToNextLevel > 0)
+		{
+			player.expToNextLevel = expToNextLevel;
+		}
+
+		UnitParts unitParts = player.GetComponent<UnitParts>();
+		if (unitParts != null && parts.Count > 0)
+		{
+			unitParts.ReloadLoadout(parts);
+		}
+
+		if (player.weaponSystem != null && missiles.Count > 0 && itemDatabase != null)
+		{
+			player.weaponSystem.missileSlots = new List<MissileSlot>();
+			foreach (SavedMissileSlot saved in missiles)
+			{
+				player.weaponSystem.missileSlots.Add(new MissileSlot
+				{
+					type = saved.type,
+					missileData = saved.missileDataId != 0
+						? itemDatabase.Get<MissileData>((ITEM_ID)saved.missileDataId)
+						: null,
+					curAmmo = saved.curAmmo,
+					maxAmmo = saved.maxAmmo
+				});
+			}
+		}
+
+		if (player.skillSystem != null && skills.Count > 0)
+		{
+			player.skillSystem.LoadSaveData(skills.ToArray());
+		}
+
+		QuickSlot quick = player.GetComponent<QuickSlot>();
+		if (quick != null && quickSlots != null && itemDatabase != null)
+		{
+			for (int i = 0; i < quickSlots.Length; i++)
+			{
+				ConsumableData consumable = quickSlots[i] != 0
+					? itemDatabase.Get<ConsumableData>(quickSlots[i])
+					: null;
+				quick.AssignSlot(i, consumable);
+			}
+		}
+
+		// 체력류는 파츠 적용으로 최대치가 바뀐 뒤에 넣어야 잘림 없이 들어감.
+		if (curHp > 0)
+		{
+			player.curHpRemaining = curHp;
+			player.curShieldRemaining = curShield;
+			player.curArmorRemaining = curArmor;
+			player.curBoostRemaining = curBoost;
+			player.curFuelRemaining = curFuel;
+		}
+	}
+
+	/// <summary>저장용 구조체에 옮겨 담음.</summary>
+	public static void WriteTo(SaveData data)
+	{
+		if (data == null)
+		{
+			return;
+		}
+
+		data.level = level;
+		data.exp = exp;
+		data.expToNextLevel = expToNextLevel;
+		data.curHp = curHp;
+		data.curShield = curShield;
+		data.curArmor = curArmor;
+		data.curBoost = curBoost;
+		data.curFuel = curFuel;
+
+		data.partSlots = new SavedPartSlot[parts.Count];
+		for (int i = 0; i < parts.Count; i++)
+		{
+			data.partSlots[i] = new SavedPartSlot
+			{
+				slotType = parts[i].partType,
+				partId = (int)parts[i].id
+			};
+		}
+
+		data.missileSlots = missiles.ToArray();
+		data.skills = skills.ToArray();
+		data.quickSlotItemIds = quickSlots;
+	}
+
+	// 기준 기체 프리팹의 소지 스탯. 함선이 없는 씬에서 최대치를 계산할 때 밑값으로 씀.
+	private static int _baseMaxHp;
+	private static int _baseMaxShield;
+	private static int _baseMaxArmor;
+	private static int _baseExpToNext;
+	private static bool _baseCached;
+
+	/// <summary>기준 기체 프리팹에서 밑값 스탯을 읽어둠. GameStartData가 있으면 게임 시작 시 1회.</summary>
+	public static void CacheBaseStats(GameObject playerPrefab)
+	{
+		if (_baseCached || playerPrefab == null)
+		{
+			return;
+		}
+		Player prefabPlayer = playerPrefab.GetComponent<Player>();
+		if (prefabPlayer == null)
+		{
+			return;
+		}
+		_baseMaxHp = prefabPlayer.maxHpRemaining;
+		_baseMaxShield = prefabPlayer.maxShieldCapacity;
+		_baseMaxArmor = prefabPlayer.maxArmor;
+		_baseExpToNext = prefabPlayer.levelStatData != null ? prefabPlayer.levelStatData.baseExpToNext : 0;
+		_baseCached = true;
+	}
+
+	/// <summary>기준 기체 + 장착 파츠 보너스. 함선이 있으면 함선 값이 더 정확하므로 그쪽을 우선할 것.</summary>
+	public static int GetMaxHp()
+	{
+		return _baseMaxHp + Mathf.RoundToInt(GetPartStatBonus(STAT_TYPE.HP_MAX));
+	}
+
+	public static int GetMaxShield()
+	{
+		return _baseMaxShield + Mathf.RoundToInt(GetPartStatBonus(STAT_TYPE.SHIELD_MAX));
+	}
+
+	public static int GetMaxArmor()
+	{
+		return _baseMaxArmor + Mathf.RoundToInt(GetPartStatBonus(STAT_TYPE.ARMOR_MAX));
+	}
+
+	/// <summary>장착 파츠의 스탯 보너스 합계. 함선 없이 스탯을 보여줘야 하는 UI용.</summary>
+	public static float GetPartStatBonus(STAT_TYPE statType)
+	{
+		float sum = 0f;
+		foreach (PartData part in parts)
+		{
+			if (part == null)
+			{
+				continue;
+			}
+			foreach (PartStatBonus bonus in part.statBonuses)
+			{
+				if (bonus.statType == statType)
+				{
+					sum += bonus.value;
+				}
+			}
+		}
+		return sum;
+	}
+}

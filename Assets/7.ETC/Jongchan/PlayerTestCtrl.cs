@@ -15,13 +15,16 @@ public class PlayerTestCtrl: MonoBehaviour
     void Start()
     {
         cc = GetComponent<CharacterController>();
-        Cursor.lockState = CursorLockMode.Locked; // ¸¶¿ì½º È­¸é °íÁ¤
+        Cursor.lockState = CursorLockMode.Locked; // ë§ˆìš°ìŠ¤ í™”ë©´ ê³ ì •
     }
 
     void Update()
     {
 
-        if (canControl)
+        // ì¸ë²¤í† ë¦¬Â·ìƒì  ë“± UIê°€ ì—´ë ¤ ìˆìœ¼ë©´ ì¡°ì‘ ì°¨ë‹¨
+        bool uiOpen = InputManager.Instance != null && InputManager.Instance.GameplayInputLocked;
+
+        if (canControl && !uiOpen)
         {
 
             if (cc.isGrounded && velocityY < 0)
@@ -29,22 +32,22 @@ public class PlayerTestCtrl: MonoBehaviour
                 velocityY = 0f;
             }
 
-            // WASD ÀÌµ¿
+            // WASD ì´ë™
             float h = Input.GetAxis("Horizontal");
             float v = Input.GetAxis("Vertical");
 
-            // Áß·Â Àû¿ë
+            // ì¤‘ë ¥ ì ìš©
             velocityY += gravity * Time.deltaTime;
 
             Vector3 move = transform.forward * v + transform.right * h;
             move.y = velocityY;
             cc.Move(move * speed * Time.deltaTime);
 
-            // ¸¶¿ì½º ÁÂ¿ì ¡æ ÇÃ·¹ÀÌ¾î È¸Àü
+            // ë§ˆìš°ìŠ¤ ì¢Œìš° â†’ í”Œë ˆì´ì–´ íšŒì „
             float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity * Time.deltaTime;
             transform.Rotate(Vector3.up * mouseX);
 
-            // ¸¶¿ì½º »óÇÏ ¡æ Ä«¸Ş¶ó¸¸ È¸Àü
+            // ë§ˆìš°ìŠ¤ ìƒí•˜ â†’ ì¹´ë©”ë¼ë§Œ íšŒì „
             float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity * Time.deltaTime;
             xRotation -= mouseY;
             xRotation = Mathf.Clamp(xRotation, -90f, 90f);

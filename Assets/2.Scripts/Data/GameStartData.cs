@@ -17,6 +17,13 @@ public class GameStartData : ScriptableObject
 	[Tooltip("새 게임 시작 시 지급할 골드.")]
 	public int startGold = 0;
 
+	[Header("<size=14>시작 레벨</size>")]
+	public int startLevel = 1;
+
+	[Header("<size=14>기준 기체</size>")]
+	[Tooltip("스탯의 기준이 되는 플레이어 프리팹. 함선이 없는 씬(정거장)에서 스탯을 계산할 때 씀.")]
+	public GameObject basePlayerPrefab;
+
 	[Header("<size=14>시작 장착 파츠</size>")]
 	[Tooltip("순서 무관. 코드에서 FRAME을 항상 먼저 처리함.")]
 	public List<PartData> startParts = new List<PartData>();

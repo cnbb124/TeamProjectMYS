@@ -34,6 +34,9 @@ public class PeriodicBonus
 [CreateAssetMenu(fileName = "New Level Stat Data", menuName = "Create Data/Level Stat Data")]
 public class LevelStatData : ScriptableObject
 {
+    [Tooltip("1레벨에서 다음 레벨까지 필요한 경험치. 새 게임 시작값이며 0이면 레벨업이 동작하지 않음.")]
+    public int baseExpToNext = 100;
+
     [Tooltip("레벨업 1회당 '다음 레벨 필요 경험치'에 더할 값. 레벨이 오를수록 필요 경험치가 늘어남.")]
     public int expToNextIncrease = 50;
 

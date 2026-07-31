@@ -87,7 +87,8 @@ public class GameManager : MonoBehaviourPunCallbacks
 		[Tooltip("카테고리 기본값 대신 아래 체크박스를 그대로 쓸지. 분류로 안 맞는 예외 씬에만 켤 것.")]
 		public bool overrideFlags;
 
-		[Tooltip("이 씬으로 갈 때 내 함선을 남겨둘지. 출격 흐름(격납고→맵선택/대기실→스테이지)이면 켤 것.")]
+		[Tooltip("이 씬으로 '들어올 때' 쓰던 함선을 그대로 데려올지. 끄면 이 씬을 로드하는 시점에 함선이 파괴됨.\n" +
+				 "판정은 출발 씬이 아니라 목적지 씬 기준임.")]
 		public bool keepsPlayerShip;
 		[Tooltip("이 씬에서 저장을 허용할지.")]
 		public bool canSave;
@@ -281,6 +282,12 @@ public class GameManager : MonoBehaviourPunCallbacks
             curSceneType = ParseSceneType(SceneManager.GetActiveScene().name);
 			BuildSceneSettingsMap();
 
+			// 새 게임/불러오기 어느 경로로 들어와도 밑값이 있어야 하므로 여기서 한 번 캐시함
+			if (_gameStartData != null)
+			{
+				PlayerProfile.CacheBaseStats(_gameStartData.basePlayerPrefab);
+			}
+
 			if (itemDatabase != null)
             {
                 itemDatabase.Init();
@@ -380,6 +387,12 @@ public class GameManager : MonoBehaviourPunCallbacks
             StartCoroutine(RestoreAfterLoad(_lastSaveSlot));
         }
 
+        // StopSFXAll이 회수한 엔진 루프 재등록
+        if (playerRef != null)
+        {
+            playerRef.RegisterEngineSound();
+        }
+
         StartCoroutine(FadeIn());
     }
 
@@ -405,10 +418,7 @@ public class GameManager : MonoBehaviourPunCallbacks
         }
 
         yield return LoadDataRoutine(slot, null); // 서버/로컬 로드(비동기) 완료까지 대기
-
-        // 함선이 없는 씬(스테이션 등)에서는 골드·아이템만 복원되고 파츠·스킬·HP는 통째로 빠짐.
-        // 예약을 남겨서 함선이 생기는 씬(격납고)에서 한 번 더 복원함.
-        _restoreOnNextLoad = playerRef == null;
+        _restoreOnNextLoad = false;
     }
 
     // =====================================================================
@@ -461,12 +471,9 @@ public class GameManager : MonoBehaviourPunCallbacks
         SoundManager.Instance.StopSFXAll();
         VFXManager.Instance.ReturnAll();
 
-        // 출격 흐름(격납고→맵선택→스테이지) 안에서는 함선을 유지함 —
-        // 격납고에서 바꾼 장착이 스테이지까지 따라가야 하기 때문. 그 밖(스테이션/로비/게임오버)은 제거.
-        //
-        // 방 여부로 판단하면 안 됨 — 살아남는 조건은 'PhotonView 있음'인데 방 조건으로 지우면
-        // 방 밖 테스트에서 기체가 게임오버 씬까지 따라온다.
-        // NetworkManager가 스폰한 함선이 아니면 LocalPlayerShip이 비어 있으므로 playerRef로 폴백.
+      
+        PlayerProfile.CaptureFrom(playerRef);
+
         if (!KeepsPlayerShip(ResolveDestination(sceneName)))
         {
             if (NetworkManager.Instance != null && NetworkManager.Instance.HasLocalPlayerShip)
@@ -1079,7 +1086,7 @@ public class GameManager : MonoBehaviourPunCallbacks
 
     // 카테고리 → 속성. 씬 속성 규칙의 유일한 코드 출처.
     // overrideFlags가 켜진 행은 사람이 찍은 체크박스를 그대로 씀.
-    private static SceneSettings Resolve(SceneSettings entry)
+    public static SceneSettings Resolve(SceneSettings entry)
     {
         if (entry.overrideFlags)
         {
@@ -1091,8 +1098,9 @@ public class GameManager : MonoBehaviourPunCallbacks
         resolved.canSave = false;
         resolved.isBattleScene = false;
         resolved.isStationScene = false;
-        resolved.shipControlDisabled = false;
         resolved.shipHidden = false;
+        // 조종은 전투씬에서만
+        resolved.shipControlDisabled = entry.category != SCENE_CATEGORY.BATTLE;
 
         switch (entry.category)
         {
@@ -1105,13 +1113,9 @@ public class GameManager : MonoBehaviourPunCallbacks
                 resolved.keepsPlayerShip = true;
                 break;
             case SCENE_CATEGORY.HANGAR:
-                // 장착 결과를 봐야 하므로 보이긴 함
-                resolved.shipControlDisabled = true;
                 resolved.keepsPlayerShip = true;
                 break;
             case SCENE_CATEGORY.TRANSIT:
-                // 스테이지까지 들고만 가고 화면엔 안 나옴
-                resolved.shipControlDisabled = true;
                 resolved.keepsPlayerShip = true;
                 resolved.shipHidden = true;
                 break;
@@ -1373,6 +1377,12 @@ public class GameManager : MonoBehaviourPunCallbacks
     private SaveData CollectSaveData()
     {
         SaveData data = new SaveData();
+
+        // 함선이 있으면 최신 상태를 프로필로 끌어온 뒤, 저장은 프로필에서만 함.
+        // 함선이 없는 씬에서 저장해도 파츠·스킬·HP가 빠지지 않게 하려는 것.
+        PlayerProfile.CaptureFrom(playerRef);
+        PlayerProfile.WriteTo(data);
+
         data.gold = InventoryManager.Instance != null ? InventoryManager.Instance.gold : 0;
 
         // 보유 아이템(가방) 저장 (ItemStack.data(SO) → id int)
@@ -1474,6 +1484,9 @@ public class GameManager : MonoBehaviourPunCallbacks
     /// <summary>불러온 SaveData를 Player / Loadout 등에 적용.</summary>
     private void ApplySaveData(SaveData data)
     {
+        // 함선 종속 데이터는 프로필이 먼저 받고, 함선이 있으면 아래에서 씌움.
+        PlayerProfile.InitFromSave(data, itemDatabase);
+
         if (InventoryManager.Instance != null)
         {
             InventoryManager.Instance.gold = data.gold;
@@ -1588,6 +1601,8 @@ public class GameManager : MonoBehaviourPunCallbacks
     /// <summary>새 게임 시작 시 데이터 전체 초기화.</summary>
     private void ClearData()
     {
+        PlayerProfile.InitFromStartData(_gameStartData);
+
         if (InventoryManager.Instance != null)
         {
             InventoryManager.Instance.gold = _gameStartData != null ? _gameStartData.startGold : 0;

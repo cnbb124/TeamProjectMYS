@@ -107,8 +107,88 @@ public partial class ProjectHubWindow
 			RefreshDataAssets();
 		}
 
+		if (GUILayout.Button("DB 전체 갱신", EditorStyles.toolbarButton, GUILayout.Width(90f)))
+		{
+			EditorApplication.delayCall += RebuildAllDatabases;
+		}
+
 		EditorGUILayout.LabelField($"{_dataAssets.Count}개", EditorStyles.miniLabel, GUILayout.Width(48f));
 		EditorGUILayout.EndHorizontal();
+	}
+
+	// 프로젝트의 ItemDatabase / SkillDatabase 에셋을 전부 찾아 다시 스캔함
+	private static void RebuildAllDatabases()
+	{
+		int items = RebuildDatabases<ItemDatabase, ItemData>("allItems",
+			asset => (int)asset.id, asset => asset.id != ITEM_ID.NONE, "ITEM_ID");
+		int skills = RebuildDatabases<SkillDatabase, SkillData>("allSkills",
+			asset => (int)asset.id, asset => asset.id != SKILL_ID.NONE, "SKILL_ID");
+
+		AssetDatabase.SaveAssets();
+		Debug.Log($"[Hub] DB 갱신 완료 — ItemDatabase {items}종, SkillDatabase {skills}종 처리");
+	}
+
+	private static int RebuildDatabases<TDb, TAsset>(string arrayField,
+		System.Func<TAsset, int> idOf, System.Func<TAsset, bool> hasId, string idName)
+		where TDb : ScriptableObject
+		where TAsset : ScriptableObject
+	{
+		List<TAsset> found = new List<TAsset>();
+		List<string> missingId = new List<string>();
+
+		string[] assetGuids = AssetDatabase.FindAssets($"t:{typeof(TAsset).Name}");
+		for (int i = 0; i < assetGuids.Length; i++)
+		{
+			string path = AssetDatabase.GUIDToAssetPath(assetGuids[i]);
+			TAsset asset = AssetDatabase.LoadAssetAtPath<TAsset>(path);
+			if (asset == null)
+			{
+				continue;
+			}
+			if (!hasId(asset))
+			{
+				missingId.Add(path);
+				continue;
+			}
+			found.Add(asset);
+		}
+		found.Sort((a, b) => idOf(a).CompareTo(idOf(b)));
+
+		string[] dbGuids = AssetDatabase.FindAssets($"t:{typeof(TDb).Name}");
+		int dbCount = 0;
+		for (int i = 0; i < dbGuids.Length; i++)
+		{
+			TDb db = AssetDatabase.LoadAssetAtPath<TDb>(AssetDatabase.GUIDToAssetPath(dbGuids[i]));
+			if (db == null)
+			{
+				continue;
+			}
+
+			SerializedObject so = new SerializedObject(db);
+			SerializedProperty prop = so.FindProperty(arrayField);
+			if (prop == null || !prop.isArray)
+			{
+				continue;
+			}
+			prop.arraySize = found.Count;
+			for (int j = 0; j < found.Count; j++)
+			{
+				prop.GetArrayElementAtIndex(j).objectReferenceValue = found[j];
+			}
+			so.ApplyModifiedProperties();
+			EditorUtility.SetDirty(db);
+			dbCount++;
+		}
+
+		if (dbCount == 0)
+		{
+			Debug.LogWarning($"[Hub] {typeof(TDb).Name} 에셋을 찾지 못함.");
+		}
+		if (missingId.Count > 0)
+		{
+			Debug.LogWarning($"[Hub] {idName}.NONE이라 제외된 항목 {missingId.Count}개:\n" + string.Join("\n", missingId));
+		}
+		return found.Count;
 	}
 
 	private void DrawDataList()

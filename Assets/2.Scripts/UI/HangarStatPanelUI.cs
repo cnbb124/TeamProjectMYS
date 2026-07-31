@@ -63,17 +63,32 @@ public class HangarStatPanelUI : MonoBehaviour
         Refresh();
     }
 
-    /// <summary>현재 플레이어 기체 스탯으로 게이지/텍스트 갱신.</summary>
+    private void OnDisable()
+    {
+        // 다음에 켜질 때 다시 잡게 함 — 씬이 바뀌면 이전 함선 참조가 죽어 있음
+        _player = null;
+    }
+
+    /// <summary>현재 기체 스탯으로 게이지/텍스트 갱신. 함선이 없으면 PlayerProfile로 계산.</summary>
     public void Refresh()
     {
         Player p = GetPlayer();
-        if (p == null) return; // 플레이어 아직 없음 — 다음 OnEnable/외부 호출 때 갱신
-
         _player = p;
 
-        ApplyStat(hpFill,     hpText,     hpPercent,     p.maxHpRemaining,     hpReferenceMax);
-        ApplyStat(shieldFill, shieldText, shieldPercent, p.maxShieldCapacity, shieldReferenceMax);
-        ApplyStat(armorFill,  armorText,  armorPercent,  p.maxArmor,          armorReferenceMax);
+        // 함선이 있으면 그쪽이 정확함(레벨 보너스까지 반영됨).
+        // 정거장처럼 함선이 없는 씬에서는 기준 기체 + 장착 파츠로 계산해서 보여줌.
+        int hp     = p != null ? p.maxHpRemaining     : PlayerProfile.GetMaxHp();
+        int shield = p != null ? p.maxShieldCapacity  : PlayerProfile.GetMaxShield();
+        int armor  = p != null ? p.maxArmor           : PlayerProfile.GetMaxArmor();
+
+        if (p == null && !PlayerProfile.HasData)
+        {
+            return;
+        }
+
+        ApplyStat(hpFill,     hpText,     hpPercent,     hp,     hpReferenceMax);
+        ApplyStat(shieldFill, shieldText, shieldPercent, shield, shieldReferenceMax);
+        ApplyStat(armorFill,  armorText,  armorPercent,  armor,  armorReferenceMax);
     }
 
     private Player GetPlayer()

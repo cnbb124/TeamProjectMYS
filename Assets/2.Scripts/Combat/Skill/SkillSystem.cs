@@ -38,12 +38,8 @@ public class SkillSystem : MonoBehaviour
 	[SerializeField]
 	private string[] _equippedSkillNames = new string[SLOT_COUNT];
 
-	[Header("시작부터 보유한 스킬 (테스트/기본 지급용)")]
-	[Tooltip("GameStartData.startSkills를 Start()에서 전부 LearnSkill() 함.")]
-	[SerializeField]
-	private GameStartData _gameStartData;
-
-	[Tooltip("레거시 — GameStartData가 비었을 때만 씀.")]
+	[Header("시작부터 보유한 스킬 (씬 직접 재생용)")]
+	[Tooltip("정상 흐름에선 PlayerProfile이 덮어씀. 여긴 씬 단독 테스트용.")]
 	[SerializeField]
 	private List<SkillData> _startingSkills = new List<SkillData>();
 
@@ -107,15 +103,9 @@ public class SkillSystem : MonoBehaviour
 
 	private void Start()
 	{
-		// 시작 스킬은 유닛이 생긴 뒤에 줘야 함 — GameManager.ClearData는 함선이 없는 씬(로비)에서 돌아서
-		// 거기서 지급하면 통째로 누락됨. 파츠(UnitParts)와 같은 방식으로 여기서 직접 읽음.
-		List<SkillData> startSkills = _gameStartData != null && _gameStartData.startSkills != null
-			? _gameStartData.startSkills
-			: _startingSkills;
-
-		for (int i = 0; i < startSkills.Count; i++)
+		for (int i = 0; i < _startingSkills.Count; i++)
 		{
-			LearnSkill(startSkills[i]);
+			LearnSkill(_startingSkills[i]);
 		}
 	}
 
@@ -311,10 +301,17 @@ public class SkillSystem : MonoBehaviour
 			_ownedSkills.Add(newSkill);
 
 			ActiveSkill activeSkill = newSkill as ActiveSkill;
-			if (activeSkill != null && IsValidIndex(saved[i].slotIndex))
+			if (activeSkill == null)
 			{
-				slots[saved[i].slotIndex] = activeSkill;
-				_equippedSkillNames[saved[i].slotIndex] = activeSkill.GetType().Name;
+				continue;
+			}
+
+			// 저장된 자리가 없으면 빈 슬롯에 배치 — LearnSkill과 같은 규칙
+			int index = IsValidIndex(saved[i].slotIndex) ? saved[i].slotIndex : FindFreeSlot();
+			if (index >= 0)
+			{
+				slots[index] = activeSkill;
+				_equippedSkillNames[index] = activeSkill.GetType().Name;
 			}
 		}
 
