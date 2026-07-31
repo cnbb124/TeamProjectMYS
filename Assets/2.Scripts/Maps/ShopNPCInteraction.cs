@@ -6,6 +6,7 @@ public class ShopNPCInteraction : MonoBehaviour
     [SerializeField] private PlayerTestCtrl player;
 
     private bool _playerInRange;
+    private bool _isOpen;
 
     private void OnTriggerEnter(Collider other)
     {
@@ -23,13 +24,21 @@ public class ShopNPCInteraction : MonoBehaviour
     {
         if (_playerInRange && Input.GetKeyDown(KeyCode.E))
         {
-            OpenInteraction();
+            if (_isOpen)
+            {
+                CloseInteraction();
+            }
+            else
+            {
+                OpenInteraction();
+            }
         }
     }
 
     private void OpenInteraction()
     {
         player.canControl = false;
+        _isOpen = true;
         affinityUI.SetActive(true);
 
         Cursor.lockState = CursorLockMode.None;
@@ -40,6 +49,7 @@ public class ShopNPCInteraction : MonoBehaviour
     public void CloseInteraction()
     {
         player.canControl = true;
+        _isOpen = false;
         affinityUI.SetActive(false);
 
         Cursor.lockState = CursorLockMode.Locked;
