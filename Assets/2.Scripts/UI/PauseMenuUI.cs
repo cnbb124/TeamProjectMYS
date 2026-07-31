@@ -20,6 +20,7 @@
  */
 
 using UnityEngine;
+using UnityEngine.UI;
 
 public class PauseMenuUI : MonoBehaviour
 {
@@ -35,6 +36,13 @@ public class PauseMenuUI : MonoBehaviour
     [SerializeField] private GameObject mapPanel;
     [Tooltip("목표(퀘스트) 패널. QuestHUD가 붙은 패널 연결. 없으면 비워둬도 됨.")]
     [SerializeField] private GameObject questPanel;
+    [Tooltip("세이브 슬롯 패널 (LoadGameUI, Mode=Save). 없으면 비워둬도 됨.")]
+    [SerializeField] private GameObject savePanel;
+    [Tooltip("로드 슬롯 패널 (LoadGameUI, Mode=Load). 없으면 비워둬도 됨.")]
+    [SerializeField] private GameObject loadPanel;
+
+    [Tooltip("세이브 버튼. 연결하면 정거장(CanSave)에서만 활성, 그 외엔 비활성(회색). 로드 버튼은 항상 활성이라 연결 불필요.")]
+    [SerializeField] private Button saveButton;
 
     // 입력 잠금/커서 해제 판정용(InputManager.IsGameplayInputLocked). 메뉴 계열 패널(메뉴/옵션/지도/퀘스트) 중
     // 하나라도 떠 있으면 커서를 풀고 게임 입력을 막음 — 멀티에선 IsPaused가 false라 '열림 상태' 자체가 유일한 잠금 근거임.
@@ -65,6 +73,8 @@ public class PauseMenuUI : MonoBehaviour
         if (optionsPanel != null) optionsPanel.SetActive(false);
         if (mapPanel != null)     mapPanel.SetActive(false);
         if (questPanel != null)   questPanel.SetActive(false);
+        if (savePanel != null)    savePanel.SetActive(false);
+        if (loadPanel != null)    loadPanel.SetActive(false);
     }
 
     private void Update()
@@ -100,6 +110,10 @@ public class PauseMenuUI : MonoBehaviour
         if (!GameManager.Instance.PauseGame()) return;
 
         if (panel != null) panel.SetActive(true);
+
+        // 세이브는 정거장(CanSave)에서만 — 그 외 씬에선 버튼 비활성(회색). 로드는 어디서든 가능이라 안 건드림.
+        if (saveButton != null)
+            saveButton.interactable = GameManager.Instance.CanSave;
     }
 
     // 메뉴 닫기 — 패널 숨기고 일시정지 해제.
@@ -173,6 +187,44 @@ public class PauseMenuUI : MonoBehaviour
         else if (SettingMenuUI.Instance != null)      SettingMenuUI.Instance.Hide();
 
         if (panel != null) panel.SetActive(true); // 일시정지 메뉴로 복귀
+    }
+
+    /// <summary>세이브 버튼 — 저장 슬롯 패널 표시(일시정지 유지). 실제 저장 가능 여부는 패널(LoadGameUI)이 CanSave로 판단.</summary>
+    public void OnSave()
+    {
+        if (savePanel == null)
+        {
+            Debug.LogWarning("[PauseMenuUI] savePanel 미연결 — 저장 패널 표시 불가.");
+            return;
+        }
+        if (panel != null) panel.SetActive(false); // 메뉴 숨김 (일시정지 유지)
+        savePanel.SetActive(true);
+    }
+
+    /// <summary>세이브 패널 닫기 — 저장 패널을 닫고 일시정지 메뉴로 복귀. 세이브 패널의 닫기 버튼에 연결.</summary>
+    public void CloseSave()
+    {
+        if (savePanel != null) savePanel.SetActive(false);
+        if (panel != null) panel.SetActive(true);
+    }
+
+    /// <summary>로드 버튼 — 로드 슬롯 패널 표시(일시정지 유지).</summary>
+    public void OnLoadGame()
+    {
+        if (loadPanel == null)
+        {
+            Debug.LogWarning("[PauseMenuUI] loadPanel 미연결 — 로드 패널 표시 불가.");
+            return;
+        }
+        if (panel != null) panel.SetActive(false);
+        loadPanel.SetActive(true);
+    }
+
+    /// <summary>로드 패널 닫기 — 로드 패널을 닫고 일시정지 메뉴로 복귀. 로드 패널의 닫기 버튼에 연결.</summary>
+    public void CloseLoad()
+    {
+        if (loadPanel != null) loadPanel.SetActive(false);
+        if (panel != null) panel.SetActive(true);
     }
 
     /// <summary>전체지도 버튼 — 지도 패널 표시(일시정지 유지). 패널 미연결 시 훅만.</summary>

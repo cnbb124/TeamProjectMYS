@@ -67,11 +67,21 @@ public class SkillQuickSlotUI : MonoBehaviour
     /// (쿨다운 중이면 발행되지 않음)</summary>
     public event Action<ActiveSkillData> onSkillUsed;
 
+    [Header("쿨타임 완료 연출 (UIEffect)")]
+    [Tooltip("쿨다운이 끝나는 순간 슬롯을 한 번 번쩍이게 함 (UIEffect Shiny 등). 슬롯 프리팹의 UIEffect 자동 탐색")]
+    [SerializeField] private bool  readyFlashEnabled = true;
+    [Tooltip("번쩍임 지속 시간(초). transitionRate가 0→1로 흐르는 시간")]
+    [SerializeField] private float readyFlashDuration = 0.4f;
+
     private RectTransform[] _slots;
     private Image[]         _frames;
     private Image[]         _icons;
     private Image[]         _cooldowns;   // Filled 오버레이 (fillAmount = 남은 쿨다운 비율)
     private float[]         _cdTimers;    // 남은 쿨다운(초)
+
+    private Coffee.UIEffects.UIEffect[] _readyEffects; // 슬롯별 UIEffect(없으면 null)
+    private bool[] _wasOnCooldown;                     // 직전 프레임에 쿨다운 중이었는지 (완료 순간 감지)
+    private float[] _readyFlashTimer;                  // 완료 번쩍임 남은 시간
 
     private float _targetAngle;
     private float _currentAngle;
@@ -125,6 +135,10 @@ public class SkillQuickSlotUI : MonoBehaviour
         _cooldowns = new Image[count];
         _cdTimers  = new float[count];
 
+        _readyEffects    = new Coffee.UIEffects.UIEffect[count];
+        _wasOnCooldown   = new bool[count];
+        _readyFlashTimer = new float[count];
+
         // slotSpacing 지정 시 인접 슬롯 간격 기준으로 반지름 자동 계산
         // (현의 길이 공식: spacing = 2 × r × sin(π/n) → r = spacing / (2 sin(π/n)))
         float r = slotSpacing > 0f && count > 1
@@ -142,7 +156,13 @@ public class SkillQuickSlotUI : MonoBehaviour
             _slots[i]     = rt;
             _frames[i]    = go.GetComponent<Image>();
             _icons[i]     = go.transform.Find("Icon")?.GetComponent<Image>();
-            _cooldowns[i] = go.transform.Find("Cooldown")?.GetComponent<Image>();
+            // 쿨타임 fill 이미지 — 프리팹 이름이 "Cooldown" 또는 "CoolTimeBG" 둘 다 허용
+            Transform cd = go.transform.Find("Cooldown") ?? go.transform.Find("CoolTimeBG");
+            _cooldowns[i] = cd != null ? cd.GetComponent<Image>() : null;
+
+            // 쿨타임 완료 번쩍임용 UIEffect — 슬롯 어디에 붙어있든(자식 포함) 자동 탐색
+            _readyEffects[i] = go.GetComponentInChildren<Coffee.UIEffects.UIEffect>(true);
+            if (_readyEffects[i] != null) _readyEffects[i].transitionRate = 0f;
 
             if (_cooldowns[i] != null) _cooldowns[i].fillAmount = 0f; // 시작은 쿨다운 없음
         }
@@ -219,14 +239,42 @@ public class SkillQuickSlotUI : MonoBehaviour
 
         for (int i = 0; i < _cdTimers.Length; i++)
         {
-            if (_cdTimers[i] <= 0f) continue;
+            // 타이머 진행
+            if (_cdTimers[i] > 0f)
+            {
+                _cdTimers[i] -= Time.deltaTime;
+                if (_cdTimers[i] < 0f) _cdTimers[i] = 0f;
 
-            _cdTimers[i] -= Time.deltaTime;
-            if (_cdTimers[i] < 0f) _cdTimers[i] = 0f;
+                // 남은 비율만큼 오버레이 채움 (다 돌면 0 = 사라짐)
+                if (_cooldowns[i] != null && skills[i] != null && skills[i].skillCoolDown > 0f)
+                    _cooldowns[i].fillAmount = _cdTimers[i] / skills[i].skillCoolDown;
+            }
 
-            // 남은 비율만큼 오버레이 채움 (다 돌면 0 = 사라짐)
-            if (_cooldowns[i] != null && skills[i] != null && skills[i].skillCoolDown > 0f)
-                _cooldowns[i].fillAmount = _cdTimers[i] / skills[i].skillCoolDown;
+            UpdateReadyFlash(i);
+        }
+    }
+
+    // 쿨다운이 "방금 막 끝난" 순간을 잡아 UIEffect를 한 번 번쩍인다(B안, ItemQuickSlotUI와 동일).
+    private void UpdateReadyFlash(int i)
+    {
+        if (!readyFlashEnabled || _readyEffects == null || _readyEffects[i] == null) return;
+
+        bool onCooldownNow = _cdTimers[i] > 0f;
+
+        // 직전엔 쿨다운 중이었는데 지금 0 = 방금 완료 → 번쩍임 시작 (빈 슬롯은 skills null이라 제외)
+        if (_wasOnCooldown[i] && !onCooldownNow && i < skills.Count && skills[i] != null)
+            _readyFlashTimer[i] = readyFlashDuration;
+
+        _wasOnCooldown[i] = onCooldownNow;
+
+        if (_readyFlashTimer[i] > 0f)
+        {
+            _readyFlashTimer[i] -= Time.deltaTime;
+            float t = 1f - Mathf.Clamp01(_readyFlashTimer[i] / readyFlashDuration); // 0→1
+            _readyEffects[i].transitionRate = t;
+
+            if (_readyFlashTimer[i] <= 0f)
+                _readyEffects[i].transitionRate = 0f;   // 끝나면 효과 꺼서 평소 상태로
         }
     }
 
