@@ -4,15 +4,17 @@
  * GAME_STATE.GAME_OVER가 되면 패널 표시. (플레이어 사망 → GameManager.GameOver() → 이벤트 발행)
  *
  * [버튼]
- * - Restart  : GameManager.RestartStage() 호출 — 현재 스테이지를 처음부터 재시작 (A안)
- * - QuitGame : 로비 씬으로 복귀
+ * - Restart          : 출격 직전 자동 저장을 복원해 격납고(BASE_LANDING)부터 다시 시작
+ * - Return to Station: 자동 저장을 복원해 스테이션으로 복귀
+ * - QuitGame         : 로비 씬으로 복귀 (복원 없음)
  *
  * [부착 / 연결]
  * 1. GameOverUI 루트(항상 켜둘 오브젝트)에 부착
  * 2. panel      : 게임오버 패널(Panel) — 평소엔 꺼두고 GAME_OVER 시 켜짐
  * 3. Restart 버튼 OnClick → OnRestart()
- * 4. Quit 버튼   OnClick → OnQuitToLobby()
- * 5. lobbySceneName : 로비 씬 이름 입력
+ * 4. Station 버튼 OnClick → OnReturnToStation()
+ * 5. Quit 버튼   OnClick → OnQuitToLobby()
+ * 6. lobbySceneName : 로비 씬 이름 입력
  *
  * ※ 테스트 씬에서 패널만 확인할 땐 panel을 켜두면 됨 (이벤트 없이도 버튼 동작 확인 가능)
  * ※ IsGameOver/curState 리셋은 GameManager.OnSceneLoaded가 처리 — 게임오버 씬을 벗어나는
@@ -79,7 +81,7 @@ public class GameOverUI : MonoBehaviour
         Cursor.visible = true;
     }
 
-    /// <summary>Restart 버튼 — 현재 스테이지를 처음부터 재시작 (A안).</summary>
+    /// <summary>Restart 버튼 — 자동 저장을 복원해 격납고부터 다시 시작.</summary>
     public void OnRestart()
     {
         if (GameManager.Instance != null)
@@ -92,6 +94,18 @@ public class GameOverUI : MonoBehaviour
             // GameManager 없는 테스트 씬 폴백
             LoadScene(SceneManager.GetActiveScene().name);
         }
+    }
+
+    /// <summary>Return to Station 버튼 — 출격 직전 자동 저장을 복원한 상태로 스테이션 복귀.</summary>
+    public void OnReturnToStation()
+    {
+        if (GameManager.Instance == null)
+        {
+            Debug.LogWarning("[GameOverUI] GameManager 없음 — 스테이션 복귀 불가");
+            return;
+        }
+        if (panel != null) panel.SetActive(false);
+        GameManager.Instance.ReturnToStation();
     }
 
     /// <summary>QuitGame 버튼 — 로비로 복귀.</summary>

@@ -239,8 +239,7 @@ public abstract class Unit : MonoBehaviour, IDamageable, IPunObservable
 	// 격납고도 여기 묶음 — 이유는 달라도 '안 움직이고 안 쏜다'는 결과가 같음.
 	// =====================================================================
 	protected bool ShouldPause =>
-		GameManager.Instance != null &&
-		(GameManager.Instance.IsPaused || GameManager.Instance.IsGameOver || GameManager.Instance.IsHangarScene);
+		GameManager.Instance != null && GameManager.Instance.IsUnitFrozen;
 
 
 	// 크리여부 판정은 투사체가 담당 크확은 유닛이. → HitInfo.isCritical로 전달받음

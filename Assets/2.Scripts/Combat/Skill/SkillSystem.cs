@@ -39,7 +39,11 @@ public class SkillSystem : MonoBehaviour
 	private string[] _equippedSkillNames = new string[SLOT_COUNT];
 
 	[Header("시작부터 보유한 스킬 (테스트/기본 지급용)")]
-	[Tooltip("Start() 시 전부 LearnSkill() 호출됨. 레벨업/상점 등 정식 트리거 생기면 그쪽에서 추가 호출.")]
+	[Tooltip("GameStartData.startSkills를 Start()에서 전부 LearnSkill() 함.")]
+	[SerializeField]
+	private GameStartData _gameStartData;
+
+	[Tooltip("레거시 — GameStartData가 비었을 때만 씀.")]
 	[SerializeField]
 	private List<SkillData> _startingSkills = new List<SkillData>();
 
@@ -103,15 +107,27 @@ public class SkillSystem : MonoBehaviour
 
 	private void Start()
 	{
-		
-		for (int i = 0; i < _startingSkills.Count; i++)
+		// 시작 스킬은 유닛이 생긴 뒤에 줘야 함 — GameManager.ClearData는 함선이 없는 씬(로비)에서 돌아서
+		// 거기서 지급하면 통째로 누락됨. 파츠(UnitParts)와 같은 방식으로 여기서 직접 읽음.
+		List<SkillData> startSkills = _gameStartData != null && _gameStartData.startSkills != null
+			? _gameStartData.startSkills
+			: _startingSkills;
+
+		for (int i = 0; i < startSkills.Count; i++)
 		{
-			LearnSkill(_startingSkills[i]);
+			LearnSkill(startSkills[i]);
 		}
 	}
 
 	private void Update()
 	{
+		// 채널링 타이머가 Time.time 기준이라 여기서 안 막으면 일시정지·격납고에서도 시간이 흘러
+		// 메뉴를 열어둔 채 워프가 완료되고 사운드까지 남. Unit.ShouldPause와 같은 조건임.
+		if (GameManager.Instance != null && GameManager.Instance.IsUnitFrozen)
+		{
+			return;
+		}
+
 		for (int i = 0; i < SLOT_COUNT; i++)
 		{
 			if (slots[i] != null)

@@ -1281,10 +1281,10 @@ public class InputManager : MonoBehaviour
     {
         bool noPlayerInScene = GameManager.Instance == null || GameManager.Instance.playerRef == null;
         bool isPaused = GameManager.Instance != null && GameManager.Instance.IsPaused;
-        // 격납고엔 함선이 서 있어 playerRef가 차 있음 — 안 풀면 커서가 잠겨 장착 UI를 못 누름.
-        bool isHangar = GameManager.Instance != null && GameManager.Instance.IsHangarScene;
+        // 격납고·맵선택엔 함선이 서 있어 playerRef가 차 있음 — 안 풀면 커서가 잠겨 UI를 못 누름.
+        bool noControl = GameManager.Instance != null && GameManager.Instance.ShipControlDisabled;
         return noPlayerInScene
-            || isHangar
+            || noControl
             || Input.GetKey(KeyCode.LeftAlt) || Input.GetKey(KeyCode.RightAlt)
             || InventoryPanelUI.IsOpen
             || PauseMenuUI.IsOpen   // 멀티에선 IsPaused가 false라, 메뉴 열림 자체로 커서를 풀어야 클릭 가능
@@ -1293,6 +1293,14 @@ public class InputManager : MonoBehaviour
 
     private void UpdateCursorLock()
     {
+        // 정거장 계열은 도보 컨트롤러(PlayerTestCtrl 등)가 커서를 직접 잠금.
+        // 여기서 매 프레임 반대로 세팅하면 잠금이 깜빡이고, 풀리는 순간 마우스 델타가 크게 튀어
+        // 카메라가 홱 돌아감. 커서 주인은 씬당 하나여야 함.
+        if (GameManager.Instance != null && GameManager.Instance.IsStationScene)
+        {
+            return;
+        }
+
         bool freeCursor = IsGameplayInputLocked();
         Cursor.lockState = freeCursor ? CursorLockMode.None : CursorLockMode.Locked;
         Cursor.visible = freeCursor;

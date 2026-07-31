@@ -23,18 +23,22 @@ public class LobbyUIManager : MonoBehaviour
     public void OnClickNewGame()
     {
         HangarExitButton.launchSceneName = "MAP_SELECT"; // 격납고쪽에 다음 갈곳 저장
-        GameManager.Instance.LoadSceneWithLoading(SCENE_TYPE.BASE_LANDING);
-        //LoadingManager.NextScene = "BASE_LANDING"; // 격납고 이동
-        //GameManager.Instance.LoadScene(SCENE_TYPE.LOADING_SEQUENCE);
+        // NewGame이어야 ClearData + GameStartData(시작 골드/아이템/스킬) 지급이 돎.
+        // 씬만 넘기면 시작 데이터가 통째로 빠짐.
+        GameManager.Instance.NewGame(SCENE_TYPE.STATION);
     }
 
-    public void OnClickLoadGame()
-    {
-        // TODO: 세이브 슬롯 목록 UI 완성되면 연결 (서버 /saves 연동 예정)
-        Debug.Log("[LobbyUIManager] LOAD GAME — 세이브 슬롯 UI 미구현");
-    }
+	public void OnClickLoadGame()
+	{
+		if (!GameManager.Instance.HasSave(GameManager.AutoSaveSlot))
+		{
+			Debug.Log("[LobbyUIManager] 자동 저장 없음");
+			return;
+		}
+		GameManager.Instance.LoadGameWithLoading(GameManager.AutoSaveSlot, SCENE_TYPE.STATION);
+	}
 
-    public void OnClickSettings()
+	public void OnClickSettings()
     {
         GameManager.Instance.LoadScene("SettingsScene");
     }
@@ -56,8 +60,7 @@ public class LobbyUIManager : MonoBehaviour
         // GameManager.Instance.LoadScene("ServerListUI");
 
         HangarExitButton.launchSceneName = "MULTIPLAYER"; // 격납고쪽에 다음 갈곳 저장
-        LoadingManager.NextScene = "BASE_LANDING"; // 격납고 이동
-        GameManager.Instance.LoadScene(SCENE_TYPE.LOADING_SEQUENCE);
+        GameManager.Instance.LoadSceneWithLoading(SCENE_TYPE.STATION);
     }
 
     // ── 아래는 안 쓰는 구버전 핸들러 — 참고용 주석 처리 ──

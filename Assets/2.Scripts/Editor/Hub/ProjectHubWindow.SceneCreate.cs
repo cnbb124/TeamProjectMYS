@@ -37,8 +37,18 @@ public partial class ProjectHubWindow
 
 	private readonly List<GameObject> _createPrefabs = new List<GameObject>();
 	private SOUND_TYPE _createBgm = SOUND_TYPE.SFX_NONE;
-	private bool _createRegisterBgm = true;
+	private bool _createRegisterSettings = true;
 	private bool _createAddToBuild = true;
+
+	// GameManager 씬 설정표에 같이 등록할 값들. 평소엔 카테고리만 고르면 됨
+	private SCENE_CATEGORY _createCategory = SCENE_CATEGORY.BATTLE;
+	private bool _createOverrideFlags;
+	private bool _createKeepsPlayerShip;
+	private bool _createCanSave;
+	private bool _createIsBattleScene;
+	private bool _createIsStationScene;
+	private bool _createShipControlDisabled;
+	private bool _createShipHidden;
 
 	private readonly List<WaveData> _createWaves = new List<WaveData>();
 	private WaveData _createBossWave;
@@ -220,13 +230,39 @@ public partial class ProjectHubWindow
 		_createBossWave = (WaveData)EditorGUILayout.ObjectField("보스 웨이브", _createBossWave, typeof(WaveData), false);
 		EditorGUILayout.LabelField("씬의 SpawnManager 인스턴스에 그대로 배선됨", EditorStyles.miniLabel);
 
-		// ---- BGM ----
-		SectionHeader("BGM");
-		_createRegisterBgm = EditorGUILayout.Toggle("GameManager 씬-BGM 표에 등록", _createRegisterBgm);
-		if (_createRegisterBgm)
+		// ---- 씬 설정표 ----
+		SectionHeader("씬 설정 (BGM / 속성)");
+		_createRegisterSettings = EditorGUILayout.Toggle("GameManager 씬 설정표에 등록", _createRegisterSettings);
+		if (_createRegisterSettings)
 		{
+			_createCategory = (SCENE_CATEGORY)EditorGUILayout.EnumPopup("씬 종류", _createCategory);
 			_createBgm = (SOUND_TYPE)EditorGUILayout.EnumPopup("BGM", _createBgm);
-			EditorGUILayout.LabelField("GameManager 프리팹의 _sceneBGMList가 수정됨(프로젝트 전역 표)", EditorStyles.miniLabel);
+			EditorGUILayout.LabelField(CategorySummary(_createCategory), EditorStyles.wordWrappedMiniLabel);
+
+			_createOverrideFlags = EditorGUILayout.Toggle("속성 직접 지정", _createOverrideFlags);
+			if (_createOverrideFlags)
+			{
+				EditorGUI.indentLevel++;
+				_createKeepsPlayerShip = EditorGUILayout.Toggle("함선 유지 (출격 흐름)", _createKeepsPlayerShip);
+				_createCanSave = EditorGUILayout.Toggle("저장 가능", _createCanSave);
+				_createIsBattleScene = EditorGUILayout.Toggle("전투 스테이지", _createIsBattleScene);
+				_createIsStationScene = EditorGUILayout.Toggle("정거장 계열", _createIsStationScene);
+				_createShipControlDisabled = EditorGUILayout.Toggle("조종 불가", _createShipControlDisabled);
+				_createShipHidden = EditorGUILayout.Toggle("함선 숨김", _createShipHidden);
+				EditorGUI.indentLevel--;
+			}
+
+			EditorGUILayout.LabelField("GameManager 프리팹의 씬 설정표가 수정됨(프로젝트 전역 표).\n" +
+									   "등록을 건너뛰면 그 씬은 속성이 전부 off로 취급됨",
+									   EditorStyles.wordWrappedMiniLabel);
+
+			if (GUILayout.Button("게임매니저 씬 설정 자동 정리 - 필요시 수동확인", GUILayout.Height(22f)))
+			{
+				EditorApplication.delayCall += FillSceneSettingsWithDefaults;
+			}
+			EditorGUILayout.LabelField("빠진 SCENE_TYPE 행을 만들고, 모든 행의 씬 종류를 이름으로 추측해 넣음.\n" +
+									   "BGM은 건드리지 않음. '속성 직접 지정'은 전부 해제되니 예외 씬은 다시 찍을 것",
+									   EditorStyles.wordWrappedMiniLabel);
 		}
 
 		// ---- 맵 선택 화면 배정 ----
@@ -429,17 +465,18 @@ public partial class ProjectHubWindow
 			AddSceneToBuildSettings(scenePath);
 		}
 
-		// 6) GameManager 프리팹의 씬-BGM 표 — SCENE_TYPE으로 식별되는 씬만 등록 가능함
-		if (_createRegisterBgm && _createBgm != SOUND_TYPE.SFX_NONE)
+		// 6) GameManager 프리팹의 씬 설정표 — SCENE_TYPE으로 식별되는 씬만 등록 가능함.
+		// BGM이 없어도 속성(함선 유지/저장 가능 등) 때문에 행은 만들어야 함.
+		if (_createRegisterSettings)
 		{
 			if (_createSceneType == SCENE_TYPE.UNKNOWN)
 			{
-				Debug.LogWarning($"[Hub] '{_createSceneName}'이 SCENE_TYPE에 없어 BGM 등록을 건너뜀. " +
+				Debug.LogWarning($"[Hub] '{_createSceneName}'이 SCENE_TYPE에 없어 씬 설정 등록을 건너뜀. " +
 								 "SCENE_TYPE에 추가한 뒤 다시 등록할 것.");
 			}
 			else
 			{
-				RegisterSceneBgm(_createSceneType, _createBgm);
+				RegisterSceneSettings(_createSceneType, _createBgm);
 			}
 		}
 
@@ -1071,7 +1108,7 @@ public partial class ProjectHubWindow
 		Debug.Log($"[Hub] 빌드 세팅에서 제거함: {scenePath}");
 	}
 
-	// GameManager 프리팹의 _sceneBGMList에서 해당 씬 항목을 제거.
+	// GameManager 프리팹의 씬 설정표에서 해당 씬 항목을 제거.
 	// 인덱스가 아니라 scene 값으로 찾고, 뒤에서부터 순회함 —
 	// 앞에서부터 지우면 인덱스가 밀려 다음 항목을 건너뜀. 중복 항목이 있어도 전부 지워짐.
 	private static void UnregisterSceneBgm(SCENE_TYPE sceneType)
@@ -1096,7 +1133,7 @@ public partial class ProjectHubWindow
 			}
 
 			SerializedObject so = new SerializedObject(gm);
-			SerializedProperty list = so.FindProperty("_sceneBGMList");
+			SerializedProperty list = so.FindProperty("_sceneSettings");
 			if (list == null || !list.isArray)
 			{
 				return;
@@ -1144,9 +1181,9 @@ public partial class ProjectHubWindow
 		return result;
 	}
 
-	// GameManager 프리팹의 _sceneBGMList에 (씬, BGM) 한 줄을 추가하거나 갱신함.
-	// 씬-BGM 표는 프리팹 하나에 모여 있는 프로젝트 전역 표라, 씬을 만들 때 같이 채워야 조회가 됨.
-	private static void RegisterSceneBgm(SCENE_TYPE sceneType, SOUND_TYPE bgm)
+	// GameManager 프리팹의 씬 설정표에 한 줄을 추가하거나 갱신함.
+	// 프리팹 하나에 모여 있는 프로젝트 전역 표라, 씬을 만들 때 같이 채워야 조회가 됨.
+	private void RegisterSceneSettings(SCENE_TYPE sceneType, SOUND_TYPE bgm)
 	{
 		string[] guids = AssetDatabase.FindAssets("t:GameObject", new[] { "Assets/3.Prefabs" });
 		for (int i = 0; i < guids.Length; i++)
@@ -1168,10 +1205,10 @@ public partial class ProjectHubWindow
 			}
 
 			SerializedObject so = new SerializedObject(gm);
-			SerializedProperty list = so.FindProperty("_sceneBGMList");
+			SerializedProperty list = so.FindProperty("_sceneSettings");
 			if (list == null || !list.isArray)
 			{
-				Debug.LogWarning("[Hub] GameManager에서 _sceneBGMList를 찾지 못함 — BGM 등록을 건너뜀.");
+				Debug.LogWarning("[Hub] GameManager에서 씬 설정표를 찾지 못함 — 등록을 건너뜀.");
 				return;
 			}
 
@@ -1182,24 +1219,202 @@ public partial class ProjectHubWindow
 				SerializedProperty sceneProp = entry.FindPropertyRelative("scene");
 				if (sceneProp != null && sceneProp.intValue == (int)sceneType)
 				{
-					entry.FindPropertyRelative("bgm").intValue = (int)bgm;
+					WriteSceneSettings(entry, sceneType, bgm);
 					so.ApplyModifiedProperties();
 					EditorUtility.SetDirty(prefab);
-					Debug.Log($"[Hub] 씬-BGM 갱신: {sceneType} → {bgm}");
+					Debug.Log($"[Hub] 씬 설정 갱신: {sceneType} (BGM {bgm})");
 					return;
 				}
 			}
 
 			list.InsertArrayElementAtIndex(list.arraySize);
-			SerializedProperty added = list.GetArrayElementAtIndex(list.arraySize - 1);
-			added.FindPropertyRelative("scene").intValue = (int)sceneType;
-			added.FindPropertyRelative("bgm").intValue = (int)bgm;
+			WriteSceneSettings(list.GetArrayElementAtIndex(list.arraySize - 1), sceneType, bgm);
 			so.ApplyModifiedProperties();
 			EditorUtility.SetDirty(prefab);
-			Debug.Log($"[Hub] 씬-BGM 등록: {sceneType} → {bgm}");
+			Debug.Log($"[Hub] 씬 설정 등록: {sceneType} (BGM {bgm})");
 			return;
 		}
 
-		Debug.LogWarning("[Hub] GameManager 프리팹을 찾지 못해 BGM 등록을 건너뜀.");
+		Debug.LogWarning("[Hub] GameManager 프리팹을 찾지 못해 씬 설정 등록을 건너뜀.");
+	}
+
+	// 씬 종류 → 그 종류가 켜는 속성. 인스펙터에서 뭘 고르는지 바로 보이라고 띄움.
+	private static string CategorySummary(SCENE_CATEGORY category)
+	{
+		switch (category)
+		{
+			case SCENE_CATEGORY.STATION:
+				return "정거장 계열 + 저장 가능";
+			case SCENE_CATEGORY.BATTLE:
+				return "전투 스테이지 + 함선 유지";
+			case SCENE_CATEGORY.HANGAR:
+				return "조종 불가 + 함선 유지 (기체는 보임)";
+			case SCENE_CATEGORY.TRANSIT:
+				return "함선 숨김 + 조종 불가 + 함선 유지";
+			case SCENE_CATEGORY.LOADING:
+				return "속성 없음";
+			default:
+				return "속성 전부 off";
+		}
+	}
+
+	// 이름으로 씬 종류를 추측함. 어디까지나 표를 처음 채울 때 쓰는 추측이고,
+	// 최종값은 사람이 인스펙터에서 고른 카테고리임. 틀리면 드롭다운만 고치면 됨.
+	private static SCENE_CATEGORY GuessCategory(SCENE_TYPE type)
+	{
+		string name = type.ToString();
+		if (name.StartsWith("STAGE", System.StringComparison.OrdinalIgnoreCase))
+		{
+			return SCENE_CATEGORY.BATTLE;
+		}
+		if (name.StartsWith("STATION", System.StringComparison.OrdinalIgnoreCase))
+		{
+			return SCENE_CATEGORY.STATION;
+		}
+		switch (type)
+		{
+			case SCENE_TYPE.BASE_LANDING:
+				return SCENE_CATEGORY.HANGAR;
+			case SCENE_TYPE.MAP_SELECT:
+			case SCENE_TYPE.MULTIPLAYER:
+				return SCENE_CATEGORY.TRANSIT;
+			case SCENE_TYPE.LOADING_SEQUENCE:
+				return SCENE_CATEGORY.LOADING;
+			default:
+				return SCENE_CATEGORY.OTHER;
+		}
+	}
+
+	// 모든 SCENE_TYPE에 대해 행을 보장하고 씬 종류를 추측해 넣음.
+	// BGM 열은 손대지 않음 — 그건 사람이 고른 값이라 추측할 근거가 없음.
+	private static void FillSceneSettingsWithDefaults()
+	{
+		SerializedObject so = FindGameManagerSerialized(out GameObject prefab);
+		if (so == null)
+		{
+			Debug.LogWarning("[Hub] GameManager 프리팹을 찾지 못해 씬 설정표를 채우지 못함.");
+			return;
+		}
+
+		SerializedProperty list = so.FindProperty("_sceneSettings");
+		if (list == null || !list.isArray)
+		{
+			Debug.LogWarning("[Hub] GameManager에서 씬 설정표를 찾지 못함.");
+			return;
+		}
+
+		int added = 0;
+		int updated = 0;
+		foreach (SCENE_TYPE type in System.Enum.GetValues(typeof(SCENE_TYPE)))
+		{
+			if (type == SCENE_TYPE.UNKNOWN)
+			{
+				continue;
+			}
+
+			SerializedProperty entry = FindEntry(list, type);
+			if (entry == null)
+			{
+				list.InsertArrayElementAtIndex(list.arraySize);
+				entry = list.GetArrayElementAtIndex(list.arraySize - 1);
+				SetInt(entry, "scene", (int)type);
+				SetInt(entry, "bgm", (int)SOUND_TYPE.SFX_NONE);
+				added++;
+			}
+			else
+			{
+				updated++;
+			}
+
+			// 카테고리만 정하고 개별 체크박스는 끔 — 속성은 런타임이 카테고리에서 풀어 씀.
+			SetInt(entry, "category", (int)GuessCategory(type));
+			SetBool(entry, "overrideFlags", false);
+			SetBool(entry, "keepsPlayerShip", false);
+			SetBool(entry, "canSave", false);
+			SetBool(entry, "isBattleScene", false);
+			SetBool(entry, "isStationScene", false);
+			SetBool(entry, "shipControlDisabled", false);
+			SetBool(entry, "shipHidden", false);
+		}
+
+		so.ApplyModifiedProperties();
+		EditorUtility.SetDirty(prefab);
+		AssetDatabase.SaveAssets();
+		Debug.Log($"[Hub] 씬 설정표 정리 — 새 행 {added}개, 기존 행 {updated}개 갱신(씬 종류 추측 적용).");
+	}
+
+	private static SerializedProperty FindEntry(SerializedProperty list, SCENE_TYPE type)
+	{
+		for (int i = 0; i < list.arraySize; i++)
+		{
+			SerializedProperty entry = list.GetArrayElementAtIndex(i);
+			SerializedProperty sceneProp = entry.FindPropertyRelative("scene");
+			if (sceneProp != null && sceneProp.intValue == (int)type)
+			{
+				return entry;
+			}
+		}
+		return null;
+	}
+
+	// GameManager가 붙은 프리팹을 찾아 SerializedObject로 돌려줌. 못 찾으면 null.
+	private static SerializedObject FindGameManagerSerialized(out GameObject prefab)
+	{
+		prefab = null;
+		string[] guids = AssetDatabase.FindAssets("t:GameObject", new[] { "Assets/3.Prefabs" });
+		for (int i = 0; i < guids.Length; i++)
+		{
+			string path = AssetDatabase.GUIDToAssetPath(guids[i]);
+			if (!path.EndsWith(".prefab"))
+			{
+				continue;
+			}
+			GameObject candidate = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+			if (candidate == null)
+			{
+				continue;
+			}
+			GameManager gm = candidate.GetComponentInChildren<GameManager>(true);
+			if (gm == null)
+			{
+				continue;
+			}
+			prefab = candidate;
+			return new SerializedObject(gm);
+		}
+		return null;
+	}
+
+	// 표 한 줄에 값 쓰기. 필드가 없으면(구버전 GameManager) 조용히 건너뜀.
+	private void WriteSceneSettings(SerializedProperty entry, SCENE_TYPE sceneType, SOUND_TYPE bgm)
+	{
+		SetInt(entry, "scene", (int)sceneType);
+		SetInt(entry, "bgm", (int)bgm);
+		SetInt(entry, "category", (int)_createCategory);
+		SetBool(entry, "overrideFlags", _createOverrideFlags);
+		SetBool(entry, "keepsPlayerShip", _createKeepsPlayerShip);
+		SetBool(entry, "canSave", _createCanSave);
+		SetBool(entry, "isBattleScene", _createIsBattleScene);
+		SetBool(entry, "isStationScene", _createIsStationScene);
+		SetBool(entry, "shipControlDisabled", _createShipControlDisabled);
+		SetBool(entry, "shipHidden", _createShipHidden);
+	}
+
+	private static void SetInt(SerializedProperty entry, string name, int value)
+	{
+		SerializedProperty prop = entry.FindPropertyRelative(name);
+		if (prop != null)
+		{
+			prop.intValue = value;
+		}
+	}
+
+	private static void SetBool(SerializedProperty entry, string name, bool value)
+	{
+		SerializedProperty prop = entry.FindPropertyRelative(name);
+		if (prop != null)
+		{
+			prop.boolValue = value;
+		}
 	}
 }

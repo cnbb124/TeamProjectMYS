@@ -25,6 +25,8 @@ public class PlayerButtonUI : MonoBehaviour
     /// <summary>싱글 플레이 시작 — 싱글 모드 설정 후 맵 선택으로.</summary>
     public void OnClickSingle()
     {
+        AutoSave();
+
         if (NetworkManager.Instance != null)
         {
             NetworkManager.Instance.StartSingleplayer();
@@ -42,6 +44,8 @@ public class PlayerButtonUI : MonoBehaviour
     /// <summary>멀티 플레이 시작 — 포톤 접속 후 멀티(대기실)로.</summary>
     public void OnClickMulti()
     {
+        AutoSave();
+
         if (NetworkManager.Instance != null)
         {
             NetworkManager.Instance.ConnectMultiplayer();
@@ -54,5 +58,15 @@ public class PlayerButtonUI : MonoBehaviour
         HangarExitButton.launchSceneName = "MULTIPLAYER"; // 격납고쪽에 다음 갈곳 저장
         LoadingManager.NextScene = "BASE_LANDING"; // 격납고 이동
         GameManager.Instance.LoadScene(SCENE_TYPE.LOADING_SEQUENCE);
+    }
+
+    // 출격 직전 자동 저장. 사망 후 재시작/스테이션 복귀가 이 시점으로 돌아옴.
+    // 여기는 STATION이라 GameManager.CanSave 조건을 만족함(다른 곳에서 부르면 저장 안 됨).
+    private void AutoSave()
+    {
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.AutoSaveBeforeLaunch();
+        }
     }
 }

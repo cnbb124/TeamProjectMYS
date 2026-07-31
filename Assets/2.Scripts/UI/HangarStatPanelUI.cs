@@ -7,7 +7,7 @@
  * HangarSlot > StatPanel 에 부착. (탭으로 HangarSlot이 켜질 때 OnEnable에서 자동 갱신)
  *
  * [데이터 소스]
- * GameManager.Instance.playerRef (현재 플레이어 기체). 없으면 playerOverride 사용.
+ * playerOverride. 비우면 GameManager.Instance.playerRef 사용.
  *
  * [인스펙터 연결 — HP/Shield/Armor 각각]
  * - ~Fill    : Image (Image Type = Filled, Horizontal) — 게이지 막대
@@ -43,9 +43,23 @@ public class HangarStatPanelUI : MonoBehaviour
     [SerializeField] private TMP_Text armorPercent;
     [SerializeField] private float    armorReferenceMax = 100f;
 
+    // 한 번 잡은 기체. 잡기 전까지만 Update에서 재시도하는 용도.
+    private Player _player;
+
     private void OnEnable()
     {
         // 탭으로 HangarSlot이 켜질 때마다 현재 기체 스탯으로 갱신
+        Refresh();
+    }
+
+    // 기체는 PlayerSpawner가 씬 로드 뒤에 스폰하므로 OnEnable 시점엔 없을 수 있음.
+    // 잡을 때까지만 재시도하고, 잡은 뒤로는 장착 변경 때 Refresh를 받아 갱신함.
+    private void Update()
+    {
+        if (_player != null)
+        {
+            return;
+        }
         Refresh();
     }
 
@@ -54,6 +68,8 @@ public class HangarStatPanelUI : MonoBehaviour
     {
         Player p = GetPlayer();
         if (p == null) return; // 플레이어 아직 없음 — 다음 OnEnable/외부 호출 때 갱신
+
+        _player = p;
 
         ApplyStat(hpFill,     hpText,     hpPercent,     p.maxHpRemaining,     hpReferenceMax);
         ApplyStat(shieldFill, shieldText, shieldPercent, p.maxShieldCapacity, shieldReferenceMax);

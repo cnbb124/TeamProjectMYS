@@ -27,6 +27,8 @@ public class WarpSkill : ActiveSkill
 
 	private bool _isWarping;
 	private float _warpStartTime;
+	private float _warpSoundPlayTime;
+	private bool _isWarpSoundPlayed;
 
 	public WarpSkill(Unit owner, WarpSkillData skillData) : base(owner, skillData)
 	{
@@ -46,10 +48,14 @@ public class WarpSkill : ActiveSkill
 				_owner.transform.rotation,
 				WarpSkillData.warpSequenceTime
 			);
-		_sound.PlaySFX3DAtUnit(WarpSkillData.warpSoundType, _owner.transform);
+		
 
 		_isWarping = true;
+		_isWarpSoundPlayed = false;
 		_warpStartTime = Time.time;
+		// 딜레이가 채널링 시간을 넘으면 시작 시각보다 과거가 돼서 즉시 재생됨
+		float soundDelay = Mathf.Clamp(WarpSkillData.warpSoundDelayTime, 0f, WarpSkillData.warpSequenceTime);
+		_warpSoundPlayTime = _warpStartTime + WarpSkillData.warpSequenceTime - soundDelay;
 	}
 
 	public override void UpdateSkill()
@@ -57,6 +63,14 @@ public class WarpSkill : ActiveSkill
 		if (!_isWarping)
 		{
 			return;
+		}
+
+		// 사운드 재생 시점
+		if (!_isWarpSoundPlayed && Time.time >= _warpSoundPlayTime)
+		{
+			_isWarpSoundPlayed = true;
+
+			_sound.PlaySFX3DAtUnit(WarpSkillData.warpSoundType,_owner.transform);
 		}
 
 		// 마지막 시작시간 + 채널링시간을 다 넘었으면(채널링이 끝났으면) 실제 워프 실행.

@@ -34,6 +34,8 @@ public class HangarEquipController : MonoBehaviour
     [Tooltip("노드↔앵커 짝을 가진 PartNodeConnector (라인 그리는 그것)")]
     [SerializeField] private PartNodeConnector connector;
     [SerializeField] private HangarSlotList    list;
+    [Tooltip("장착 후 스탯 갱신용. 비우면 씬에서 자동 탐색.")]
+    [SerializeField] private HangarStatPanelUI statPanel;
 
     [Header("동작")]
     [Tooltip("장착 시 인벤토리 정리: 새 파츠 제거 + 벗겨진 파츠 반환")]
@@ -152,5 +154,19 @@ public class HangarEquipController : MonoBehaviour
         }
 
         if (list != null) list.RefreshFiltered(type);  // 기체 색은 ShipPartDamageView가 매프레임 갱신
+        RefreshStatPanel();                            // 파츠가 바뀌면 최대 HP/실드/아머도 바뀜
+    }
+
+    // 탭으로 꺼져 있을 수 있어 비활성 포함으로 찾음.
+    private void RefreshStatPanel()
+    {
+        if (statPanel == null)
+        {
+            statPanel = FindObjectOfType<HangarStatPanelUI>(true);
+        }
+        if (statPanel != null)
+        {
+            statPanel.Refresh();
+        }
     }
 }

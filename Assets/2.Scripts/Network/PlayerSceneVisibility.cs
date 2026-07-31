@@ -86,6 +86,13 @@ public class PlayerSceneVisibility : MonoBehaviourPunCallbacks
 
     private void ApplyVisibility()
     {
+        // 맵선택·대기실은 함선을 들고만 가는 씬이라 누구 것이든 안 보임.
+        if (GameManager.Instance != null && GameManager.Instance.ShipHidden)
+        {
+            SetVisible(false);
+            return;
+        }
+
         // 내 함선은 항상 내 씬에 있으니 항상 보임.
         if (photonView == null || photonView.IsMine)
         {

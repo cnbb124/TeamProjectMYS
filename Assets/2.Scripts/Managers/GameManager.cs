@@ -75,22 +75,43 @@ public class GameManager : MonoBehaviourPunCallbacks
 	//  ※ SCENE_TYPE 이름 = 실제 씬 파일 이름이어야 조회됨(scene.name 기준)
 	// =====================================================================
 	[System.Serializable]
-	public struct SceneBGM
+	public struct SceneSettings
 	{
 		public SCENE_TYPE scene;
+
+		[Tooltip("씬의 성격. 아래 체크박스는 이 값에서 자동으로 정해짐(FlagsFor).")]
+		public SCENE_CATEGORY category;
+
 		public SOUND_TYPE bgm;
+
+		[Tooltip("카테고리 기본값 대신 아래 체크박스를 그대로 쓸지. 분류로 안 맞는 예외 씬에만 켤 것.")]
+		public bool overrideFlags;
+
+		[Tooltip("이 씬으로 갈 때 내 함선을 남겨둘지. 출격 흐름(격납고→맵선택/대기실→스테이지)이면 켤 것.")]
+		public bool keepsPlayerShip;
+		[Tooltip("이 씬에서 저장을 허용할지.")]
+		public bool canSave;
+		[Tooltip("전투 스테이지인지. 전투 전용 처리 분기용.")]
+		public bool isBattleScene;
+		[Tooltip("정거장 계열(상점/대화 등 비전투 거점)인지.")]
+		public bool isStationScene;
+		[Tooltip("함선을 남겨두되 조종은 막을지.")]
+		public bool shipControlDisabled;
+		[Tooltip("함선을 안 보이게 할지. 존재는 유지하고 렌더러·콜라이더만 끔.")]
+		public bool shipHidden;
 	}
 
-	[Header("<size=22>━━━━━━ 씬-BGM 매핑 ━━━━━━</size>")]
-	[Header("씬 추가 시 여기서 SCENE_TYPE + BGM 드롭다운으로 추가\n" +
-		"SCENE_TYPE 이름 = 실제 씬 파일 이름이어야 조회됨(scene.name 기준)")]
-	[SerializeField] private List<SceneBGM> _sceneBGMList = new List<SceneBGM>();
+	[Header("<size=22>━━━━━━ 씬 설정표 ━━━━━━</size>")]
+	[Header("씬 추가 시 여기에 SCENE_TYPE + BGM + 속성 체크박스로 한 줄 추가\n" +
+		"SCENE_TYPE 이름 = 실제 씬 파일 이름이어야 조회됨(scene.name 기준)\n" +
+		"씬 종류만 고르면 속성은 자동으로 정해짐. 표에 없는 씬은 전부 off(Awake 경고 확인)")]
+	[SerializeField] private List<SceneSettings> _sceneSettings = new List<SceneSettings>();
 
-	// 런타임 조회용. Awake에서 _sceneBGMList로 구성 (key = scene.ToString())
+	// 런타임 조회용. Awake에서 _sceneSettings로 구성 (key = scene.ToString())
 	// 대소문자 무시 비교자 — 씬 파일명이 'Base_Landing'처럼 enum 표기(BASE_LANDING)와 달라도
 	// 조회가 되게 함. SceneManager.LoadScene도 대소문자를 안 가리므로 여기만 엄격하면 BGM이 조용히 누락됨.
-	private Dictionary<string, SOUND_TYPE> _sceneBGMMap =
-		new Dictionary<string, SOUND_TYPE>(System.StringComparer.OrdinalIgnoreCase);
+	private Dictionary<string, SceneSettings> _sceneSettingsMap =
+		new Dictionary<string, SceneSettings>(System.StringComparer.OrdinalIgnoreCase);
 
 	[Header("보스 BGM 전환")]
 	[Tooltip("보스 등장 시 전환할 BGM. 보스 처치 시 현재 씬 BGM으로 복귀.")]
@@ -112,19 +133,20 @@ public class GameManager : MonoBehaviourPunCallbacks
 	public SCENE_TYPE curSceneType = SCENE_TYPE.UNKNOWN;
 
 	/// <summary>전투 스테이지 씬인지 (전투 전용 처리 분기용)</summary>
-	public bool IsBattleScene =>
-		curSceneType == SCENE_TYPE.STAGE1 || curSceneType == SCENE_TYPE.STAGE2;
+	public bool IsBattleScene => SettingsOf(curSceneType).isBattleScene;
 
-	/// <summary>정거장 계열 씬인지 (상점/격납고 등 비전투 거점)</summary>
-	public bool IsStationScene =>
-		curSceneType == SCENE_TYPE.STATION
-		|| curSceneType == SCENE_TYPE.STATION_1F
-		|| curSceneType == SCENE_TYPE.STATION_B2;
+	/// <summary>정거장 계열 씬인지 (상점 등 비전투 거점)</summary>
+	public bool IsStationScene => SettingsOf(curSceneType).isStationScene;
 
-	/// <summary>격납고 씬인지 (함선은 서 있지만 조종은 안 되는 곳)</summary>
+	/// <summary>함선이 있어도 조종하면 안 되는 씬인지 (격납고·맵선택 등)</summary>
 	// Unit.ShouldPause / InputManager가 이걸 보고 조종·전투·커서잠금을 막음.
-	public bool IsHangarScene =>
-		curSceneType == SCENE_TYPE.BASE_LANDING;
+	public bool ShipControlDisabled => SettingsOf(curSceneType).shipControlDisabled;
+
+	/// <summary>함선을 숨겨야 하는 씬인지 (맵선택·대기실 등). PlayerSceneVisibility가 봄.</summary>
+	public bool ShipHidden => SettingsOf(curSceneType).shipHidden;
+
+	/// <summary>유닛·스킬이 스스로 멈춰야 하는 상태. Unit.ShouldPause와 SkillSystem이 같이 씀.</summary>
+	public bool IsUnitFrozen => IsPaused || IsGameOver || ShipControlDisabled;
 
     // 상태 변화 시 UI에서 구독 (패널 전환 등)
     public GameStateHandler onGameStateChanged;
@@ -230,16 +252,20 @@ public class GameManager : MonoBehaviourPunCallbacks
     private string SavePath(int slot) =>
         Path.Combine(Application.persistentDataPath, $"save{slot}.json");
 
+    /// <summary>출격 직전 자동 저장 슬롯. 사망/재시작이 되돌아갈 지점. 유저 슬롯(0~9)과 안 겹치게 띄움.</summary>
+    public const int AutoSaveSlot = 99;
+
     // 마지막으로 저장/로드한 슬롯. 사망 재시작 시 이 슬롯을 복원 대상으로 사용.
     private int _lastSaveSlot = 0;
     // 다음 씬 로드 완료 시 세이브를 복원할지 여부 (사망 재시작 전용).
     private bool _restoreOnNextLoad = false;
 
     // =====================================================================
-    // 저장 가능 여부 (STATION 씬에서만 true)
+    // 저장 가능 여부 — 씬 설정표의 canSave
+    // curSceneType이 아니라 실제 활성 씬 이름으로 조회함. 저장은 씬 전환 도중에도 불릴 수 있어
+    // 아직 갱신 전인 curSceneType을 믿으면 엉뚱한 씬 기준으로 판정됨.
     // =====================================================================
-    public bool CanSave =>
-        SceneManager.GetActiveScene().name == SCENE_TYPE.STATION.ToString();
+    public bool CanSave => SettingsOf(SceneManager.GetActiveScene().name).canSave;
 
     // =====================================================================
     // 초기화
@@ -253,12 +279,7 @@ public class GameManager : MonoBehaviourPunCallbacks
             SceneManager.sceneLoaded += OnSceneLoaded;
             // 처음 시작한 씬은 sceneLoaded가 안 오므로(구독 시점이 이미 로드 후) 여기서 직접 채움
             curSceneType = ParseSceneType(SceneManager.GetActiveScene().name);
-			// 씬-BGM 매핑을 인스펙터 리스트에서 구성
-			_sceneBGMMap.Clear();
-			foreach (SceneBGM entry in _sceneBGMList)
-			{
-				_sceneBGMMap[entry.scene.ToString()] = entry.bgm;
-			}
+			BuildSceneSettingsMap();
 
 			if (itemDatabase != null)
             {
@@ -347,11 +368,14 @@ public class GameManager : MonoBehaviourPunCallbacks
         // (특정 스테이지 씬 이름에 의존하지 않음 — 어느 씬에서 리셋돼도 부작용 없음)
         ResetBattleData();
 
-        // 사망 후 재시작(A안): 마지막 세이브를 복원.
+        // 예약된 세이브 복원(재시작/스테이션 복귀/불러오기).
         // 단, 이 시점(sceneLoaded)은 새 Player의 Start()(기본 로드아웃 장착)보다 먼저 실행되므로,
         // 여기서 바로 복원하면 직후 Start()의 기본 로드아웃에 덮어써진다.
         // → 한 프레임 기다렸다가(모든 Start 완료 후) 복원한다.
-        if (_restoreOnNextLoad)
+        //
+        // 로딩 씬은 건너뜀 — 거긴 잠깐 스쳐가는 곳이라 여기서 예약을 써버리면
+        // 정작 목적지 씬에서는 복원이 안 됨.
+        if (_restoreOnNextLoad && curSceneType != SCENE_TYPE.LOADING_SEQUENCE)
         {
             _restoreOnNextLoad = false;
             StartCoroutine(RestoreAfterLoad(_lastSaveSlot));
@@ -364,7 +388,23 @@ public class GameManager : MonoBehaviourPunCallbacks
     private IEnumerator RestoreAfterLoad(int slot)
     {
         yield return null; // Start() 단계 통과 대기
+
+        // 함선은 PlayerSpawner가 스폰하는데 연결이 늦으면 몇 프레임 뒤에 나옴.
+        // 없는 상태로 복원하면 로드아웃/HP가 통째로 누락되므로 잠깐 기다려줌.
+        // 스포너가 없는 씬(스테이션 등)은 기다려도 안 나오므로 바로 넘어감.
         RefreshPlayerRefToLocal();
+        if (playerRef == null && FindObjectOfType<PlayerSpawner>() != null)
+        {
+            const float waitLimit = 3f;
+            float waited = 0f;
+            while (playerRef == null && waited < waitLimit)
+            {
+                waited += Time.unscaledDeltaTime;
+                yield return null;
+                RefreshPlayerRefToLocal();
+            }
+        }
+
         yield return LoadDataRoutine(slot, null); // 서버/로컬 로드(비동기) 완료까지 대기
     }
 
@@ -418,20 +458,24 @@ public class GameManager : MonoBehaviourPunCallbacks
         SoundManager.Instance.StopSFXAll();
         VFXManager.Instance.ReturnAll();
 
-        // 전투씬을 벗어나므로 내 함선을 제거(PhotonView가 있으면 DDOL이라 씬 로드로는 안 죽음).
+        // 출격 흐름(격납고→맵선택→스테이지) 안에서는 함선을 유지함 —
+        // 격납고에서 바꾼 장착이 스테이지까지 따라가야 하기 때문. 그 밖(스테이션/로비/게임오버)은 제거.
         //
         // 방 여부로 판단하면 안 됨 — 살아남는 조건은 'PhotonView 있음'인데 방 조건으로 지우면
         // 방 밖 테스트에서 기체가 게임오버 씬까지 따라온다.
         // NetworkManager가 스폰한 함선이 아니면 LocalPlayerShip이 비어 있으므로 playerRef로 폴백.
-        if (NetworkManager.Instance != null && NetworkManager.Instance.HasLocalPlayerShip)
+        if (!KeepsPlayerShip(ResolveDestination(sceneName)))
         {
-            NetworkManager.Instance.DestroyLocalPlayerShip();
+            if (NetworkManager.Instance != null && NetworkManager.Instance.HasLocalPlayerShip)
+            {
+                NetworkManager.Instance.DestroyLocalPlayerShip();
+            }
+            else if (playerRef != null)
+            {
+                Destroy(playerRef.gameObject);
+            }
+            playerRef = null;
         }
-        else if (playerRef != null)
-        {
-            Destroy(playerRef.gameObject);
-        }
-        playerRef = null;
 
         // 게임오버로 빠질 때는 방에서도 나간다.
         //
@@ -515,7 +559,8 @@ public class GameManager : MonoBehaviourPunCallbacks
 
     private void PlaySceneBGM(string sceneName)
     {
-        if (_sceneBGMMap.TryGetValue(sceneName, out SOUND_TYPE bgm))
+        SOUND_TYPE bgm = SettingsOf(sceneName).bgm;
+        if (bgm != SOUND_TYPE.SFX_NONE)
         {
             // 보스 처치 후 이 씬 BGM으로 복귀하기 위해 기억
             _currentSceneBGM = bgm;
@@ -544,7 +589,14 @@ public class GameManager : MonoBehaviourPunCallbacks
     // UI에서 호출하는 공개 메서드
     // =====================================================================
 
-    /// <summary>새 게임 시작. 데이터 초기화 후 로딩 시퀀스로 이동.</summary>
+    /// <summary>새 게임 시작. 데이터 초기화 + 시작 데이터 지급 후 지정 씬으로 이동(로딩 씬 경유).</summary>
+    public void NewGame(SCENE_TYPE destination)
+    {
+        LoadingManager.NextScene = destination.ToString();
+        NewGame();
+    }
+
+    /// <summary>새 게임 시작. 목적지는 LoadingManager.NextScene에 미리 넣어둘 것.</summary>
     public void NewGame()
     {
         ClearData();
@@ -558,12 +610,30 @@ public class GameManager : MonoBehaviourPunCallbacks
         StartCoroutine(LoadGameRoutine(saveSlotNum));
     }
 
+    /// <summary>세이브를 불러온 뒤 지정한 씬으로 이동(로딩 씬 경유).</summary>
+    // LoadGame은 목적지를 안 정해서 LoadingManager.NextScene에 남아 있던 이전 값으로 가버림.
+    // 목적지를 먼저 박아두고 같은 경로를 태움.
+    public void LoadGameWithLoading(int saveSlotNum, SCENE_TYPE destination)
+    {
+        LoadingManager.NextScene = destination.ToString();
+        LoadGame(saveSlotNum);
+    }
+
     // 서버/로컬 로드가 비동기라, 로드 완료 후 상태 전환 + 씬 이동.
     private IEnumerator LoadGameRoutine(int saveSlotNum)
     {
         yield return LoadDataRoutine(saveSlotNum, null);
         ChangeState(GAME_STATE.PLAYING);
+        // 여기서의 복원은 함선이 없는 씬(로비/메인)에서 도는 경우가 많아 기체 부분이 통째로 누락됨.
+        // 목적지에 함선이 스폰된 뒤 한 번 더 씌우도록 예약함.
+        QueueRestore(saveSlotNum);
         LoadScene(SCENE_TYPE.LOADING_SEQUENCE);
+    }
+
+    /// <summary>해당 슬롯에 세이브 파일이 있는지. LOAD 버튼 활성/비활성 판정용.</summary>
+    public bool HasSave(int slot)
+    {
+        return File.Exists(SavePath(slot));
     }
 
     //=================================
@@ -582,6 +652,28 @@ public class GameManager : MonoBehaviourPunCallbacks
     //     <- PlayerLoadout에 장비/탄약 복원
     //     <- Inventory에 아이템 목록 복원
     //=================================
+
+    /// <summary>출격 직전 자동 저장. 스테이션에서 싱글/멀티를 고르는 순간 호출됨.</summary>
+    public void AutoSaveBeforeLaunch()
+    {
+        SaveGame(AutoSaveSlot);
+    }
+
+    /// <summary>자동 저장이 있으면 다음 씬 로드 후 복원하도록 예약.</summary>
+    private void QueueAutoSaveRestore()
+    {
+        QueueRestore(AutoSaveSlot);
+    }
+
+    // 해당 슬롯 파일이 있으면 다음 씬 로드 후 복원 예약. 없으면 아무것도 안 함.
+    private void QueueRestore(int slot)
+    {
+        _restoreOnNextLoad = File.Exists(SavePath(slot));
+        if (_restoreOnNextLoad)
+        {
+            _lastSaveSlot = slot;
+        }
+    }
 
     /// <summary>현재 게임 저장. STATION 씬에서만 가능.</summary>
     public void SaveGame(int saveSlotNum)
@@ -715,9 +807,20 @@ public class GameManager : MonoBehaviourPunCallbacks
     public void RestartStage()
     {
         IsGameOver = false;
-        _restoreOnNextLoad = File.Exists(SavePath(_lastSaveSlot));
+        QueueAutoSaveRestore();
         ChangeState(GAME_STATE.PLAYING);
-        LoadScene(SceneManager.GetActiveScene().name);
+        // 스테이지를 리로드하지 않고 격납고부터 다시 시작함 — 출격 준비를 고칠 기회를 줘야 함.
+        // 나갈 목적지(HangarExitButton.launchSceneName)는 static이라 출격 때 고른 값이 그대로 남아 있음.
+        LoadSceneWithLoading(SCENE_TYPE.BASE_LANDING);
+    }
+
+    /// <summary>스테이션 복귀. 출격 직전 자동 저장 시점으로 되돌림.</summary>
+    public void ReturnToStation()
+    {
+        IsGameOver = false;
+        QueueAutoSaveRestore();
+        ChangeState(GAME_STATE.PLAYING);
+        LoadSceneWithLoading(SCENE_TYPE.STATION);
     }
 
     /// <summary>스테이지 클리어 조건 달성 시 호출. (게임 전체 클리어와는 별개 — 그건 별도 로직 필요, 아직 미구현)</summary>
@@ -927,8 +1030,114 @@ public class GameManager : MonoBehaviourPunCallbacks
         }
     }
 
+    // 로딩 씬을 거치는 전환은 실제 목적지가 LoadingManager.NextScene에 들어 있음.
+    private static string ResolveDestination(string sceneName)
+    {
+        if (sceneName == SCENE_TYPE.LOADING_SEQUENCE.ToString())
+        {
+            return LoadingManager.NextScene;
+        }
+        return sceneName;
+    }
+
+    // =====================================================================
+    // 씬 설정표 조회
+    // 씬별 속성의 단일 출처. 여기엔 씬 이름이 하나도 안 들어감 —
+    // 속성 규칙은 카테고리(SCENE_CATEGORY)에만 걸려 있어서 씬이 늘어도 코드를 안 고침.
+    // =====================================================================
+    private void BuildSceneSettingsMap()
+    {
+        _sceneSettingsMap.Clear();
+        foreach (SceneSettings entry in _sceneSettings)
+        {
+            // 카테고리로 속성을 풀어서 넣어둠. 조회할 때마다 풀지 않고 여기서 한 번만 처리함.
+            _sceneSettingsMap[entry.scene.ToString()] = Resolve(entry);
+        }
+
+        // 표에 빠진 SCENE_TYPE은 조용히 전부 off가 되므로 알려줌 — 저장이 막히거나
+        // 함선이 사라지는 식으로 뒤늦게 드러나는 게 최악임.
+        List<string> missing = new List<string>();
+        foreach (SCENE_TYPE type in System.Enum.GetValues(typeof(SCENE_TYPE)))
+        {
+            if (type == SCENE_TYPE.UNKNOWN || type == SCENE_TYPE.LOADING_SEQUENCE
+                || _sceneSettingsMap.ContainsKey(type.ToString()))
+            {
+                continue;
+            }
+            missing.Add(type.ToString());
+        }
+
+        if (missing.Count > 0)
+        {
+            Debug.LogWarning($"[GameManager] 씬 설정표에 없는 씬: {string.Join(", ", missing)}\n" +
+                             "속성이 전부 off로 취급됨. Hub > 새 씬 만들기 > 씬 설정에서 채울 것.");
+        }
+    }
+
+    // 카테고리 → 속성. 씬 속성 규칙의 유일한 코드 출처.
+    // overrideFlags가 켜진 행은 사람이 찍은 체크박스를 그대로 씀.
+    private static SceneSettings Resolve(SceneSettings entry)
+    {
+        if (entry.overrideFlags)
+        {
+            return entry;
+        }
+
+        SceneSettings resolved = entry;
+        resolved.keepsPlayerShip = false;
+        resolved.canSave = false;
+        resolved.isBattleScene = false;
+        resolved.isStationScene = false;
+        resolved.shipControlDisabled = false;
+        resolved.shipHidden = false;
+
+        switch (entry.category)
+        {
+            case SCENE_CATEGORY.STATION:
+                resolved.isStationScene = true;
+                resolved.canSave = true;
+                break;
+            case SCENE_CATEGORY.BATTLE:
+                resolved.isBattleScene = true;
+                resolved.keepsPlayerShip = true;
+                break;
+            case SCENE_CATEGORY.HANGAR:
+                // 장착 결과를 봐야 하므로 보이긴 함
+                resolved.shipControlDisabled = true;
+                resolved.keepsPlayerShip = true;
+                break;
+            case SCENE_CATEGORY.TRANSIT:
+                // 스테이지까지 들고만 가고 화면엔 안 나옴
+                resolved.shipControlDisabled = true;
+                resolved.keepsPlayerShip = true;
+                resolved.shipHidden = true;
+                break;
+        }
+        return resolved;
+    }
+
+    private SceneSettings SettingsOf(SCENE_TYPE type)
+    {
+        return SettingsOf(type.ToString());
+    }
+
+    private SceneSettings SettingsOf(string sceneName)
+    {
+        if (!string.IsNullOrEmpty(sceneName) && _sceneSettingsMap.TryGetValue(sceneName, out SceneSettings settings))
+        {
+            return settings;
+        }
+        return new SceneSettings();   // 표에도 SCENE_TYPE에도 없는 작업씬 — 전부 false
+    }
+
+    // 그 씬으로 갈 때 내 함선을 남겨둘지. 출격 흐름(격납고→맵선택/대기실→스테이지) 안이면 남김.
+    private bool KeepsPlayerShip(string sceneName)
+    {
+        return SettingsOf(sceneName).keepsPlayerShip;
+    }
+
     // 씬 이름 → SCENE_TYPE. 이름이 정확히 일치할 때만 인정하고, 표에 없는 작업씬은 UNKNOWN을 돌려줌.
-    // SCENE_TYPE 이름 = 실제 씬 파일 이름 규칙에 기대는 건 _sceneBGMMap / CanSave와 동일함.
+    // SCENE_TYPE 이름 = 실제 씬 파일 이름 규칙에 기대는 건 씬 설정표 조회와 동일함.
     private SCENE_TYPE ParseSceneType(string sceneName)
     {
         // 대소문자 무시 — SceneManager.LoadScene(string)이 대소문자를 안 가리므로 씬 파일명이
@@ -1351,7 +1560,8 @@ public class GameManager : MonoBehaviourPunCallbacks
             }
 
             // 보유 스킬 복원 (skillId int → SkillData 참조, skillDatabase 통해 역참조)
-            if (playerRef.skillSystem != null)
+            // null이면 함선 없는 씬에서 저장된 것 — 그대로 넘기면 시작 스킬까지 지워짐
+            if (playerRef.skillSystem != null && data.skills != null)
             {
                 playerRef.skillSystem.LoadSaveData(data.skills);
             }
@@ -1408,36 +1618,23 @@ public class GameManager : MonoBehaviourPunCallbacks
     }
 
     // 비우기가 끝난 뒤에 지급해야 함 — 순서가 바뀌면 같이 지워짐.
-    // 장착 파츠는 여기서 안 건드림. UnitParts가 스폰 시 GameStartData를 직접 읽음.
+    // 여기서 주는 건 함선과 무관한 것(골드/가방)뿐임.
+    // 파츠는 UnitParts가, 스킬은 SkillSystem이 스폰 시 GameStartData를 직접 읽음 —
+    // 새 게임은 함선이 없는 씬(로비)에서 시작해서 여기서 주면 통째로 누락됨.
     private void GrantStartItems()
     {
-        if (_gameStartData == null)
+        if (_gameStartData == null || InventoryManager.Instance == null)
         {
             return;
         }
 
-        if (InventoryManager.Instance != null)
+        foreach (GameStartData.StartItem entry in _gameStartData.startItems)
         {
-            foreach (GameStartData.StartItem entry in _gameStartData.startItems)
+            if (entry == null || entry.item == null || entry.count <= 0)
             {
-                if (entry == null || entry.item == null || entry.count <= 0)
-                {
-                    continue;
-                }
-                InventoryManager.Instance.AddItem(entry.item, entry.count);
+                continue;
             }
-        }
-
-        if (playerRef != null && playerRef.skillSystem != null)
-        {
-            foreach (SkillData skill in _gameStartData.startSkills)
-            {
-                if (skill == null)
-                {
-                    continue;
-                }
-                playerRef.skillSystem.LearnSkill(skill);
-            }
+            InventoryManager.Instance.AddItem(entry.item, entry.count);
         }
     }
 }

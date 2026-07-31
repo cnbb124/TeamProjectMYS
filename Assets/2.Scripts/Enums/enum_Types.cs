@@ -166,19 +166,18 @@ public enum MISSILE_TYPE
 // MISSILE_FIRE_MODE 삭제 — 발사 수는 missileFirePositions.Count와 curAmmo 중 작은 값으로 자동 결정
 
 
-//Build Settings의 씬 순서와 일치해야 함. LoadScene(SCENE_TYPE)오버로드가(int)sceneType으로 로드함.
-// 현재 Build Settings 순서 확인 후 맞출것
+
 public enum SCENE_TYPE
 {
 	// ⚠ 모든 항목에 번호를 명시함. 명시가 없으면 앞 항목을 지웠을 때 뒤 번호가 밀려
 	//    씬/프리팹에 직렬화된 값이 다른 의미로 읽힘. 새로 추가할 때도 반드시 번호를 붙일 것.
-	//    항목을 지워도 그 번호는 재사용하지 않음.
+	
 	//    신규 번호는 사이에 끼워 넣을 여지를 두려고 5 단위로 띄움.
 	UNKNOWN = -1,   // 이 표에 없는 씬(작업씬 등). GameManager.curSceneType이 파싱 실패 시 쓰는 값
 	MAIN = 0,
 	STATION = 1,
-	STATION_1F = 2,
-	STATION_B2 = 3,
+	//STATION_1F = 2,
+	//STATION_B2 = 3,
 	BASE_LANDING = 4,
 	LOADING_SEQUENCE = 20,   // 로딩 시퀀스 씬
 	MULTIPLAYER = 25,   // 멀티 대기실 씬
@@ -186,9 +185,24 @@ public enum SCENE_TYPE
 	STAGE1 = 50,
 	STAGE2 = 51,
 
+
 	STAGE3 = 55,
 	STAGE4 = 60,
+	JAYEON = 900,
 	GAME_OVER = 999,   // 끝을 나타내는 값 — 신규 번호 계산에서 제외됨
+}
+
+// 씬의 성격. 씬마다 속성을 하나씩 찍는 대신 이 값 하나로 묶어서 정함.
+// 씬은 계속 늘어나지만 카테고리는 잘 안 늘어나므로, 속성 규칙은 여기에만 걸어둠
+// (GameManager.FlagsFor 참고). 이 분류로 안 맞는 씬만 표에서 개별 지정함.
+public enum SCENE_CATEGORY
+{
+	OTHER = 0,     // 로비/메뉴/게임오버 등 — 속성 전부 off
+	STATION = 1,   // 마을·거점 (저장 가능)
+	BATTLE = 2,    // 전투 스테이지
+	HANGAR = 3,    // 격납고 (함선은 있으나 조종 불가)
+	TRANSIT = 4,   // 맵선택·대기실 등 통과 씬 (함선만 들고 감)
+	LOADING = 5,   // 로딩 씬
 }
 public enum INPUT_CONTROL_TYPE
 {
@@ -326,6 +340,8 @@ public enum POOL_TYPE
 	ITEM_CONSUMABLE_HPKIT_DEFAULT,
 	ITEM_CONSUMABLE_BOOSTKIT_DEFAULT,
 	ITEM_CONSUMABLE_SHIELDKIT_DEFAULT,
+	ITEM_MATERIAL_MAGNET_DEFAULT = 205,
+	ITEM_MATERIAL_NICKEL = 206,
 }
 
 // PoolEntry.category — DisableByCategory(PoolCategory)에서 poolConfigs 필터링용.

@@ -4,6 +4,9 @@ using UnityEngine;
 
 public class GameStartCollider : MonoBehaviour
 {
+    // InputManager가 커서를 풀어야 하는지 판단할 때 봄.
+    public static bool IsOpen { get; private set; }
+
     [SerializeField] private GameObject UI;
     [SerializeField] private PlayerTestCtrl player;
 
@@ -43,10 +46,16 @@ public class GameStartCollider : MonoBehaviour
         //}
     }
 
+    private void OnDisable()
+    {
+        IsOpen = false;
+    }
+
     private void OpenInteraction()
     {
         player.canControl = false;
         _UIOpen = true;
+        IsOpen = true;
         UI.SetActive(true);
 
         Cursor.lockState = CursorLockMode.None;
@@ -58,6 +67,7 @@ public class GameStartCollider : MonoBehaviour
     {
         player.canControl = true;
         _UIOpen = false;
+        IsOpen = false;
         UI.SetActive(false);
 
         Cursor.lockState = CursorLockMode.Locked;

@@ -37,10 +37,13 @@ public enum ITEM_ID
 	MISSILE_PLAYER_DUMB_DEFAULT = 2201,                           //DUMB_MISSILE_END       = 2299,
 	//CLUSTER_MISSILE    = 2300,
 	MISSILE_PLAYER_CLUSTER_BASE_DEFAULT = 2301,                        //CLUSTER_MISSILE_END    = 2399,
-    MISSILE_PLAYER_CLUSTER_CHILDREN_DEFAULT = 2305,    
+	MISSILE_PLAYER_CLUSTER_BASE_MYS,
 
-    // ── 소모품 (3000번대) ─────────────────────────────────────────
-    __ID_CONSUMABLE_Do_not_select_ = 3000,
+	MISSILE_PLAYER_CLUSTER_CHILDREN_DEFAULT = 2305,
+	MISSILE_PLAYER_CLUSTER_CHILDREN_MYS,
+
+	// ── 소모품 (3000번대) ─────────────────────────────────────────
+	__ID_CONSUMABLE_Do_not_select_ = 3000,
 	//CONSUMABLE_HPKIT		= 3000,
 	CONSUMABLE_HPKIT_DEFAULT = 3001,			 //CONSUMABLE_HP_END		 = 3099,
 	//CONSUMABLE_SHIELDKIT	= 3100,

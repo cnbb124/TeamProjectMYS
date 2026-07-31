@@ -4,7 +4,7 @@ using UnityEngine;
 // HangarShipPresenter — 격납고에 스폰된 내 함선을 착륙 연출 앵커에 물림.
 //
 // 격납고에서도 함선을 정식 스폰해야 장착이 전투씬까지 이어짐(씬 배치본은 DDOL이 안 돼 씬과 함께 사라짐).
-// 조종 차단은 여기가 아니라 GameManager.IsHangarScene을 보는 Unit.ShouldPause / InputManager가 함.
+// 조종 차단은 여기가 아니라 GameManager.ShipControlDisabled를 보는 Unit.ShouldPause / InputManager가 함.
 //
 // [에디터 세팅]
 //   1. 격납고 씬 빈 오브젝트에 부착.
