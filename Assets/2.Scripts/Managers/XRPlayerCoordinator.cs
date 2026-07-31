@@ -113,7 +113,7 @@ public sealed class XRPlayerCoordinator : MonoBehaviour
                 }
 
                 switcher.enabled = true;
-                switcher.SetView(true);
+                switcher.ActivateCockpitView();
             }
             else
             {

@@ -233,13 +233,14 @@ public abstract class Unit : MonoBehaviour, IDamageable, IPunObservable
 
 
 	// =====================================================================
-	// 일시정지 / 게임오버 체크
+	// 일시정지 / 게임오버 / 격납고 체크
 	// Player, Enemy 등 자식 클래스의 Update/FixedUpdate 첫 줄에서 사용.
 	// Unit.Update() 에도 적용 - 자식이 base.Update() 호출 시 이중 안전망.
+	// 격납고도 여기 묶음 — 이유는 달라도 '안 움직이고 안 쏜다'는 결과가 같음.
 	// =====================================================================
 	protected bool ShouldPause =>
 		GameManager.Instance != null &&
-		(GameManager.Instance.IsPaused || GameManager.Instance.IsGameOver);
+		(GameManager.Instance.IsPaused || GameManager.Instance.IsGameOver || GameManager.Instance.IsHangarScene);
 
 
 	// 크리여부 판정은 투사체가 담당 크확은 유닛이. → HitInfo.isCritical로 전달받음

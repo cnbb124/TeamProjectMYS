@@ -32,7 +32,8 @@ public partial class ProjectHubWindow
 		("클러스터", "ClusterMisslleData"),
 		("스킬", "SkillData"),
 		("레벨 스탯", "LevelStatData"),
-		("기본 장착", "DefaultLoadout"),
+		("시작 데이터", "GameStartData"),
+		("기본 장착(레거시)", "DefaultLoadout"),
 		("자원", "ResourceData"),
 		("맵 리스트","MapListData")
 	};

@@ -50,6 +50,10 @@ public class UnitParts : MonoBehaviour
     private static PART_TYPE[] BASE_SLOT_TYPES = { PART_TYPE.ENGINE, PART_TYPE.FRAME };
 
     [Header("<size=14>기본 로드아웃 (설정 시 인스펙터 파츠 슬롯 무시)</size>")]
+    [Tooltip("GameStartData.startParts를 장착함.")]
+    [SerializeField] private GameStartData _gameStartData;
+
+    [Tooltip("레거시 — GameStartData로 이관됨. 위가 비었을 때만 씀.")]
     [SerializeField] private DefaultLoadout _defaultLoadout;
 
     // 스폰된 파츠 프리팹이 부착될 부모. 닷지/부스트 등 연출 애니메이션이 VIsual을 움직이므로,
@@ -109,9 +113,10 @@ public class UnitParts : MonoBehaviour
 
     private void Start()
     {
-        if (_defaultLoadout != null)
+        List<PartData> startParts = GetStartParts();
+        if (startParts != null)
         {
-            ApplyDefaultLoadout();
+            ApplyStartParts(startParts);
             return;
         }
 
@@ -132,17 +137,31 @@ public class UnitParts : MonoBehaviour
         _unit.RefillToMax();
     }
 
+    // 시작 파츠 목록. GameStartData 우선, 없으면 레거시 DefaultLoadout. 둘 다 없으면 null.
+    private List<PartData> GetStartParts()
+    {
+        if (_gameStartData != null && _gameStartData.startParts != null)
+        {
+            return _gameStartData.startParts;
+        }
+        if (_defaultLoadout != null)
+        {
+            return _defaultLoadout.defaultParts;
+        }
+        return null;
+    }
+
     /// <summary>
-    /// DefaultLoadout SO 기반으로 자동 장착.
+    /// 시작 파츠 목록으로 자동 장착.
     /// FRAME 먼저 처리해야 providedSlots 기반 런처 슬롯이 생성됨.
     /// </summary>
-    private void ApplyDefaultLoadout()
+    private void ApplyStartParts(IEnumerable<PartData> parts)
     {
         // 최초 로드아웃 — 아직 프리팹/스탯보너스가 적용되기 전(Start)이라 정리 없이 재생성.
         // 인스펙터 슬롯 전체 제거 후 기본 슬롯만 재생성 (이전 슬롯 구조 완전 무시)
         partSlots.Clear();
         EnsureBaseSlots();
-        EquipPartsList(_defaultLoadout.defaultParts);
+        EquipPartsList(parts);
 
         // Unit.Start()와의 실행순서가 보장되지 않아 cur=max 초기화가 위 보너스 적용 전에 끝났을 수 있음.
         // 파츠 적용이 끝난 지금 시점 기준으로 cur을 다시 max로 동기화.
@@ -201,13 +220,13 @@ public class UnitParts : MonoBehaviour
         }
     }
 
-    // DefaultLoadout 전용 장착. 빈 슬롯에 순서대로 채움.
+    // 시작 파츠 전용 장착. 빈 슬롯에 순서대로 채움.
     private void EquipFromDefault(PartData newPart)
     {
         PartSlotEntry slot = GetFirstEmptySlot(newPart.partType);
         if (slot == null)
         {
-            Debug.LogWarning("[UnitParts] DefaultLoadout: 빈 슬롯 없음 - " + newPart.partType);
+            Debug.LogWarning("[UnitParts] 시작 파츠: 빈 슬롯 없음 - " + newPart.partType);
             return;
         }
 

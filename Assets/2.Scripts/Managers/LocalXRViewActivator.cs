@@ -64,7 +64,7 @@ public sealed class LocalXRViewActivator : MonoBehaviour
         }
 
         switcher.enabled = true;
-        switcher.SetView(true);
+        switcher.ActivateCockpitView();
         _activatedSwitchers.Add(instanceId);
     }
 }

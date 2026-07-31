@@ -153,6 +153,9 @@ public class Player : Unit
 	// 기체를 직접 따라가면 카메라가 물리 스텝 계단을 물려받아 떨리므로 한 겹 끼워둔 것(Start 참고).
 	private Transform _camAimProxy;
 
+	/// <summary>카메라가 따라갈 분신. 뒤늦게 깨어난 CameraManager가 직접 가져감.</summary>
+	public Transform CameraAimProxy => _camAimProxy;
+
 
 	// ==================플레이어용==================
 	[Header("경험치/레벨")]

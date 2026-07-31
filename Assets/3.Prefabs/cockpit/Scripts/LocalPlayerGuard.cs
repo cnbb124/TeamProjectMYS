@@ -65,7 +65,8 @@ public sealed class LocalPlayerGuard : MonoBehaviour
 
         if (_viewController != null)
         {
-            _viewController.SetView(true);
+            // SetView는 초기화 전이면 무시됨 — 초기화까지 하는 쪽으로 부름.
+            _viewController.ActivateCockpitView();
         }
     }
 

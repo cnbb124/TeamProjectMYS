@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using Cinemachine;
+using Photon.Pun;
 using UnityEngine;
 using UnityEngine.XR;
 
@@ -49,6 +50,9 @@ public sealed class CockpitViewSwitcher : MonoBehaviour
     [Tooltip("원본 3인칭 시점을 만드는 Virtual Camera. 비어 있으면 씬에서 찾습니다.")]
     [SerializeField] private CinemachineVirtualCamera _thirdPersonVirtualCamera;
 
+    [Tooltip("3인칭 카메라를 못 찾으면 새로 만듦. Main Camera가 지워진 작업씬 전용이라 기본은 끔.")]
+    [SerializeField] private bool _createThirdPersonCameraIfMissing = false;
+
     [Header("Optional")]
     [Tooltip("카메라별 근거리 비주얼 표시 정책을 담당합니다.")]
     [SerializeField] private CockpitVisibilityController _visibilityController;
@@ -77,9 +81,56 @@ public sealed class CockpitViewSwitcher : MonoBehaviour
 
     public bool IsCockpitView => _isCockpitView;
 
+    // 콕핏 카메라는 프리팹에서 켜진 채 MainCamera 태그를 달고 있음 — 남의 함선까지 켜지지 않게 일단 꺼둠.
     private void Awake()
     {
+        // LocalPlayerGuard(-1000)가 먼저 VR 진입을 끝냈으면 도로 끄면 안 됨.
+        if (_initialized)
+        {
+            return;
+        }
+        ShutDownCockpitCamera();
+    }
+
+    // 내 함선만 초기화. Awake는 IsMine 확정 전이라 Start에서 함.
+    private void Start()
+    {
+        if (_initialized || !IsLocalShip())
+        {
+            return;
+        }
         Initialize();
+    }
+
+    // 싱글(방 밖)이면 무조건 내 것.
+    private bool IsLocalShip()
+    {
+        PhotonView owner = GetComponentInParent<PhotonView>();
+        return owner == null || !PhotonNetwork.InRoom || owner.IsMine;
+    }
+
+    /// <summary>VR 시점 진입. 'VR 실행 중 + 내 함선'을 확인한 쪽만 호출할 것.</summary>
+    public void ActivateCockpitView()
+    {
+        if (!_initialized)
+        {
+            Initialize();
+        }
+        SetView(true);
+    }
+
+    private void ShutDownCockpitCamera()
+    {
+        if (_vrCamera == null)
+        {
+            _vrCamera = FindCameraInChildren();
+        }
+        if (_vrCamera == null)
+        {
+            return;
+        }
+
+        SetCameraActive(_vrCamera, _vrCamera.GetComponent<AudioListener>(), false);
     }
 
     private void Update()
@@ -153,16 +204,14 @@ public sealed class CockpitViewSwitcher : MonoBehaviour
                 : FindExistingThirdPersonCamera();
         }
 
-        // SeokYong 씬처럼 원본 Virtual Camera는 남아 있지만 출력용 Main Camera가
-        // 제거된 경우가 있다. 임의 추적 카메라를 만드는 것이 아니라,
-        // 원본 Cinemachine 구도를 출력할 표준 Camera + Brain만 복구한다.
-        if (_thirdPersonCamera == null)
+        // Main Camera가 지워진 작업씬 복구용. 켜두면 전투 카메라가 없는 씬에서도 만들어져 MainCamera가 늘어남.
+        if (_thirdPersonCamera == null && _createThirdPersonCameraIfMissing)
         {
             _thirdPersonCamera = CreateCinemachineOutputCamera();
             _thirdPersonBrain = _thirdPersonCamera.GetComponent<CinemachineBrain>();
         }
 
-        if (_thirdPersonBrain == null)
+        if (_thirdPersonBrain == null && _thirdPersonCamera != null)
         {
             _thirdPersonBrain = _thirdPersonCamera.GetComponent<CinemachineBrain>();
         }
@@ -172,8 +221,11 @@ public sealed class CockpitViewSwitcher : MonoBehaviour
             _thirdPersonVirtualCamera = FindSceneComponent<CinemachineVirtualCamera>();
         }
 
+        // 3인칭 카메라가 없어도 콕핏 시점은 되므로 초기화는 계속함. 전환만 막힘(ToggleView).
         _vrListener = GetOrAddAudioListener(_vrCamera);
-        _thirdPersonListener = GetOrAddAudioListener(_thirdPersonCamera);
+        _thirdPersonListener = _thirdPersonCamera != null
+            ? GetOrAddAudioListener(_thirdPersonCamera)
+            : null;
         _initialized = true;
 
         SetView(_startInCockpit);
@@ -182,7 +234,7 @@ public sealed class CockpitViewSwitcher : MonoBehaviour
         {
             Debug.Log(
                 $"[CockpitViewSwitcher] 준비 완료: VR={_vrCamera.name}, " +
-                $"3인칭={_thirdPersonCamera.name}, " +
+                $"3인칭={(_thirdPersonCamera != null ? _thirdPersonCamera.name : "없음(전환 불가)")}, " +
                 $"Brain={(_thirdPersonBrain != null ? _thirdPersonBrain.name : "없음")}, " +
                 $"VirtualCamera={(_thirdPersonVirtualCamera != null ? _thirdPersonVirtualCamera.name : "없음")}",
                 this);
@@ -262,6 +314,16 @@ public sealed class CockpitViewSwitcher : MonoBehaviour
 
     public void ToggleView()
     {
+        // 3인칭 카메라가 없으면 콕핏만 꺼지고 켜질 게 없어 화면이 까매짐.
+        if (_isCockpitView && _thirdPersonCamera == null)
+        {
+            Debug.LogWarning(
+                "[CockpitViewSwitcher] 이 씬엔 3인칭 출력 카메라가 없어 전환하지 않음 " +
+                "(CinemachineBrain이 붙은 카메라가 있어야 함).",
+                this);
+            return;
+        }
+
         SetView(!_isCockpitView);
     }
 

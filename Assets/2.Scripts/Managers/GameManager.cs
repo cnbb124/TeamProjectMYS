@@ -121,6 +121,11 @@ public class GameManager : MonoBehaviourPunCallbacks
 		|| curSceneType == SCENE_TYPE.STATION_1F
 		|| curSceneType == SCENE_TYPE.STATION_B2;
 
+	/// <summary>격납고 씬인지 (함선은 서 있지만 조종은 안 되는 곳)</summary>
+	// Unit.ShouldPause / InputManager가 이걸 보고 조종·전투·커서잠금을 막음.
+	public bool IsHangarScene =>
+		curSceneType == SCENE_TYPE.BASE_LANDING;
+
     // 상태 변화 시 UI에서 구독 (패널 전환 등)
     public GameStateHandler onGameStateChanged;
 
@@ -214,6 +219,10 @@ public class GameManager : MonoBehaviourPunCallbacks
     [Header("━━━━━━ 스킬 데이터베이스 ━━━━━━")]
     [Tooltip("SkillDatabase.asset 연결 필수. Awake에서 Init() 호출.")]
     public SkillDatabase skillDatabase;
+
+    [Header("━━━━━━ 새 게임 시작 데이터 ━━━━━━")]
+    [Tooltip("GameStartData.asset 연결. 미연결이면 새 게임이 골드 0 / 소지품 없음으로 시작함.")]
+    [SerializeField] private GameStartData _gameStartData;
 
     // =====================================================================
     // 저장 경로 / 재시작 상태
@@ -373,7 +382,19 @@ public class GameManager : MonoBehaviourPunCallbacks
         StartCoroutine(LoadSceneRoutine(sceneType.ToString()));
     }
 
-    private IEnumerator LoadSceneRoutine(string sceneName)
+    public void LoadSceneWithLoading(string sceneName)
+    {
+        LoadingManager.NextScene = sceneName;
+        LoadScene(SCENE_TYPE.LOADING_SEQUENCE);
+    }
+
+	public void LoadSceneWithLoading(SCENE_TYPE sceneType)
+	{
+		LoadingManager.NextScene = sceneType.ToString();
+		LoadScene(SCENE_TYPE.LOADING_SEQUENCE);
+	}
+
+	private IEnumerator LoadSceneRoutine(string sceneName)
     {
         // 전환 전 초기화
         // 메뉴(일시정지/인벤토리)가 열린 채 씬이 전환돼도 다음 씬은 정상 진행되도록 초기화
@@ -1356,7 +1377,7 @@ public class GameManager : MonoBehaviourPunCallbacks
     {
         if (InventoryManager.Instance != null)
         {
-            InventoryManager.Instance.gold = 0;
+            InventoryManager.Instance.gold = _gameStartData != null ? _gameStartData.startGold : 0;
             if (InventoryManager.Instance.items != null)
             {
                 InventoryManager.Instance.items.Clear();
@@ -1382,6 +1403,41 @@ public class GameManager : MonoBehaviourPunCallbacks
                 }
             }
         }
+        GrantStartItems();
         ResetBattleData();
+    }
+
+    // 비우기가 끝난 뒤에 지급해야 함 — 순서가 바뀌면 같이 지워짐.
+    // 장착 파츠는 여기서 안 건드림. UnitParts가 스폰 시 GameStartData를 직접 읽음.
+    private void GrantStartItems()
+    {
+        if (_gameStartData == null)
+        {
+            return;
+        }
+
+        if (InventoryManager.Instance != null)
+        {
+            foreach (GameStartData.StartItem entry in _gameStartData.startItems)
+            {
+                if (entry == null || entry.item == null || entry.count <= 0)
+                {
+                    continue;
+                }
+                InventoryManager.Instance.AddItem(entry.item, entry.count);
+            }
+        }
+
+        if (playerRef != null && playerRef.skillSystem != null)
+        {
+            foreach (SkillData skill in _gameStartData.startSkills)
+            {
+                if (skill == null)
+                {
+                    continue;
+                }
+                playerRef.skillSystem.LearnSkill(skill);
+            }
+        }
     }
 }

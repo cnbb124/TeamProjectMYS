@@ -23,8 +23,9 @@ public class LobbyUIManager : MonoBehaviour
     public void OnClickNewGame()
     {
         HangarExitButton.launchSceneName = "MAP_SELECT"; // 격납고쪽에 다음 갈곳 저장
-        LoadingManager.NextScene = "BASE_LANDING"; // 격납고 이동
-        GameManager.Instance.LoadScene(SCENE_TYPE.LOADING_SEQUENCE);
+        GameManager.Instance.LoadSceneWithLoading(SCENE_TYPE.BASE_LANDING);
+        //LoadingManager.NextScene = "BASE_LANDING"; // 격납고 이동
+        //GameManager.Instance.LoadScene(SCENE_TYPE.LOADING_SEQUENCE);
     }
 
     public void OnClickLoadGame()

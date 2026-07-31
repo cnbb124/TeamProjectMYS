@@ -1281,7 +1281,10 @@ public class InputManager : MonoBehaviour
     {
         bool noPlayerInScene = GameManager.Instance == null || GameManager.Instance.playerRef == null;
         bool isPaused = GameManager.Instance != null && GameManager.Instance.IsPaused;
+        // 격납고엔 함선이 서 있어 playerRef가 차 있음 — 안 풀면 커서가 잠겨 장착 UI를 못 누름.
+        bool isHangar = GameManager.Instance != null && GameManager.Instance.IsHangarScene;
         return noPlayerInScene
+            || isHangar
             || Input.GetKey(KeyCode.LeftAlt) || Input.GetKey(KeyCode.RightAlt)
             || InventoryPanelUI.IsOpen
             || PauseMenuUI.IsOpen   // 멀티에선 IsPaused가 false라, 메뉴 열림 자체로 커서를 풀어야 클릭 가능

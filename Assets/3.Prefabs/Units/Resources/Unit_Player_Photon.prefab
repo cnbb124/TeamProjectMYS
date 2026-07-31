@@ -116,7 +116,7 @@ MonoBehaviour:
   level: 1
   exp: 0
   expToNextLevel: 100
-  missileSlotGainInterval: 3
+  levelStatData: {fileID: 11400000, guid: b8998c8d80c8e134191b743f6364641c, type: 2}
   fuelMoveConsumeRate: 5
   fuelBoostConsumeRate: 10
   maxFuelCapacity: 5000
@@ -184,6 +184,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 0
   _losBufferSize: 18
+  _losGraceTime: 0.3
   lockOnRange: 1125
   lockOnRequiredTime: 0.8
   targetLayerMask:
@@ -226,7 +227,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7483eddd1f61ff44cb7573f041af0021, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _defaultLoadout: {fileID: 11400000, guid: 7c2bd1293467d554591b2fc6ec5b62fd, type: 2}
+  _gameStartData: {fileID: 11400000, guid: c1feac3284267d841a98edb5793221dc, type: 2}
+  _defaultLoadout: {fileID: 0}
   _visualRoot: {fileID: 0}
   partSlots: []
 --- !u!114 &7591612362499378302

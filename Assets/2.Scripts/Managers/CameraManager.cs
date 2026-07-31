@@ -58,6 +58,21 @@ public class CameraManager : MonoBehaviour
         }
     }
 
+    // 함선이 DDOL이라 다른 씬에서 태어났으면 Player.Start의 등록이 여기선 안 돎 — 카메라가 직접 회수함.
+    private void Start()
+    {
+        if (_virtualCamera != null && _virtualCamera.Follow != null)
+        {
+            return;
+        }
+
+        Player player = GameManager.Instance != null ? GameManager.Instance.playerRef : null;
+        if (player != null && player.CameraAimProxy != null)
+        {
+            SetFollowTarget(player.CameraAimProxy);
+        }
+    }
+
     /// <summary>vCam이 따라갈 대상 지정(로컬 플레이어가 스폰 시 자기 자신을 넘김). _bindLookAt이면 LookAt도 같이.</summary>
     public void SetFollowTarget(Transform target)
     {

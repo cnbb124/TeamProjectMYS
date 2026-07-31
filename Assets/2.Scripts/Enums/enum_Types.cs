@@ -42,10 +42,13 @@ public enum LAYER_TYPE
 //적종류
 public enum ENEMY_TYPE
 {
-	DROPSHIP,
-	GUNSHIP,
-	MISSLIESHIP,
-	BOSS,
+	// 적
+	GUNSHIP = 0,
+	DROPSHIP = 5,
+	MISSILESHIP = 10,
+	WORKER = 15,
+	BOSS = 20,
+	STATION = 30,
 }
 //피해종류
 public enum DAMAGE_TYPE
