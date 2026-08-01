@@ -98,6 +98,14 @@ public class WeaponSystem : MonoBehaviour
 	[SerializeField]
 	private bool _useMissileSound = true;
 
+	// 레거시
+
+	//[SerializeField]
+	//private bool _useLaunchBulletAnim = true;
+	//[Tooltip("미사일 발사 시 애니메이션 재생 여부.")]
+	//[SerializeField]
+	//private bool _useLaunchMissileAnim = true;
+
 	[Tooltip("총알 발사 머즐플래시 재생 시간 설정")]
 	[SerializeField]
 	private float _bulletMuzzleFlashVFXPlayTime = 0.2f;

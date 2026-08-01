@@ -65,15 +65,15 @@ MonoBehaviour:
   _blocksLineOfSight: 0
   weaponSystem: {fileID: 0}
   skillSystem: {fileID: 0}
-  maxHpRemaining: 700
-  maxShieldCapacity: 700
+  maxHpRemaining: 600
+  maxShieldCapacity: 450
   shieldRegainDelay: 2
   shieldRegainRate: 35
   isShieldRegaining: 0
   shield: {fileID: 8632861264470973050}
   bodyHitboxRoot: {fileID: 2330727422614379468}
-  maxArmor: 200
-  defense: 3
+  maxArmor: 0
+  defense: 0
   criChance: 30
   criDamageMultiplier: 1.5
   _deathSequenceDuration: 1.5
@@ -152,16 +152,16 @@ MonoBehaviour:
   missileFireCooldown: 2.5
   missileSlots:
   - type: 0
-    curAmmo: 999
-    maxAmmo: 999
+    curAmmo: 300
+    maxAmmo: 300
     missileData: {fileID: 11400000, guid: 2652fd978459f5a44aad1cc7fa6033a7, type: 2}
   - type: 2
-    curAmmo: 20
-    maxAmmo: 40
+    curAmmo: 10
+    maxAmmo: 10
     missileData: {fileID: 11400000, guid: 8c191d98c98221143a109045fef3cf95, type: 2}
   - type: 1
     curAmmo: 300
-    maxAmmo: 400
+    maxAmmo: 300
     missileData: {fileID: 11400000, guid: 3d552595dc550124e99acaedac3d0fde, type: 2}
   curMissileType: 0
 --- !u!114 &3086103550316328721
@@ -227,7 +227,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7483eddd1f61ff44cb7573f041af0021, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _gameStartData: {fileID: 11400000, guid: c1feac3284267d841a98edb5793221dc, type: 2}
   _defaultLoadout: {fileID: 0}
   _visualRoot: {fileID: 0}
   partSlots: []
@@ -274,7 +273,6 @@ MonoBehaviour:
   - 
   - 
   - 
-  _gameStartData: {fileID: 11400000, guid: c1feac3284267d841a98edb5793221dc, type: 2}
   _startingSkills: []
   _mysSiloPositions:
   - {fileID: 7059626052137299445}
