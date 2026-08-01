@@ -100,6 +100,14 @@ public class PlayerSceneVisibility : MonoBehaviourPunCallbacks
             return;
         }
 
+        // 격납고처럼 각자 자기 기체만 봐야 하는 씬이면, 같은 씬에 있어도 남 함선은 숨긴다.
+        // (씬 자체는 공유되지만 정비 화면이라 남의 기체가 겹쳐 보이면 안 됨)
+        if (GameManager.Instance != null && GameManager.Instance.OtherShipsHidden)
+        {
+            SetVisible(false);
+            return;
+        }
+
         // 남 함선: 소유자의 '현재 씬'이 나의 현재 씬과 '확실히 다를' 때만 숨긴다.
         // 소유자 씬을 아직 모르면(프로퍼티 미수신/미설정) 숨기지 않는다 — 같은 씬인데 타이밍 때문에
         // 프로퍼티를 못 받아서 서로 안 보이는 비대칭 버그를 막기 위함. 정보가 오면 OnPlayerPropertiesUpdate가 재평가.

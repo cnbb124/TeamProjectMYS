@@ -180,7 +180,7 @@ public sealed class XRMainMenuRenderTextureAdapter : MonoBehaviour
             case "MULTIPLAYER":
             case "BASE_LANDING":
             case "Base_Landing":
-            case "GAME_OVER":
+            case "RESULT":
             case "LOADING_SEQUENCE":
                 return true;
             default:
@@ -561,7 +561,7 @@ public sealed class XRRenderTexturePanelInput : XRBaseInteractable
             case "MULTIPLAYER":
             case "BASE_LANDING":
             case "Base_Landing":
-            case "GAME_OVER":
+            case "RESULT":
             case "LOADING_SEQUENCE":
                 return true;
             default:

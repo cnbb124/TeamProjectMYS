@@ -19,6 +19,7 @@ public class SavedPartSlot
 {
     public PART_TYPE slotType;
     public int       partId;  // (int)ITEM_ID
+    public int       curPartHp;   // version 2부터
 }
 
 // 미사일 슬롯 하나를 JSON-safe 하게 저장하는 클래스.
@@ -61,7 +62,7 @@ public class SavedItemStack
 [System.Serializable]
 public class SaveData
 {
-    public const int CURRENT_VERSION = 1;
+    public const int CURRENT_VERSION = 2;
     public int version = CURRENT_VERSION;
 
     //플레이어 스탯

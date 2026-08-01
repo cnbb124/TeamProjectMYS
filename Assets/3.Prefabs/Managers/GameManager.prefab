@@ -56,6 +56,18 @@ MonoBehaviour:
     isStationScene: 0
     shipControlDisabled: 0
     shipHidden: 0
+    otherShipsHidden: 0
+  - scene: 5
+    category: 0
+    bgm: 9999
+    overrideFlags: 0
+    keepsPlayerShip: 0
+    canSave: 0
+    isBattleScene: 0
+    isStationScene: 0
+    shipControlDisabled: 0
+    shipHidden: 0
+    otherShipsHidden: 0
   - scene: 20
     category: 5
     bgm: 9999
@@ -66,6 +78,7 @@ MonoBehaviour:
     isStationScene: 0
     shipControlDisabled: 0
     shipHidden: 0
+    otherShipsHidden: 0
   - scene: 1
     category: 1
     bgm: 102
@@ -76,6 +89,7 @@ MonoBehaviour:
     isStationScene: 0
     shipControlDisabled: 0
     shipHidden: 0
+    otherShipsHidden: 0
   - scene: 4
     category: 3
     bgm: 9999
@@ -86,6 +100,7 @@ MonoBehaviour:
     isStationScene: 0
     shipControlDisabled: 0
     shipHidden: 0
+    otherShipsHidden: 0
   - scene: 30
     category: 4
     bgm: 9999
@@ -96,6 +111,7 @@ MonoBehaviour:
     isStationScene: 0
     shipControlDisabled: 0
     shipHidden: 0
+    otherShipsHidden: 0
   - scene: 25
     category: 4
     bgm: 9999
@@ -106,16 +122,7 @@ MonoBehaviour:
     isStationScene: 0
     shipControlDisabled: 0
     shipHidden: 0
-  - scene: 51
-    category: 2
-    bgm: 9999
-    overrideFlags: 0
-    keepsPlayerShip: 0
-    canSave: 0
-    isBattleScene: 0
-    isStationScene: 0
-    shipControlDisabled: 0
-    shipHidden: 0
+    otherShipsHidden: 0
   - scene: 50
     category: 2
     bgm: 105
@@ -126,26 +133,7 @@ MonoBehaviour:
     isStationScene: 0
     shipControlDisabled: 0
     shipHidden: 0
-  - scene: 55
-    category: 2
-    bgm: 9999
-    overrideFlags: 0
-    keepsPlayerShip: 0
-    canSave: 0
-    isBattleScene: 0
-    isStationScene: 0
-    shipControlDisabled: 0
-    shipHidden: 0
-  - scene: 60
-    category: 2
-    bgm: 9999
-    overrideFlags: 0
-    keepsPlayerShip: 0
-    canSave: 0
-    isBattleScene: 0
-    isStationScene: 0
-    shipControlDisabled: 0
-    shipHidden: 0
+    otherShipsHidden: 0
   - scene: 999
     category: 0
     bgm: 9999
@@ -156,6 +144,7 @@ MonoBehaviour:
     isStationScene: 0
     shipControlDisabled: 0
     shipHidden: 0
+    otherShipsHidden: 0
   - scene: 900
     category: 0
     bgm: 9999
@@ -166,6 +155,7 @@ MonoBehaviour:
     isStationScene: 0
     shipControlDisabled: 0
     shipHidden: 0
+    otherShipsHidden: 0
   _bossBGM: 109
   _bossBGMFadeDuration: 1.5
   curState: 0
@@ -176,6 +166,8 @@ MonoBehaviour:
   bossSpawned: 0
   _bossTargetsTotal: 0
   _bossTargetsDestroyed: 0
+  _stageClearSequenceTime: 15
+  _stageClearProjectileRange: 100
   _fadeImage: {fileID: 182902350571200689}
   fadeDuration: 1.5
   itemDatabase: {fileID: 11400000, guid: 2f0581e5b62951543ac6117778fbee09, type: 2}

@@ -31,9 +31,8 @@ public class GameOverUI : MonoBehaviour
 
     [Header("씬 이름")]
     [SerializeField] private string lobbySceneName = "TestLobby"; // 로비 씬
-    [Tooltip("체크 시 로딩 씬(LoadingManager) 경유해서 전환")]
+    [Tooltip("체크 시 로딩 씬 경유해서 전환")]
     [SerializeField] private bool useLoading = false;
-    [SerializeField] private string loadingSceneName = "LoadingScene";
 
     // GameManager 참조. Start에서 1회만 잡고 OnEnable/OnDisable은 이 필드만 씀.
     private GameManager _gameManager;
@@ -123,29 +122,20 @@ public class GameOverUI : MonoBehaviour
     {
         // 씬 전환은 GameManager 경유 — 전환 직전 정리(풀/사운드/이펙트 회수)가 실행되어야
         // DontDestroyOnLoad 매니저가 파괴된 유닛 참조를 들고 가는 문제가 안 생김.
-        if (GameManager.Instance != null)
+        if (GameManager.Instance == null)
         {
-            if (useLoading)
-            {
-                LoadingManager.NextScene = sceneName;
-                GameManager.Instance.LoadScene(loadingSceneName);
-            }
-            else
-            {
-                GameManager.Instance.LoadScene(sceneName);
-            }
+            // GameManager 없는 테스트 씬 대비 폴백(직접 로드)
+            SceneManager.LoadScene(sceneName);
             return;
         }
 
-        // GameManager 없는 테스트 씬 대비 폴백(직접 로드)
         if (useLoading)
         {
-            LoadingManager.NextScene = sceneName;
-            SceneManager.LoadScene(loadingSceneName);
+            GameManager.Instance.LoadSceneWithLoading(sceneName);
         }
         else
         {
-            SceneManager.LoadScene(sceneName);
+            GameManager.Instance.LoadScene(sceneName);
         }
     }
 }

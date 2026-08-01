@@ -372,13 +372,16 @@ public class Enemy : Unit
 	// 아이템 드랍 1회 보장용. 반납이 지연되는 경로에서 OnDying()이 계속 돌아도 중복 드랍 안 되게 막음.
 	private bool _deathItemDropped;
 
+	/// <summary>보스 스폰 조건용 킬카운트에 포함되는 적인지.</summary>
+	protected virtual bool CountsTowardKillCount => true;
+
 	protected override void Die()
 	{
 		// 보상은 min~max 범위에서 랜덤 (같은 적이라도 매번 조금씩 다르게). Random.Range(int)는 max 미포함이라 +1.
 		int exp = Random.Range(expRewardMin, expRewardMax + 1);
 		int gold = Random.Range(goldRewardMin, goldRewardMax + 1);
 		// 킬카운트 + 보상(경험치/골드)은 GameManager가 killer(_lastAttacker) 기준으로 분배.
-		GameManager.Instance?.OnEnemyKilled(_lastAttacker, exp, gold);
+		GameManager.Instance?.OnEnemyKilled(_lastAttacker, exp, gold, CountsTowardKillCount);
 
 		// 풀 반납(SetActive(false))은 사망 애니가 재생되도록 지연 — OnDying()의 타이머로 처리.
 		// 아이템 드랍도 같은 타이머를 타서 사망 연출이 끝난 뒤에 나옴 — 실제 스폰은 DropItem()에서.

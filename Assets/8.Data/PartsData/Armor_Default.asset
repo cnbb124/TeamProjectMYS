@@ -12,15 +12,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 000fb1aa06e9dcf44aaa15ff11ea9fdc, type: 3}
   m_Name: Armor_Default
   m_EditorClassIdentifier: 
-  id: 0
+  id: 1501
   itemName: 
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: df4bd2be20955b04b964da802579f7e9, type: 3}
   description: 
   price: 0
   category: 0
-  partType: 0
-  partPrefab: {fileID: 0}
+  partType: 2
+  partPrefab: {fileID: 5323913186514175898, guid: 4af417dfff5311e4196e790c137c8d59, type: 3}
   mountOffset: {x: 0, y: 0, z: 0}
   providedSlots: 
-  maxPartHp: 100
-  statBonuses: []
+  maxPartHp: 0
+  statBonuses:
+  - statType: 3
+    value: 250
+  - statType: 4
+    value: 3

@@ -79,6 +79,10 @@ public class SpawnManager : MonoBehaviourPunCallbacks
 	private int _currentWaveIndex = 0;
 	// 지금 돌고 있는 게 보스 웨이브인지. 보스 웨이브를 클리어하면 남은 일반 웨이브는 무시하고 즉시 스테이지 클리어함.
 	private bool _bossWaveActive = false;
+
+	// StopWaves 이후로 잠금. 스폰 재시작을 막음.
+	// 현재는 GameManager가 클리어 시점부터 킬카운트를 안 세서 실제로 걸릴 일이 없음 — 예비용.
+	private bool _wavesStopped = false;
 	// 현재 웨이브에서 스폰된 적 목록 (클리어 판정용)
 	private List<Enemy> _waveEnemies = new List<Enemy>();
 	private Transform[] _shuffleBuffer;
@@ -113,7 +117,7 @@ public class SpawnManager : MonoBehaviourPunCallbacks
 	{
 		// 적 스폰/웨이브는 Master 권위 — 나머지 클라는 웨이브를 안 돌리고 네트워크로 적을 받는다.
 		// (오프라인/싱글은 IsMasterClient=true라 기존과 동일하게 동작)
-		if (!PhotonNetwork.IsMasterClient)
+		if (!PhotonNetwork.IsMasterClient || _wavesStopped)
 		{
 			return;
 		}
@@ -322,6 +326,17 @@ public class SpawnManager : MonoBehaviourPunCallbacks
 		AdvanceWave(wave);
 	}
 
+	/// <summary>
+	/// 새 웨이브 소환을 멈춤. 스테이지 클리어 시퀀스가 시작될 때 호출됨.
+	/// 이미 나와 있는 적은 건드리지 않음 — 정리는 GameManager가 함.
+	/// </summary>
+	public void StopWaves()
+	{
+		_wavesStopped = true;
+		StopAllCoroutines();
+		_bossWaveActive = false;
+	}
+
 	private void AdvanceWave(WaveData wave)
 	{
 		// 보스 웨이브를 클리어했으면 남은 일반 웨이브는 전부 무시하고 즉시 스테이지 클리어.
@@ -370,7 +385,7 @@ public class SpawnManager : MonoBehaviourPunCallbacks
 	private void OnBossSpawnTriggered()
 	{
 		// 보스 스폰도 Master 권위.
-		if (!PhotonNetwork.IsMasterClient || bossWave == null)
+		if (!PhotonNetwork.IsMasterClient || bossWave == null || _wavesStopped)
 		{
 			return;
 		}

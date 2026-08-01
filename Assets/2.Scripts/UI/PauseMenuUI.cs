@@ -152,12 +152,12 @@ public class PauseMenuUI : MonoBehaviour
         if (GameManager.Instance != null) GameManager.Instance.RestartStage();
     }
 
-    /// <summary>마을로 복귀 버튼 — STATION 씬으로 이동.</summary>
+    /// <summary>마을로 복귀 버튼 — 출격 직전 자동 저장을 복원한 상태로 스테이션 이동.</summary>
     public void OnReturnToStation()
     {
         if (panel != null) panel.SetActive(false);
         // 씬 전환(LoadSceneRoutine)이 일시정지 상태를 초기화함.
-        if (GameManager.Instance != null) GameManager.Instance.LoadScene(SCENE_TYPE.STATION);
+        if (GameManager.Instance != null) GameManager.Instance.ReturnToStation();
     }
 
     /// <summary>게임 종료 버튼.</summary>

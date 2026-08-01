@@ -76,8 +76,6 @@ public class VFXManager : MonoBehaviour
     // =====================================================================
     private static VFXManager instance;
     // Awake에서만 세팅됨. Awake 전엔 null이므로 최초 접근은 Start부터 할 것.
-    // (예전엔 여기서 FindObjectOfType으로 찾아줬는데, 그게 매니저 자신의 Awake보다 먼저
-    //  instance를 채워버려서 Awake의 초기화 블록이 통째로 스킵되는 버그를 만들었음)
     public static VFXManager Instance => instance;
 	[Header("<size=22>사용시 주의사항</size>\n\n" +
         "<size=14>PlayEffect메서드들 사용시 파티클\n" +

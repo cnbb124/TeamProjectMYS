@@ -70,6 +70,11 @@ public class HangarExitButton : MonoBehaviour
         // - 로딩 씬을 거치려면 LoadingManager.NextScene 방식 사용
         //
         if (string.IsNullOrEmpty(launchSceneName)) return;
+
+        // 출격 직전 자동 저장 — 사망 후 Restart가 되돌아올 지점.
+        // 격납고에서 떠야 함선이 살아있어 HP·파츠·장비가 실제 값으로 담김.
+        GameManager.Instance.AutoSaveBeforeLaunch();
+
         LoadingManager.NextScene = launchSceneName;
         GameManager.Instance.LoadScene(SCENE_TYPE.LOADING_SEQUENCE);
 

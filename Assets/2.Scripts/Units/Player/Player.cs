@@ -564,6 +564,10 @@ public class Player : Unit
 	// 예) player.OnHitDirectionWorld += dir => hudManager.ShowHitIndicator(dir);
 	public HitDirectionHandler onHitDirectionWorld;
 
+	// 로드아웃이 실제로 씌워진 뒤 발행. 파츠 보너스가 최대치에 반영된 시점이라
+	// 스탯을 읽어 그리는 UI는 스폰 직후가 아니라 이걸 받고 갱신해야 함(스폰 다음 프레임에 적용됨).
+	public static event System.Action<Player> onLoadoutApplied;
+
 	// 피격 반동 - 카메라 쉐이크, 넉백 등 (Unit.OnHitReaction public화에 맞춰 public override)
 	public override void OnHitReaction(HitInfo info)
 	{
@@ -926,8 +930,70 @@ public class Player : Unit
 		if (IsMine)
 		{
 			PlayerProfile.ApplyTo(this, GameManager.Instance != null ? GameManager.Instance.itemDatabase : null);
+			BroadcastLoadout();
 		}
 
+		CollectParticles();
+		onLoadoutApplied?.Invoke(this);
+	}
+
+	/// <summary>
+	/// 내 파츠 구성을 남 클라의 복제본에 알림. 원격 함선도 같은 파츠를 달아야
+	/// 겉모습이 맞고, 런처 파츠가 등록하는 발사 위치가 생겨 투사체 복제가 나감.
+	/// 파츠를 바꿨을 때도 호출할 것(격납고 장착 등).
+	/// </summary>
+	public void BroadcastLoadout()
+	{
+		if (_photonView == null || !_photonView.IsMine || !PhotonNetwork.InRoom)
+		{
+			return;
+		}
+
+		UnitParts unitParts = GetComponent<UnitParts>();
+		if (unitParts == null)
+		{
+			return;
+		}
+
+		List<int> partIds = new List<int>();
+		foreach (PartSlotEntry slot in unitParts.partSlots)
+		{
+			if (slot.equippedPart != null)
+			{
+				partIds.Add((int)slot.equippedPart.id);
+			}
+		}
+		_photonView.RPC(nameof(RpcApplyLoadout), RpcTarget.OthersBuffered, partIds.ToArray());
+	}
+
+	// 남 클라 수신 — 보내온 파츠 ID로 복제본을 같은 구성으로 맞춤.
+	// 버퍼드라 나중에 들어온 사람도 이미 떠 있는 함선의 구성을 받아감.
+	[PunRPC]
+	private void RpcApplyLoadout(int[] partIds)
+	{
+		if (partIds == null || partIds.Length == 0)
+		{
+			return;
+		}
+
+		ItemDatabase database = GameManager.Instance != null ? GameManager.Instance.itemDatabase : null;
+		UnitParts unitParts = GetComponent<UnitParts>();
+		if (database == null || unitParts == null)
+		{
+			return;
+		}
+
+		List<PartData> parts = new List<PartData>();
+		for (int i = 0; i < partIds.Length; i++)
+		{
+			PartData part = database.Get<PartData>((ITEM_ID)partIds[i]);
+			if (part != null)
+			{
+				parts.Add(part);
+			}
+		}
+
+		unitParts.ReloadLoadout(parts);
 		CollectParticles();
 	}
 

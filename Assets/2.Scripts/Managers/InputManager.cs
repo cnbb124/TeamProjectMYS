@@ -309,8 +309,6 @@ public class InputManager : MonoBehaviour
     // =====================================================================
     private static InputManager instance = null;
     // Awake에서만 세팅됨. Awake 전엔 null이므로 최초 접근은 Start부터 할 것.
-    // (예전엔 여기서 FindObjectOfType으로 찾아줬는데, 그게 매니저 자신의 Awake보다 먼저
-    //  instance를 채워버려서 Awake의 초기화 블록이 통째로 스킵되는 버그를 만들었음)
     public static InputManager Instance => instance;
 
     // =====================================================================
@@ -341,9 +339,9 @@ public class InputManager : MonoBehaviour
     // 부스트 토글 상태(래치). 장치별로 따로 둠 —
     // 키보드는 꾹 누르기, 패드는 토글처럼 서로 다른 방식으로 쓸 수 있어야 하므로
     // 한 개를 공유하면 한쪽에서 켠 게 다른 쪽 설정에 끌려다니게 됨.
+    // 모바일 래치는 모바일 입력을 실제로 구현할 때 같은 규칙으로 하나 더 둘 것.
     private bool _kbBoostLatch;
     private bool _padBoostLatch;
-    private bool _mobileBoostLatch;
 
     // 부스트 입력 해석. 장치마다 같은 규칙이라 한 곳에 모음.
     // 토글이면 '누른 순간'마다 켜고 끄고, 아니면 누르고 있는 동안만 true.
@@ -381,7 +379,6 @@ public class InputManager : MonoBehaviour
 
         _kbBoostLatch = false;
         _padBoostLatch = false;
-        _mobileBoostLatch = false;
         isBoosting = false;
     }
 
@@ -1250,7 +1247,6 @@ public class InputManager : MonoBehaviour
         // 토글로 켜둔 부스트도 같이 해제 — 메뉴 열었다 닫으면 계속 부스트가 걸려 있게 되므로
         _kbBoostLatch = false;
         _padBoostLatch = false;
-        _mobileBoostLatch = false;
         isBoosting = false;
         isDodging = false;
         fireBullet = false;

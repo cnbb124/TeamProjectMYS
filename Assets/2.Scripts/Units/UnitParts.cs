@@ -39,6 +39,8 @@ public class PartSlotEntry
     // 지금 이 파츠가 유닛 스탯에 반영해둔 비율(0=파괴, 0.5=절반, 1=온전).
     // HP가 바뀌면 이 값과의 차이만큼만 유닛 스탯에 더하거나 빼서 갱신함.
     [System.NonSerialized] public float appliedStatRatio;
+    // statBonuses와 같은 인덱스로, 지금 이 파츠가 유닛 스탯에 넣어둔 실제 값.
+    [System.NonSerialized] public float[] appliedStatValues;
 }
 
 public class UnitParts : MonoBehaviour
@@ -110,7 +112,7 @@ public class UnitParts : MonoBehaviour
 
     private void Start()
     {
-        List<PartData> startParts = GetStartParts();
+        IList<PartData> startParts = GetStartParts();
         if (startParts != null)
         {
             ApplyStartParts(startParts);
@@ -134,7 +136,7 @@ public class UnitParts : MonoBehaviour
         _unit.RefillToMax();
     }
 
-    private List<PartData> GetStartParts()
+    private IList<PartData> GetStartParts()
     {
         return _defaultLoadout != null ? _defaultLoadout.defaultParts : null;
     }
@@ -143,13 +145,13 @@ public class UnitParts : MonoBehaviour
     /// 시작 파츠 목록으로 자동 장착.
     /// FRAME 먼저 처리해야 providedSlots 기반 런처 슬롯이 생성됨.
     /// </summary>
-    private void ApplyStartParts(IEnumerable<PartData> parts)
+    private void ApplyStartParts(IList<PartData> parts)
     {
         // 최초 로드아웃 — 아직 프리팹/스탯보너스가 적용되기 전(Start)이라 정리 없이 재생성.
         // 인스펙터 슬롯 전체 제거 후 기본 슬롯만 재생성 (이전 슬롯 구조 완전 무시)
         partSlots.Clear();
         EnsureBaseSlots();
-        EquipPartsList(parts);
+        EquipPartsList(parts, null);
 
         // Unit.Start()와의 실행순서가 보장되지 않아 cur=max 초기화가 위 보너스 적용 전에 끝났을 수 있음.
         // 파츠 적용이 끝난 지금 시점 기준으로 cur을 다시 max로 동기화.
@@ -161,36 +163,90 @@ public class UnitParts : MonoBehaviour
     /// 먼저 정리한 뒤, 주어진 목록으로 다시 장착한다.
     /// 같은 타입 슬롯이 여러 개(좌우 런처 등)면 목록 순서대로 빈 슬롯에 채워진다.
     /// </summary>
-    public void ReloadLoadout(IEnumerable<PartData> parts)
+    public void ReloadLoadout(IList<PartData> parts)
+    {
+        ReloadLoadout(parts, null);
+    }
+
+    /// <summary>
+    /// 위와 같되, 저장돼 있던 파츠별 HP까지 되돌린다.
+    /// partHps는 parts와 같은 인덱스이며, 음수는 "만피로 둠"을 뜻함.
+    /// </summary>
+    public void ReloadLoadout(IList<PartData> parts, IList<int> partHps)
     {
         ClearEquippedParts();
         partSlots.Clear();
         EnsureBaseSlots();
-        EquipPartsList(parts);
+
+        // parts[i]가 실제로 어느 슬롯에 들어갔는지 받아둠 — 장착 순서(FRAME 우선)와 슬롯 순서가
+        // 달라서 인덱스만으로는 HP를 어느 슬롯에 넣어야 할지 알 수 없음.
+        PartSlotEntry[] placedSlots = new PartSlotEntry[parts.Count];
+        EquipPartsList(parts, placedSlots);
+
         _unit.RefillToMax();
+        // RefillToMax가 전부 만피로 되돌리므로, 손상 상태는 그 뒤에 다시 입혀야 함.
+        ApplyPartHps(placedSlots, partHps);
     }
 
     // FRAME을 먼저 장착해야 providedSlots 기반 런처 슬롯이 생성되므로 FRAME → 나머지 순으로 처리.
     // 같은 타입 슬롯이 여러 개면 EquipFromDefault의 GetFirstEmptySlot이 목록 순서대로 채운다.
-    private void EquipPartsList(IEnumerable<PartData> parts)
+    // placedSlots(선택): parts[i]가 들어간 슬롯을 같은 인덱스에 기록함. 안 쓰면 null.
+    private void EquipPartsList(IList<PartData> parts, PartSlotEntry[] placedSlots)
     {
-        foreach (PartData part in parts)
+        for (int i = 0; i < parts.Count; i++)
         {
+            PartData part = parts[i];
             if (part == null || part.partType != PART_TYPE.FRAME)
             {
                 continue;
             }
-            EquipFromDefault(part);
+            PartSlotEntry slot = EquipFromDefault(part);
+            if (placedSlots != null)
+            {
+                placedSlots[i] = slot;
+            }
             break;
         }
 
-        foreach (PartData part in parts)
+        for (int i = 0; i < parts.Count; i++)
         {
+            PartData part = parts[i];
             if (part == null || part.partType == PART_TYPE.FRAME)
             {
                 continue;
             }
-            EquipFromDefault(part);
+            PartSlotEntry slot = EquipFromDefault(part);
+            if (placedSlots != null)
+            {
+                placedSlots[i] = slot;
+            }
+        }
+    }
+
+    // 저장돼 있던 파츠 HP를 되돌림. 스탯 기여도도 그 HP에 맞게 다시 계산됨
+    // (RefreshPartStat 안의 ClampCurrentToMax가 줄어든 최대치에 맞춰 현재값도 잘라줌).
+    private void ApplyPartHps(PartSlotEntry[] placedSlots, IList<int> partHps)
+    {
+        if (placedSlots == null || partHps == null)
+        {
+            return;
+        }
+
+        int count = Mathf.Min(placedSlots.Length, partHps.Count);
+        for (int i = 0; i < count; i++)
+        {
+            PartSlotEntry slot = placedSlots[i];
+            if (slot == null || slot.equippedPart == null || slot.equippedPart.maxPartHp <= 0)
+            {
+                continue;
+            }
+            // 음수 = 저장된 정보 없음(구버전 세이브/새 게임). 만피 그대로 둠.
+            if (partHps[i] < 0)
+            {
+                continue;
+            }
+            slot.curPartHp = Mathf.Clamp(partHps[i], 0, slot.equippedPart.maxPartHp);
+            RefreshPartStat(slot, GetHpStatRatio(slot));
         }
     }
 
@@ -208,14 +264,14 @@ public class UnitParts : MonoBehaviour
         }
     }
 
-    // 시작 파츠 전용 장착. 빈 슬롯에 순서대로 채움.
-    private void EquipFromDefault(PartData newPart)
+    // 시작 파츠 전용 장착. 빈 슬롯에 순서대로 채움. 들어간 슬롯을 돌려줌(빈 슬롯이 없으면 null).
+    private PartSlotEntry EquipFromDefault(PartData newPart)
     {
         PartSlotEntry slot = GetFirstEmptySlot(newPart.partType);
         if (slot == null)
         {
             Debug.LogWarning("[UnitParts] 시작 파츠: 빈 슬롯 없음 - " + newPart.partType);
-            return;
+            return null;
         }
 
         slot.equippedPart = newPart;
@@ -227,6 +283,7 @@ public class UnitParts : MonoBehaviour
         {
             RebuildSlotsFromFrame(newPart);
         }
+        return slot;
     }
 
     // 해당 타입의 equippedPart가 없는 첫 번째 슬롯 반환
@@ -467,7 +524,7 @@ public class UnitParts : MonoBehaviour
 
         foreach (PartSlotEntry slot in partSlots)
         {
-            if (slot.equippedPart == null || slot.slotType == PART_TYPE.FRAME || slot.equippedPart.maxPartHp <= 0)
+            if (slot.equippedPart == null || slot.slotType == PART_TYPE.FRAME || slot.slotType == PART_TYPE.ARMOR || slot.equippedPart.maxPartHp <= 0)
             {
                 continue;
             }
@@ -493,7 +550,7 @@ public class UnitParts : MonoBehaviour
     {
         foreach (PartSlotEntry slot in partSlots)
         {
-            if (slot.equippedPart == null || slot.slotType == PART_TYPE.FRAME || slot.equippedPart.maxPartHp <= 0)
+            if (slot.equippedPart == null || slot.slotType == PART_TYPE.FRAME || slot.slotType == PART_TYPE.ARMOR || slot.equippedPart.maxPartHp <= 0)
             {
                 continue;
             }
@@ -520,6 +577,25 @@ public class UnitParts : MonoBehaviour
     {
         slot.curPartHp = Mathf.Max(0, slot.curPartHp - damage);
         RefreshPartStat(slot, GetHpStatRatio(slot));
+    }
+
+    /// <summary>
+    /// 장착된 파츠 중 HP가 깎인 게 하나라도 있는지. 수리 UI가 "고칠 게 있는지" 판단할 때 씀.
+    /// </summary>
+    public bool HasDamagedPart()
+    {
+        foreach (PartSlotEntry slot in partSlots)
+        {
+            if (slot.equippedPart == null || slot.equippedPart.maxPartHp <= 0)
+            {
+                continue;
+            }
+            if (slot.curPartHp < slot.equippedPart.maxPartHp)
+            {
+                return true;
+            }
+        }
+        return false;
     }
 
     /// <summary>
@@ -569,15 +645,31 @@ public class UnitParts : MonoBehaviour
         {
             return;
         }
-        float change = targetRatio - slot.appliedStatRatio;
-        if (!Mathf.Approximately(change, 0f))
+        List<PartStatBonus> bonuses = slot.equippedPart.statBonuses;
+        if (slot.appliedStatValues == null || slot.appliedStatValues.Length != bonuses.Count)
         {
-            foreach (PartStatBonus bonus in slot.equippedPart.statBonuses)
-            {
-                ApplySingleBonus(bonus.statType, bonus.value * change);
-            }
-            slot.appliedStatRatio = targetRatio;
+            slot.appliedStatValues = new float[bonuses.Count];
         }
+
+        for (int i = 0; i < bonuses.Count; i++)
+        {
+            PartStatBonus bonus = bonuses[i];
+            float target = bonus.value * targetRatio;
+            // 정수로 반영되는 스탯은 여기서 미리 잘라야 함. 차이만 넘기면 절삭이 매번 따로 일어나
+            // 0.5씩 두 번 내린 값과 1로 한 번 올린 값이 안 맞음(방어력 3이 파괴 후 1로 남는 문제).
+            if (IsIntegerStat(bonus.statType))
+            {
+                target = (int)target;
+            }
+
+            float change = target - slot.appliedStatValues[i];
+            if (!Mathf.Approximately(change, 0f))
+            {
+                ApplySingleBonus(bonus.statType, change);
+            }
+            slot.appliedStatValues[i] = target;
+        }
+        slot.appliedStatRatio = targetRatio;
         // 최대치 스탯(실드/부스트/아머)이 줄었으면 현재값이 그 위로 튀지 않게 맞춤.
         ClampCurrentToMax();
     }
@@ -596,6 +688,21 @@ public class UnitParts : MonoBehaviour
         if (_unit.curArmorRemaining > _unit.maxArmor)
         {
             _unit.curArmorRemaining = _unit.maxArmor;
+        }
+    }
+
+    // ApplySingleBonus에서 (int)로 잘려 들어가는 스탯들.
+    private static bool IsIntegerStat(STAT_TYPE statType)
+    {
+        switch (statType)
+        {
+            case STAT_TYPE.HP_MAX:
+            case STAT_TYPE.SHIELD_MAX:
+            case STAT_TYPE.ARMOR_MAX:
+            case STAT_TYPE.ARMOR_DEF:
+                return true;
+            default:
+                return false;
         }
     }
 

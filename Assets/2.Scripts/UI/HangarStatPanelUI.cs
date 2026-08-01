@@ -49,24 +49,22 @@ public class HangarStatPanelUI : MonoBehaviour
     private void OnEnable()
     {
         // 탭으로 HangarSlot이 켜질 때마다 현재 기체 스탯으로 갱신
-        Refresh();
-    }
-
-    // 기체는 PlayerSpawner가 씬 로드 뒤에 스폰하므로 OnEnable 시점엔 없을 수 있음.
-    // 잡을 때까지만 재시도하고, 잡은 뒤로는 장착 변경 때 Refresh를 받아 갱신함.
-    private void Update()
-    {
-        if (_player != null)
-        {
-            return;
-        }
+        Player.onLoadoutApplied -= HandleLoadoutApplied;
+        Player.onLoadoutApplied += HandleLoadoutApplied;
         Refresh();
     }
 
     private void OnDisable()
     {
+        Player.onLoadoutApplied -= HandleLoadoutApplied;
         // 다음에 켜질 때 다시 잡게 함 — 씬이 바뀌면 이전 함선 참조가 죽어 있음
         _player = null;
+    }
+
+    // 파츠가 씌워지는 건 스폰 다음 프레임이라, 스폰 직후에 읽으면 프리팹 기본값만 잡힘.
+    private void HandleLoadoutApplied(Player player)
+    {
+        Refresh();
     }
 
     /// <summary>현재 기체 스탯으로 게이지/텍스트 갱신. 함선이 없으면 PlayerProfile로 계산.</summary>

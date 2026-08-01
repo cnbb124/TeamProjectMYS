@@ -89,7 +89,7 @@ public enum SOUND_TYPE
 	//필요한 사운드는 규칙에 맞춰 추가후 매칭시켜주세요. 이름 변경원하면 변경하시되 해당 코드찾아서 수정해야함.
 
 	//BGM관련 100번대
-	BGM_LOBBY = 100,          // 정거장(상점) 배경음
+	BGM_LOBBY = 100,          // 로비(MAIN) 화면 배경음
 	BGM_BATTLE,         // 우주 전투 배경음
 	BGM_1F,             // 1층 배경음
 	BGM_B2,             // 지하2층배경음
@@ -179,17 +179,19 @@ public enum SCENE_TYPE
 	//STATION_1F = 2,
 	//STATION_B2 = 3,
 	BASE_LANDING = 4,
-	LOADING_SEQUENCE = 20,   // 로딩 시퀀스 씬
+    LOGIN = 5,
+    LOADING_SEQUENCE = 20,   // 로딩 시퀀스 씬
 	MULTIPLAYER = 25,   // 멀티 대기실 씬
 	MAP_SELECT = 30,   // 맵 선택 화면
 	STAGE1 = 50,
 	STAGE2 = 51,
+	
 
 
 	STAGE3 = 55,
 	STAGE4 = 60,
 	JAYEON = 900,
-	GAME_OVER = 999,   // 끝을 나타내는 값 — 신규 번호 계산에서 제외됨
+	RESULT = 999,   // 게임오버/스테이지클리어 공용 결과 화면. 끝을 나타내는 값 — 신규 번호 계산에서 제외됨
 }
 
 // 씬의 성격. 씬마다 속성을 하나씩 찍는 대신 이 값 하나로 묶어서 정함.

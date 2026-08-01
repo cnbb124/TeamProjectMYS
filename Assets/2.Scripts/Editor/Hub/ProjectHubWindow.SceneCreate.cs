@@ -49,6 +49,7 @@ public partial class ProjectHubWindow
 	private bool _createIsStationScene;
 	private bool _createShipControlDisabled;
 	private bool _createShipHidden;
+	private bool _createOtherShipsHidden;
 
 	private readonly List<WaveData> _createWaves = new List<WaveData>();
 	private WaveData _createBossWave;
@@ -249,6 +250,7 @@ public partial class ProjectHubWindow
 				_createIsStationScene = EditorGUILayout.Toggle("정거장 계열", _createIsStationScene);
 				_createShipControlDisabled = EditorGUILayout.Toggle("조종 불가", _createShipControlDisabled);
 				_createShipHidden = EditorGUILayout.Toggle("함선 숨김", _createShipHidden);
+				_createOtherShipsHidden = EditorGUILayout.Toggle("남 함선만 숨김", _createOtherShipsHidden);
 				EditorGUI.indentLevel--;
 			}
 
@@ -954,6 +956,22 @@ public partial class ProjectHubWindow
 
 	// 씬 파일이 실제로 있는지. AssetDatabase.AssetPathToGUID는 지운 에셋의 GUID를 한동안 계속 돌려주므로
 	// 파일 시스템을 직접 본다.
+	// 프로젝트에 실제로 있는 씬 파일 이름 모음. SCENE_TYPE에만 남아 있고 씬은 없는 이름을 걸러내는 데 씀.
+	private static HashSet<string> CollectExistingSceneNames()
+	{
+		HashSet<string> names = new HashSet<string>(System.StringComparer.OrdinalIgnoreCase);
+		string[] guids = AssetDatabase.FindAssets("t:Scene", new[] { "Assets" });
+		for (int i = 0; i < guids.Length; i++)
+		{
+			string path = AssetDatabase.GUIDToAssetPath(guids[i]);
+			if (SceneFileExists(path))
+			{
+				names.Add(System.IO.Path.GetFileNameWithoutExtension(path));
+			}
+		}
+		return names;
+	}
+
 	private static bool SceneFileExists(string assetPath)
 	{
 		if (string.IsNullOrWhiteSpace(assetPath))
@@ -1248,7 +1266,7 @@ public partial class ProjectHubWindow
 			case SCENE_CATEGORY.BATTLE:
 				return "조종 가능 + 전투 + 함선 유지";
 			case SCENE_CATEGORY.HANGAR:
-				return "조종 불가 + 함선 유지 (기체 보임)";
+				return "조종 불가 + 함선 유지 (내 기체만 보임, 남 함선 숨김)";
 			case SCENE_CATEGORY.TRANSIT:
 				return "조종 불가 + 함선 유지 + 숨김";
 			case SCENE_CATEGORY.LOADING:
@@ -1303,6 +1321,8 @@ public partial class ProjectHubWindow
 			return;
 		}
 
+		HashSet<string> sceneNames = CollectExistingSceneNames();
+
 		// SCENE_TYPE에서 사라진 값(주석 처리 등)이 남아 있으면 인스펙터에서 깨져 보임
 		int removed = 0;
 		for (int i = list.arraySize - 1; i >= 0; i--)
@@ -1312,7 +1332,12 @@ public partial class ProjectHubWindow
 			{
 				continue;
 			}
-			if (!System.Enum.IsDefined(typeof(SCENE_TYPE), sceneProp.intValue))
+			bool definedType = System.Enum.IsDefined(typeof(SCENE_TYPE), sceneProp.intValue);
+			// 씬 파일이 없는 행은 지움. 씬을 지워도 SCENE_TYPE 멤버는 남기는 정책이라,
+			// enum만 보고 채우면 없는 씬 행이 계속 생김.
+			bool hasSceneFile = definedType
+				&& sceneNames.Contains(((SCENE_TYPE)sceneProp.intValue).ToString());
+			if (!definedType || !hasSceneFile)
 			{
 				list.DeleteArrayElementAtIndex(i);
 				removed++;
@@ -1323,7 +1348,7 @@ public partial class ProjectHubWindow
 		int updated = 0;
 		foreach (SCENE_TYPE type in System.Enum.GetValues(typeof(SCENE_TYPE)))
 		{
-			if (type == SCENE_TYPE.UNKNOWN)
+			if (type == SCENE_TYPE.UNKNOWN || !sceneNames.Contains(type.ToString()))
 			{
 				continue;
 			}
@@ -1351,6 +1376,7 @@ public partial class ProjectHubWindow
 			SetBool(entry, "isStationScene", false);
 			SetBool(entry, "shipControlDisabled", false);
 			SetBool(entry, "shipHidden", false);
+			SetBool(entry, "otherShipsHidden", false);
 		}
 
 		so.ApplyModifiedProperties();
@@ -1414,6 +1440,7 @@ public partial class ProjectHubWindow
 		SetBool(entry, "isStationScene", _createIsStationScene);
 		SetBool(entry, "shipControlDisabled", _createShipControlDisabled);
 		SetBool(entry, "shipHidden", _createShipHidden);
+		SetBool(entry, "otherShipsHidden", _createOtherShipsHidden);
 	}
 
 	private static void SetInt(SerializedProperty entry, string name, int value)

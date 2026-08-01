@@ -3974,6 +3974,7 @@ GameObject:
   - component: {fileID: 4926014751143550482}
   - component: {fileID: 611234987654321001}
   - component: {fileID: 3524379251435334267}
+  - component: {fileID: 784217238762165581}
   m_Layer: 0
   m_Name: cockpit
   m_TagString: Untagged
@@ -4017,7 +4018,7 @@ MonoBehaviour:
   _thirdPersonCamera: {fileID: 0}
   _thirdPersonBrain: {fileID: 0}
   _thirdPersonVirtualCamera: {fileID: 0}
-  _createThirdPersonCameraIfMissing: 1
+  _createThirdPersonCameraIfMissing: 0
   _visibilityController: {fileID: 4710721688418999899}
   _logSetup: 1
   _vrHudPresenter: {fileID: 611234987654321001}
@@ -4176,6 +4177,18 @@ MonoBehaviour:
   _stickMaxRoll: 20
   _throttleMaxAngle: 25
   _invertThrottle: 0
+--- !u!114 &784217238762165581
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3426992776632539541}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7d5d5c72609f3fe48824182b1f6fb51c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &3450669587587355600
 GameObject:
   m_ObjectHideFlags: 0

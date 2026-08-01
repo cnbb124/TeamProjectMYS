@@ -72,8 +72,6 @@ public class PoolManager : MonoBehaviour
 	// =====================================================================
 	private static PoolManager instance = null;
 	// Awake에서만 세팅됨. Awake 전엔 null이므로 최초 접근은 Start부터 할 것.
-	// (예전엔 여기서 FindObjectOfType으로 찾아줬는데, 그게 매니저 자신의 Awake보다 먼저
-	//  instance를 채워버려서 Awake의 초기화 블록이 통째로 스킵되는 버그를 만들었음)
 	public static PoolManager Instance => instance;
 
 	// =====================================================================
@@ -350,6 +348,27 @@ public class PoolManager : MonoBehaviour
 			if (config.category == category)
 			{
 				Disable(config.poolType);
+			}
+		}
+	}
+
+	/// <summary>
+	/// 날아가는 중인 투사체의 남은 사거리를 잘라 각자 조금 더 날아간 뒤 끝나게 함.
+	/// 미사일은 그 자리에서 폭발하고 총알은 반납됨 — 둘 다 평소 사거리 끝 경로라 풀 반납도 정상.
+	/// 클리어처럼 '갑자기 사라지면 어색한' 상황에서 DisableAllProjectiles 대신 씀.
+	/// </summary>
+	public void CutProjectileRanges(float remainDistance)
+	{
+		foreach (var kv in _projectilePools)
+		{
+			List<Projectile> pool = kv.Value;
+			foreach (Projectile projectile in pool)
+			{
+				if (projectile == null || !projectile.gameObject.activeSelf)
+				{
+					continue;
+				}
+				projectile.CutRange(remainDistance);
 			}
 		}
 	}

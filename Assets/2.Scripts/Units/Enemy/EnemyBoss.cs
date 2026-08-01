@@ -100,18 +100,14 @@ public class EnemyBoss : EnemyShip
         {
             _photonView.RPC(nameof(RpcPlayPattern), RpcTarget.Others, phase, index);
         }
-        BeginPattern(phase, index);
+        // 재생중 검사·풀 조회·범위 검사는 위에서 이미 끝났으므로 고른 패턴만 넘김.
+        BeginPattern(pool[index]);
     }
 
     // 남 클라 수신 — Master가 고른 패턴을 그대로 로컬 재생(연출). 데미지 권위는 FireOneBullet에서 IsMine으로 갈림.
+    // 인덱스만 받으므로 풀 조회와 범위 검사는 여기서 함(보낸 쪽과 배열 길이가 다를 수 있음).
     [PunRPC]
     private void RpcPlayPattern(int phase, int index)
-    {
-        BeginPattern(phase, index);
-    }
-
-    // 지정 페이즈/인덱스의 패턴을 로컬에서 재생 시작(중복 재생 방지).
-    private void BeginPattern(int phase, int index)
     {
         if (_isFiringPattern)
         {
@@ -122,7 +118,12 @@ public class EnemyBoss : EnemyShip
         {
             return;
         }
-        BulletPatternData pattern = pool[index];
+        BeginPattern(pool[index]);
+    }
+
+    // 패턴 하나를 로컬에서 재생 시작. 인스펙터 배열에 빈 칸이 있으면 그 회차는 그냥 넘어감.
+    private void BeginPattern(BulletPatternData pattern)
+    {
         if (pattern == null)
         {
             return;
@@ -323,6 +324,9 @@ public class EnemyBoss : EnemyShip
         }
     }
 
+
+    // 보스는 스스로가 보스 스폰의 결과라 킬카운트에 넣지 않음.
+    protected override bool CountsTowardKillCount => false;
 
     protected override void Die()
     {

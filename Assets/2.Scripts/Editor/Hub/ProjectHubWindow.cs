@@ -62,6 +62,13 @@ public partial class ProjectHubWindow : EditorWindow
 		DataTabOnDisable();
 		// 씬 뷰 콜백을 안 떼면 창을 닫아도 계속 그려짐
 		SpherePlaceOnDisable();
+		SceneTabOnDisable();
+	}
+
+	// 빌드 세팅 창 등에서 고치고 돌아왔을 때 표가 옛날 값인 걸 막음.
+	private void OnFocus()
+	{
+		SceneTabOnFocus();
 	}
 
 	private void OnGUI()

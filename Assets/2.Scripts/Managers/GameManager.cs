@@ -64,8 +64,6 @@ public class GameManager : MonoBehaviourPunCallbacks
     // =====================================================================
     private static GameManager instance = null;
     // Awake에서만 세팅됨. Awake 전엔 null이므로 최초 접근은 Start부터 할 것.
-    // (예전엔 여기서 FindObjectOfType으로 찾아줬는데, 그게 매니저 자신의 Awake보다 먼저
-    //  instance를 채워버려서 Awake의 초기화 블록이 통째로 스킵되는 버그를 만들었음)
     public static GameManager Instance => instance;
 
     //public static GameManager Instance { get; private set; }
@@ -100,6 +98,9 @@ public class GameManager : MonoBehaviourPunCallbacks
 		public bool shipControlDisabled;
 		[Tooltip("함선을 안 보이게 할지. 존재는 유지하고 렌더러·콜라이더만 끔.")]
 		public bool shipHidden;
+		[Tooltip("남(다른 플레이어)의 함선만 안 보이게 할지. 내 함선은 그대로 보임.\n" +
+				 "격납고처럼 같은 씬에 여럿이 있어도 각자 자기 기체만 봐야 하는 씬에 씀.")]
+		public bool otherShipsHidden;
 	}
 
 	[Header("<size=22>━━━━━━ 씬 설정표 ━━━━━━</size>")]
@@ -145,6 +146,9 @@ public class GameManager : MonoBehaviourPunCallbacks
 
 	/// <summary>함선을 숨겨야 하는 씬인지 (맵선택·대기실 등). PlayerSceneVisibility가 봄.</summary>
 	public bool ShipHidden => SettingsOf(curSceneType).shipHidden;
+
+	/// <summary>남의 함선만 숨기는 씬인지 (격납고 등). 내 함선은 영향 없음.</summary>
+	public bool OtherShipsHidden => SettingsOf(curSceneType).otherShipsHidden;
 
 	/// <summary>유닛·스킬이 스스로 멈춰야 하는 상태. Unit.ShouldPause와 SkillSystem이 같이 씀.</summary>
 	public bool IsUnitFrozen => IsPaused || IsGameOver || ShipControlDisabled;
@@ -220,6 +224,16 @@ public class GameManager : MonoBehaviourPunCallbacks
     public BossSpawnHandler onBossSpawn;
     // 보스 처치 시 발행
     public event System.Action onBossKilled;
+
+    [Header("스테이지 클리어")]
+    [Tooltip("클리어 판정 후 스테이션으로 넘어가기까지의 시간(초). 드랍 아이템을 주울 여유.")]
+    [SerializeField] private float _stageClearSequenceTime = 8f;
+
+    [Tooltip("클리어 시 날아가던 투사체가 더 날아갈 거리. 이만큼 간 뒤 각자 끝남(미사일은 폭발).")]
+    [SerializeField] private float _stageClearProjectileRange = 30f;
+
+    /// <summary>스테이지 클리어 시 발행. 인자는 씬이 넘어가기까지 남은 시간(초) — 클리어 UI가 구독할 것.</summary>
+    public event System.Action<float> onStageClear;
     // 목표 진행도(킬/파괴 목표) 변경 시 발행. Quest UI 등이 구독해 갱신.
     public event System.Action onObjectiveChanged;
 
@@ -267,6 +281,9 @@ public class GameManager : MonoBehaviourPunCallbacks
     // 아직 갱신 전인 curSceneType을 믿으면 엉뚱한 씬 기준으로 판정됨.
     // =====================================================================
     public bool CanSave => SettingsOf(SceneManager.GetActiveScene().name).canSave;
+
+    /// <summary>스테이지를 깨고 격납고로 들어왔는지. 수리는 이때만 허용됨.</summary>
+    public bool StageClearedBeforeHangar { get; private set; }
 
     // =====================================================================
     // 초기화
@@ -348,7 +365,7 @@ public class GameManager : MonoBehaviourPunCallbacks
         // 여러 갈래여도 씬 도착은 전부 이 지점을 지나므로 한 군데서 정하는 게 맞음.
         // 게임오버 씬은 GameOver()가 정한 값을 그대로 유지해야 하므로 제외함
         // (여기서 초기화하면 GameOverUI.Start의 IsGameOver 검사가 패널을 다시 꺼버림).
-        if (curSceneType != SCENE_TYPE.GAME_OVER)
+        if (curSceneType != SCENE_TYPE.RESULT)
         {
             // 게임오버 씬을 벗어나는 순간 정지 플래그도 같이 내림 — 안 내리면 IsGameplayFrozen이 계속 참이라
             // 다음 플레이에서 유닛/퀵슬롯이 전부 멈춘 상태로 시작함.
@@ -496,7 +513,7 @@ public class GameManager : MonoBehaviourPunCallbacks
         //
         // 다른 씬 전환(스테이션↔스테이지 등)에서는 방을 유지해야 하므로 게임오버일 때만 나감.
         // 함선 정리를 마친 뒤에 나가야 PhotonNetwork.Destroy가 정상 처리됨.
-        if (PhotonNetwork.InRoom && sceneName == SCENE_TYPE.GAME_OVER.ToString())
+        if (PhotonNetwork.InRoom && sceneName == SCENE_TYPE.RESULT.ToString())
         {
             PhotonNetwork.LeaveRoom();
         }
@@ -663,10 +680,13 @@ public class GameManager : MonoBehaviourPunCallbacks
     //     <- Inventory에 아이템 목록 복원
     //=================================
 
-    /// <summary>출격 직전 자동 저장. 스테이션에서 싱글/멀티를 고르는 순간 호출됨.</summary>
+    /// <summary>출격 직전 자동 저장. 격납고에서 나가는 순간 호출됨.</summary>
     public void AutoSaveBeforeLaunch()
     {
-        SaveGame(AutoSaveSlot);
+        // SaveGame이 아니라 SaveData 직행 — 격납고는 canSave가 아니라 SaveGame이면 거절됨.
+        // 함선이 있는 곳에서 떠야 HP·파츠가 실제 값으로 담김.
+        SaveData(AutoSaveSlot);
+        StageClearedBeforeHangar = false;
     }
 
     /// <summary>자동 저장이 있으면 다음 씬 로드 후 복원하도록 예약.</summary>
@@ -709,8 +729,8 @@ public class GameManager : MonoBehaviourPunCallbacks
     /// <returns>메뉴를 띄워도 되는 상태면 true(게임오버/클리어면 false).</returns>
     public bool PauseGame()
     {
-        // 게임오버/클리어 상태에선 일시정지 불가. 그 외(PLAYING, 메뉴, 테스트 씬 등)는 허용.
-        if (curState == GAME_STATE.GAME_OVER || curState == GAME_STATE.STAGE_CLEAR) return false;
+        // 게임오버에서만 일시정지 불가. 클리어 중엔 보상 줍는 시간이라 메뉴/UI가 정상 동작해야 함.
+        if (curState == GAME_STATE.GAME_OVER) return false;
 
         // 멀티(온라인)에선 시간을 멈추지 않는다 — 남들은 계속 플레이 중이므로.
         // 메뉴는 뜨고(호출자가 표시), 여기선 사운드 감쇠만 한다. 게임 로직 프리즈는 안 함.
@@ -802,17 +822,17 @@ public class GameManager : MonoBehaviourPunCallbacks
             return;
         }
         IsGameOver = true;
+        StageClearedBeforeHangar = false;
         ChangeState(GAME_STATE.GAME_OVER);
         PoolManager.Instance.DisableAllProjectiles();//현재 투사체 모두 비활성화
         SoundManager.Instance.StopSFXAll();//모든 나고있던 효과음 중지
-        LoadScene(SCENE_TYPE.GAME_OVER);
+        LoadScene(SCENE_TYPE.RESULT);
         //기타 필요한 ui연출이나 사운드, 이펙트연출은 추가로 작성필요
     }
 
     /// <summary>
     /// 사망 후 현재 스테이지를 처음부터 재시작
-    /// 게임오버 상태를 풀고 현재 씬을 리로드. 마지막 세이브(STATION 저장 시점)가
-    /// 있으면 씬 로드 완료 후 영구 진행도를 복원하고, 없으면 프리팹 기본값으로 시작.
+    /// 게임오버를 풀고 격납고로 돌아감. 출격 직전 자동저장이 있으면 그 시점으로 복원됨.
     /// </summary>
     public void RestartStage()
     {
@@ -833,7 +853,11 @@ public class GameManager : MonoBehaviourPunCallbacks
         LoadSceneWithLoading(SCENE_TYPE.STATION);
     }
 
-    /// <summary>스테이지 클리어 조건 달성 시 호출. (게임 전체 클리어와는 별개 — 그건 별도 로직 필요, 아직 미구현)</summary>
+    /// <summary>
+    /// 스테이지 클리어. 보스 처치 또는 마지막 웨이브 소진으로 진입함.
+    /// 바로 씬을 넘기지 않고 _stageClearSequenceTime 동안 보상을 주울 시간을 준 뒤 스테이션으로 감.
+    /// 클리어 UI는 onStageClear를 구독해서 띄우면 됨.
+    /// </summary>
     public void StageClear()
     {
         if (curState == GAME_STATE.STAGE_CLEAR)
@@ -841,19 +865,56 @@ public class GameManager : MonoBehaviourPunCallbacks
             return;
         }
         ChangeState(GAME_STATE.STAGE_CLEAR);
-        PoolManager.Instance.DisableAllProjectiles();
+        StageClearedBeforeHangar = true;
+
+        // 킬카운트는 보스 스폰 조건용이라 클리어 후엔 쓸 데가 없음. 비우고 표시도 갱신.
+        killCount = 0;
+        onObjectiveChanged?.Invoke();
+        PublishBattleProgress();
+
+        // 날아가던 투사체는 지우지 않고 사거리만 잘라 각자 끝나게 함(미사일은 폭발).
+        PoolManager.Instance.CutProjectileRanges(_stageClearProjectileRange);
+
+        // 새 웨이브 소환 중단 + 남은 적을 정상 사망 처리(연출·드랍 그대로).
+        SpawnManager spawner = FindObjectOfType<SpawnManager>();
+        if (spawner != null)
+        {
+            spawner.StopWaves();
+        }
+        UnitManager.Instance?.KillAllEnemies();
+
+        onStageClear?.Invoke(_stageClearSequenceTime);
+        StartCoroutine(StageClearRoutine());
+    }
+
+    // 보상을 주울 시간을 준 뒤 결과 화면으로. 대기는 일시정지 안전.
+    private IEnumerator StageClearRoutine()
+    {
+        yield return WaitGameplaySeconds(_stageClearSequenceTime);
+
+        // 저장은 여기서 — 결과 씬은 함선을 안 데려가므로 도착 후엔 체력·파츠를 담을 수 없음.
+        SaveData(AutoSaveSlot);
+
+        LoadSceneWithLoading(SCENE_TYPE.RESULT);
     }
 
 	/// <summary>
 	/// 적 처치 시 Enemy.Die()에서 호출.
 	/// 킬카운트 누적 후 보스 스폰 조건 체크.
 	/// </summary>
-	public void OnEnemyKilled(GameObject killer, int exp, int gold)
+	public void OnEnemyKilled(GameObject killer, int exp, int gold, bool countsKill = true)
     {
+        // 보상은 항상 지급. 킬카운트(보스 스폰 조건)는 세는 대상만.
+        GiveRewardToPlayer(killer, exp, gold);
+
+        // 클리어 정리로 죽는 적은 세지 않음 — 여기서 세면 보스 스폰 조건이 다시 충족될 수 있음.
+        if (!countsKill || curState == GAME_STATE.STAGE_CLEAR)
+        {
+            return;
+        }
         killCount++;
         PublishBattleProgress();
         onObjectiveChanged?.Invoke();
-        GiveRewardToPlayer(killer, exp, gold);
         CheckBossSpawnCondition();
     }
 
@@ -930,13 +991,15 @@ public class GameManager : MonoBehaviourPunCallbacks
     /// </summary>
     public void OnBossKilled()
     {
-        killCount++;
         // 보스 처치 → 현재 씬 BGM으로 페이드 복귀(매핑 있을 때만)
         if (_hasCurrentSceneBGM)
         {
             SoundManager.Instance.ChangeBGMWithFade(_currentSceneBGM, _bossBGMFadeDuration);
         }
         onBossKilled?.Invoke();
+
+        // 보스 처치 = 스테이지 클리어. 각 클라가 RpcBossKilled로 여기 도달하므로 전원이 로컬에서 클리어됨.
+        StageClear();
     }
 
     // 목표 카운터(Total/Destroyed)를 로컬에서 세도 되는지. 룸 안에서는 방장만 셈 —
@@ -1029,11 +1092,12 @@ public class GameManager : MonoBehaviourPunCallbacks
     {
         switch (scene)
         {
+            case SCENE_TYPE.LOGIN:
             case SCENE_TYPE.MAIN:
             case SCENE_TYPE.MULTIPLAYER:
             case SCENE_TYPE.MAP_SELECT:
             case SCENE_TYPE.LOADING_SEQUENCE:
-            case SCENE_TYPE.GAME_OVER:
+            case SCENE_TYPE.RESULT:
                 return false;
             default:
                 return true;
@@ -1066,7 +1130,10 @@ public class GameManager : MonoBehaviourPunCallbacks
 
         // 표에 빠진 SCENE_TYPE은 조용히 전부 off가 되므로 알려줌 — 저장이 막히거나
         // 함선이 사라지는 식으로 뒤늦게 드러나는 게 최악임.
+        HashSet<string> buildScenes = CollectBuildSceneNames();
+
         List<string> missing = new List<string>();
+        List<string> noSceneFile = new List<string>();
         foreach (SCENE_TYPE type in System.Enum.GetValues(typeof(SCENE_TYPE)))
         {
             if (type == SCENE_TYPE.UNKNOWN || type == SCENE_TYPE.LOADING_SEQUENCE
@@ -1074,7 +1141,14 @@ public class GameManager : MonoBehaviourPunCallbacks
             {
                 continue;
             }
-            missing.Add(type.ToString());
+            if (buildScenes.Contains(type.ToString()))
+            {
+                missing.Add(type.ToString());
+            }
+            else
+            {
+                noSceneFile.Add(type.ToString());
+            }
         }
 
         if (missing.Count > 0)
@@ -1082,6 +1156,28 @@ public class GameManager : MonoBehaviourPunCallbacks
             Debug.LogWarning($"[GameManager] 씬 설정표에 없는 씬: {string.Join(", ", missing)}\n" +
                              "속성이 전부 off로 취급됨. Hub > 새 씬 만들기 > 씬 설정에서 채울 것.");
         }
+
+        if (noSceneFile.Count > 0)
+        {
+            Debug.Log($"[GameManager] enum에만 있고 실제 씬은 없음: {string.Join(", ", noSceneFile)}\n" +
+                      "씬을 만들거나 SCENE_TYPE에서 뺄 것. 설정표에는 넣지 않아도 됨.");
+        }
+    }
+
+    // 빌드 세팅에 등록된 씬 이름. 런타임이라 AssetDatabase를 못 쓰므로 빌드 목록으로 대신 판정함.
+    private static HashSet<string> CollectBuildSceneNames()
+    {
+        HashSet<string> names = new HashSet<string>(System.StringComparer.OrdinalIgnoreCase);
+        int count = SceneManager.sceneCountInBuildSettings;
+        for (int i = 0; i < count; i++)
+        {
+            string path = SceneUtility.GetScenePathByBuildIndex(i);
+            if (!string.IsNullOrEmpty(path))
+            {
+                names.Add(Path.GetFileNameWithoutExtension(path));
+            }
+        }
+        return names;
     }
 
     // 카테고리 → 속성. 씬 속성 규칙의 유일한 코드 출처.
@@ -1099,6 +1195,7 @@ public class GameManager : MonoBehaviourPunCallbacks
         resolved.isBattleScene = false;
         resolved.isStationScene = false;
         resolved.shipHidden = false;
+        resolved.otherShipsHidden = false;
         // 조종은 전투씬에서만
         resolved.shipControlDisabled = entry.category != SCENE_CATEGORY.BATTLE;
 
@@ -1114,6 +1211,8 @@ public class GameManager : MonoBehaviourPunCallbacks
                 break;
             case SCENE_CATEGORY.HANGAR:
                 resolved.keepsPlayerShip = true;
+                // 멀티에서 같은 격납고에 여럿이 들어와도 각자 자기 기체만 보게 함.
+                resolved.otherShipsHidden = true;
                 break;
             case SCENE_CATEGORY.TRANSIT:
                 resolved.keepsPlayerShip = true;
@@ -1515,86 +1614,11 @@ public class GameManager : MonoBehaviourPunCallbacks
             AffectionManager.Instance.LoadAffections(data.affections);
         }
 
+        // 함선이 이미 있으면(같은 씬에서 불러오기) 프로필을 바로 씌움.
+        // 함선이 아직 없으면 스폰 직후 Player가 스스로 PlayerProfile.ApplyTo를 부름.
         if (playerRef != null)
         {
-            playerRef.level             = data.level;
-            playerRef.exp               = data.exp;
-            playerRef.expToNextLevel    = data.expToNextLevel;
-
-            // 파츠 슬롯 복원 (id int → SO 참조).
-            // 좌우 런처처럼 같은 타입 슬롯이 여러 개여도 저장 순서대로 각 슬롯에 배정되도록
-            // 파츠 목록을 모아 ReloadLoadout으로 일괄 재구성한다.
-            // (타입 기준 Equip은 첫 슬롯만 잡아 L/R이 충돌하므로 사용하지 않음)
-            if (data.partSlots != null && itemDatabase != null)
-            {
-                UnitParts unitParts = playerRef.GetComponent<UnitParts>();
-                if (unitParts != null)
-                {
-                    List<PartData> savedParts = new List<PartData>();
-                    for (int i = 0; i < data.partSlots.Length; i++)
-                    {
-                        SavedPartSlot saved = data.partSlots[i];
-                        if (saved.partId == 0) continue;
-                        PartData partData = itemDatabase.Get<PartData>((ITEM_ID)saved.partId);
-                        if (partData == null)
-                        {
-                            Debug.LogWarning($"[GameManager] 파츠 복원 실패: id={saved.partId}");
-                            continue;
-                        }
-                        savedParts.Add(partData);
-                    }
-                    unitParts.ReloadLoadout(savedParts);
-                }
-            }
-
-            // 현재 HP/실드/아머/부스트 복원.
-            // ReloadLoadout이 RefillToMax로 max를 채우므로, 파츠 복원 뒤에 세팅해야 저장값이 유지된다.
-            playerRef.curHpRemaining     = data.curHp;
-            playerRef.curShieldRemaining = data.curShield;
-            playerRef.curArmorRemaining  = data.curArmor;
-            playerRef.curBoostRemaining  = data.curBoost;
-            playerRef.curFuelRemaining   = data.curFuel;
-
-            // 미사일 슬롯 복원 (id int → SO 참조)
-            if (data.missileSlots != null)
-            {
-                playerRef.weaponSystem.missileSlots = new List<MissileSlot>();
-                for (int i = 0; i < data.missileSlots.Length; i++)
-                {
-                    SavedMissileSlot saved = data.missileSlots[i];
-                    MissileData missileData = itemDatabase != null && saved.missileDataId != 0
-                        ? itemDatabase.Get<MissileData>((ITEM_ID)saved.missileDataId)
-                        : null;
-                    playerRef.weaponSystem.missileSlots.Add(new MissileSlot
-                    {
-                        type        = saved.type,
-                        missileData = missileData,
-                        curAmmo     = saved.curAmmo,
-                        maxAmmo     = saved.maxAmmo
-                    });
-                }
-            }
-
-            // 보유 스킬 복원 (skillId int → SkillData 참조, skillDatabase 통해 역참조)
-            // null이면 함선 없는 씬에서 저장된 것 — 그대로 넘기면 시작 스킬까지 지워짐
-            if (playerRef.skillSystem != null && data.skills != null)
-            {
-                playerRef.skillSystem.LoadSaveData(data.skills);
-            }
-
-            // 소모품 퀵슬롯 복원 (id int → ConsumableData 참조, 0이면 빈칸)
-            QuickSlot quickSlot = playerRef.GetComponent<QuickSlot>();
-            if (quickSlot != null && data.quickSlotItemIds != null && itemDatabase != null)
-            {
-                for (int i = 0; i < data.quickSlotItemIds.Length; i++)
-                {
-                    ITEM_ID id = data.quickSlotItemIds[i];
-                    ConsumableData consumable = id != 0
-                        ? itemDatabase.Get<ConsumableData>(id)
-                        : null;
-                    quickSlot.AssignSlot(i, consumable);
-                }
-            }
+            PlayerProfile.ApplyTo(playerRef, itemDatabase);
         }
     }
 

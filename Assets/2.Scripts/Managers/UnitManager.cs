@@ -19,8 +19,6 @@ public class UnitManager : MonoBehaviour
 {
     private static UnitManager instance;
     // Awake에서만 세팅됨. Awake 전엔 null이므로 최초 접근은 Start부터 할 것.
-    // (예전엔 여기서 FindObjectOfType으로 찾아줬는데, 그게 매니저 자신의 Awake보다 먼저
-    //  instance를 채워버려서 Awake의 초기화 블록이 통째로 스킵되는 버그를 만들었음)
     public static UnitManager Instance => instance;
 
     private void Awake()
@@ -72,6 +70,24 @@ public class UnitManager : MonoBehaviour
     public void UnregisterEnemy(Unit enemy)
     {
         _enemies.Remove(enemy);
+    }
+
+    /// <summary>
+    /// 등록된 적을 전부 사망 처리. 평소 죽을 때와 같은 FSM을 타므로 사망 애니·VFX·아이템 드랍이 정상적으로 나오고
+    /// 풀 반납도 사망 연출이 끝난 뒤 평소 경로로 됨.
+    /// 멀티에선 소유자(Master)의 적만 죽고 나머지는 기존 사망 동기화로 따라옴.
+    /// </summary>
+    public void KillAllEnemies()
+    {
+        for (int i = _enemies.Count - 1; i >= 0; i--)
+        {
+            Unit enemy = _enemies[i];
+            if (enemy == null || !enemy.IsMine || enemy.CurState == UNIT_STATE.DIE)
+            {
+                continue;
+            }
+            enemy.CurState = UNIT_STATE.DIE;
+        }
     }
 
     // 현재 살아있는 적 리스트 반환. 뒤에서부터 순회해 null 항목 자동 정리.

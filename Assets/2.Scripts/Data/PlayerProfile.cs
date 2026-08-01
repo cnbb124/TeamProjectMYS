@@ -26,6 +26,8 @@ public static class PlayerProfile
 	public static float curFuel;
 
 	public static readonly List<PartData> parts = new List<PartData>();
+	// parts와 같은 인덱스. 음수면 정보 없음(만피).
+	public static readonly List<int> partHps = new List<int>();
 	public static readonly List<SavedMissileSlot> missiles = new List<SavedMissileSlot>();
 	public static readonly List<SavedSkill> skills = new List<SavedSkill>();
 	public static ITEM_ID[] quickSlots = new ITEM_ID[0];
@@ -49,6 +51,7 @@ public static class PlayerProfile
 		curBoost = 0f;
 		curFuel = 0f;
 		parts.Clear();
+		partHps.Clear();
 		missiles.Clear();
 		skills.Clear();
 		quickSlots = new ITEM_ID[0];
@@ -73,6 +76,7 @@ public static class PlayerProfile
 			if (part != null)
 			{
 				parts.Add(part);
+				partHps.Add(-1);   // 새 게임이니 만피
 			}
 		}
 
@@ -119,6 +123,7 @@ public static class PlayerProfile
 				if (part != null)
 				{
 					parts.Add(part);
+					partHps.Add(data.version >= 2 ? saved.curPartHp : -1);
 				}
 			}
 		}
@@ -156,6 +161,7 @@ public static class PlayerProfile
 		curFuel = player.curFuelRemaining;
 
 		parts.Clear();
+		partHps.Clear();
 		UnitParts unitParts = player.GetComponent<UnitParts>();
 		if (unitParts != null)
 		{
@@ -164,6 +170,7 @@ public static class PlayerProfile
 				if (slot.equippedPart != null)
 				{
 					parts.Add(slot.equippedPart);
+					partHps.Add(slot.curPartHp);
 				}
 			}
 		}
@@ -230,7 +237,7 @@ public static class PlayerProfile
 		UnitParts unitParts = player.GetComponent<UnitParts>();
 		if (unitParts != null && parts.Count > 0)
 		{
-			unitParts.ReloadLoadout(parts);
+			unitParts.ReloadLoadout(parts, partHps);
 		}
 
 		if (player.weaponSystem != null && missiles.Count > 0 && itemDatabase != null)
@@ -268,13 +275,14 @@ public static class PlayerProfile
 		}
 
 		// 체력류는 파츠 적용으로 최대치가 바뀐 뒤에 넣어야 잘림 없이 들어감.
+		// 손상된 파츠를 복원하면 최대치가 내려가 있을 수 있으므로 최대치로 한 번 더 자름.
 		if (curHp > 0)
 		{
-			player.curHpRemaining = curHp;
-			player.curShieldRemaining = curShield;
-			player.curArmorRemaining = curArmor;
-			player.curBoostRemaining = curBoost;
-			player.curFuelRemaining = curFuel;
+			player.curHpRemaining = Mathf.Min(curHp, player.maxHpRemaining);
+			player.curShieldRemaining = Mathf.Min(curShield, player.maxShieldCapacity);
+			player.curArmorRemaining = Mathf.Min(curArmor, player.maxArmor);
+			player.curBoostRemaining = Mathf.Min(curBoost, player.maxBoostCapacity);
+			player.curFuelRemaining = Mathf.Min(curFuel, player.maxFuelCapacity);
 		}
 	}
 
@@ -298,10 +306,13 @@ public static class PlayerProfile
 		data.partSlots = new SavedPartSlot[parts.Count];
 		for (int i = 0; i < parts.Count; i++)
 		{
+			// 프로필에 HP 정보가 없으면(-1) 만피로 기록 — 불러올 때 0(파괴)으로 오인되지 않게.
+			int hp = i < partHps.Count && partHps[i] >= 0 ? partHps[i] : parts[i].maxPartHp;
 			data.partSlots[i] = new SavedPartSlot
 			{
 				slotType = parts[i].partType,
-				partId = (int)parts[i].id
+				partId = (int)parts[i].id,
+				curPartHp = hp
 			};
 		}
 

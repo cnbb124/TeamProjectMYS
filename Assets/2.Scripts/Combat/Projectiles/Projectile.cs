@@ -222,6 +222,20 @@ public abstract class Projectile : MonoBehaviour
         ReturnToPool();
     }
 
+	/// <summary>
+	/// 남은 사거리를 잘라 곧 스스로 끝나게 함. 지금까지 날아온 거리 + remainDistance 지점에서 OnMaxRange가 돎
+	/// (미사일은 그 자리에서 폭발, 총알은 반납). 이미 그보다 짧게 남았으면 그대로 둠.
+	/// 날아가던 투사체를 SetActive(false)로 지우면 공중에서 증발하는 것처럼 보여서 씀.
+	/// </summary>
+	public void CutRange(float remainDistance)
+	{
+		float cut = _traveledDistance + Mathf.Max(0f, remainDistance);
+		if (cut < maxRange)
+		{
+			maxRange = cut;
+		}
+	}
+
 
 
     //같은팀인지 체크 (attacker와 피격 Unit 태그 비교)

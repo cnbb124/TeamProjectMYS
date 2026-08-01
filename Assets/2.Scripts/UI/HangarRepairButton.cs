@@ -32,6 +32,10 @@ public class HangarRepairButton : MonoBehaviour
 	[Tooltip("깎인 HP 1당 수리비 골드. 0이면 무료")]
 	[SerializeField] private int costPerHp = 2;
 
+	// 직전에 그린 상태. 같은 값이면 UI를 다시 안 그림.
+	private int _lastCost = -1;
+	private bool? _lastDamaged;
+
 	private void Start()
 	{
 		if (repairButton == null) repairButton = GetComponent<Button>();
@@ -41,12 +45,16 @@ public class HangarRepairButton : MonoBehaviour
 
 	private void OnEnable()
 	{
+		// 캐시를 무효화해 켜지는 즉시 한 번은 실제로 그리게 함.
+		_lastCost = -1;
+		_lastDamaged = null;
 		RefreshState();
 	}
 
 	private void Update()
 	{
-		// 격납고 열려있는 동안 상태 갱신 (HP/골드 변동 반영). UI 하나라 비용 미미
+		// 격납고 열려있는 동안 상태 갱신 (HP/골드 변동 반영).
+		// 값이 안 바뀌면 UI를 건드리지 않음 — 매 프레임 문자열을 새로 만들지 않기 위함.
 		RefreshState();
 	}
 
@@ -61,14 +69,15 @@ public class HangarRepairButton : MonoBehaviour
 
 	private void OnRepairClicked()
 	{
-		Player p = GameManager.Instance.playerRef;
+		Player p = GetPlayer();
 
 		if (p != null)
-		{// Player p = GetPlayer();
-		 //if (p == null) return;
+		{
+			if (!IsRepairAllowed()) return;
 
 			int missing = p.maxHpRemaining - p.curHpRemaining;
-			if (missing <= 0) return; // 풀피 — 할 것 없음
+			// HP가 멀쩡해도 실드·아머·부스트·연료·파츠가 깎였으면 수리 대상임.
+			if (!IsDamaged(p)) return; // 전부 만땅 — 할 것 없음
 
 			int cost = GetRepairCost();
 
@@ -88,21 +97,61 @@ public class HangarRepairButton : MonoBehaviour
 		}
 	}
 
-	// 버튼 활성/비활성 + 비용 텍스트 갱신
+	// 버튼 활성/비활성 + 비용 텍스트 갱신.
+	// 직전 값과 같으면 아무것도 안 함 — Update에서 매 프레임 불려도 문자열 생성이 안 일어나게 함.
 	private void RefreshState()
 	{
 		Player p = GetPlayer();
-		bool damaged = p != null && p.curHpRemaining < p.maxHpRemaining;
+		bool damaged = p != null && IsRepairAllowed() && IsDamaged(p);
+		int cost = GetRepairCost();
+
+		if (_lastDamaged == damaged && _lastCost == cost)
+		{
+			return;
+		}
+		_lastDamaged = damaged;
+		_lastCost = cost;
 
 		if (repairButton != null)
+		{
 			repairButton.interactable = damaged;
+		}
 
 		if (costText != null)
 		{
-			if (!damaged) costText.text = "REPAIR";
-			else if (costPerHp <= 0) costText.text = "REPAIR  FREE";
-			else costText.text = $"REPAIR  {GetRepairCost():N0}G";
+			if (!damaged)
+			{
+				costText.text = "REPAIR";
+			}
+			else if (cost <= 0)
+			{
+				costText.text = "REPAIR  FREE";
+			}
+			else
+			{
+				costText.text = $"REPAIR  {cost:N0}G";
+			}
 		}
+	}
+
+	// 수리는 스테이지를 깨고 돌아왔을 때만. 사망 후 재시작은 마지막 저장으로 복구되므로 대상이 아님.
+	private bool IsRepairAllowed()
+	{
+		return GameManager.Instance != null && GameManager.Instance.StageClearedBeforeHangar;
+	}
+
+	// 수리할 게 하나라도 있는지. RefillToMax가 되돌리는 값들을 그대로 따라감 —
+	// HP만 보면 연료·실드·파츠만 깎인 상태에서 버튼이 꺼져 아무것도 못 고치게 됨.
+	private bool IsDamaged(Player p)
+	{
+		if (p.curHpRemaining < p.maxHpRemaining) return true;
+		if (p.curShieldRemaining < p.maxShieldCapacity) return true;
+		if (p.curArmorRemaining < p.maxArmor) return true;
+		if (p.curBoostRemaining < p.maxBoostCapacity) return true;
+		if (p.curFuelRemaining < p.maxFuelCapacity) return true;
+
+		UnitParts parts = p.GetComponent<UnitParts>();
+		return parts != null && parts.HasDamagedPart();
 	}
 
 	private Player GetPlayer()

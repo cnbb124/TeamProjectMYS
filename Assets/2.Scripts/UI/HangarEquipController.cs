@@ -155,6 +155,7 @@ public class HangarEquipController : MonoBehaviour
 
         if (list != null) list.RefreshFiltered(type);  // 기체 색은 ShipPartDamageView가 매프레임 갱신
         PlayerProfile.CaptureFrom(player);             // 씬을 안 나가도 장착 즉시 프로필에 반영
+        player.BroadcastLoadout();                     // 바뀐 구성을 남 클라 복제본에도 반영
         player.CollectParticles();                     // 파츠 프리팹이 새로 생겨 이전 파티클 캐시가 죽음
         RefreshStatPanel();                            // 파츠가 바뀌면 최대 HP/실드/아머도 바뀜
     }

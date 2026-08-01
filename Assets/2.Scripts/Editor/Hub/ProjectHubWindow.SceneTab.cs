@@ -33,6 +33,27 @@ public partial class ProjectHubWindow
 	private void SceneTabOnEnable()
 	{
 		RefreshSceneRows();
+		EditorBuildSettings.sceneListChanged -= OnBuildSceneListChanged;
+		EditorBuildSettings.sceneListChanged += OnBuildSceneListChanged;
+	}
+
+	private void SceneTabOnDisable()
+	{
+		EditorBuildSettings.sceneListChanged -= OnBuildSceneListChanged;
+	}
+
+	// 빌드 세팅이 어디서 바뀌든(빌드 세팅 창, 다른 스크립트) 표를 즉시 다시 읽음.
+	private void OnBuildSceneListChanged()
+	{
+		RefreshSceneRows();
+		Repaint();
+	}
+
+	// 씬 파일 추가·이름변경은 이벤트가 없어서, 창을 다시 잡을 때 훑음.
+	private void SceneTabOnFocus()
+	{
+		RefreshSceneRows();
+		Repaint();
 	}
 
 	private void DrawSceneTab()
@@ -94,7 +115,7 @@ public partial class ProjectHubWindow
 			}
 			else
 			{
-				DrawMark(row.inBuildSettings && row.buildEnabled, 48f);
+				DrawBuildMark(row.inBuildSettings, row.buildEnabled, 48f);
 			}
 
 			if (hasFile)
@@ -110,6 +131,15 @@ public partial class ProjectHubWindow
 				GUI.color = new Color(1f, 0.6f, 0.6f);
 				EditorGUILayout.LabelField($"'{row.typeName}' 이름의 씬 파일이 없음", EditorStyles.miniLabel);
 				GUI.color = prev;
+			}
+
+			if (hasFile && !isWorkScene && row.inBuildSettings && !row.buildEnabled)
+			{
+				if (GUILayout.Button("활성화", GUILayout.Width(60f)))
+				{
+					EnableSceneInBuildSettings(row.assetPath);
+					RefreshSceneRows();
+				}
 			}
 
 			if (hasFile && !isWorkScene && !row.inBuildSettings)
@@ -142,6 +172,54 @@ public partial class ProjectHubWindow
 		GUI.color = ok ? new Color(0.6f, 1f, 0.6f) : new Color(1f, 0.6f, 0.6f);
 		EditorGUILayout.LabelField(ok ? "O" : "X", GUILayout.Width(width));
 		GUI.color = prev;
+	}
+
+	// 빌드 열은 상태가 셋 — 목록에 없음(X) / 목록엔 있는데 체크 꺼짐(OFF) / 정상(O).
+	// 둘을 같은 X로 묶으면 "왜 빌드에 넣었는데 X냐"가 됨.
+	private static void DrawBuildMark(bool inList, bool enabled, float width)
+	{
+		string text;
+		Color color;
+		string tip;
+
+		if (!inList)
+		{
+			text = "X";
+			color = new Color(1f, 0.6f, 0.6f);
+			tip = "빌드 세팅 목록에 없음 — 런타임 씬 로드가 실패함";
+		}
+		else if (!enabled)
+		{
+			text = "OFF";
+			color = new Color(1f, 0.9f, 0.5f);
+			tip = "목록엔 있지만 체크박스가 꺼져 있음 — 빌드에 포함되지 않음";
+		}
+		else
+		{
+			text = "O";
+			color = new Color(0.6f, 1f, 0.6f);
+			tip = "빌드 세팅에 포함됨";
+		}
+
+		Color prev = GUI.color;
+		GUI.color = color;
+		EditorGUILayout.LabelField(new GUIContent(text, tip), GUILayout.Width(width));
+		GUI.color = prev;
+	}
+
+	// 목록엔 있는데 체크만 꺼진 씬을 켬.
+	private static void EnableSceneInBuildSettings(string path)
+	{
+		EditorBuildSettingsScene[] list = EditorBuildSettings.scenes;
+		for (int i = 0; i < list.Length; i++)
+		{
+			if (list[i].path == path)
+			{
+				list[i].enabled = true;
+			}
+		}
+		EditorBuildSettings.scenes = list;
+		Debug.Log($"[Hub] 빌드 세팅에서 활성화함: {path}");
 	}
 
 	// 현재 씬에 있어야 이 씬만 열고 바로 재생할 수 있는 것들.

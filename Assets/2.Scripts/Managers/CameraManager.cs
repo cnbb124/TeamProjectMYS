@@ -28,8 +28,6 @@ public class CameraManager : MonoBehaviour
     // 프로젝트 표준 싱글톤(씬 전용 — vCam이 게임플레이 씬과 짝이라 씬을 넘기면 안 됨, CameraShaker와 동일).
     private static CameraManager instance;
     // Awake에서만 세팅됨. Awake 전엔 null이므로 최초 접근은 Start부터 할 것.
-    // (예전엔 여기서 FindObjectOfType으로 찾아줬는데, 그게 매니저 자신의 Awake보다 먼저
-    //  instance를 채워버려서 Awake의 초기화 블록이 통째로 스킵되는 버그를 만들었음)
     public static CameraManager Instance => instance;
 
     [Tooltip("게임플레이 vCam. 비우면 Awake에서 씬에서 자동 탐색(여러 개면 명시 지정 권장).")]
