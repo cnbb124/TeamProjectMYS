@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using UnityEngine.XR.Interaction.Toolkit;
 
 /// <summary>
 /// Renders scene-owned screen-space UI into a fixed 16:9 texture and presents
@@ -29,6 +30,7 @@ public sealed class XRMainMenuRenderTextureAdapter : MonoBehaviour
     private Texture2D _cursorTexture;
     private RectTransform _cursor;
     private RenderTexturePointerInput _pointerInput;
+    private XRRenderTexturePanelInput _xrPointerInput;
     private int _sessionSceneHandle = -1;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
@@ -141,6 +143,12 @@ public sealed class XRMainMenuRenderTextureAdapter : MonoBehaviour
 
     private void AdaptScene(Scene scene)
     {
+        if (!UsesHeadLockedMenuPanel(scene))
+        {
+            CleanupSession();
+            return;
+        }
+
         Camera xrCamera = FindBestSceneCamera(scene);
         Canvas[] canvases = FindSceneCanvases(scene);
         if (xrCamera == null || canvases.Length == 0)
@@ -160,6 +168,24 @@ public sealed class XRMainMenuRenderTextureAdapter : MonoBehaviour
         }
 
         ConfigurePointerInput(scene, canvases[0]);
+    }
+
+    private static bool UsesHeadLockedMenuPanel(Scene scene)
+    {
+        switch (scene.name)
+        {
+            case "MAIN":
+            case "LOGIN":
+            case "MAP_SELECT":
+            case "MULTIPLAYER":
+            case "BASE_LANDING":
+            case "Base_Landing":
+            case "GAME_OVER":
+            case "LOADING_SEQUENCE":
+                return true;
+            default:
+                return false;
+        }
     }
 
     private void EnsureSession(Scene scene, Camera xrCamera)
@@ -227,6 +253,7 @@ public sealed class XRMainMenuRenderTextureAdapter : MonoBehaviour
             mainTexture = _uiTexture
         };
         _panel.GetComponent<MeshRenderer>().sharedMaterial = _panelMaterial;
+        _xrPointerInput = _panel.AddComponent<XRRenderTexturePanelInput>();
 
         Debug.Log(
             $"[XRMainMenuRenderTextureAdapter] Created " +
@@ -285,6 +312,11 @@ public sealed class XRMainMenuRenderTextureAdapter : MonoBehaviour
 
             _pointerInput.SetTargetSize(TextureWidth, TextureHeight);
             module.inputOverride = _pointerInput;
+            _xrPointerInput?.Configure(
+                eventSystem,
+                canvas.GetComponent<GraphicRaycaster>(),
+                TextureWidth,
+                TextureHeight);
         }
 
         if (_cursor == null)
@@ -344,6 +376,7 @@ public sealed class XRMainMenuRenderTextureAdapter : MonoBehaviour
         }
 
         _pointerInput = null;
+        _xrPointerInput = null;
         _cursor = null;
 
         DestroyRuntimeObject(_panel);
@@ -477,6 +510,228 @@ public sealed class XRMainMenuRenderTextureAdapter : MonoBehaviour
         if (target != null)
         {
             Destroy(target);
+        }
+    }
+}
+
+/// <summary>
+/// XR Ray Interactor가 Render Texture 패널에 맞힌 지점을 UI 픽셀 좌표로
+/// 변환하고 기존 GraphicRaycaster에 전달한다.
+/// </summary>
+public sealed class XRRenderTexturePanelInput : XRBaseInteractable
+{
+    private EventSystem _eventSystem;
+    private GraphicRaycaster _graphicRaycaster;
+    private Vector2 _targetSize = new Vector2(1920f, 1080f);
+    private readonly System.Collections.Generic.List<RaycastResult> _results =
+        new System.Collections.Generic.List<RaycastResult>();
+
+    private PointerEventData _pointer;
+    private GameObject _hoverTarget;
+    private GameObject _pressedTarget;
+    private GameObject _dragTarget;
+    private Vector2 _previousPosition;
+
+    public void Configure(
+        EventSystem eventSystem,
+        GraphicRaycaster graphicRaycaster,
+        int width,
+        int height)
+    {
+        _eventSystem = eventSystem;
+        _graphicRaycaster = graphicRaycaster;
+        _targetSize = new Vector2(
+            Mathf.Max(1, width),
+            Mathf.Max(1, height));
+        _pointer = new PointerEventData(eventSystem)
+        {
+            pointerId = -100
+        };
+    }
+
+    private static bool UsesHeadLockedMenuPanel(Scene scene)
+    {
+        // 3D 월드 장면(STATION, STAGE1 등)에 전체 화면 메뉴 Quad를 만들면
+        // 불투명 UI 배경이 카메라 앞을 덮어 단색 화면처럼 보일 수 있다.
+        switch (scene.name)
+        {
+            case "MAIN":
+            case "LOGIN":
+            case "MAP_SELECT":
+            case "MULTIPLAYER":
+            case "BASE_LANDING":
+            case "Base_Landing":
+            case "GAME_OVER":
+            case "LOADING_SEQUENCE":
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    private void Update()
+    {
+        XRRayInteractor ray = FindHoveringRay();
+        if (ray == null || !TryUpdatePointer(ray))
+        {
+            SetHoverTarget(null);
+            return;
+        }
+
+        if (_pressedTarget != null && _dragTarget != null)
+        {
+            ExecuteEvents.Execute(
+                _dragTarget,
+                _pointer,
+                ExecuteEvents.dragHandler);
+        }
+    }
+
+    protected override void OnSelectEntered(SelectEnterEventArgs args)
+    {
+        base.OnSelectEntered(args);
+
+        XRRayInteractor ray = args.interactorObject as XRRayInteractor;
+        if (ray == null || !TryUpdatePointer(ray) || _hoverTarget == null)
+        {
+            return;
+        }
+
+        _pressedTarget = _hoverTarget;
+        _pointer.pointerPress = _pressedTarget;
+        _pointer.pressPosition = _pointer.position;
+        ExecuteEvents.Execute(
+            _pressedTarget,
+            _pointer,
+            ExecuteEvents.pointerDownHandler);
+
+        _dragTarget = ExecuteEvents.GetEventHandler<IDragHandler>(_pressedTarget);
+        _pointer.pointerDrag = _dragTarget;
+        if (_dragTarget != null)
+        {
+            ExecuteEvents.Execute(
+                _dragTarget,
+                _pointer,
+                ExecuteEvents.initializePotentialDrag);
+            ExecuteEvents.Execute(
+                _dragTarget,
+                _pointer,
+                ExecuteEvents.beginDragHandler);
+            _pointer.dragging = true;
+        }
+    }
+
+    protected override void OnSelectExited(SelectExitEventArgs args)
+    {
+        if (_pressedTarget != null && _pointer != null)
+        {
+            if (_dragTarget != null)
+            {
+                ExecuteEvents.Execute(
+                    _dragTarget,
+                    _pointer,
+                    ExecuteEvents.endDragHandler);
+            }
+
+            ExecuteEvents.Execute(
+                _pressedTarget,
+                _pointer,
+                ExecuteEvents.pointerUpHandler);
+
+            if (_pressedTarget == _hoverTarget)
+            {
+                ExecuteEvents.Execute(
+                    _pressedTarget,
+                    _pointer,
+                    ExecuteEvents.pointerClickHandler);
+            }
+        }
+
+        _pressedTarget = null;
+        _dragTarget = null;
+        if (_pointer != null)
+        {
+            _pointer.pointerPress = null;
+            _pointer.pointerDrag = null;
+            _pointer.dragging = false;
+        }
+
+        base.OnSelectExited(args);
+    }
+
+    protected override void OnDisable()
+    {
+        SetHoverTarget(null);
+        _pressedTarget = null;
+        _dragTarget = null;
+        base.OnDisable();
+    }
+
+    private XRRayInteractor FindHoveringRay()
+    {
+        for (int i = 0; i < interactorsHovering.Count; i++)
+        {
+            if (interactorsHovering[i] is XRRayInteractor ray)
+            {
+                return ray;
+            }
+        }
+
+        return null;
+    }
+
+    private bool TryUpdatePointer(XRRayInteractor ray)
+    {
+        if (_eventSystem == null ||
+            _graphicRaycaster == null ||
+            _pointer == null ||
+            !ray.TryGetCurrent3DRaycastHit(out RaycastHit hit) ||
+            hit.collider == null ||
+            hit.collider.gameObject != gameObject)
+        {
+            return false;
+        }
+
+        Vector3 localHit = transform.InverseTransformPoint(hit.point);
+        float normalizedX = Mathf.Clamp01(localHit.x + 0.5f);
+        float normalizedY = Mathf.Clamp01(localHit.y + 0.5f);
+        Vector2 nextPosition = new Vector2(
+            normalizedX * _targetSize.x,
+            normalizedY * _targetSize.y);
+        _pointer.delta = nextPosition - _previousPosition;
+        _pointer.position = nextPosition;
+        _previousPosition = nextPosition;
+
+        _results.Clear();
+        _graphicRaycaster.Raycast(_pointer, _results);
+        SetHoverTarget(_results.Count > 0 ? _results[0].gameObject : null);
+        return true;
+    }
+
+    private void SetHoverTarget(GameObject target)
+    {
+        if (_hoverTarget == target || _pointer == null)
+        {
+            return;
+        }
+
+        if (_hoverTarget != null)
+        {
+            ExecuteEvents.Execute(
+                _hoverTarget,
+                _pointer,
+                ExecuteEvents.pointerExitHandler);
+        }
+
+        _hoverTarget = target;
+        _pointer.pointerEnter = target;
+
+        if (_hoverTarget != null)
+        {
+            ExecuteEvents.Execute(
+                _hoverTarget,
+                _pointer,
+                ExecuteEvents.pointerEnterHandler);
         }
     }
 }

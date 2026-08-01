@@ -174,6 +174,7 @@ Shader "FX/Procedural Force Field"
                 float4 vertex : POSITION;
                 float3 normal : NORMAL;
                 float2 uv : TEXCOORD0;
+                UNITY_VERTEX_INPUT_INSTANCE_ID
             };
 
             struct v2f
@@ -190,6 +191,7 @@ Shader "FX/Procedural Force Field"
                 float hitMask2 : TEXCOORD8;
                 float hitAge3 : TEXCOORD9;
                 float hitMask3 : TEXCOORD10;
+                UNITY_VERTEX_OUTPUT_STEREO
             };
 
             float Hash21(float2 p)
@@ -303,6 +305,9 @@ Shader "FX/Procedural Force Field"
             v2f vert(appdata v)
             {
                 v2f o;
+                UNITY_SETUP_INSTANCE_ID(v);
+                UNITY_INITIALIZE_OUTPUT(v2f, o);
+                UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(o);
 
                 float3 posOSRaw = v.vertex.xyz;
 
@@ -375,6 +380,8 @@ Shader "FX/Procedural Force Field"
 
             fixed4 frag(v2f i) : SV_Target
             {
+                UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(i);
+
                 float t = _Time.y;
 
                 float3 N = normalize(i.worldN);
@@ -452,6 +459,7 @@ Shader "FX/Procedural Force Field"
                 #pragma target 3.0
                 #pragma vertex vert
                 #pragma fragment frag
+                #pragma multi_compile_instancing
                 ENDCG
             }
         }

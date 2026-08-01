@@ -221,6 +221,11 @@ public sealed class CockpitViewSwitcher : MonoBehaviour
             _thirdPersonVirtualCamera = FindSceneComponent<CinemachineVirtualCamera>();
         }
 
+        if (_thirdPersonVirtualCamera == null && _createThirdPersonCameraIfMissing)
+        {
+            _thirdPersonVirtualCamera = CreateThirdPersonVirtualCamera();
+        }
+
         // 3인칭 카메라가 없어도 콕핏 시점은 되므로 초기화는 계속함. 전환만 막힘(ToggleView).
         _vrListener = GetOrAddAudioListener(_vrCamera);
         _thirdPersonListener = _thirdPersonCamera != null
@@ -258,6 +263,23 @@ public sealed class CockpitViewSwitcher : MonoBehaviour
     private Camera FindExistingThirdPersonCamera()
     {
         Camera[] cameras = Resources.FindObjectsOfTypeAll<Camera>();
+
+        // 실제로 화면을 출력 중인 MainCamera를 가장 먼저 사용한다.
+        // 최신 씬처럼 CinemachineBrain이 없는 일반 카메라도 3인칭 출력일 수 있다.
+        for (int i = 0; i < cameras.Length; i++)
+        {
+            Camera camera = cameras[i];
+            if (camera != _vrCamera &&
+                camera.gameObject.scene.IsValid() &&
+                camera.enabled &&
+                camera.targetTexture == null &&
+                camera.CompareTag("MainCamera"))
+            {
+                return camera;
+            }
+        }
+
+        // 활성 MainCamera가 없으면 팀의 Cinemachine 출력 카메라를 찾는다.
         for (int i = 0; i < cameras.Length; i++)
         {
             Camera camera = cameras[i];
@@ -287,7 +309,76 @@ public sealed class CockpitViewSwitcher : MonoBehaviour
         cameraComponent.stereoTargetEye = StereoTargetEyeMask.Both;
 
         cameraObject.AddComponent<CinemachineBrain>();
+        cameraObject.transform.SetParent(transform.root, true);
         return cameraComponent;
+    }
+
+    private CinemachineVirtualCamera CreateThirdPersonVirtualCamera()
+    {
+        GameObject virtualCameraObject = new GameObject("Virtual Camera (Third Person)");
+        CinemachineVirtualCamera virtualCamera =
+            virtualCameraObject.AddComponent<CinemachineVirtualCamera>();
+        virtualCameraObject.transform.SetParent(transform.root, true);
+
+        PhotonView owner = GetComponentInParent<PhotonView>();
+        Transform followTarget = owner != null ? owner.transform : transform.root;
+        virtualCamera.Follow = followTarget;
+        virtualCamera.LookAt = followTarget;
+        virtualCamera.Priority = 20;
+
+        CinemachineTransposer transposer =
+            virtualCamera.AddCinemachineComponent<CinemachineTransposer>();
+        transposer.m_BindingMode = CinemachineTransposer.BindingMode.LockToTargetWithWorldUp;
+        transposer.m_FollowOffset = new Vector3(0f, 3f, -8f);
+
+        CinemachineComposer composer =
+            virtualCamera.AddCinemachineComponent<CinemachineComposer>();
+        composer.m_TrackedObjectOffset = new Vector3(0f, 1f, 0f);
+
+        return virtualCamera;
+    }
+
+    private bool EnsureThirdPersonCamera()
+    {
+        if (_thirdPersonBrain == null)
+        {
+            _thirdPersonBrain = FindSceneComponent<CinemachineBrain>();
+        }
+
+        if (_thirdPersonCamera == null)
+        {
+            _thirdPersonCamera = _thirdPersonBrain != null
+                ? _thirdPersonBrain.GetComponent<Camera>()
+                : FindExistingThirdPersonCamera();
+        }
+
+        if (_thirdPersonCamera == null && _createThirdPersonCameraIfMissing)
+        {
+            _thirdPersonCamera = CreateCinemachineOutputCamera();
+            _thirdPersonBrain = _thirdPersonCamera.GetComponent<CinemachineBrain>();
+        }
+
+        if (_thirdPersonBrain == null && _thirdPersonCamera != null)
+        {
+            _thirdPersonBrain = _thirdPersonCamera.GetComponent<CinemachineBrain>();
+        }
+
+        if (_thirdPersonVirtualCamera == null)
+        {
+            _thirdPersonVirtualCamera = FindSceneComponent<CinemachineVirtualCamera>();
+        }
+
+        if (_thirdPersonVirtualCamera == null && _createThirdPersonCameraIfMissing)
+        {
+            _thirdPersonVirtualCamera = CreateThirdPersonVirtualCamera();
+        }
+
+        _thirdPersonListener = _thirdPersonCamera != null
+            ? GetOrAddAudioListener(_thirdPersonCamera)
+            : null;
+
+        // 일반 Camera도 유효한 3인칭 출력이다. Brain은 Cinemachine 씬에서만 필수다.
+        return _thirdPersonCamera != null;
     }
 
     private static T FindSceneComponent<T>() where T : Component
@@ -314,8 +405,9 @@ public sealed class CockpitViewSwitcher : MonoBehaviour
 
     public void ToggleView()
     {
+        bool thirdPersonCameraReady = EnsureThirdPersonCamera();
         // 3인칭 카메라가 없으면 콕핏만 꺼지고 켜질 게 없어 화면이 까매짐.
-        if (_isCockpitView && _thirdPersonCamera == null)
+        if (_isCockpitView && !thirdPersonCameraReady)
         {
             Debug.LogWarning(
                 "[CockpitViewSwitcher] 이 씬엔 3인칭 출력 카메라가 없어 전환하지 않음 " +

@@ -88,6 +88,21 @@ public class PauseMenuUI : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// XR 왼손 Menu 버튼이 기존 ESC와 동일한 메뉴 흐름을 호출하는 진입점.
+    /// </summary>
+    public static void ToggleFromExternalInput()
+    {
+        if (_instance == null)
+        {
+            return;
+        }
+
+        if (_instance.IsOptionsShown()) _instance.CloseOptions();
+        else if (_instance.IsShown())   _instance.CloseMenu();
+        else                            _instance.OpenMenu();
+    }
+
     private bool IsShown()
     {
         return panel != null && panel.activeSelf;
