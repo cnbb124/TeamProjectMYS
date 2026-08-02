@@ -165,53 +165,7 @@ public partial class ProjectHubWindow
 			LoadDraft(entry, sceneType);
 		}
 
-		// ---- 씬 종류 ----
-		EditorGUILayout.LabelField("이 씬의 종류를 선택", EditorStyles.boldLabel);
-
-		int currentIndex = System.Array.IndexOf(CategoryChoices, _draftCategory);
-		if (currentIndex < 0)
-		{
-			currentIndex = CategoryChoices.Length - 1;
-		}
-
-		string[] labels = new string[CategoryChoices.Length];
-		for (int i = 0; i < CategoryChoices.Length; i++)
-		{
-			labels[i] = CategoryLabel(CategoryChoices[i]);
-		}
-
-		int pickedIndex = GUILayout.SelectionGrid(currentIndex, labels, 3, GUILayout.Height(44f));
-		_draftCategory = CategoryChoices[Mathf.Clamp(pickedIndex, 0, CategoryChoices.Length - 1)];
-		HubStyles.ColoredLabel(CategoryPlain(_draftCategory), HubStyles.Muted, HubStyles.IssueText);
-
-		GUILayout.Space(4f);
-
-		// ---- 배경음 ----
-		_draftBgm = (SOUND_TYPE)EditorGUILayout.EnumPopup("배경음", _draftBgm);
-		if (_draftBgm == SOUND_TYPE.SFX_NONE)
-		{
-			HubStyles.ColoredLabel("배경음 없음 — 이전 씬 음악이 그대로 이어집니다.",
-				HubStyles.Warn, EditorStyles.miniLabel);
-		}
-
-		// ---- 고급 ----
-		GUILayout.Space(4f);
-		_detailAdvancedOpen = EditorGUILayout.Foldout(_detailAdvancedOpen,
-			"고급 — 직접 설정 (평소엔 건드릴 필요 없음)", true);
-
-		if (_detailAdvancedOpen)
-		{
-			EditorGUI.indentLevel++;
-			_draftOverride = EditorGUILayout.Toggle("위 종류 대신 직접 정하기", _draftOverride);
-
-			EditorGUI.BeginDisabledGroup(!_draftOverride);
-			for (int i = 0; i < _draftFlags.Length; i++)
-			{
-				_draftFlags[i] = EditorGUILayout.Toggle(SettingFlagLabels[i], _draftFlags[i]);
-			}
-			EditorGUI.EndDisabledGroup();
-			EditorGUI.indentLevel--;
-		}
+		DrawCategoryBgmAdvanced(ref _draftCategory, ref _draftBgm, ref _draftOverride, _draftFlags);
 
 		// ---- 적용 / 되돌리기 ----
 		GUILayout.Space(6f);
@@ -235,6 +189,60 @@ public partial class ProjectHubWindow
 		{
 			HubStyles.ColoredLabel("바뀐 내용이 있습니다. [씬 수정하기]를 눌러야 저장됩니다.",
 				HubStyles.Warn, EditorStyles.miniLabel);
+		}
+	}
+
+	// 씬 종류 → 배경음 → 고급 순서. 씬 수정과 새 씬 만들기가 같은 모양이 되도록 공용으로 씀.
+	// 값을 필드로 직접 안 받고 ref로 받는 이유 = 수정 쪽은 초안(_draft*), 생성 쪽은 _create* 로 담는 곳이 달라서임.
+	private void DrawCategoryBgmAdvanced(ref SCENE_CATEGORY category, ref SOUND_TYPE bgm,
+		ref bool overrideFlags, bool[] flags)
+	{
+		// ---- 씬 종류 ----
+		EditorGUILayout.LabelField("이 씬의 종류를 선택", EditorStyles.boldLabel);
+
+		int currentIndex = System.Array.IndexOf(CategoryChoices, category);
+		if (currentIndex < 0)
+		{
+			currentIndex = CategoryChoices.Length - 1;
+		}
+
+		string[] labels = new string[CategoryChoices.Length];
+		for (int i = 0; i < CategoryChoices.Length; i++)
+		{
+			labels[i] = CategoryLabel(CategoryChoices[i]);
+		}
+
+		int pickedIndex = GUILayout.SelectionGrid(currentIndex, labels, 3, GUILayout.Height(44f));
+		category = CategoryChoices[Mathf.Clamp(pickedIndex, 0, CategoryChoices.Length - 1)];
+		HubStyles.ColoredLabel(CategoryPlain(category), HubStyles.Muted, HubStyles.IssueText);
+
+		GUILayout.Space(4f);
+
+		// ---- 배경음 ----
+		bgm = (SOUND_TYPE)EditorGUILayout.EnumPopup("배경음", bgm);
+		if (bgm == SOUND_TYPE.SFX_NONE)
+		{
+			HubStyles.ColoredLabel("배경음 없음 — 이전 씬 음악이 그대로 이어집니다.",
+				HubStyles.Warn, EditorStyles.miniLabel);
+		}
+
+		// ---- 고급 ----
+		GUILayout.Space(4f);
+		_detailAdvancedOpen = EditorGUILayout.Foldout(_detailAdvancedOpen,
+			"고급 — 직접 설정 (평소엔 건드릴 필요 없음)", true);
+
+		if (_detailAdvancedOpen)
+		{
+			EditorGUI.indentLevel++;
+			overrideFlags = EditorGUILayout.Toggle("위 종류 대신 직접 정하기", overrideFlags);
+
+			EditorGUI.BeginDisabledGroup(!overrideFlags);
+			for (int i = 0; i < flags.Length; i++)
+			{
+				flags[i] = EditorGUILayout.Toggle(SettingFlagLabels[i], flags[i]);
+			}
+			EditorGUI.EndDisabledGroup();
+			EditorGUI.indentLevel--;
 		}
 	}
 

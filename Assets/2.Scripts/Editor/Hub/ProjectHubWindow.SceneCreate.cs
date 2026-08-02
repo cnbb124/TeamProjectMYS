@@ -17,7 +17,6 @@ public partial class ProjectHubWindow
 {
 	private const string DefaultScenesFolder = "Assets/1.Scenes/BuildScene";
 
-	private bool _createFoldout = true;
 	private SceneTemplateData _template;
 	// 프로젝트에 있는 템플릿 에셋을 드롭다운으로 고르게 함 — 에셋을 드래그해 오지 않아도 되게.
 	// null이면 아직 안 읽은 상태라 다음 OnGUI에서 채움
@@ -43,13 +42,16 @@ public partial class ProjectHubWindow
 	// GameManager 씬 설정표에 같이 등록할 값들. 평소엔 카테고리만 고르면 됨
 	private SCENE_CATEGORY _createCategory = SCENE_CATEGORY.BATTLE;
 	private bool _createOverrideFlags;
-	private bool _createKeepsPlayerShip;
-	private bool _createCanSave;
-	private bool _createIsBattleScene;
-	private bool _createIsStationScene;
-	private bool _createShipControlDisabled;
-	private bool _createShipHidden;
-	private bool _createOtherShipsHidden;
+	// 속성 체크박스. 씬 수정 화면과 같은 UI를 쓰려고 SettingFlagNames 순서에 맞춘 배열로 둠
+	private readonly bool[] _createFlags = new bool[SettingFlagNames.Length];
+
+	// '추가 항목' 접이식 그룹. 평소엔 이름·종류·배경음만 정하면 되므로 기본은 템플릿만 펼침
+	private bool _createExtraTemplate = true;
+	private bool _createExtraObjects;
+	private bool _createExtraSpawn;
+	private bool _createExtraWave;
+	private bool _createExtraMap;
+	private bool _createExtraRegister;
 
 	private readonly List<WaveData> _createWaves = new List<WaveData>();
 	private WaveData _createBossWave;
@@ -67,28 +69,145 @@ public partial class ProjectHubWindow
 
 	private void DrawSceneCreateSection()
 	{
-		_createFoldout = EditorGUILayout.Foldout(_createFoldout, "새 씬 만들기", true, EditorStyles.foldoutHeader);
-		if (!_createFoldout)
+		// ---- 이름 / 저장 위치 ----
+		// 씬 수정 화면이 맨 위에 '선택된 씬'을 보여주는 것과 같은 자리 — 여기선 만들 이름을 정함
+		EditorGUILayout.LabelField("만들 씬의 이름", HubStyles.SectionTitle);
+		_createSceneName = EditorGUILayout.TextField("씬 이름", _createSceneName);
+		_createFolder = EditorGUILayout.TextField("저장 폴더", _createFolder);
+
+		// 이름이 SCENE_TYPE에 있는지 — 씬 생성 자체는 이름만으로 되지만,
+		// GameManager가 씬을 식별하는 근거(curSceneType/BGM 조회)는 SCENE_TYPE이라 없으면 그 기능만 빠짐.
+		// 대소문자는 안 가림(SceneManager.LoadScene도 안 가림).
+		bool typeExists = System.Enum.TryParse(_createSceneName, true, out SCENE_TYPE resolved)
+						  && System.Enum.IsDefined(typeof(SCENE_TYPE), resolved);
+		_createSceneType = typeExists ? resolved : SCENE_TYPE.UNKNOWN;
+
+		if (string.IsNullOrWhiteSpace(_createSceneName))
 		{
-			return;
+			EditorGUILayout.HelpBox("씬 이름을 입력할 것.", MessageType.Info);
+		}
+		else if (typeExists)
+		{
+			EditorGUILayout.HelpBox($"SCENE_TYPE.{resolved} 로 인식됨 — BGM 등록/씬 판별이 정상 동작함.", MessageType.None);
+		}
+		else
+		{
+			EditorGUILayout.HelpBox($"SCENE_TYPE에 '{_createSceneName}'이 없음.\n" +
+									"씬은 지금 바로 만들 수 있지만, 추가하지 않으면 GameManager가 이 씬을 식별하지 못해\n" +
+									"BGM 자동 재생과 curSceneType 판별이 빠짐.", MessageType.Warning);
+			EditorGUI.BeginDisabledGroup(HubEnumEditor.IsCompiling);
+			if (GUILayout.Button($"SCENE_TYPE에 '{_createSceneName}' 추가 (코드 수정 + 컴파일)", GUILayout.Height(22f)))
+			{
+				// 코드 수정 + 리임포트가 끼므로 GUI가 끝난 뒤에 실행
+				string deferredName = _createSceneName;
+				EditorApplication.delayCall += () => AddSceneTypeMember(deferredName);
+			}
+			EditorGUI.EndDisabledGroup();
 		}
 
-		EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+		string scenePath = $"{_createFolder}/{_createSceneName}.unity";
+		bool alreadyExists = SceneFileExists(scenePath);
+		if (alreadyExists)
+		{
+			EditorGUILayout.HelpBox($"이미 존재함: {scenePath}\n덮어쓰지 않음. 다른 종류를 고르거나 기존 씬을 열 것.", MessageType.Warning);
+		}
 
-		// 라벨 칸 폭. 기본값(약 150)이라 긴 라벨이 '...'으로 잘려서 이 섹션 동안만 넓혀 씀.
-		// EditorGUIUtility는 전역 상태라 섹션이 끝나면 반드시 원래대로 되돌려야 다른 창에 영향이 안 감.
+		HubStyles.Separator(4f);
+
+		// ---- 씬 종류 / 배경음 / 고급 ----
+		// 씬 수정 화면과 같은 UI를 그대로 씀
+		DrawCategoryBgmAdvanced(ref _createCategory, ref _createBgm, ref _createOverrideFlags, _createFlags);
+
+		if (!_createRegisterSettings)
+		{
+			HubStyles.ColoredLabel("아래 [추가 항목 → 등록 · 빌드]에서 설정표 등록을 꺼둔 상태 — 위에서 고른 종류와 배경음이 저장되지 않습니다.",
+				HubStyles.Warn, EditorStyles.miniLabel);
+		}
+		else if (_createSceneType == SCENE_TYPE.UNKNOWN && !string.IsNullOrWhiteSpace(_createSceneName))
+		{
+			HubStyles.ColoredLabel("SCENE_TYPE이 없어 위 종류·배경음은 저장되지 않습니다. 먼저 SCENE_TYPE에 추가할 것.",
+				HubStyles.Warn, EditorStyles.miniLabel);
+		}
+
+		HubStyles.Separator(4f);
+
+		// ---- 추가 항목 ----
+		// 여기부터는 씬 안을 무엇으로 채울지. 평소엔 템플릿만 고르면 되므로 나머지는 접어둠
+		EditorGUILayout.LabelField("추가 항목", HubStyles.SectionTitle);
+
+		// 라벨 칸 폭. 기본값(약 150)이라 긴 라벨이 '...'으로 잘려서 이 구간 동안만 넓혀 씀.
+		// EditorGUIUtility는 전역 상태라 구간이 끝나면 반드시 원래대로 되돌려야 다른 창에 영향이 안 감.
 		float prevLabelWidth = EditorGUIUtility.labelWidth;
 		EditorGUIUtility.labelWidth = 220f;
 
-		// ---- 템플릿 ----
-		// 평소 흐름은 '템플릿 고르기'로 끝남 — 씬을 열 필요가 없음.
-		// 씬을 열어야 하는 건 아래 [현재 열린 씬을 템플릿으로 저장]을 눌러 템플릿을 처음 만들 때 한 번뿐.
-		SectionHeader("템플릿");
+		DrawCreateTemplateGroup();
+		DrawCreateObjectsGroup();
+		DrawCreateSpawnGroup();
+		DrawCreateWaveGroup();
+		DrawCreateMapGroup();
+		DrawCreateRegisterGroup();
 
+		EditorGUIUtility.labelWidth = prevLabelWidth;
+
+		// ---- 생성 ----
+		EditorGUILayout.Space(8f);
+		EditorGUI.BeginDisabledGroup(alreadyExists || string.IsNullOrWhiteSpace(_createSceneName));
+		if (GUILayout.Button("씬 생성", GUILayout.Height(30f)))
+		{
+			// OnGUI 안에서 씬을 새로 열거나 모달을 띄우면 GUI 레이아웃 스택이 깨져
+			// 'EndLayoutGroup: BeginLayoutGroup must be called first' 가 뜸.
+			// delayCall로 GUI가 끝난 뒤에 실행시킴.
+			string deferredPath = scenePath;
+			EditorApplication.delayCall += () => CreateScene(deferredPath);
+		}
+		EditorGUI.EndDisabledGroup();
+
+		if (!string.IsNullOrEmpty(_justCreatedScene))
+		{
+			EditorGUILayout.Space(4f);
+			EditorGUILayout.HelpBox($"생성 완료: {_justCreatedScene}\n이 씬이 열려 있으니 바로 맵을 배치할 수 있음.", MessageType.Info);
+			EditorGUILayout.BeginHorizontal();
+			if (GUILayout.Button("맵 배치 탭으로 이동", GUILayout.Height(22f)))
+			{
+				_tab = HubTab.Map;
+				_justCreatedScene = null;
+				GUI.FocusControl(null);
+			}
+			if (GUILayout.Button("닫기", GUILayout.Width(60f), GUILayout.Height(22f)))
+			{
+				_justCreatedScene = null;
+			}
+			EditorGUILayout.EndHorizontal();
+		}
+	}
+
+	// 접이식 그룹 머리. 접힌 상태에서도 뭐가 들었는지 보이라고 요약을 제목 뒤에 붙임.
+	// Foldout은 GUILayoutOption을 못 받아 가로줄에 라벨을 따로 붙이면 밀려나므로 제목 문자열에 합침.
+	private static bool CreateGroupHeader(bool open, string title, string summary)
+	{
+		string label = open || string.IsNullOrEmpty(summary)
+			? title
+			: $"{title}     ({summary})";
+		return EditorGUILayout.Foldout(open, label, true);
+	}
+
+	// 평소 흐름은 '템플릿 고르기'로 끝남 — 씬을 열 필요가 없음.
+	// 씬을 열어야 하는 건 [현재 열린 씬을 템플릿으로 저장]을 눌러 템플릿을 처음 만들 때 한 번뿐.
+	private void DrawCreateTemplateGroup()
+	{
 		if (_templateChoices == null)
 		{
 			RefreshTemplateChoices();
 		}
+
+		string summary = _template != null ? _template.name : "고른 템플릿 없음";
+		_createExtraTemplate = CreateGroupHeader(_createExtraTemplate, "템플릿", summary);
+		if (!_createExtraTemplate)
+		{
+			return;
+		}
+
+		EditorGUI.indentLevel++;
 
 		EditorGUILayout.BeginHorizontal();
 		if (_templateChoices.Length == 0)
@@ -138,49 +257,20 @@ public partial class ProjectHubWindow
 									"\n프리팹으로 만든 뒤 다시 캡처하면 사라짐.", MessageType.Warning);
 		}
 
-		// ---- 이름 / 경로 ----
-		_createSceneName = EditorGUILayout.TextField("씬 이름", _createSceneName);
-		_createFolder = EditorGUILayout.TextField("저장 폴더", _createFolder);
+		EditorGUI.indentLevel--;
+	}
 
-		// 이름이 SCENE_TYPE에 있는지 — 씬 생성 자체는 이름만으로 되지만,
-		// GameManager가 씬을 식별하는 근거(curSceneType/BGM 조회)는 SCENE_TYPE이라 없으면 그 기능만 빠짐.
-		// 대소문자는 안 가림(SceneManager.LoadScene도 안 가림).
-		bool typeExists = System.Enum.TryParse(_createSceneName, true, out SCENE_TYPE resolved)
-						  && System.Enum.IsDefined(typeof(SCENE_TYPE), resolved);
-		_createSceneType = typeExists ? resolved : SCENE_TYPE.UNKNOWN;
-
-		if (string.IsNullOrWhiteSpace(_createSceneName))
+	private void DrawCreateObjectsGroup()
+	{
+		string summary = $"프리팹 {_createPrefabs.Count}개 · 빈 오브젝트 {_createEmptyObjects.Count}개";
+		_createExtraObjects = CreateGroupHeader(_createExtraObjects, "배치할 오브젝트", summary);
+		if (!_createExtraObjects)
 		{
-			EditorGUILayout.HelpBox("씬 이름을 입력할 것.", MessageType.Info);
-		}
-		else if (typeExists)
-		{
-			EditorGUILayout.HelpBox($"SCENE_TYPE.{resolved} 로 인식됨 — BGM 등록/씬 판별이 정상 동작함.", MessageType.None);
-		}
-		else
-		{
-			EditorGUILayout.HelpBox($"SCENE_TYPE에 '{_createSceneName}'이 없음.\n" +
-									"씬은 지금 바로 만들 수 있지만, 추가하지 않으면 GameManager가 이 씬을 식별하지 못해\n" +
-									"BGM 자동 재생과 curSceneType 판별이 빠짐.", MessageType.Warning);
-			EditorGUI.BeginDisabledGroup(HubEnumEditor.IsCompiling);
-			if (GUILayout.Button($"SCENE_TYPE에 '{_createSceneName}' 추가 (코드 수정 + 컴파일)", GUILayout.Height(22f)))
-			{
-				// 코드 수정 + 리임포트가 끼므로 GUI가 끝난 뒤에 실행
-				string deferredName = _createSceneName;
-				EditorApplication.delayCall += () => AddSceneTypeMember(deferredName);
-			}
-			EditorGUI.EndDisabledGroup();
+			return;
 		}
 
-		string scenePath = $"{_createFolder}/{_createSceneName}.unity";
-		bool alreadyExists = SceneFileExists(scenePath);
-		if (alreadyExists)
-		{
-			EditorGUILayout.HelpBox($"이미 존재함: {scenePath}\n덮어쓰지 않음. 다른 종류를 고르거나 기존 씬을 열 것.", MessageType.Warning);
-		}
+		EditorGUI.indentLevel++;
 
-		// ---- 배치할 프리팹 ----
-		SectionHeader("배치할 프리팹");
 		EditorGUILayout.BeginHorizontal();
 		if (GUILayout.Button("현재 열린 씬에서 프리팹 긁어오기", GUILayout.Height(22f)))
 		{
@@ -194,8 +284,8 @@ public partial class ProjectHubWindow
 		DrawObjectList(_createPrefabs, "프리팹");
 		EditorGUILayout.LabelField("순서대로 씬 루트에 배치됨. ⊙ 버튼을 누르면 프로젝트 에셋 목록에서 고를 수 있음", EditorStyles.miniLabel);
 
-		// ---- 새로 만들 오브젝트 ----
-		SectionHeader("새로 만들 오브젝트 (프리팹 아님)");
+		EditorGUILayout.Space(4f);
+		EditorGUILayout.LabelField("새로 만들 오브젝트 (프리팹 아님)", EditorStyles.boldLabel);
 		for (int i = 0; i < _createEmptyObjects.Count; i++)
 		{
 			EditorGUILayout.BeginHorizontal();
@@ -218,57 +308,54 @@ public partial class ProjectHubWindow
 			_createLightRotation = EditorGUILayout.Vector3Field("조명 회전", _createLightRotation);
 		}
 
-		// ---- 스폰 포인트 ----
-		SectionHeader("스폰 포인트 생성");
+		EditorGUI.indentLevel--;
+	}
+
+	private void DrawCreateSpawnGroup()
+	{
+		string summary = $"랜덤 {_createDefaultSpawnCount} · 고정 {_createFixedSpawnCount} · 반경 {_createSpawnRingRadius:0}";
+		_createExtraSpawn = CreateGroupHeader(_createExtraSpawn, "스폰 포인트", summary);
+		if (!_createExtraSpawn)
+		{
+			return;
+		}
+
+		EditorGUI.indentLevel++;
 		_createDefaultSpawnCount = Mathf.Max(0, EditorGUILayout.IntField("기본(랜덤) 포인트 수", _createDefaultSpawnCount));
 		_createFixedSpawnCount = Mathf.Max(0, EditorGUILayout.IntField("고정 포인트 수", _createFixedSpawnCount));
 		_createSpawnRingRadius = EditorGUILayout.FloatField("배치 반경", _createSpawnRingRadius);
 		EditorGUILayout.LabelField("원형으로 균등 배치함. 만든 뒤 씬에서 옮기면 됨", EditorStyles.miniLabel);
+		EditorGUI.indentLevel--;
+	}
 
-		// ---- 웨이브 / 보스 ----
-		SectionHeader("웨이브");
+	private void DrawCreateWaveGroup()
+	{
+		string summary = _createBossWave != null
+			? $"웨이브 {_createWaves.Count}개 · 보스 있음"
+			: $"웨이브 {_createWaves.Count}개";
+		_createExtraWave = CreateGroupHeader(_createExtraWave, "웨이브", summary);
+		if (!_createExtraWave)
+		{
+			return;
+		}
+
+		EditorGUI.indentLevel++;
 		DrawObjectList(_createWaves, "WaveData");
 		_createBossWave = (WaveData)EditorGUILayout.ObjectField("보스 웨이브", _createBossWave, typeof(WaveData), false);
 		EditorGUILayout.LabelField("씬의 SpawnManager 인스턴스에 그대로 배선됨", EditorStyles.miniLabel);
+		EditorGUI.indentLevel--;
+	}
 
-		// ---- 씬 설정표 ----
-		SectionHeader("씬 설정 (BGM / 속성)");
-		_createRegisterSettings = EditorGUILayout.Toggle("GameManager 씬 설정표에 등록", _createRegisterSettings);
-		if (_createRegisterSettings)
+	private void DrawCreateMapGroup()
+	{
+		string summary = _createRegisterToMap ? $"{_createMapButtonIndex + 1}번 버튼에 배정" : "배정 안 함";
+		_createExtraMap = CreateGroupHeader(_createExtraMap, "맵 선택 화면 배정", summary);
+		if (!_createExtraMap)
 		{
-			_createCategory = (SCENE_CATEGORY)EditorGUILayout.EnumPopup("씬 종류", _createCategory);
-			_createBgm = (SOUND_TYPE)EditorGUILayout.EnumPopup("BGM", _createBgm);
-			EditorGUILayout.LabelField(CategorySummary(_createCategory), EditorStyles.wordWrappedMiniLabel);
-
-			_createOverrideFlags = EditorGUILayout.Toggle("속성 직접 지정", _createOverrideFlags);
-			if (_createOverrideFlags)
-			{
-				EditorGUI.indentLevel++;
-				_createKeepsPlayerShip = EditorGUILayout.Toggle("함선 유지 (출격 흐름)", _createKeepsPlayerShip);
-				_createCanSave = EditorGUILayout.Toggle("저장 가능", _createCanSave);
-				_createIsBattleScene = EditorGUILayout.Toggle("전투 스테이지", _createIsBattleScene);
-				_createIsStationScene = EditorGUILayout.Toggle("정거장 계열", _createIsStationScene);
-				_createShipControlDisabled = EditorGUILayout.Toggle("조종 불가", _createShipControlDisabled);
-				_createShipHidden = EditorGUILayout.Toggle("함선 숨김", _createShipHidden);
-				_createOtherShipsHidden = EditorGUILayout.Toggle("남 함선만 숨김", _createOtherShipsHidden);
-				EditorGUI.indentLevel--;
-			}
-
-			EditorGUILayout.LabelField("GameManager 프리팹의 씬 설정표가 수정됨(프로젝트 전역 표).\n" +
-									   "등록을 건너뛰면 그 씬은 속성이 전부 off로 취급됨",
-									   EditorStyles.wordWrappedMiniLabel);
-
-			if (GUILayout.Button("게임매니저 씬 설정 자동 정리 - 필요시 수동확인", GUILayout.Height(22f)))
-			{
-				EditorApplication.delayCall += FillSceneSettingsWithDefaults;
-			}
-			EditorGUILayout.LabelField("빠진 SCENE_TYPE 행을 만들고, 모든 행의 씬 종류를 이름으로 추측해 넣음.\n" +
-									   "BGM은 건드리지 않음. '속성 직접 지정'은 전부 해제되니 예외 씬은 다시 찍을 것",
-									   EditorStyles.wordWrappedMiniLabel);
+			return;
 		}
 
-		// ---- 맵 선택 화면 배정 ----
-		SectionHeader("맵 선택 화면 배정");
+		EditorGUI.indentLevel++;
 		_createRegisterToMap = EditorGUILayout.Toggle("맵 선택 버튼에 배정", _createRegisterToMap);
 		if (_createRegisterToMap)
 		{
@@ -276,44 +363,37 @@ public partial class ProjectHubWindow
 			_createMapButtonIndex = Mathf.Max(0, EditorGUILayout.IntField("버튼 번호 (0 = 1번)", _createMapButtonIndex));
 			EditorGUILayout.LabelField("이 씬을 MapListData의 해당 버튼 자리에 배정함(에셋만 수정)", EditorStyles.miniLabel);
 		}
+		EditorGUI.indentLevel--;
+	}
 
-		// ---- 빌드 세팅 ----
-		SectionHeader("빌드");
+	private void DrawCreateRegisterGroup()
+	{
+		string summary = _createRegisterSettings && _createAddToBuild
+			? "설정표 등록 + 빌드 추가"
+			: (_createRegisterSettings ? "설정표만 등록" : (_createAddToBuild ? "빌드만 추가" : "둘 다 안 함"));
+		_createExtraRegister = CreateGroupHeader(_createExtraRegister, "등록 · 빌드", summary);
+		if (!_createExtraRegister)
+		{
+			return;
+		}
+
+		EditorGUI.indentLevel++;
+		_createRegisterSettings = EditorGUILayout.Toggle("GameManager 씬 설정표에 등록", _createRegisterSettings);
+		EditorGUILayout.LabelField("GameManager 프리팹의 씬 설정표가 수정됨(프로젝트 전역 표).\n" +
+								   "등록을 건너뛰면 그 씬은 속성이 전부 off로 취급됨",
+								   EditorStyles.wordWrappedMiniLabel);
+
 		_createAddToBuild = EditorGUILayout.Toggle("빌드 세팅에 추가", _createAddToBuild);
 
-		EditorGUILayout.Space(6f);
-		EditorGUI.BeginDisabledGroup(alreadyExists);
-		if (GUILayout.Button("씬 생성", GUILayout.Height(30f)))
+		EditorGUILayout.Space(4f);
+		if (GUILayout.Button("게임매니저 씬 설정 자동 정리 - 필요시 수동확인", GUILayout.Height(22f)))
 		{
-			// OnGUI 안에서 씬을 새로 열거나 모달을 띄우면 GUI 레이아웃 스택이 깨져
-			// 'EndLayoutGroup: BeginLayoutGroup must be called first' 가 뜸.
-			// delayCall로 GUI가 끝난 뒤에 실행시킴.
-			string deferredPath = scenePath;
-			EditorApplication.delayCall += () => CreateScene(deferredPath);
+			EditorApplication.delayCall += FillSceneSettingsWithDefaults;
 		}
-		EditorGUI.EndDisabledGroup();
-
-		if (!string.IsNullOrEmpty(_justCreatedScene))
-		{
-			EditorGUILayout.Space(4f);
-			EditorGUILayout.HelpBox($"생성 완료: {_justCreatedScene}\n이 씬이 열려 있으니 바로 맵을 배치할 수 있음.", MessageType.Info);
-			EditorGUILayout.BeginHorizontal();
-			if (GUILayout.Button("맵 배치 탭으로 이동", GUILayout.Height(22f)))
-			{
-				_tab = HubTab.Map;
-				_justCreatedScene = null;
-				GUI.FocusControl(null);
-			}
-			if (GUILayout.Button("닫기", GUILayout.Width(60f), GUILayout.Height(22f)))
-			{
-				_justCreatedScene = null;
-			}
-			EditorGUILayout.EndHorizontal();
-		}
-
-		EditorGUIUtility.labelWidth = prevLabelWidth;
-		EditorGUILayout.EndVertical();
-		EditorGUILayout.Space(8f);
+		EditorGUILayout.LabelField("빠진 SCENE_TYPE 행을 만들고, 모든 행의 씬 종류를 이름으로 추측해 넣음.\n" +
+								   "BGM은 건드리지 않음. '속성 직접 지정'은 전부 해제되니 예외 씬은 다시 찍을 것",
+								   EditorStyles.wordWrappedMiniLabel);
+		EditorGUI.indentLevel--;
 	}
 
 	// Object 목록 편집(추가/삭제). 배열 인스펙터를 직접 그리는 대신 최소 기능만 둠
@@ -1437,13 +1517,10 @@ public partial class ProjectHubWindow
 		SetInt(entry, "bgm", (int)bgm);
 		SetInt(entry, "category", (int)_createCategory);
 		SetBool(entry, "overrideFlags", _createOverrideFlags);
-		SetBool(entry, "keepsPlayerShip", _createKeepsPlayerShip);
-		SetBool(entry, "canSave", _createCanSave);
-		SetBool(entry, "isBattleScene", _createIsBattleScene);
-		SetBool(entry, "isStationScene", _createIsStationScene);
-		SetBool(entry, "shipControlDisabled", _createShipControlDisabled);
-		SetBool(entry, "shipHidden", _createShipHidden);
-		SetBool(entry, "otherShipsHidden", _createOtherShipsHidden);
+		for (int i = 0; i < SettingFlagNames.Length; i++)
+		{
+			SetBool(entry, SettingFlagNames[i], _createFlags[i]);
+		}
 	}
 
 	private static void SetInt(SerializedProperty entry, string name, int value)
