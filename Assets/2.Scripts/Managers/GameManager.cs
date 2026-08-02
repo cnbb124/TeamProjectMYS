@@ -267,8 +267,9 @@ public class GameManager : MonoBehaviourPunCallbacks
     private string SavePath(int slot) =>
         Path.Combine(Application.persistentDataPath, $"save{slot}.json");
 
-    /// <summary>출격 직전 자동 저장 슬롯. 사망/재시작이 되돌아갈 지점. 유저 슬롯(0~9)과 안 겹치게 띄움.</summary>
-    public const int AutoSaveSlot = 99;
+    /// <summary>출격 직전 자동 저장 슬롯. 사망/재시작이 되돌아갈 지점.</summary>
+    // 서버가 받는 범위가 0~9라 그 안에서 잡음. 유저 슬롯은 0~4(LoadGameUI.slotCount)라 안 겹침.
+    public const int AutoSaveSlot = 9;
 
     // 마지막으로 저장/로드한 슬롯. 사망 재시작 시 이 슬롯을 복원 대상으로 사용.
     private int _lastSaveSlot = 0;
@@ -1413,11 +1414,13 @@ public class GameManager : MonoBehaviourPunCallbacks
         Debug.Log($"[GameManager] 로컬 저장 완료: {SavePath(saveSlot)}");
 
         // 로그인 상태면 서버에도 저장(비동기, 실패해도 로컬은 남음).
+        // 슬롯 안 넘기면 기본값 0으로만 감.
         if (ServerApi.Instance != null && ServerApi.Instance.IsLoggedIn)
         {
             ServerApi.Instance.StartCoroutine(ServerApi.Instance.SaveCo(data,
-                () => Debug.Log("[GameManager] 서버 저장 성공"),
-                err => Debug.LogWarning($"[GameManager] 서버 저장 실패(로컬은 저장됨): {err}")));
+                () => Debug.Log($"[GameManager] 서버 저장 성공 (slot {saveSlot})"),
+                err => Debug.LogWarning($"[GameManager] 서버 저장 실패(로컬은 저장됨): {err}"),
+                saveSlot));
         }
     }
 
@@ -1432,6 +1435,7 @@ public class GameManager : MonoBehaviourPunCallbacks
         if (ServerApi.Instance != null && ServerApi.Instance.IsLoggedIn)
         {
             bool serverOk = false;
+            // 슬롯 안 넘기면 기본값 0만 읽음.
             yield return ServerApi.Instance.LoadCo(
                 data =>
                 {
@@ -1439,10 +1443,11 @@ public class GameManager : MonoBehaviourPunCallbacks
                     {
                         ApplySaveData(data);
                         serverOk = true;
-                        Debug.Log("[GameManager] 서버 로드 완료");
+                        Debug.Log($"[GameManager] 서버 로드 완료 (slot {saveSlot})");
                     }
                 },
-                err => Debug.LogWarning($"[GameManager] 서버 로드 실패, 로컬 시도: {err}"));
+                err => Debug.LogWarning($"[GameManager] 서버 로드 실패, 로컬 시도: {err}"),
+                saveSlot);
 
             if (!serverOk)
             {
@@ -1516,67 +1521,11 @@ public class GameManager : MonoBehaviourPunCallbacks
             }
         }
 
-        if (playerRef != null)
-        {
-            data.level = playerRef.level;
-            data.exp = playerRef.exp;
-            data.expToNextLevel = playerRef.expToNextLevel;
-            data.curHp = playerRef.curHpRemaining;
-            data.curShield = playerRef.curShieldRemaining;
-            data.curArmor = playerRef.curArmorRemaining;
-            data.curBoost = playerRef.curBoostRemaining;
-            data.curFuel = playerRef.curFuelRemaining;
-
-            // 파츠 슬롯 저장 (SO 참조 → id int)
-            UnitParts unitParts = playerRef.GetComponent<UnitParts>();
-            if (unitParts != null && unitParts.partSlots != null)
-            {
-                data.partSlots = new SavedPartSlot[unitParts.partSlots.Count];
-                for (int i = 0; i < unitParts.partSlots.Count; i++)
-                {
-                    PartSlotEntry slot = unitParts.partSlots[i];
-                    data.partSlots[i] = new SavedPartSlot
-                    {
-                        slotType = slot.slotType,
-                        partId   = slot.equippedPart != null ? (int)slot.equippedPart.id : 0
-                    };
-                }
-            }
-
-            // 미사일 슬롯 저장 (SO 참조 → id int)
-            if (playerRef.weaponSystem.missileSlots != null)
-            {
-                data.missileSlots = new SavedMissileSlot[playerRef.weaponSystem.missileSlots.Count];
-                for (int i = 0; i < playerRef.weaponSystem.missileSlots.Count; i++)
-                {
-                    MissileSlot src = playerRef.weaponSystem.missileSlots[i];
-                    data.missileSlots[i] = new SavedMissileSlot
-                    {
-                        type          = src.type,
-                        missileDataId = src.missileData != null ? (int)src.missileData.id : 0,
-                        curAmmo       = src.curAmmo,
-                        maxAmmo       = src.maxAmmo
-                    };
-                }
-            }
-
-            // 보유 스킬 저장 (SkillSystem이 직접 SavedSkill[] 생성)
-            if (playerRef.skillSystem != null)
-            {
-                data.skills = playerRef.skillSystem.CollectSaveData();
-            }
-
-            // 소모품 퀵슬롯 저장 (ConsumableData(SO) → id int, 빈칸은 0)
-            QuickSlot quickSlot = playerRef.GetComponent<QuickSlot>();
-            if (quickSlot != null && quickSlot.slots != null)
-            {
-                data.quickSlotItemIds = new ITEM_ID[quickSlot.slots.Length];
-                for (int i = 0; i < quickSlot.slots.Length; i++)
-                {
-                    data.quickSlotItemIds[i] = quickSlot.slots[i] != null ? quickSlot.slots[i].id : 0;
-                }
-            }
-        }
+        // ※ 여기서 playerRef를 다시 훑어 담지 말 것.
+        // 위 CaptureFrom + WriteTo가 레벨·체력·파츠·미사일·스킬·퀵슬롯을 전부 담는다.
+        // 예전엔 아래에 함선에서 직접 담는 코드가 한 벌 더 있었는데, 그게 WriteTo 결과를
+        // 통째로 덮어쓰면서 파츠 HP(curPartHp)만 안 넣어 전 파츠가 0으로 저장되고 있었다.
+        // (0 = 파괴로 복원되어 엔진 스탯이 사라지고 최대 연료가 0이 되던 원인)
         return data;
     }
 

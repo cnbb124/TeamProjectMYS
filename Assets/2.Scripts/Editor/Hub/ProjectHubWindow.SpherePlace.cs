@@ -46,6 +46,8 @@ public partial class ProjectHubWindow
 		WorldBoundary boundary = Object.FindObjectOfType<WorldBoundary>(true);
 		if (boundary == null)
 		{
+			// 그냥 빠져나가면 이전 씬의 중심이 남아 엉뚱한 자리에 배치됨. 원점으로 되돌림
+			_sphereCenter = Vector3.zero;
 			return;
 		}
 		SerializedObject so = new SerializedObject(boundary);

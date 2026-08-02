@@ -175,6 +175,18 @@ public static class PlayerProfile
 			}
 		}
 
+		// [진단] 파츠 HP가 0으로 저장되는 문제 추적용. 확인 끝나면 지울 것
+		{
+			string dump = "";
+			for (int i = 0; i < parts.Count; i++)
+			{
+				dump += $"\n    {parts[i].name}({parts[i].partType}) cur={partHps[i]} max={parts[i].maxPartHp}";
+			}
+			Debug.Log($"[진단-수집] 함선 '{player.name}' 에서 프로필로 담음. " +
+					  $"파츠 {parts.Count}개 / 연료 {player.curFuelRemaining}/{player.maxFuelCapacity}{dump}\n" +
+					  $"호출 경로:\n{System.Environment.StackTrace}");
+		}
+
 		// 파츠 목록을 갱신한 뒤에 계산해야 보너스가 맞음.
 		// 함선이 없는 씬에서도 같은 최대치가 나오게 밑값을 역산해 둠.
 		_baseMaxHp = player.maxHpRemaining - Mathf.RoundToInt(GetPartStatBonus(STAT_TYPE.HP_MAX));

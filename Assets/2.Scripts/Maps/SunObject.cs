@@ -24,15 +24,16 @@ public class SunObject : MonoBehaviour
     [SerializeField] private Vector3 spinAxis  = Vector3.up; // 자전 축
     [SerializeField] private float   spinSpeed = 0.2f;       // 자전 속도(도/초) — 정말 느리게
 
-    public Transform player;
-    [SerializeField] Vector3 worldOffset = new Vector3(800f, 400f, 2000f);
+    
+    //public Transform player;
+    //[SerializeField] Vector3 worldOffset = new Vector3(800f, 400f, 2000f);
 
     private void LateUpdate()
     {
         // 자전 — 본체 메시를 로컬 회전 (위치는 고정, 건드리지 않음)
         if (spinSpeed != 0f)
             transform.Rotate(spinAxis.normalized, spinSpeed * Time.deltaTime, Space.Self);
-
-        transform.position = player.position + worldOffset;
+        //배경이라 실시간으로 플레이어보다 멀리있게 하려고한거같은데, 이런처리는 그냥 카메라 2개쓰고 하던가 하면되는거라 주석처리함
+        //transform.position = player.position + worldOffset;
     }
 }

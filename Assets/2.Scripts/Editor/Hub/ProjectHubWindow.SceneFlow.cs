@@ -95,6 +95,11 @@ public partial class ProjectHubWindow
 	// 펼쳐둔 그룹 제목. 줄이 달라도 같은 제목이면 같이 펼쳐짐.
 	private readonly HashSet<string> _flowExpandedGroups = new HashSet<string>();
 
+	// 흐름도 전용 좌우 스크롤. 카드가 옆으로 길어져도 아래 설정 화면들은 안 늘어나게 하려고 따로 둠
+	private Vector2 _flowScroll;
+	// 흐름도 영역 높이. 아래 분할선을 끌어 조절함
+	private float _flowHeight = 230f;
+
 	private void DrawSceneFlow()
 	{
 		EditorGUILayout.BeginHorizontal();
@@ -103,10 +108,18 @@ public partial class ProjectHubWindow
 		DrawFlowLegend();
 		EditorGUILayout.EndHorizontal();
 
+		// 씬이 늘면 카드가 옆으로 계속 길어짐. 창을 넓히는 대신 여기서만 좌우로 밀어 보게 함
+		_flowScroll = EditorGUILayout.BeginScrollView(_flowScroll, GUILayout.Height(_flowHeight));
+
 		for (int r = 0; r < SceneFlowRows.Length; r++)
 		{
 			DrawFlowRow(SceneFlowRows[r]);
 		}
+
+		EditorGUILayout.EndScrollView();
+
+		// 분할선을 아래로 끌면 흐름도가 커짐. 스테이지 그룹을 펼치면 줄이 늘어나므로 조절이 필요함
+		_flowHeight = DrawHorizontalSplitter(_flowHeight, 90f, 700f, true);
 
 		HubStyles.Separator();
 	}

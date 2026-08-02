@@ -29,8 +29,6 @@ public partial class ProjectHubWindow
 	private readonly List<SceneRow> _sceneRows = new List<SceneRow>();
 	private Vector2 _sceneScroll;
 
-	// 설정을 펼쳐 편집 중인 행. UNKNOWN이면 접힌 상태.
-	private SCENE_TYPE _sceneSettingsEditing = SCENE_TYPE.UNKNOWN;
 
 	// 속성 직접 지정 체크박스들. 이름은 SceneSettings 필드명과 같아야 함.
 	private static readonly string[] SettingFlagNames =
@@ -86,7 +84,12 @@ public partial class ProjectHubWindow
 
 		_sceneScroll = EditorGUILayout.BeginScrollView(_sceneScroll);
 
+		// 흐름도는 씬이 늘면 옆으로 길어지는 게 정상이라 자기만 좌우 스크롤을 가짐
 		DrawSceneFlow();
+
+		// 나머지는 설정 화면이라 창을 아무리 넓혀도 같이 늘어날 필요가 없음.
+		// 씬 종류 버튼 묶음과 같은 폭으로 맞춰 한 덩어리로 보이게 함
+		EditorGUILayout.BeginVertical(GUILayout.Width(SceneContentWidth));
 
 		DrawSceneDetail();
 
@@ -100,6 +103,7 @@ public partial class ProjectHubWindow
 		EditorGUILayout.Space(8f);
 		DrawSceneIssues();
 
+		EditorGUILayout.EndVertical();
 		EditorGUILayout.EndScrollView();
 	}
 
@@ -171,12 +175,16 @@ public partial class ProjectHubWindow
 				}
 			}
 
+			// 편집기는 위 상세 패널 하나만 씀 — 여기서 또 펼치면 편집 중인 값이 서로 덮어써짐.
+			// 이 버튼은 상세 패널을 그 씬으로 바꾸기만 함
 			if (hasFile && !isWorkScene)
 			{
-				bool open = _sceneSettingsEditing == row.sceneType;
-				if (GUILayout.Button(open ? "닫기" : "설정", GUILayout.Width(44f)))
+				bool selected = _flowSelected == row.sceneType;
+				if (GUILayout.Button(selected ? "보는 중" : "설정", GUILayout.Width(52f)))
 				{
-					_sceneSettingsEditing = open ? SCENE_TYPE.UNKNOWN : row.sceneType;
+					_flowSelected = row.sceneType;
+					_sceneScroll = Vector2.zero;
+					GUI.FocusControl(null);
 				}
 			}
 
@@ -193,19 +201,7 @@ public partial class ProjectHubWindow
 
 			EditorGUILayout.EndHorizontal();
 
-			if (!isWorkScene && _sceneSettingsEditing == row.sceneType)
-			{
-				DrawSceneSettingsEditor(row.sceneType);
-			}
 		}
-	}
-
-	// 표의 [설정] 버튼도 흐름도 상세와 같은 편집기를 씀.
-	private void DrawSceneSettingsEditor(SCENE_TYPE sceneType)
-	{
-		EditorGUILayout.BeginVertical(HubStyles.Card);
-		DrawSceneSettingsBody(sceneType);
-		EditorGUILayout.EndVertical();
 	}
 
 	private static void DrawMark(bool ok, float width)
@@ -416,6 +412,17 @@ public partial class ProjectHubWindow
 				row.buildEnabled = enabled;
 			}
 			_sceneRows.Add(row);
+		}
+
+		// 고쳐 보던 씬이 지워졌으면 여기서 선택을 푼다.
+		// 그리는 도중에 풀면 Layout 패스와 Repaint 패스가 서로 다른 화면을 그려서 GUI 예외가 남
+		if (_flowSelected != SCENE_TYPE.UNKNOWN)
+		{
+			SceneRow selected = FindRow(_flowSelected);
+			if (selected == null || string.IsNullOrEmpty(selected.assetPath))
+			{
+				_flowSelected = SCENE_TYPE.UNKNOWN;
+			}
 		}
 	}
 

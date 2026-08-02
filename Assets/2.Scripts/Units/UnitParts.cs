@@ -232,6 +232,9 @@ public class UnitParts : MonoBehaviour
             return;
         }
 
+        // [진단] 파츠 HP가 0으로 저장되는 문제 추적용. 확인 끝나면 지울 것
+        Debug.Log($"[진단-복원] {name} 에 되돌릴 파츠HP 목록 = [{string.Join(", ", partHps)}]");
+
         int count = Mathf.Min(placedSlots.Length, partHps.Count);
         for (int i = 0; i < count; i++)
         {
@@ -278,6 +281,10 @@ public class UnitParts : MonoBehaviour
         SpawnPartPrefab(slot);
         slot.curPartHp = newPart.maxPartHp;
         RefreshPartStat(slot, GetHpStatRatio(slot));
+
+        // [진단] 파츠 HP가 0으로 저장되는 문제 추적용. 확인 끝나면 지울 것
+        Debug.Log($"[진단-장착] {name} / {newPart.name} ({newPart.partType}) " +
+                  $"maxPartHp={newPart.maxPartHp} → curPartHp={slot.curPartHp}");
 
         if (newPart.partType == PART_TYPE.FRAME)
         {

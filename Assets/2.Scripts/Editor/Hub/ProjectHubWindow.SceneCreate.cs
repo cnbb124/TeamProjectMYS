@@ -33,6 +33,8 @@ public partial class ProjectHubWindow
 	// 이름에서 해석된 SCENE_TYPE. 이름이 표에 없으면 UNKNOWN이고 그때는 BGM 등록을 건너뜀
 	private SCENE_TYPE _createSceneType = SCENE_TYPE.UNKNOWN;
 	private string _createFolder = DefaultScenesFolder;
+	// 저장 폴더를 사람이 직접 고쳤는지. 고쳤으면 템플릿이 덮어쓰지 않음
+	private bool _createFolderEdited;
 
 	private readonly List<GameObject> _createPrefabs = new List<GameObject>();
 	private SOUND_TYPE _createBgm = SOUND_TYPE.SFX_NONE;
@@ -74,7 +76,9 @@ public partial class ProjectHubWindow
 		// 씬 수정 화면이 맨 위에 '선택된 씬'을 보여주는 것과 같은 자리 — 여기선 만들 이름을 정함
 		EditorGUILayout.LabelField("만들 씬의 이름", HubStyles.SectionTitle);
 		_createSceneName = EditorGUILayout.TextField("씬 이름", _createSceneName);
-		_createFolder = EditorGUILayout.TextField("저장 폴더", _createFolder);
+		// 저장 폴더는 [고급 · 도구] 한 곳에만 둠 — 두 군데에 두면 한쪽에서 고친 게
+		// 템플릿 덮어쓰기 방지에 안 걸려서 서로 다른 값처럼 보임
+		EditorGUILayout.LabelField("저장 위치", _createFolder, EditorStyles.miniLabel);
 
 		// 이름이 SCENE_TYPE에 있는지 — 씬 생성 자체는 이름만으로 되지만,
 		// GameManager가 씬을 식별하는 근거(curSceneType/BGM 조회)는 SCENE_TYPE이라 없으면 그 기능만 빠짐.
@@ -204,12 +208,22 @@ public partial class ProjectHubWindow
 	// 1순위 = 템플릿 에셋이 스스로 밝힌 종류, 2순위 = 에셋 이름에 종류 이름이 들어간 것(기존 에셋 무수정 호환).
 	private void SelectTemplateForCategory(SCENE_CATEGORY category)
 	{
-		_templateAutoFor = category;
-
-		if (_templateChoices == null)
+		// 목록이 비었으면 한 번 더 훑음 — 못 읽은 상태로 굳는 걸 막기 위함
+		if (_templateChoices == null || _templateAssets == null || _templateAssets.Length == 0)
 		{
 			RefreshTemplateChoices();
 		}
+
+		// 그래도 비어 있으면 '이 종류에 템플릿이 없다'가 아니라 '아직 못 읽었다'일 수 있음
+		// (컴파일 직후처럼 에셋 DB가 준비되기 전에 훑으면 0개가 나옴).
+		// 이때 '처리 끝'으로 기록해버리면 다시는 안 찾아서, 종류를 손으로 바꾸기 전까지
+		// 영영 빈 템플릿으로 굳음 — 기록하지 않고 다음 그리기에서 다시 시도함.
+		if (_templateAssets == null || _templateAssets.Length == 0)
+		{
+			return;
+		}
+
+		_templateAutoFor = category;
 
 		SceneTemplateData match = null;
 		for (int i = 0; i < _templateAssets.Length; i++)
@@ -235,12 +249,17 @@ public partial class ProjectHubWindow
 			}
 		}
 
-		// 맞는 게 없으면 이전 종류의 프리팹이 남아 엉뚱한 씬이 만들어지므로 비움
+		// 맞는 게 없으면 '빈 씬'이 되어야 함.
+		// 프리팹만 비우고 스폰 포인트·조명을 놔두면 직전 종류의 값(또는 초기값 8/2/400)이 그대로 살아서
+		// 격납고 같은 씬에 아무 데도 안 붙는 스폰 포인트 오브젝트가 만들어짐
 		if (match == null)
 		{
 			_template = null;
 			_createPrefabs.Clear();
 			_createEmptyObjects.Clear();
+			_createDefaultSpawnCount = 0;
+			_createFixedSpawnCount = 0;
+			_createDirectionalLight = false;
 			return;
 		}
 
@@ -305,10 +324,10 @@ public partial class ProjectHubWindow
 		_createRegisterToMap = EditorGUILayout.Toggle("맵 선택 버튼에 배정", _createRegisterToMap);
 		if (_createRegisterToMap)
 		{
-			_createMapList = (MapListData)EditorGUILayout.ObjectField("맵 목록(MapListData)", _createMapList, typeof(MapListData), false);
-			int shownNumber = Mathf.Max(1, EditorGUILayout.IntField("버튼 번호 (첫 칸이 1번)", _createMapButtonIndex + 1));
+			_createMapList = (MapListData)EditorGUILayout.ObjectField("이 맵을 저장할 맵리스트", _createMapList, typeof(MapListData), false);
+			int shownNumber = Mathf.Max(1, EditorGUILayout.IntField("배정할 버튼 번호", _createMapButtonIndex + 1));
 			_createMapButtonIndex = shownNumber - 1;
-			EditorGUILayout.LabelField("이 씬을 MapListData의 해당 버튼 자리에 배정함(에셋만 수정)", EditorStyles.miniLabel);
+			EditorGUILayout.LabelField("이 씬을 MapListData의 해당 버튼 자리에 배정함", EditorStyles.miniLabel);
 		}
 		EditorGUI.indentLevel--;
 	}
@@ -324,7 +343,29 @@ public partial class ProjectHubWindow
 
 		EditorGUI.indentLevel++;
 
+		EditorGUI.BeginChangeCheck();
 		_createFolder = EditorGUILayout.TextField("저장 폴더", _createFolder);
+		if (EditorGUI.EndChangeCheck())
+		{
+			_createFolderEdited = true;
+		}
+
+		if (_createFolderEdited)
+		{
+			EditorGUILayout.BeginHorizontal();
+			HubStyles.ColoredLabel("직접 정한 폴더라 씬 종류를 바꿔도 그대로 둡니다.",
+				HubStyles.Muted, EditorStyles.miniLabel);
+			if (GUILayout.Button("템플릿 폴더 쓰기", GUILayout.Width(110f)))
+			{
+				_createFolderEdited = false;
+				if (_template != null && !string.IsNullOrWhiteSpace(_template.targetFolder))
+				{
+					_createFolder = _template.targetFolder;
+				}
+				GUI.FocusControl(null);
+			}
+			EditorGUILayout.EndHorizontal();
+		}
 
 		EditorGUILayout.Space(4f);
 		EditorGUILayout.LabelField("템플릿", EditorStyles.boldLabel);
@@ -511,8 +552,8 @@ public partial class ProjectHubWindow
 		}
 		else if (_createWaves.Count > 0 || _createBossWave != null)
 		{
-			Debug.LogWarning("[Hub] 배치한 프리팹 중 SpawnManager가 없어 웨이브를 배선하지 못함. " +
-							 "SpawnManager 프리팹을 [배치할 프리팹] 목록에 넣을 것.");
+			Debug.LogWarning("[Hub] 이 종류의 템플릿에 SpawnManager가 없어 웨이브를 배선하지 못함. " +
+							 "템플릿 에셋의 '배치할 프리팹' 목록에 SpawnManager 프리팹을 넣을 것.");
 		}
 
 		// 4) 저장
@@ -728,7 +769,9 @@ public partial class ProjectHubWindow
 		{
 			_createBgm = template.bgm;
 		}
-		if (!string.IsNullOrWhiteSpace(template.targetFolder))
+		// 사용자가 폴더를 직접 고쳤으면 건드리지 않음 —
+		// 종류 버튼을 다시 누를 때마다 애써 적어둔 경로가 템플릿 값으로 되돌아가던 문제
+		if (!_createFolderEdited && !string.IsNullOrWhiteSpace(template.targetFolder))
 		{
 			_createFolder = template.targetFolder;
 		}

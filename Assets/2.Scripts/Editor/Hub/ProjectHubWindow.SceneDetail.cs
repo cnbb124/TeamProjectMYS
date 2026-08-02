@@ -10,6 +10,13 @@ using UnityEngine;
 // =====================================================================
 public partial class ProjectHubWindow
 {
+	// 씬 관리 탭에서 설정 화면들이 창 폭에서 차지할 비율. 여기 숫자만 고치면 전부 같이 줄어듦.
+	// 흐름도는 여기 안 걸림 — 씬이 늘면 옆으로 길어져야 하므로 자기 좌우 스크롤을 씀
+	private const float SceneContentWidthRatio = 0.65f;
+
+	// 너무 좁으면 씬 종류 버튼 세 칸의 글자가 잘려서 아래쪽은 보장해 둠
+	private float SceneContentWidth => Mathf.Max(420f, position.width * SceneContentWidthRatio);
+
 	private bool _detailAdvancedOpen;
 	// 상세 패널 모드. false=선택한 씬 수정, true=새 씬 만들기
 	private bool _detailCreateMode;
@@ -92,19 +99,15 @@ public partial class ProjectHubWindow
 			return;
 		}
 
-		if (_flowSelected == SCENE_TYPE.UNKNOWN)
+		// 고른 씬이 없을 때와 그 씬 파일이 사라졌을 때를 한 갈래로 묶음.
+		// 예전엔 여기서 _flowSelected를 UNKNOWN으로 바꿨는데, 그리는 도중에 상태를 바꾸면
+		// Layout 패스와 Repaint 패스가 서로 다른 갈래를 타서 컨트롤 수가 어긋남
+		// (씬을 지우면 나던 'Getting control N's position...' 예외가 이것). 정리는 표를 새로 읽을 때 함.
+		SceneRow row = _flowSelected != SCENE_TYPE.UNKNOWN ? FindRow(_flowSelected) : null;
+		if (row == null || string.IsNullOrEmpty(row.assetPath))
 		{
 			HubStyles.ColoredLabel("위 흐름도에서 씬을 고르면 여기서 설정을 바꿀 수 있습니다.",
 				HubStyles.Muted, HubStyles.IssueText);
-			EditorGUILayout.EndVertical();
-			HubStyles.Separator();
-			return;
-		}
-
-		SceneRow row = FindRow(_flowSelected);
-		if (row == null || string.IsNullOrEmpty(row.assetPath))
-		{
-			_flowSelected = SCENE_TYPE.UNKNOWN;
 			EditorGUILayout.EndVertical();
 			HubStyles.Separator();
 			return;
@@ -222,6 +225,7 @@ public partial class ProjectHubWindow
 			labels[i] = CategoryLabel(CategoryChoices[i]);
 		}
 
+		// 폭은 바깥 컨테이너(SceneContentWidth)가 이미 잡아줌 — 여기서 또 지정하면 두 군데를 고쳐야 함
 		int pickedIndex = GUILayout.SelectionGrid(currentIndex, labels, 3, GUILayout.Height(44f));
 		category = CategoryChoices[Mathf.Clamp(pickedIndex, 0, CategoryChoices.Length - 1)];
 		HubStyles.ColoredLabel(CategoryPlain(category), HubStyles.Muted, HubStyles.IssueText);

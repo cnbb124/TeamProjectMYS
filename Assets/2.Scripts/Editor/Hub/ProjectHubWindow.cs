@@ -73,6 +73,10 @@ public partial class ProjectHubWindow : EditorWindow
 
 	private void OnGUI()
 	{
+		// 마우스 이동 이벤트는 맵 배치의 구 위 좌표 표시에만 필요함.
+		// 켜두면 그 탭이 아닐 때도 마우스만 움직이면 창 전체가 계속 다시 그려져서 탭 따라 껐다 켬
+		wantsMouseMove = _tab == HubTab.Map;
+
 		DrawTabBar();
 		if (_collapsed)
 		{
@@ -165,6 +169,37 @@ public partial class ProjectHubWindow : EditorWindow
 		}
 
 		return Mathf.Clamp(width, min, max);
+	}
+
+	// 드래그로 높이를 조절하는 가로 분할선. 갱신된 높이를 반환함.
+	// resizeAbove=false : 분할선 '아래' 영역을 조절(끌어올리면 커짐)
+	// resizeAbove=true  : 분할선 '위' 영역을 조절(끌어내리면 커짐)
+	private float DrawHorizontalSplitter(float height, float min, float max, bool resizeAbove = false)
+	{
+		Rect rect = GUILayoutUtility.GetRect(5f, 5f, GUILayout.Height(5f), GUILayout.ExpandWidth(true));
+		EditorGUI.DrawRect(rect, new Color(0.16f, 0.16f, 0.16f, 1f));
+		EditorGUIUtility.AddCursorRect(rect, MouseCursor.ResizeVertical);
+
+		Event e = Event.current;
+		if (e.type == EventType.MouseDown && e.button == 0 && rect.Contains(e.mousePosition))
+		{
+			_splitterDragging = true;
+			e.Use();
+		}
+		if (_splitterDragging)
+		{
+			if (e.type == EventType.MouseDrag)
+			{
+				height += resizeAbove ? e.delta.y : -e.delta.y;
+				Repaint();
+			}
+			else if (e.type == EventType.MouseUp || e.rawType == EventType.MouseUp)
+			{
+				_splitterDragging = false;
+			}
+		}
+
+		return Mathf.Clamp(height, min, max);
 	}
 
 	// =================================================================
