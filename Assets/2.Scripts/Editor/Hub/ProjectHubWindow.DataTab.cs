@@ -35,7 +35,8 @@ public partial class ProjectHubWindow
 		("시작 데이터", "GameStartData"),
 		("기본 장착(레거시)", "DefaultLoadout"),
 		("자원", "ResourceData"),
-		("맵 리스트","MapListData")
+		("맵 리스트","MapListData"),
+		("적 웨이브", "WaveData")
 	};
 
 	private int _dataGroupIndex;
