@@ -3,7 +3,7 @@
  * 결과 화면(RESULT 씬). 게임오버와 스테이지 클리어가 같은 씬을 쓰고, 상태에 따라 패널만 갈린다.
  *
  * [버튼] 두 결과 모두 동작이 같아 핸들러를 공유함
- * - Restart          : 격납고(BASE_LANDING)부터 다시 시작
+ * - Restart          : 격납고(BASE_HANGAR)부터 다시 시작
  * - Return to Station: 스테이션으로 복귀
  * - QuitGame         : 로비 씬으로 복귀
  *

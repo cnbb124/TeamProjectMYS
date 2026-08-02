@@ -28,6 +28,21 @@ public partial class ProjectHubWindow
 
 	private readonly List<SceneRow> _sceneRows = new List<SceneRow>();
 	private Vector2 _sceneScroll;
+
+	// 설정을 펼쳐 편집 중인 행. UNKNOWN이면 접힌 상태.
+	private SCENE_TYPE _sceneSettingsEditing = SCENE_TYPE.UNKNOWN;
+
+	// 속성 직접 지정 체크박스들. 이름은 SceneSettings 필드명과 같아야 함.
+	private static readonly string[] SettingFlagNames =
+	{
+		"keepsPlayerShip", "canSave", "isBattleScene", "isStationScene",
+		"shipControlDisabled", "shipHidden", "otherShipsHidden",
+	};
+	private static readonly string[] SettingFlagLabels =
+	{
+		"함선 유지 (출격 흐름)", "저장 가능", "전투 스테이지", "정거장 계열",
+		"조종 불가", "함선 숨김", "남 함선만 숨김",
+	};
 	private bool _sceneShowWorkScenes;
 
 	private void SceneTabOnEnable()
@@ -71,7 +86,9 @@ public partial class ProjectHubWindow
 
 		_sceneScroll = EditorGUILayout.BeginScrollView(_sceneScroll);
 
-		DrawSceneCreateSection();
+		DrawSceneFlow();
+
+		DrawSceneDetail();
 
 		SectionHeader("SCENE_TYPE ↔ 씬 파일 ↔ 빌드 세팅");
 		DrawSceneTable();
@@ -79,6 +96,9 @@ public partial class ProjectHubWindow
 		EditorGUILayout.Space(8f);
 		SectionHeader("현재 열린 씬 진단");
 		DrawCurrentSceneDiagnosis();
+
+		EditorGUILayout.Space(8f);
+		DrawSceneIssues();
 
 		EditorGUILayout.EndScrollView();
 	}
@@ -151,6 +171,15 @@ public partial class ProjectHubWindow
 				}
 			}
 
+			if (hasFile && !isWorkScene)
+			{
+				bool open = _sceneSettingsEditing == row.sceneType;
+				if (GUILayout.Button(open ? "닫기" : "설정", GUILayout.Width(44f)))
+				{
+					_sceneSettingsEditing = open ? SCENE_TYPE.UNKNOWN : row.sceneType;
+				}
+			}
+
 			if (hasFile)
 			{
 				if (GUILayout.Button("삭제", GUILayout.Width(44f)))
@@ -163,7 +192,20 @@ public partial class ProjectHubWindow
 			}
 
 			EditorGUILayout.EndHorizontal();
+
+			if (!isWorkScene && _sceneSettingsEditing == row.sceneType)
+			{
+				DrawSceneSettingsEditor(row.sceneType);
+			}
 		}
+	}
+
+	// 표의 [설정] 버튼도 흐름도 상세와 같은 편집기를 씀.
+	private void DrawSceneSettingsEditor(SCENE_TYPE sceneType)
+	{
+		EditorGUILayout.BeginVertical(HubStyles.Card);
+		DrawSceneSettingsBody(sceneType);
+		EditorGUILayout.EndVertical();
 	}
 
 	private static void DrawMark(bool ok, float width)

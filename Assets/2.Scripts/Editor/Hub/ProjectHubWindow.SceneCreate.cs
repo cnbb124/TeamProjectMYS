@@ -1285,14 +1285,17 @@ public partial class ProjectHubWindow
 		{
 			return SCENE_CATEGORY.BATTLE;
 		}
-		if (name.StartsWith("STATION", System.StringComparison.OrdinalIgnoreCase))
+		// BASE_STATION_1F 처럼 뒤에 붙여 늘어나도 코드를 안 고치도록 접두사로 판정함.
+		if (name.StartsWith("BASE_STATION", System.StringComparison.OrdinalIgnoreCase))
 		{
 			return SCENE_CATEGORY.STATION;
 		}
+		if (name.StartsWith("BASE_HANGAR", System.StringComparison.OrdinalIgnoreCase))
+		{
+			return SCENE_CATEGORY.HANGAR;
+		}
 		switch (type)
 		{
-			case SCENE_TYPE.BASE_LANDING:
-				return SCENE_CATEGORY.HANGAR;
 			case SCENE_TYPE.MAP_SELECT:
 			case SCENE_TYPE.MULTIPLAYER:
 				return SCENE_CATEGORY.TRANSIT;

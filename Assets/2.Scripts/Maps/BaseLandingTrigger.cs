@@ -13,7 +13,7 @@ public class BaseLandingTrigger : MonoBehaviour
 
         _triggered = true;
         HUD.SetActive(false);
-        LoadingManager.NextScene = SCENE_TYPE.BASE_LANDING.ToString();
+        LoadingManager.NextScene = SCENE_TYPE.BASE_HANGAR.ToString();
         GameManager.Instance.LoadScene(SCENE_TYPE.LOADING_SEQUENCE);
     }
 }

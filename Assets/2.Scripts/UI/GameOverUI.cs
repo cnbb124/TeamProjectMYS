@@ -4,7 +4,7 @@
  * GAME_STATE.GAME_OVER가 되면 패널 표시. (플레이어 사망 → GameManager.GameOver() → 이벤트 발행)
  *
  * [버튼]
- * - Restart          : 출격 직전 자동 저장을 복원해 격납고(BASE_LANDING)부터 다시 시작
+ * - Restart          : 출격 직전 자동 저장을 복원해 격납고(BASE_HANGAR)부터 다시 시작
  * - Return to Station: 자동 저장을 복원해 스테이션으로 복귀
  * - QuitGame         : 로비 씬으로 복귀 (복원 없음)
  *

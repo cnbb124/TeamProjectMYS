@@ -175,10 +175,10 @@ public enum SCENE_TYPE
 	//    신규 번호는 사이에 끼워 넣을 여지를 두려고 5 단위로 띄움.
 	UNKNOWN = -1,   // 이 표에 없는 씬(작업씬 등). GameManager.curSceneType이 파싱 실패 시 쓰는 값
 	MAIN = 0,
-	STATION = 1,
+	BASE_STATION = 1,
 	//STATION_1F = 2,
 	//STATION_B2 = 3,
-	BASE_LANDING = 4,
+	BASE_HANGAR = 4,
     LOGIN = 5,
     LOADING_SEQUENCE = 20,   // 로딩 시퀀스 씬
 	MULTIPLAYER = 25,   // 멀티 대기실 씬

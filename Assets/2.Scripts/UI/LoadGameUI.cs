@@ -48,7 +48,7 @@ public class LoadGameUI : MonoBehaviour
 
     [Header("로드 후 이동할 씬")]
     [Tooltip("B안: 저장 지점이 아니라 이 씬에서 재개 (기본 STATION)")]
-    [SerializeField] private string destinationScene = "STATION";
+    [SerializeField] private string destinationScene = "BASE_STATION";
 
     private readonly List<LoadSlotUI> _slots = new List<LoadSlotUI>();
     private bool _loading;   // 로드 진행 중 중복 클릭 방지

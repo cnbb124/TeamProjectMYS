@@ -110,7 +110,7 @@ public class GameManager : MonoBehaviourPunCallbacks
 	[SerializeField] private List<SceneSettings> _sceneSettings = new List<SceneSettings>();
 
 	// 런타임 조회용. Awake에서 _sceneSettings로 구성 (key = scene.ToString())
-	// 대소문자 무시 비교자 — 씬 파일명이 'Base_Landing'처럼 enum 표기(BASE_LANDING)와 달라도
+	// 대소문자 무시 비교자 — 씬 파일명 대소문자가 enum 표기와 달라도
 	// 조회가 되게 함. SceneManager.LoadScene도 대소문자를 안 가리므로 여기만 엄격하면 BGM이 조용히 누락됨.
 	private Dictionary<string, SceneSettings> _sceneSettingsMap =
 		new Dictionary<string, SceneSettings>(System.StringComparer.OrdinalIgnoreCase);
@@ -841,7 +841,7 @@ public class GameManager : MonoBehaviourPunCallbacks
         ChangeState(GAME_STATE.PLAYING);
         // 스테이지를 리로드하지 않고 격납고부터 다시 시작함 — 출격 준비를 고칠 기회를 줘야 함.
         // 나갈 목적지(HangarExitButton.launchSceneName)는 static이라 출격 때 고른 값이 그대로 남아 있음.
-        LoadSceneWithLoading(SCENE_TYPE.BASE_LANDING);
+        LoadSceneWithLoading(SCENE_TYPE.BASE_HANGAR);
     }
 
     /// <summary>스테이션 복귀. 출격 직전 자동 저장 시점으로 되돌림.</summary>
@@ -850,7 +850,7 @@ public class GameManager : MonoBehaviourPunCallbacks
         IsGameOver = false;
         QueueAutoSaveRestore();
         ChangeState(GAME_STATE.PLAYING);
-        LoadSceneWithLoading(SCENE_TYPE.STATION);
+        LoadSceneWithLoading(SCENE_TYPE.BASE_STATION);
     }
 
     /// <summary>
@@ -1247,7 +1247,7 @@ public class GameManager : MonoBehaviourPunCallbacks
     private SCENE_TYPE ParseSceneType(string sceneName)
     {
         // 대소문자 무시 — SceneManager.LoadScene(string)이 대소문자를 안 가리므로 씬 파일명이
-        // 'Base_Landing'처럼 enum 표기(BASE_LANDING)와 달라도 정상 로드됨. 여기서만 구분하면
+        // 대소문자가 enum 표기와 달라도 정상 로드됨. 여기서만 구분하면
         // 로드는 되는데 curSceneType이 UNKNOWN으로 잡히는 불일치가 생김.
         if (System.Enum.TryParse(sceneName, true, out SCENE_TYPE parsed) && System.Enum.IsDefined(typeof(SCENE_TYPE), parsed))
         {

@@ -178,8 +178,7 @@ public sealed class XRMainMenuRenderTextureAdapter : MonoBehaviour
             case "LOGIN":
             case "MAP_SELECT":
             case "MULTIPLAYER":
-            case "BASE_LANDING":
-            case "Base_Landing":
+            case "BASE_HANGAR":
             case "RESULT":
             case "LOADING_SEQUENCE":
                 return true;
@@ -559,8 +558,7 @@ public sealed class XRRenderTexturePanelInput : XRBaseInteractable
             case "LOGIN":
             case "MAP_SELECT":
             case "MULTIPLAYER":
-            case "BASE_LANDING":
-            case "Base_Landing":
+            case "BASE_HANGAR":
             case "RESULT":
             case "LOADING_SEQUENCE":
                 return true;

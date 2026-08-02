@@ -1,12 +1,14 @@
-using System;
 using UnityEngine;
 using UnityEngine.XR.Interaction.Toolkit;
 
-// VR이 안 켜져 있으면 컨트롤러 인터랙터(레이저 선 포함)를 꺼둔다.
-// 비VR 플레이에서 함선에 빨간 선이 뻗어 보이는 걸 막기 위함. cockpit 프리팹 루트에 부착.
+// VR이 아닐 때만 컨트롤러 인터랙터(레이저 선 포함)를 꺼둔다.
+// VR일 때는 아무것도 건드리지 않음 — 그쪽은 XRInteractionModeCoordinator가 담당함.
+// cockpit 프리팹 루트에 부착.
 public class XRInteractorVisibility : MonoBehaviour
 {
     private XRBaseInteractor[] _interactors;
+    // 내가 끈 경우에만 true. VR이 뒤늦게 켜졌을 때 내가 끈 것만 되돌리기 위함.
+    private bool _disabledByThis;
 
     private void Awake()
     {
@@ -17,7 +19,12 @@ public class XRInteractorVisibility : MonoBehaviour
     {
         XRRuntimeManager.Started -= OnXRStarted;
         XRRuntimeManager.Started += OnXRStarted;
-        Apply(XRRuntimeManager.IsRunning);
+
+        if (!XRRuntimeManager.IsRunning)
+        {
+            SetInteractorsActive(false);
+            _disabledByThis = true;
+        }
     }
 
     private void OnDisable()
@@ -25,12 +32,18 @@ public class XRInteractorVisibility : MonoBehaviour
         XRRuntimeManager.Started -= OnXRStarted;
     }
 
+    // VR이 뒤늦게 켜지면 내가 꺼둔 걸 원래대로 돌려놓고 손을 뗀다.
     private void OnXRStarted()
     {
-        Apply(true);
+        if (!_disabledByThis)
+        {
+            return;
+        }
+        SetInteractorsActive(true);
+        _disabledByThis = false;
     }
 
-    private void Apply(bool visible)
+    private void SetInteractorsActive(bool active)
     {
         if (_interactors == null)
         {
@@ -40,7 +53,7 @@ public class XRInteractorVisibility : MonoBehaviour
         {
             if (_interactors[i] != null)
             {
-                _interactors[i].gameObject.SetActive(visible);
+                _interactors[i].gameObject.SetActive(active);
             }
         }
     }

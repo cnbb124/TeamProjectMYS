@@ -37,7 +37,7 @@ public class PlayerButtonUI : MonoBehaviour
         }
 
         HangarExitButton.launchSceneName = "MAP_SELECT"; // 격납고쪽에 다음 갈곳 저장
-        LoadingManager.NextScene = "BASE_LANDING"; // 격납고 이동
+        LoadingManager.NextScene = "BASE_HANGAR"; // 격납고 이동
         GameManager.Instance.LoadScene(SCENE_TYPE.LOADING_SEQUENCE);
     }
 
@@ -56,7 +56,7 @@ public class PlayerButtonUI : MonoBehaviour
         }
 
         HangarExitButton.launchSceneName = "MULTIPLAYER"; // 격납고쪽에 다음 갈곳 저장
-        LoadingManager.NextScene = "BASE_LANDING"; // 격납고 이동
+        LoadingManager.NextScene = "BASE_HANGAR"; // 격납고 이동
         GameManager.Instance.LoadScene(SCENE_TYPE.LOADING_SEQUENCE);
     }
 
