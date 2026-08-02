@@ -20,6 +20,13 @@ public class SceneTemplateData : ScriptableObject
 	[TextArea(2, 4)]
 	public string description;
 
+	// 씬 만들기에서 종류를 고르면 이 값이 같은 템플릿이 자동으로 선택됨.
+	// 종류마다 템플릿을 따로 고르게 하면 "전투 스테이지인데 마을 템플릿"이 되는 실수가 나서 종류에 묶음.
+	[Header("어느 씬 종류용인가")]
+	[Tooltip("씬 만들기에서 이 종류를 고르면 이 템플릿이 자동으로 선택됨.\n" +
+			 "비워두면(메뉴·기타) 에셋 이름으로 짐작함 — Template_BATTLE_STAGE 처럼 종류 이름이 들어가면 됨")]
+	public SCENE_CATEGORY category = SCENE_CATEGORY.OTHER;
+
 	[Header("배치할 프리팹 — 순서대로 씬 루트에 놓임")]
 	public List<GameObject> prefabs = new List<GameObject>();
 
@@ -57,10 +64,22 @@ public class SceneTemplateData : ScriptableObject
 	public float ambientIntensity = 1f;
 	public Color ambientSkyColor = new Color(0.212f, 0.227f, 0.259f, 1f);
 
-	[Header("스폰 포인트")]
-	public int defaultSpawnPointCount = 8;
-	public int fixedSpawnPointCount = 2;
-	public float spawnRingRadius = 400f;
+	// 전투 스테이지에서만 쓰는 값.
+	// 마을 템플릿에 스폰 포인트가 딸려 있으면 아무 데도 연결 안 되는 빈 오브젝트만 씬에 생기므로,
+	// 따로 묶어서 위 '어느 씬 종류용인가'가 전투일 때만 인스펙터에 보이게 함(SceneTemplateDataEditor).
+	[System.Serializable]
+	public class BattleSettings
+	{
+		[Tooltip("적이 아무 데나 나올 때 쓰는 포인트 수. 0이면 안 만듦")]
+		public int defaultSpawnPointCount = 8;
+		[Tooltip("웨이브가 자리를 지정해 쓰는 포인트 수. 0이면 안 만듦")]
+		public int fixedSpawnPointCount = 2;
+		[Tooltip("포인트를 원형으로 둘러 놓을 반경")]
+		public float spawnRingRadius = 400f;
+	}
+
+	[Header("전투 스테이지 전용")]
+	public BattleSettings battle = new BattleSettings();
 
 	[Header("기본값")]
 	[Tooltip("씬 생성 시 미리 채워둘 BGM. SFX_NONE이면 비워둠")]

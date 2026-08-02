@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: Template_BATTLE_STAGE
   m_EditorClassIdentifier: 
   description: "STAGE1 \uC52C\uC5D0\uC11C \uBF51\uC74C"
+  category: 2
   prefabs:
   - {fileID: 3322725146387859037, guid: b218387af71c46545bcfd09e4f08f28e, type: 3}
   - {fileID: 2926822869374206385, guid: d8230dc91059e0f4ba901c65fcd57ac3, type: 3}
@@ -36,9 +37,10 @@ MonoBehaviour:
   ambientMode: 0
   ambientIntensity: 1
   ambientSkyColor: {r: 0.212, g: 0.227, b: 0.259, a: 1}
-  defaultSpawnPointCount: 6
-  fixedSpawnPointCount: 2
-  spawnRingRadius: 400
+  battle:
+    defaultSpawnPointCount: 6
+    fixedSpawnPointCount: 2
+    spawnRingRadius: 400
   bgm: 9999
   targetFolder: Assets/1.Scenes/BuildScene
   notReproducible: []

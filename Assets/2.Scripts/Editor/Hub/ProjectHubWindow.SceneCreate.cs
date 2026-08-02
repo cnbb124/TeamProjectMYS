@@ -45,13 +45,14 @@ public partial class ProjectHubWindow
 	// 속성 체크박스. 씬 수정 화면과 같은 UI를 쓰려고 SettingFlagNames 순서에 맞춘 배열로 둠
 	private readonly bool[] _createFlags = new bool[SettingFlagNames.Length];
 
-	// '추가 항목' 접이식 그룹. 평소엔 이름·종류·배경음만 정하면 되므로 기본은 템플릿만 펼침
-	private bool _createExtraTemplate = true;
-	private bool _createExtraObjects;
-	private bool _createExtraSpawn;
+	// '추가 항목' 접이식 그룹. 평소엔 이름·종류·배경음만 정하면 되므로 기본은 전부 접음
 	private bool _createExtraWave;
 	private bool _createExtraMap;
-	private bool _createExtraRegister;
+	private bool _createExtraAdvanced;
+
+	// 템플릿 자동 선택을 이미 끝낸 종류. 매 OnGUI마다 에셋을 다시 훑지 않으려고 기억해 둠.
+	// 어느 SCENE_CATEGORY와도 안 겹치는 값이어야 첫 그리기에서 한 번 돌아감
+	private SCENE_CATEGORY _templateAutoFor = (SCENE_CATEGORY)(-1);
 
 	private readonly List<WaveData> _createWaves = new List<WaveData>();
 	private WaveData _createBossWave;
@@ -115,15 +116,17 @@ public partial class ProjectHubWindow
 		HubStyles.Separator(4f);
 
 		// ---- 씬 종류 / 배경음 / 고급 ----
-		// 씬 수정 화면과 같은 UI를 그대로 씀
+		// 씬 수정 화면과 같은 UI를 그대로 씀. 종류를 바꾸면 그 종류의 템플릿이 딸려 옴
+		SCENE_CATEGORY beforeCategory = _createCategory;
 		DrawCategoryBgmAdvanced(ref _createCategory, ref _createBgm, ref _createOverrideFlags, _createFlags);
 
-		if (!_createRegisterSettings)
+		if (beforeCategory != _createCategory || _templateAutoFor != _createCategory)
 		{
-			HubStyles.ColoredLabel("아래 [추가 항목 → 등록 · 빌드]에서 설정표 등록을 꺼둔 상태 — 위에서 고른 종류와 배경음이 저장되지 않습니다.",
-				HubStyles.Warn, EditorStyles.miniLabel);
+			SelectTemplateForCategory(_createCategory);
 		}
-		else if (_createSceneType == SCENE_TYPE.UNKNOWN && !string.IsNullOrWhiteSpace(_createSceneName))
+		DrawTemplateNotice();
+
+		if (_createSceneType == SCENE_TYPE.UNKNOWN && !string.IsNullOrWhiteSpace(_createSceneName))
 		{
 			HubStyles.ColoredLabel("SCENE_TYPE이 없어 위 종류·배경음은 저장되지 않습니다. 먼저 SCENE_TYPE에 추가할 것.",
 				HubStyles.Warn, EditorStyles.miniLabel);
@@ -132,7 +135,8 @@ public partial class ProjectHubWindow
 		HubStyles.Separator(4f);
 
 		// ---- 추가 항목 ----
-		// 여기부터는 씬 안을 무엇으로 채울지. 평소엔 템플릿만 고르면 되므로 나머지는 접어둠
+		// 씬 안을 채우는 값(프리팹·스폰 포인트·조명)은 전부 템플릿이 들고 오므로 여기 안 띄움.
+		// 남기는 건 종류만으로 정할 수 없는 것 = 전투 씬의 웨이브와 맵 배정뿐임
 		EditorGUILayout.LabelField("추가 항목", HubStyles.SectionTitle);
 
 		// 라벨 칸 폭. 기본값(약 150)이라 긴 라벨이 '...'으로 잘려서 이 구간 동안만 넓혀 씀.
@@ -140,12 +144,17 @@ public partial class ProjectHubWindow
 		float prevLabelWidth = EditorGUIUtility.labelWidth;
 		EditorGUIUtility.labelWidth = 220f;
 
-		DrawCreateTemplateGroup();
-		DrawCreateObjectsGroup();
-		DrawCreateSpawnGroup();
-		DrawCreateWaveGroup();
-		DrawCreateMapGroup();
-		DrawCreateRegisterGroup();
+		if (_createCategory == SCENE_CATEGORY.BATTLE)
+		{
+			DrawCreateWaveGroup();
+			DrawCreateMapGroup();
+		}
+		else
+		{
+			HubStyles.ColoredLabel("전투 스테이지를 고르면 웨이브와 맵 선택 배정이 여기 나옵니다.",
+				HubStyles.Muted, EditorStyles.miniLabel);
+		}
+		DrawCreateAdvancedGroup();
 
 		EditorGUIUtility.labelWidth = prevLabelWidth;
 
@@ -191,23 +200,139 @@ public partial class ProjectHubWindow
 		return EditorGUILayout.Foldout(open, label, true);
 	}
 
-	// 평소 흐름은 '템플릿 고르기'로 끝남 — 씬을 열 필요가 없음.
-	// 씬을 열어야 하는 건 [현재 열린 씬을 템플릿으로 저장]을 눌러 템플릿을 처음 만들 때 한 번뿐.
-	private void DrawCreateTemplateGroup()
+	// 고른 종류에 맞는 템플릿을 찾아 값을 채움.
+	// 1순위 = 템플릿 에셋이 스스로 밝힌 종류, 2순위 = 에셋 이름에 종류 이름이 들어간 것(기존 에셋 무수정 호환).
+	private void SelectTemplateForCategory(SCENE_CATEGORY category)
 	{
+		_templateAutoFor = category;
+
 		if (_templateChoices == null)
 		{
 			RefreshTemplateChoices();
 		}
 
-		string summary = _template != null ? _template.name : "고른 템플릿 없음";
-		_createExtraTemplate = CreateGroupHeader(_createExtraTemplate, "템플릿", summary);
-		if (!_createExtraTemplate)
+		SceneTemplateData match = null;
+		for (int i = 0; i < _templateAssets.Length; i++)
+		{
+			if (_templateAssets[i] != null && _templateAssets[i].category == category)
+			{
+				match = _templateAssets[i];
+				break;
+			}
+		}
+
+		if (match == null)
+		{
+			string keyword = category.ToString();
+			for (int i = 0; i < _templateAssets.Length; i++)
+			{
+				if (_templateAssets[i] != null &&
+					_templateAssets[i].name.IndexOf(keyword, System.StringComparison.OrdinalIgnoreCase) >= 0)
+				{
+					match = _templateAssets[i];
+					break;
+				}
+			}
+		}
+
+		// 맞는 게 없으면 이전 종류의 프리팹이 남아 엉뚱한 씬이 만들어지므로 비움
+		if (match == null)
+		{
+			_template = null;
+			_createPrefabs.Clear();
+			_createEmptyObjects.Clear();
+			return;
+		}
+
+		if (match == _template)
+		{
+			return;
+		}
+
+		_template = match;
+		_templateIndex = System.Array.IndexOf(_templateAssets, match);
+		ApplyTemplate(_template);
+	}
+
+	// 어떤 템플릿이 붙었고 그래서 뭐가 같이 만들어지는지 한 줄로 알림
+	private void DrawTemplateNotice()
+	{
+		if (_template == null)
+		{
+			HubStyles.ColoredLabel("이 종류에 맞는 템플릿이 없어 빈 씬으로 만들어집니다 — 아래 [고급 · 도구]에서 만들 수 있습니다.",
+				HubStyles.Warn, EditorStyles.miniLabel);
+			return;
+		}
+
+		int spawnCount = _createDefaultSpawnCount + _createFixedSpawnCount;
+		HubStyles.ColoredLabel($"템플릿 : {_template.name} — 프리팹 {_createPrefabs.Count}개 · 스폰 포인트 {spawnCount}개가 같이 만들어집니다.",
+			HubStyles.Ok, EditorStyles.miniLabel);
+
+		if (_template.notReproducible.Count > 0)
+		{
+			EditorGUILayout.HelpBox("이 템플릿에 재현 불가 항목이 있음:\n  " +
+									string.Join("\n  ", _template.notReproducible) +
+									"\n프리팹으로 만든 뒤 다시 캡처하면 사라짐.", MessageType.Warning);
+		}
+	}
+
+	private void DrawCreateWaveGroup()
+	{
+		string summary = _createBossWave != null
+			? $"웨이브 {_createWaves.Count}개 · 보스 있음"
+			: $"웨이브 {_createWaves.Count}개";
+		_createExtraWave = CreateGroupHeader(_createExtraWave, "웨이브", summary);
+		if (!_createExtraWave)
+		{
+			return;
+		}
+
+		EditorGUILayout.LabelField("여기서 짠 웨이브는 새 씬의 SpawnManager에 그대로 배선됩니다.", EditorStyles.miniLabel);
+		DrawWaveListEditor(_createWaves, ref _createBossWave, _createSceneName);
+	}
+
+	private void DrawCreateMapGroup()
+	{
+		// 버튼 번호는 사람이 세는 대로 1번부터 보여주고, 배열에 넣을 때만 0부터로 되돌림
+		string summary = _createRegisterToMap ? $"{_createMapButtonIndex + 1}번 버튼에 배정" : "배정 안 함";
+		_createExtraMap = CreateGroupHeader(_createExtraMap, "맵 선택 화면 배정", summary);
+		if (!_createExtraMap)
 		{
 			return;
 		}
 
 		EditorGUI.indentLevel++;
+		_createRegisterToMap = EditorGUILayout.Toggle("맵 선택 버튼에 배정", _createRegisterToMap);
+		if (_createRegisterToMap)
+		{
+			_createMapList = (MapListData)EditorGUILayout.ObjectField("맵 목록(MapListData)", _createMapList, typeof(MapListData), false);
+			int shownNumber = Mathf.Max(1, EditorGUILayout.IntField("버튼 번호 (첫 칸이 1번)", _createMapButtonIndex + 1));
+			_createMapButtonIndex = shownNumber - 1;
+			EditorGUILayout.LabelField("이 씬을 MapListData의 해당 버튼 자리에 배정함(에셋만 수정)", EditorStyles.miniLabel);
+		}
+		EditorGUI.indentLevel--;
+	}
+
+	// 평소엔 볼 일 없는 것들. 템플릿 만들기·저장 위치·등록 여부처럼 종류만으로 정해지는 값들이라 접어둠
+	private void DrawCreateAdvancedGroup()
+	{
+		_createExtraAdvanced = CreateGroupHeader(_createExtraAdvanced, "고급 · 도구", "템플릿 만들기 / 저장 위치 / 등록 여부");
+		if (!_createExtraAdvanced)
+		{
+			return;
+		}
+
+		EditorGUI.indentLevel++;
+
+		_createFolder = EditorGUILayout.TextField("저장 폴더", _createFolder);
+
+		EditorGUILayout.Space(4f);
+		EditorGUILayout.LabelField("템플릿", EditorStyles.boldLabel);
+
+		if (_templateChoices == null)
+		{
+			RefreshTemplateChoices();
+		}
 
 		EditorGUILayout.BeginHorizontal();
 		if (_templateChoices.Length == 0)
@@ -216,7 +341,8 @@ public partial class ProjectHubWindow
 		}
 		else
 		{
-			int picked = EditorGUILayout.Popup("템플릿 고르기", _templateIndex, _templateChoices);
+			// 자동 선택이 틀렸을 때만 쓰는 수동 지정. 여기서 고르면 그 종류의 자동 선택보다 우선함
+			int picked = EditorGUILayout.Popup("직접 고르기", _templateIndex, _templateChoices);
 			if (picked != _templateIndex)
 			{
 				_templateIndex = picked;
@@ -249,141 +375,16 @@ public partial class ProjectHubWindow
 		EditorGUILayout.LabelField("끄면 컨테이너(MapObject 등)만 만들어짐. 켜면 그 안의 프리팹 위치까지 그대로 복제됨\n" +
 								   "새 전투 스테이지는 끄고, 마을씬처럼 배치가 내용인 씬은 켤 것",
 								   EditorStyles.wordWrappedMiniLabel);
-
-		if (_template != null && _template.notReproducible.Count > 0)
-		{
-			EditorGUILayout.HelpBox("이 템플릿에 재현 불가 항목이 있음:\n  " +
-									string.Join("\n  ", _template.notReproducible) +
-									"\n프리팹으로 만든 뒤 다시 캡처하면 사라짐.", MessageType.Warning);
-		}
-
-		EditorGUI.indentLevel--;
-	}
-
-	private void DrawCreateObjectsGroup()
-	{
-		string summary = $"프리팹 {_createPrefabs.Count}개 · 빈 오브젝트 {_createEmptyObjects.Count}개";
-		_createExtraObjects = CreateGroupHeader(_createExtraObjects, "배치할 오브젝트", summary);
-		if (!_createExtraObjects)
-		{
-			return;
-		}
-
-		EditorGUI.indentLevel++;
-
-		EditorGUILayout.BeginHorizontal();
-		if (GUILayout.Button("현재 열린 씬에서 프리팹 긁어오기", GUILayout.Height(22f)))
-		{
-			FillFromOpenScene();
-		}
-		if (GUILayout.Button("목록 비우기", GUILayout.Width(90f), GUILayout.Height(22f)))
-		{
-			_createPrefabs.Clear();
-		}
-		EditorGUILayout.EndHorizontal();
-		DrawObjectList(_createPrefabs, "프리팹");
-		EditorGUILayout.LabelField("순서대로 씬 루트에 배치됨. ⊙ 버튼을 누르면 프로젝트 에셋 목록에서 고를 수 있음", EditorStyles.miniLabel);
-
-		EditorGUILayout.Space(4f);
-		EditorGUILayout.LabelField("새로 만들 오브젝트 (프리팹 아님)", EditorStyles.boldLabel);
-		for (int i = 0; i < _createEmptyObjects.Count; i++)
-		{
-			EditorGUILayout.BeginHorizontal();
-			_createEmptyObjects[i] = EditorGUILayout.TextField($"빈 오브젝트 {i}", _createEmptyObjects[i]);
-			if (GUILayout.Button("-", GUILayout.Width(24f)))
-			{
-				_createEmptyObjects.RemoveAt(i);
-				EditorGUILayout.EndHorizontal();
-				break;
-			}
-			EditorGUILayout.EndHorizontal();
-		}
-		if (GUILayout.Button("+ 빈 오브젝트 추가", GUILayout.Width(140f)))
-		{
-			_createEmptyObjects.Add("NewObject");
-		}
-		_createDirectionalLight = EditorGUILayout.Toggle("Directional Light 생성", _createDirectionalLight);
-		if (_createDirectionalLight)
-		{
-			_createLightRotation = EditorGUILayout.Vector3Field("조명 회전", _createLightRotation);
-		}
-
-		EditorGUI.indentLevel--;
-	}
-
-	private void DrawCreateSpawnGroup()
-	{
-		string summary = $"랜덤 {_createDefaultSpawnCount} · 고정 {_createFixedSpawnCount} · 반경 {_createSpawnRingRadius:0}";
-		_createExtraSpawn = CreateGroupHeader(_createExtraSpawn, "스폰 포인트", summary);
-		if (!_createExtraSpawn)
-		{
-			return;
-		}
-
-		EditorGUI.indentLevel++;
-		_createDefaultSpawnCount = Mathf.Max(0, EditorGUILayout.IntField("기본(랜덤) 포인트 수", _createDefaultSpawnCount));
-		_createFixedSpawnCount = Mathf.Max(0, EditorGUILayout.IntField("고정 포인트 수", _createFixedSpawnCount));
-		_createSpawnRingRadius = EditorGUILayout.FloatField("배치 반경", _createSpawnRingRadius);
-		EditorGUILayout.LabelField("원형으로 균등 배치함. 만든 뒤 씬에서 옮기면 됨", EditorStyles.miniLabel);
-		EditorGUI.indentLevel--;
-	}
-
-	private void DrawCreateWaveGroup()
-	{
-		string summary = _createBossWave != null
-			? $"웨이브 {_createWaves.Count}개 · 보스 있음"
-			: $"웨이브 {_createWaves.Count}개";
-		_createExtraWave = CreateGroupHeader(_createExtraWave, "웨이브", summary);
-		if (!_createExtraWave)
-		{
-			return;
-		}
-
-		EditorGUI.indentLevel++;
-		DrawObjectList(_createWaves, "WaveData");
-		_createBossWave = (WaveData)EditorGUILayout.ObjectField("보스 웨이브", _createBossWave, typeof(WaveData), false);
-		EditorGUILayout.LabelField("씬의 SpawnManager 인스턴스에 그대로 배선됨", EditorStyles.miniLabel);
-		EditorGUI.indentLevel--;
-	}
-
-	private void DrawCreateMapGroup()
-	{
-		string summary = _createRegisterToMap ? $"{_createMapButtonIndex + 1}번 버튼에 배정" : "배정 안 함";
-		_createExtraMap = CreateGroupHeader(_createExtraMap, "맵 선택 화면 배정", summary);
-		if (!_createExtraMap)
-		{
-			return;
-		}
-
-		EditorGUI.indentLevel++;
-		_createRegisterToMap = EditorGUILayout.Toggle("맵 선택 버튼에 배정", _createRegisterToMap);
-		if (_createRegisterToMap)
-		{
-			_createMapList = (MapListData)EditorGUILayout.ObjectField("맵 목록(MapListData)", _createMapList, typeof(MapListData), false);
-			_createMapButtonIndex = Mathf.Max(0, EditorGUILayout.IntField("버튼 번호 (0 = 1번)", _createMapButtonIndex));
-			EditorGUILayout.LabelField("이 씬을 MapListData의 해당 버튼 자리에 배정함(에셋만 수정)", EditorStyles.miniLabel);
-		}
-		EditorGUI.indentLevel--;
-	}
-
-	private void DrawCreateRegisterGroup()
-	{
-		string summary = _createRegisterSettings && _createAddToBuild
-			? "설정표 등록 + 빌드 추가"
-			: (_createRegisterSettings ? "설정표만 등록" : (_createAddToBuild ? "빌드만 추가" : "둘 다 안 함"));
-		_createExtraRegister = CreateGroupHeader(_createExtraRegister, "등록 · 빌드", summary);
-		if (!_createExtraRegister)
-		{
-			return;
-		}
-
-		EditorGUI.indentLevel++;
-		_createRegisterSettings = EditorGUILayout.Toggle("GameManager 씬 설정표에 등록", _createRegisterSettings);
-		EditorGUILayout.LabelField("GameManager 프리팹의 씬 설정표가 수정됨(프로젝트 전역 표).\n" +
-								   "등록을 건너뛰면 그 씬은 속성이 전부 off로 취급됨",
+		EditorGUILayout.LabelField("만든 템플릿에 '어느 씬 종류용인가'를 지정해두면 위에서 그 종류를 고를 때 자동으로 붙음",
 								   EditorStyles.wordWrappedMiniLabel);
 
+		EditorGUILayout.Space(4f);
+		EditorGUILayout.LabelField("등록", EditorStyles.boldLabel);
+		_createRegisterSettings = EditorGUILayout.Toggle("GameManager 씬 설정표에 등록", _createRegisterSettings);
 		_createAddToBuild = EditorGUILayout.Toggle("빌드 세팅에 추가", _createAddToBuild);
+		EditorGUILayout.LabelField("둘 다 켜두는 게 정상임. 끄면 위에서 고른 종류·배경음이 저장되지 않고,\n" +
+								   "빌드 세팅에 없는 씬은 게임에서 로드가 실패함",
+								   EditorStyles.wordWrappedMiniLabel);
 
 		EditorGUILayout.Space(4f);
 		if (GUILayout.Button("게임매니저 씬 설정 자동 정리 - 필요시 수동확인", GUILayout.Height(22f)))
@@ -393,28 +394,8 @@ public partial class ProjectHubWindow
 		EditorGUILayout.LabelField("빠진 SCENE_TYPE 행을 만들고, 모든 행의 씬 종류를 이름으로 추측해 넣음.\n" +
 								   "BGM은 건드리지 않음. '속성 직접 지정'은 전부 해제되니 예외 씬은 다시 찍을 것",
 								   EditorStyles.wordWrappedMiniLabel);
-		EditorGUI.indentLevel--;
-	}
 
-	// Object 목록 편집(추가/삭제). 배열 인스펙터를 직접 그리는 대신 최소 기능만 둠
-	private void DrawObjectList<T>(List<T> list, string label) where T : Object
-	{
-		for (int i = 0; i < list.Count; i++)
-		{
-			EditorGUILayout.BeginHorizontal();
-			list[i] = (T)EditorGUILayout.ObjectField($"{label} {i}", list[i], typeof(T), false);
-			if (GUILayout.Button("-", GUILayout.Width(24f)))
-			{
-				list.RemoveAt(i);
-				EditorGUILayout.EndHorizontal();
-				break;
-			}
-			EditorGUILayout.EndHorizontal();
-		}
-		if (GUILayout.Button($"+ {label} 추가", GUILayout.Width(140f)))
-		{
-			list.Add(null);
-		}
+		EditorGUI.indentLevel--;
 	}
 
 	private void CreateScene(string scenePath)
@@ -739,9 +720,9 @@ public partial class ProjectHubWindow
 
 		_createDirectionalLight = template.createDirectionalLight;
 		_createLightRotation = template.lightRotation;
-		_createDefaultSpawnCount = template.defaultSpawnPointCount;
-		_createFixedSpawnCount = template.fixedSpawnPointCount;
-		_createSpawnRingRadius = template.spawnRingRadius;
+		_createDefaultSpawnCount = template.battle.defaultSpawnPointCount;
+		_createFixedSpawnCount = template.battle.fixedSpawnPointCount;
+		_createSpawnRingRadius = template.battle.spawnRingRadius;
 
 		if (template.bgm != SOUND_TYPE.SFX_NONE)
 		{
@@ -849,8 +830,8 @@ public partial class ProjectHubWindow
 		SpawnManager spawner = Object.FindObjectOfType<SpawnManager>(true);
 		if (spawner != null)
 		{
-			template.defaultSpawnPointCount = spawner.defaultSpawnPoints != null ? spawner.defaultSpawnPoints.Length : 0;
-			template.fixedSpawnPointCount = spawner.fixedSpawnPoints != null ? spawner.fixedSpawnPoints.Length : 0;
+			template.battle.defaultSpawnPointCount = spawner.defaultSpawnPoints != null ? spawner.defaultSpawnPoints.Length : 0;
+			template.battle.fixedSpawnPointCount = spawner.fixedSpawnPoints != null ? spawner.fixedSpawnPoints.Length : 0;
 		}
 
 		AssetDatabase.CreateAsset(template, path);
@@ -868,66 +849,6 @@ public partial class ProjectHubWindow
 		{
 			Debug.Log($"[Hub] 템플릿 저장 완료: {path} (프리팹 {template.prefabs.Count}개)");
 		}
-	}
-
-	// 열려 있는 씬의 루트에서 프리팹 인스턴스를 전부 긁어와 목록에 채움.
-	// 이름으로 추측하지 않고 실제 씬 구성을 그대로 읽으므로 빠뜨리는 게 없음 —
-	// STAGE1을 열고 누르면 그 씬의 구성이 곧 정답이 됨.
-	private void FillFromOpenScene()
-	{
-		UnityEngine.SceneManagement.Scene scene = UnityEngine.SceneManagement.SceneManager.GetActiveScene();
-		if (!scene.IsValid())
-		{
-			Debug.LogError("[Hub] 열린 씬이 없음.");
-			return;
-		}
-
-		_createPrefabs.Clear();
-		_createEmptyObjects.Clear();
-		List<string> skipped = new List<string>();
-
-		GameObject[] roots = scene.GetRootGameObjects();
-		for (int i = 0; i < roots.Length; i++)
-		{
-			GameObject root = roots[i];
-
-			// 계측/디버그용은 새 씬에 들어갈 이유가 없음
-			if (IsExcludedFromTemplate(root))
-			{
-				skipped.Add(root.name);
-				continue;
-			}
-
-			if (PrefabUtility.IsAnyPrefabInstanceRoot(root))
-			{
-				GameObject source = PrefabUtility.GetCorrespondingObjectFromOriginalSource(root);
-				if (source != null && !_createPrefabs.Contains(source))
-				{
-					_createPrefabs.Add(source);
-				}
-				continue;
-			}
-
-			Light light = root.GetComponent<Light>();
-			if (light != null && light.type == LightType.Directional)
-			{
-				_createDirectionalLight = true;
-				_createLightRotation = root.transform.eulerAngles;
-				continue;
-			}
-
-			// Transform만 있는 컨테이너는 '새로 만들 오브젝트'로
-			if (root.GetComponents<Component>().Length == 1)
-			{
-				_createEmptyObjects.Add(root.name);
-				continue;
-			}
-
-			skipped.Add($"{root.name}(프리팹 아님)");
-		}
-
-		Debug.Log($"[Hub] '{scene.name}'에서 프리팹 {_createPrefabs.Count}개, 빈 오브젝트 {_createEmptyObjects.Count}개 긁어옴." +
-				  (skipped.Count > 0 ? $" 제외: {string.Join(", ", skipped)}" : ""));
 	}
 
 	// 템플릿/생성 대상에서 빼는 오브젝트. 계측용이거나 씬마다 새로 두는 게 맞는 것들.
@@ -1334,26 +1255,6 @@ public partial class ProjectHubWindow
 		}
 
 		Debug.LogWarning("[Hub] GameManager 프리팹을 찾지 못해 씬 설정 등록을 건너뜀.");
-	}
-
-	// 씬 종류 → 그 종류가 켜는 속성. 인스펙터에서 뭘 고르는지 바로 보이라고 띄움.
-	private static string CategorySummary(SCENE_CATEGORY category)
-	{
-		switch (category)
-		{
-			case SCENE_CATEGORY.STATION:
-				return "조종 불가 + 정거장 + 저장 가능";
-			case SCENE_CATEGORY.BATTLE:
-				return "조종 가능 + 전투 + 함선 유지";
-			case SCENE_CATEGORY.HANGAR:
-				return "조종 불가 + 함선 유지 (내 기체만 보임, 남 함선 숨김)";
-			case SCENE_CATEGORY.TRANSIT:
-				return "조종 불가 + 함선 유지 + 숨김";
-			case SCENE_CATEGORY.LOADING:
-				return "조종 불가";
-			default:
-				return "조종 불가";
-		}
 	}
 
 	// 이름으로 씬 종류를 추측함. 어디까지나 표를 처음 채울 때 쓰는 추측이고,

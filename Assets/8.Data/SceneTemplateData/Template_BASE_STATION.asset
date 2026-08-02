@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: Template_BASE_STATION
   m_EditorClassIdentifier: 
   description: "StationScene_JongChan \uC52C\uC5D0\uC11C \uBF51\uC74C"
+  category: 1
   prefabs:
   - {fileID: 7895501024435905058, guid: ec01732fe6717604c905949a455ecaa8, type: 3}
   - {fileID: 919132149155446097, guid: 305867cf2c5bb434da986eea5e2da2a3, type: 3}
@@ -33,9 +34,10 @@ MonoBehaviour:
   ambientMode: 0
   ambientIntensity: 1
   ambientSkyColor: {r: 0.212, g: 0.227, b: 0.259, a: 1}
-  defaultSpawnPointCount: 8
-  fixedSpawnPointCount: 2
-  spawnRingRadius: 400
+  battle:
+    defaultSpawnPointCount: 0
+    fixedSpawnPointCount: 0
+    spawnRingRadius: 0
   bgm: 9999
   targetFolder: Assets/1.Scenes/WorkScene
   notReproducible:

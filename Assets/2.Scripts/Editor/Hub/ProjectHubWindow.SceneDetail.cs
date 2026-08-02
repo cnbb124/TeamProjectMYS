@@ -190,6 +190,16 @@ public partial class ProjectHubWindow
 			HubStyles.ColoredLabel("바뀐 내용이 있습니다. [씬 수정하기]를 눌러야 저장됩니다.",
 				HubStyles.Warn, EditorStyles.miniLabel);
 		}
+
+		// 웨이브는 전투 스테이지에만 있음. 초안이 아니라 표에 적용된 종류를 기준으로 판단해야
+		// 종류만 눌러보고 아직 적용 안 한 상태에서 엉뚱하게 웨이브 칸이 뜨지 않음
+		SCENE_CATEGORY appliedCategory = (SCENE_CATEGORY)entry.FindPropertyRelative("category").intValue;
+		if (appliedCategory == SCENE_CATEGORY.BATTLE)
+		{
+			HubStyles.Separator(4f);
+			EditorGUILayout.LabelField("웨이브", HubStyles.SectionTitle);
+			DrawSceneWaveSection(sceneType);
+		}
 	}
 
 	// 씬 종류 → 배경음 → 고급 순서. 씬 수정과 새 씬 만들기가 같은 모양이 되도록 공용으로 씀.
