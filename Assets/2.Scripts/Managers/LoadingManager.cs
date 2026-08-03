@@ -17,9 +17,9 @@ using TMPro;
 public class LoadingManager : MonoBehaviour
 {
     [Header("UI References")]
-    [SerializeField] private Image    backgroundA;   // 현재 표시 이미지
-    [SerializeField] private Image    backgroundB;   // 크로스페이드용 이미지
-    [SerializeField] private Image    backgroundC;   // 마지막 이미지
+    [SerializeField] private Image    backgroundA;   // 배경 표시용
+    //[SerializeField] private Image    backgroundB;   // 크로스페이드용 이미지
+    //[SerializeField] private Image    backgroundC;   // 마지막 이미지
     [SerializeField] private Image    fillBar;
     [SerializeField] private TMP_Text progressText;
     [SerializeField] private TMP_Text tipText;
@@ -29,47 +29,17 @@ public class LoadingManager : MonoBehaviour
 
     [Header("설정")]
     [SerializeField] private float minLoadTime   = 6f;   // 최소 로딩 시간 (이미지 3장 볼 시간)
-    [SerializeField] private float fadeDuration  = 1f;   // 이미지 전환 페이드 시간
+    //[SerializeField] private float fadeDuration  = 1f;   // 이미지 전환 페이드 시간
     [SerializeField] private string[] tips;
 
     public static string NextScene = "GameScene";
 
-    private int _currentImageIndex = 0;
-
-    // 배열 시작 지점을 랜덤으로 옮김. 순서는 그대로 유지됨(0,1,2 → 2,0,1 같은 식).
-    private void RotateBackgroundsRandomly()
-    {
-        int count = backgroundImages.Length;
-        if (count < 2)
-        {
-            return;
-        }
-
-        int offset = Random.Range(0, count);
-        if (offset == 0)
-        {
-            return;
-        }
-
-        Sprite[] rotated = new Sprite[count];
-        for (int i = 0; i < count; i++)
-        {
-            rotated[i] = backgroundImages[(i + offset) % count];
-        }
-        backgroundImages = rotated;
-    }
-
     private void Start()
     {
-        if (backgroundImages != null && backgroundImages.Length > 0)
+        if (backgroundA != null && backgroundImages != null && backgroundImages.Length > 0)
         {
-            // 시작 이미지를 매번 다르게 — 등록 순서는 유지한 채 시작 지점만 랜덤으로 돌림.
-            // 전부 한 번씩 나오는 순환은 그대로임.
-            RotateBackgroundsRandomly();
-
-            backgroundA.sprite = backgroundImages[0];
+            backgroundA.sprite = backgroundImages[Random.Range(0, backgroundImages.Length)];
             backgroundA.color  = Color.white;
-            backgroundB.color  = new Color(1f, 1f, 1f, 0f);
         }
 
         if (tipText != null && tips != null && tips.Length > 0)
@@ -86,26 +56,9 @@ public class LoadingManager : MonoBehaviour
         float elapsed = 0f;
         float displayProgress = 0f;
 
-        // 이미지 1장당 표시 시간
-        float intervalPerImage = backgroundImages != null && backgroundImages.Length > 1
-            ? minLoadTime / backgroundImages.Length
-            : minLoadTime;
-
-        float nextSwapTime = intervalPerImage;
-
         while (!op.isDone)
         {
             elapsed += Time.deltaTime;
-
-            // 이미지 전환 타이밍 체크
-            if (backgroundImages != null && backgroundImages.Length > 1
-                && elapsed >= nextSwapTime
-                && _currentImageIndex < backgroundImages.Length - 1)
-            {
-                _currentImageIndex++;
-                nextSwapTime += intervalPerImage;
-                StartCoroutine(CrossFade(backgroundImages[_currentImageIndex]));
-            }
 
             float targetProgress  = Mathf.Clamp01(op.progress / 0.9f);
             float timeProgress    = Mathf.Clamp01(elapsed / minLoadTime);
@@ -124,23 +77,23 @@ public class LoadingManager : MonoBehaviour
     }
 
     // A→B 크로스페이드 후 A/B 역할 교체
-    private IEnumerator CrossFade(Sprite nextSprite)
-    {
-        backgroundB.sprite = nextSprite;
+    //private IEnumerator CrossFade(Sprite nextSprite)
+    //{
+    //    backgroundB.sprite = nextSprite;
 
-        float t = 0f;
-        while (t < fadeDuration)
-        {
-            t += Time.deltaTime;
-            float alpha = Mathf.Clamp01(t / fadeDuration);
-            backgroundB.color = new Color(1f, 1f, 1f, alpha);
-            backgroundA.color = new Color(1f, 1f, 1f, 1f - alpha);
-            yield return null;
-        }
+    //    float t = 0f;
+    //    while (t < fadeDuration)
+    //    {
+    //        t += Time.deltaTime;
+    //        float alpha = Mathf.Clamp01(t / fadeDuration);
+    //        backgroundB.color = new Color(1f, 1f, 1f, alpha);
+    //        backgroundA.color = new Color(1f, 1f, 1f, 1f - alpha);
+    //        yield return null;
+    //    }
 
-        // 역할 교체
-        backgroundA.sprite = nextSprite;
-        backgroundA.color  = Color.white;
-        backgroundB.color  = new Color(1f, 1f, 1f, 0f);
-    }
+    //    // 역할 교체
+    //    backgroundA.sprite = nextSprite;
+    //    backgroundA.color  = Color.white;
+    //    backgroundB.color  = new Color(1f, 1f, 1f, 0f);
+    //}
 }

@@ -476,14 +476,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   backgroundA: {fileID: 1879354503}
-  backgroundB: {fileID: 785399655}
-  backgroundC: {fileID: 511505832}
   fillBar: {fileID: 594521255}
   progressText: {fileID: 83266908}
   tipText: {fileID: 2059907599}
-  backgroundImages: []
+  backgroundImages:
+  - {fileID: 21300000, guid: 4a85934e2afe39a4cb9eb3214ac64110, type: 3}
+  - {fileID: 21300000, guid: 137fabbf3274e4f44b52b0f498f3d15b, type: 3}
+  - {fileID: 21300000, guid: 83688dbec65a744478ef495ad234c4e3, type: 3}
   minLoadTime: 3
-  fadeDuration: 1
   tips:
   - "\uC801\uC758 \uC720\uB3C4 \uBBF8\uC0AC\uC77C\uC740 \uC0DD\uAC01\uBCF4\uB2E4
     \uB290\uB9BD\uB2C8\uB2E4... \uBC18\uB300\uB85C \uD53C\uD574\uBCF4\uBA74 \uC5B4\uB5A8\uC9C0?"
@@ -1241,7 +1241,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 600, y: 100}
+  m_SizeDelta: {x: 1000, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &2059907598
 GameObject:
@@ -1375,7 +1375,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 500, y: 130}
+  m_SizeDelta: {x: 800, y: 130}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:

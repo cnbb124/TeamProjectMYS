@@ -29,6 +29,8 @@ public class ResultUI : MonoBehaviour
     [SerializeField] private GameObject gameOverPanel;
     [Tooltip("스테이지 클리어 시 표시할 패널")]
     [SerializeField] private GameObject clearPanel;
+    [Tooltip("세이브 버튼시 표시할 패널")]
+    [SerializeField] private GameObject savePanel;
 
     [Header("씬 이름")]
     [SerializeField] private string lobbySceneName = SCENE_TYPE.MAIN.ToString();
@@ -132,7 +134,20 @@ public class ResultUI : MonoBehaviour
         LoadScene(lobbySceneName);
     }
 
-    private void HideAll()
+
+
+	public void OnSave()
+	{
+		if (savePanel == null)
+		{
+			Debug.LogWarning("[PauseMenuUI] savePanel 미연결 — 저장 패널 표시 불가.");
+			return;
+		}
+		if (clearPanel != null) clearPanel.SetActive(false); 
+		savePanel.SetActive(true);
+	}
+
+	private void HideAll()
     {
         if (gameOverPanel != null)
         {

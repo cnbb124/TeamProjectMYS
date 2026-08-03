@@ -1586,6 +1586,11 @@ public class Player : Unit
 
 		// 감소형이라 빼는 방향. 파츠에는 이 항목이 없음.
 		dodgeCoolTime = _baseDodgeCoolTime - LevelTotal(LEVEL_BONUS_TYPE.DODGE_COOLTIME_DECREASE);
+
+		// [진단] curHp > maxHp 추적용. 확인 끝나면 지울 것
+		Debug.Log($"[진단-재계산] lv={level} maxHp={maxHpRemaining} " +
+				  $"(기본 {_baseMaxHp} + 레벨 {LevelTotal(LEVEL_BONUS_TYPE.HP_MAX)} + 파츠 {PartsTotal(parts, STAT_TYPE.HP_MAX)}) " +
+				  $"curHp={curHpRemaining}\n호출 경로:\n{System.Environment.StackTrace}");
 	}
 
 	// 2레벨부터 현재 레벨까지 쌓인 그 항목의 합. 주기 보너스는 해당 레벨에서만 더함.

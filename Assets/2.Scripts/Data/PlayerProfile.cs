@@ -187,13 +187,6 @@ public static class PlayerProfile
 					  $"호출 경로:\n{System.Environment.StackTrace}");
 		}
 
-		// 파츠 목록을 갱신한 뒤에 계산해야 보너스가 맞음.
-		// 함선이 없는 씬에서도 같은 최대치가 나오게 밑값을 역산해 둠.
-		_baseMaxHp = player.maxHpRemaining - Mathf.RoundToInt(GetPartStatBonus(STAT_TYPE.HP_MAX));
-		_baseMaxShield = player.maxShieldCapacity - Mathf.RoundToInt(GetPartStatBonus(STAT_TYPE.SHIELD_MAX));
-		_baseMaxArmor = player.maxArmor - Mathf.RoundToInt(GetPartStatBonus(STAT_TYPE.ARMOR_MAX));
-		_baseCached = true;
-
 		missiles.Clear();
 		if (player.weaponSystem != null && player.weaponSystem.missileSlots != null)
 		{
@@ -255,6 +248,11 @@ public static class PlayerProfile
 		// 최대치는 저장하지 않고 레벨에서 다시 계산 — 파츠를 끼운 뒤에 불러야 파츠 몫까지 같이 얹힘.
 		player.RecalcStatsFromLevel();
 
+		// [진단] curHp > maxHp 추적용. 확인 끝나면 지울 것
+		Debug.Log($"[진단-복원2] 재계산 직후 lv={player.level} 파츠목록={parts.Count}개 " +
+				  $"maxHp={player.maxHpRemaining} curHp(프로필)={curHp} " +
+				  $"maxShield={player.maxShieldCapacity} maxArmor={player.maxArmor} maxBoost={player.maxBoostCapacity}");
+
 		if (player.weaponSystem != null && missiles.Count > 0 && itemDatabase != null)
 		{
 			player.weaponSystem.missileSlots = new List<MissileSlot>();
@@ -299,6 +297,13 @@ public static class PlayerProfile
 			player.curBoostRemaining = Mathf.Min(curBoost, player.maxBoostCapacity);
 			player.curFuelRemaining = Mathf.Min(curFuel, player.maxFuelCapacity);
 		}
+
+		// [진단] curHp > maxHp 추적용. 확인 끝나면 지울 것
+		Debug.Log($"[진단-복원3] ApplyTo 끝 lv={player.level} " +
+				  $"HP {player.curHpRemaining}/{player.maxHpRemaining} " +
+				  $"실드 {player.curShieldRemaining}/{player.maxShieldCapacity} " +
+				  $"아머 {player.curArmorRemaining}/{player.maxArmor} " +
+				  $"부스트 {player.curBoostRemaining}/{player.maxBoostCapacity}");
 	}
 
 	/// <summary>저장용 구조체에 옮겨 담음.</summary>
@@ -342,6 +347,7 @@ public static class PlayerProfile
 	private static int _baseMaxArmor;
 	private static int _baseExpToNext;
 	private static bool _baseCached;
+	private static LevelStatData _levelStatData;
 
 	/// <summary>기준 기체 프리팹에서 밑값 스탯을 읽어둠. GameStartData가 있으면 게임 시작 시 1회.</summary>
 	public static void CacheBaseStats(GameObject playerPrefab)
@@ -359,23 +365,60 @@ public static class PlayerProfile
 		_baseMaxShield = prefabPlayer.maxShieldCapacity;
 		_baseMaxArmor = prefabPlayer.maxArmor;
 		_baseExpToNext = prefabPlayer.levelStatData != null ? prefabPlayer.levelStatData.baseExpToNext : 0;
+		_levelStatData = prefabPlayer.levelStatData;
 		_baseCached = true;
 	}
 
-	/// <summary>기준 기체 + 장착 파츠 보너스. 함선이 있으면 함선 값이 더 정확하므로 그쪽을 우선할 것.</summary>
+	/// <summary>기준 기체 + 레벨 + 파츠. Player.RecalcStatsFromLevel과 같은 식.</summary>
 	public static int GetMaxHp()
 	{
-		return _baseMaxHp + Mathf.RoundToInt(GetPartStatBonus(STAT_TYPE.HP_MAX));
+		return _baseMaxHp
+			+ Mathf.RoundToInt(GetLevelStatBonus(LEVEL_BONUS_TYPE.HP_MAX) + GetPartStatBonus(STAT_TYPE.HP_MAX));
 	}
 
 	public static int GetMaxShield()
 	{
-		return _baseMaxShield + Mathf.RoundToInt(GetPartStatBonus(STAT_TYPE.SHIELD_MAX));
+		return _baseMaxShield
+			+ Mathf.RoundToInt(GetLevelStatBonus(LEVEL_BONUS_TYPE.SHIELD_MAX) + GetPartStatBonus(STAT_TYPE.SHIELD_MAX));
 	}
 
 	public static int GetMaxArmor()
 	{
-		return _baseMaxArmor + Mathf.RoundToInt(GetPartStatBonus(STAT_TYPE.ARMOR_MAX));
+		return _baseMaxArmor
+			+ Mathf.RoundToInt(GetLevelStatBonus(LEVEL_BONUS_TYPE.ARMOR_MAX) + GetPartStatBonus(STAT_TYPE.ARMOR_MAX));
+	}
+
+	/// <summary>2레벨부터 현재 level까지 쌓인 그 항목의 레벨 보너스 합.</summary>
+	public static float GetLevelStatBonus(LEVEL_BONUS_TYPE bonusType)
+	{
+		if (_levelStatData == null)
+		{
+			return 0f;
+		}
+
+		float total = 0f;
+		for (int lv = 2; lv <= level; lv++)
+		{
+			for (int i = 0; i < _levelStatData.perLevelBonuses.Count; i++)
+			{
+				LevelBonus b = _levelStatData.perLevelBonuses[i];
+				if (b.bonusType == bonusType)
+				{
+					total += b.value;
+				}
+			}
+
+			for (int i = 0; i < _levelStatData.periodicBonuses.Count; i++)
+			{
+				PeriodicBonus p = _levelStatData.periodicBonuses[i];
+				bool due = p.everyNLevels <= 1 || lv % p.everyNLevels == 0;
+				if (due && p.bonusType == bonusType)
+				{
+					total += p.value;
+				}
+			}
+		}
+		return total;
 	}
 
 	/// <summary>장착 파츠의 스탯 보너스 합계. 함선 없이 스탯을 보여줘야 하는 UI용.</summary>
