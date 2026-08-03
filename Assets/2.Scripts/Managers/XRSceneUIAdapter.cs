@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using UnityEngine.XR.Interaction.Toolkit.UI;
 
 /// <summary>
 /// Makes scene-owned screen-space UI visible to both eyes while XR is running.
@@ -13,6 +14,8 @@ using UnityEngine.UI;
 public sealed class XRSceneUIAdapter : MonoBehaviour
 {
     private const string CombatHudCanvasName = "HUD";
+    private const string StationSceneName = "BASE_STATION";
+    private const string StationPlayerButtonCanvasName = "PlayerButtonUI";
     private const float UiPlaneDistance = 1.5f;
     private const float ViewMargin = 0.9f;
     private const int RefreshFrameCount = 12;
@@ -22,6 +25,7 @@ public sealed class XRSceneUIAdapter : MonoBehaviour
     private static XRSceneUIAdapter _instance;
     private Coroutine _refreshCoroutine;
 
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
     private static void Create()
     {
         if (_instance != null)
@@ -115,6 +119,14 @@ public sealed class XRSceneUIAdapter : MonoBehaviour
             return;
         }
 
+        // Menu scenes are rendered through XRMainMenuRenderTextureAdapter.
+        // Adapting the same canvases here would make both adapters overwrite
+        // their render mode, camera and EventSystem input configuration.
+        if (UsesHeadLockedMenuPanel(activeScene))
+        {
+            return;
+        }
+
         Camera sceneCamera = FindBestSceneCamera(activeScene);
         if (sceneCamera == null)
         {
@@ -126,8 +138,6 @@ public sealed class XRSceneUIAdapter : MonoBehaviour
         {
             sceneCamera.cullingMask |= 1 << uiLayer;
         }
-
-        ConfigurePointerInput(sceneCamera);
 
         Canvas[] canvases = Resources.FindObjectsOfTypeAll<Canvas>();
         for (int i = 0; i < canvases.Length; i++)
@@ -148,6 +158,25 @@ public sealed class XRSceneUIAdapter : MonoBehaviour
             Debug.Log(
                 $"[XRSceneUIAdapter] {activeScene.name}: " +
                 $"{canvas.name} -> {sceneCamera.name}");
+        }
+
+        ConfigurePointerInput(sceneCamera);
+    }
+
+    private static bool UsesHeadLockedMenuPanel(Scene scene)
+    {
+        switch (scene.name)
+        {
+            case "MAIN":
+            case "LOGIN":
+            case "MAP_SELECT":
+            case "MULTIPLAYER":
+            case "BASE_HANGAR":
+            case "RESULT":
+            case "LOADING_SEQUENCE":
+                return true;
+            default:
+                return false;
         }
     }
 
@@ -239,6 +268,16 @@ public sealed class XRSceneUIAdapter : MonoBehaviour
         {
             raycaster.enabled = true;
         }
+
+        TrackedDeviceGraphicRaycaster trackedRaycaster =
+            canvas.GetComponent<TrackedDeviceGraphicRaycaster>();
+        if (trackedRaycaster == null)
+        {
+            trackedRaycaster = canvas.gameObject.AddComponent<
+                TrackedDeviceGraphicRaycaster>();
+        }
+
+        trackedRaycaster.enabled = true;
     }
 
     private static void ConfigurePointerInput(Camera sceneCamera)
@@ -255,18 +294,73 @@ public sealed class XRSceneUIAdapter : MonoBehaviour
                 continue;
             }
 
-            StandaloneInputModule module =
+            StandaloneInputModule legacyModule =
                 eventSystem.GetComponent<StandaloneInputModule>();
-            if (module == null)
+            if (legacyModule != null)
             {
-                continue;
+                legacyModule.enabled = false;
             }
 
-            // GraphicRaycaster and the Game View mirror both use normal screen
-            // coordinates in ScreenSpaceCamera mode. Remapping through the XR
-            // camera pixelRect offsets hit positions in single-eye views.
-            module.inputOverride = null;
+            XRUIInputModule xrModule =
+                eventSystem.GetComponent<XRUIInputModule>();
+            if (xrModule == null)
+            {
+                xrModule = eventSystem.gameObject.AddComponent<XRUIInputModule>();
+            }
+
+            xrModule.enableXRInput = true;
+            xrModule.enabled = true;
+
+            bool useStationLocalMouse =
+                sceneCamera.gameObject.scene.name == StationSceneName;
+            XRStationGameViewPointer stationPointer =
+                eventSystem.GetComponent<XRStationGameViewPointer>();
+            if (useStationLocalMouse)
+            {
+                if (stationPointer == null)
+                {
+                    stationPointer = eventSystem.gameObject.AddComponent<
+                        XRStationGameViewPointer>();
+                }
+
+                stationPointer.Configure(
+                    eventSystem,
+                    xrModule,
+                    sceneCamera,
+                    FindSceneCanvas(
+                        sceneCamera.gameObject.scene,
+                        StationPlayerButtonCanvasName));
+                stationPointer.enabled = true;
+            }
+            else
+            {
+                if (stationPointer != null)
+                {
+                    stationPointer.enabled = false;
+                }
+
+                xrModule.enableMouseInput = true;
+            }
         }
+    }
+
+    private static Canvas FindSceneCanvas(Scene scene, string canvasName)
+    {
+        Canvas[] canvases = Resources.FindObjectsOfTypeAll<Canvas>();
+        for (int i = 0; i < canvases.Length; i++)
+        {
+            Canvas canvas = canvases[i];
+            if (canvas != null &&
+                canvas.gameObject.scene == scene &&
+                canvas.name.Equals(
+                    canvasName,
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                return canvas;
+            }
+        }
+
+        return null;
     }
 
     private static float GetSafePlaneDistance(Camera sceneCamera)
@@ -276,5 +370,429 @@ public sealed class XRSceneUIAdapter : MonoBehaviour
             minimum,
             sceneCamera.farClipPlane - 0.05f);
         return Mathf.Clamp(UiPlaneDistance, minimum, maximum);
+    }
+}
+
+/// <summary>
+/// Uses the Unity Editor Game View-local mouse coordinate for the station's
+/// single/multiplayer panel. The normal XR mouse path can report desktop/editor
+/// coordinates, so it is disabled only while this panel is visible. Controller
+/// input remains owned by XRUIInputModule.
+/// </summary>
+[DisallowMultipleComponent]
+public sealed class XRStationGameViewPointer : MonoBehaviour
+{
+    private EventSystem _eventSystem;
+    private XRUIInputModule _xrInputModule;
+    private Camera _eventCamera;
+    private Canvas _targetCanvas;
+    private Selectable[] _selectables = Array.Empty<Selectable>();
+    private PointerEventData _pointerData;
+    private GameObject _hoverTarget;
+    private GameObject _pressTarget;
+    private GameObject _dragTarget;
+    private GameObject _lastDiagnosticTarget;
+    private Vector2 _gameViewMousePosition;
+    private Vector2 _previousPointerPosition;
+    private bool _hasGameViewCoordinate;
+    private bool _pointerInsideGameView;
+    private bool _dragging;
+    private bool _hasDiagnosticTarget;
+    private bool _loggedGameViewCoordinate;
+
+    public void Configure(
+        EventSystem eventSystem,
+        XRUIInputModule xrInputModule,
+        Camera eventCamera,
+        Canvas targetCanvas)
+    {
+        bool canvasChanged = _targetCanvas != targetCanvas;
+        _eventSystem = eventSystem;
+        _xrInputModule = xrInputModule;
+        _eventCamera = eventCamera;
+        _targetCanvas = targetCanvas;
+
+        if (canvasChanged)
+        {
+            ClearPointerState();
+            _selectables = _targetCanvas != null
+                ? _targetCanvas.GetComponentsInChildren<Selectable>(true)
+                : Array.Empty<Selectable>();
+            _hasDiagnosticTarget = false;
+        }
+
+        UpdateMouseInputOwnership();
+    }
+
+    private void OnGUI()
+    {
+        Event guiEvent = Event.current;
+        if (guiEvent == null || Screen.width <= 0 || Screen.height <= 0)
+        {
+            return;
+        }
+
+        Vector2 guiPosition = guiEvent.mousePosition;
+        _gameViewMousePosition = new Vector2(
+            guiPosition.x,
+            Screen.height - guiPosition.y);
+        _hasGameViewCoordinate = true;
+        _pointerInsideGameView =
+            _gameViewMousePosition.x >= 0f &&
+            _gameViewMousePosition.x <= Screen.width &&
+            _gameViewMousePosition.y >= 0f &&
+            _gameViewMousePosition.y <= Screen.height;
+
+        if (_pointerInsideGameView && !_loggedGameViewCoordinate)
+        {
+            _loggedGameViewCoordinate = true;
+            Debug.Log(
+                $"[XR Station Mouse Diagnostic] " +
+                $"local={_gameViewMousePosition:F1}, " +
+                $"Screen={Screen.width}x{Screen.height}");
+        }
+    }
+
+    private void Update()
+    {
+        bool panelVisible = IsTargetPanelVisible();
+        UpdateMouseInputOwnership(panelVisible);
+        if (!panelVisible || _eventSystem == null || _eventCamera == null)
+        {
+            ClearPointerState();
+            return;
+        }
+
+        if (!_hasGameViewCoordinate || !_pointerInsideGameView ||
+            Screen.width <= 0 || Screen.height <= 0)
+        {
+            ProcessPointer(null, new Vector2(-1f, -1f));
+            return;
+        }
+
+        Vector2 viewportPosition = new Vector2(
+            _gameViewMousePosition.x / Screen.width,
+            _gameViewMousePosition.y / Screen.height);
+        if (!TryFindSelectable(
+                viewportPosition,
+                out GameObject target,
+                out Vector2 canvasPosition))
+        {
+            target = null;
+            canvasPosition = new Vector2(-1f, -1f);
+        }
+
+        ProcessPointer(target, canvasPosition);
+    }
+
+    private bool TryFindSelectable(
+        Vector2 viewportPosition,
+        out GameObject target,
+        out Vector2 canvasPosition)
+    {
+        target = null;
+        canvasPosition = new Vector2(-1f, -1f);
+        if (_targetCanvas == null)
+        {
+            return false;
+        }
+
+        RectTransform canvasRect =
+            _targetCanvas.transform as RectTransform;
+        if (canvasRect == null)
+        {
+            return false;
+        }
+
+        // Recalculate the point from a mono viewport ray. This avoids the
+        // left-eye projection offset used by some XR camera helpers.
+        Ray pointerRay = _eventCamera.ViewportPointToRay(
+            new Vector3(viewportPosition.x, viewportPosition.y, 0f),
+            Camera.MonoOrStereoscopicEye.Mono);
+        Plane canvasPlane = new Plane(
+            canvasRect.forward,
+            canvasRect.position);
+        if (!canvasPlane.Raycast(pointerRay, out float distance))
+        {
+            return false;
+        }
+
+        Vector3 worldPoint = pointerRay.GetPoint(distance);
+        Vector3 localPoint3 = canvasRect.InverseTransformPoint(worldPoint);
+        Vector2 canvasLocalPosition =
+            new Vector2(localPoint3.x, localPoint3.y);
+        if (!canvasRect.rect.Contains(canvasLocalPosition))
+        {
+            return false;
+        }
+
+        canvasPosition = new Vector2(
+            canvasLocalPosition.x - canvasRect.rect.xMin,
+            canvasLocalPosition.y - canvasRect.rect.yMin);
+
+        Selectable bestSelectable = null;
+        int bestDepth = int.MinValue;
+        for (int i = 0; i < _selectables.Length; i++)
+        {
+            Selectable selectable = _selectables[i];
+            if (selectable == null ||
+                !selectable.isActiveAndEnabled ||
+                !selectable.IsInteractable())
+            {
+                continue;
+            }
+
+            RectTransform selectableRect =
+                selectable.transform as RectTransform;
+            if (selectableRect == null)
+            {
+                continue;
+            }
+
+            Vector3 selectableLocal =
+                selectableRect.InverseTransformPoint(worldPoint);
+            if (!selectableRect.rect.Contains(
+                    new Vector2(selectableLocal.x, selectableLocal.y)))
+            {
+                continue;
+            }
+
+            Graphic targetGraphic = selectable.targetGraphic;
+            int depth = targetGraphic != null
+                ? targetGraphic.depth
+                : selectable.transform.GetSiblingIndex();
+            if (bestSelectable == null || depth >= bestDepth)
+            {
+                bestSelectable = selectable;
+                bestDepth = depth;
+            }
+        }
+
+        if (bestSelectable == null)
+        {
+            return false;
+        }
+
+        target = bestSelectable.gameObject;
+        return true;
+    }
+
+    private void ProcessPointer(GameObject target, Vector2 pointerPosition)
+    {
+        EnsurePointerData(pointerPosition);
+        SetHoverTarget(target);
+
+        if (Input.GetMouseButtonDown(0) && target != null)
+        {
+            BeginPress(target);
+        }
+
+        if (Input.GetMouseButton(0) &&
+            _dragTarget != null &&
+            _pointerData.delta.sqrMagnitude > 0f)
+        {
+            if (!_dragging)
+            {
+                ExecuteEvents.Execute(
+                    _dragTarget,
+                    _pointerData,
+                    ExecuteEvents.beginDragHandler);
+                _dragging = true;
+                _pointerData.dragging = true;
+            }
+
+            ExecuteEvents.Execute(
+                _dragTarget,
+                _pointerData,
+                ExecuteEvents.dragHandler);
+        }
+
+        if (Input.GetMouseButtonUp(0))
+        {
+            EndPress(target);
+        }
+
+        LogTarget(pointerPosition, target);
+    }
+
+    private void EnsurePointerData(Vector2 pointerPosition)
+    {
+        if (_pointerData == null)
+        {
+            _pointerData = new PointerEventData(_eventSystem);
+            _previousPointerPosition = pointerPosition;
+        }
+
+        _pointerData.position = pointerPosition;
+        _pointerData.delta = pointerPosition - _previousPointerPosition;
+        _pointerData.button = PointerEventData.InputButton.Left;
+        _previousPointerPosition = pointerPosition;
+    }
+
+    private void SetHoverTarget(GameObject target)
+    {
+        if (_hoverTarget == target || _pointerData == null)
+        {
+            return;
+        }
+
+        if (_hoverTarget != null)
+        {
+            ExecuteEvents.Execute(
+                _hoverTarget,
+                _pointerData,
+                ExecuteEvents.pointerExitHandler);
+        }
+
+        _hoverTarget = target;
+        _pointerData.pointerEnter = target;
+        if (_hoverTarget != null)
+        {
+            ExecuteEvents.Execute(
+                _hoverTarget,
+                _pointerData,
+                ExecuteEvents.pointerEnterHandler);
+        }
+    }
+
+    private void BeginPress(GameObject target)
+    {
+        _pointerData.eligibleForClick = true;
+        _pointerData.dragging = false;
+        _pointerData.useDragThreshold = true;
+        _pointerData.pressPosition = _pointerData.position;
+
+        _pressTarget = ExecuteEvents.ExecuteHierarchy(
+            target,
+            _pointerData,
+            ExecuteEvents.pointerDownHandler);
+        if (_pressTarget == null)
+        {
+            _pressTarget = ExecuteEvents.GetEventHandler<IPointerClickHandler>(
+                target);
+        }
+
+        _pointerData.pointerPress = _pressTarget;
+        _pointerData.rawPointerPress = target;
+        _dragTarget = ExecuteEvents.GetEventHandler<IDragHandler>(target);
+        _pointerData.pointerDrag = _dragTarget;
+        _dragging = false;
+        if (_dragTarget != null)
+        {
+            ExecuteEvents.Execute(
+                _dragTarget,
+                _pointerData,
+                ExecuteEvents.initializePotentialDrag);
+        }
+    }
+
+    private void EndPress(GameObject target)
+    {
+        if (_pressTarget != null)
+        {
+            ExecuteEvents.Execute(
+                _pressTarget,
+                _pointerData,
+                ExecuteEvents.pointerUpHandler);
+
+            GameObject clickTarget = target != null
+                ? ExecuteEvents.GetEventHandler<IPointerClickHandler>(target)
+                : null;
+            if (_pointerData.eligibleForClick &&
+                clickTarget == _pressTarget)
+            {
+                ExecuteEvents.Execute(
+                    _pressTarget,
+                    _pointerData,
+                    ExecuteEvents.pointerClickHandler);
+            }
+        }
+
+        if (_dragging && _dragTarget != null)
+        {
+            ExecuteEvents.Execute(
+                _dragTarget,
+                _pointerData,
+                ExecuteEvents.endDragHandler);
+        }
+
+        _pressTarget = null;
+        _dragTarget = null;
+        _dragging = false;
+        if (_pointerData != null)
+        {
+            _pointerData.eligibleForClick = false;
+            _pointerData.dragging = false;
+            _pointerData.pointerPress = null;
+            _pointerData.rawPointerPress = null;
+            _pointerData.pointerDrag = null;
+        }
+    }
+
+    private bool IsTargetPanelVisible()
+    {
+        return _targetCanvas != null &&
+               _targetCanvas.gameObject.activeInHierarchy;
+    }
+
+    private void UpdateMouseInputOwnership()
+    {
+        UpdateMouseInputOwnership(IsTargetPanelVisible());
+    }
+
+    private void UpdateMouseInputOwnership(bool manualMouseActive)
+    {
+        if (_xrInputModule != null)
+        {
+            _xrInputModule.enableMouseInput = !manualMouseActive;
+        }
+    }
+
+    private void ClearPointerState()
+    {
+        if (_pointerData != null && _hoverTarget != null)
+        {
+            ExecuteEvents.Execute(
+                _hoverTarget,
+                _pointerData,
+                ExecuteEvents.pointerExitHandler);
+        }
+
+        if (_pointerData != null && _pressTarget != null)
+        {
+            ExecuteEvents.Execute(
+                _pressTarget,
+                _pointerData,
+                ExecuteEvents.pointerUpHandler);
+        }
+
+        _hoverTarget = null;
+        _pressTarget = null;
+        _dragTarget = null;
+        _dragging = false;
+        _pointerData = null;
+    }
+
+    private void LogTarget(Vector2 pointerPosition, GameObject target)
+    {
+        if (_hasDiagnosticTarget && _lastDiagnosticTarget == target)
+        {
+            return;
+        }
+
+        _hasDiagnosticTarget = true;
+        _lastDiagnosticTarget = target;
+        Debug.Log(
+            $"[XR Station Mouse Target] mapped={pointerPosition:F1}, " +
+            $"selectable={(target != null ? target.name : "<none>")}");
+    }
+
+    private void OnDisable()
+    {
+        ClearPointerState();
+        if (_xrInputModule != null)
+        {
+            _xrInputModule.enableMouseInput = true;
+        }
     }
 }

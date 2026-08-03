@@ -10,6 +10,16 @@ public class LobbyButtonHover : MonoBehaviour, IPointerEnterHandler, IPointerExi
 
     private Coroutine _coroutine;
 
+    private void Awake()
+    {
+        ResetVisualState();
+    }
+
+    private void OnDisable()
+    {
+        ResetVisualState();
+    }
+
     public void OnPointerEnter(PointerEventData eventData)
     {
         SetFill(1f);
@@ -18,6 +28,25 @@ public class LobbyButtonHover : MonoBehaviour, IPointerEnterHandler, IPointerExi
     public void OnPointerExit(PointerEventData eventData)
     {
         SetFill(0f);
+    }
+
+    public void ResetVisualState()
+    {
+        SetImmediateState(false);
+    }
+
+    public void SetImmediateState(bool highlighted)
+    {
+        if (_coroutine != null)
+        {
+            StopCoroutine(_coroutine);
+            _coroutine = null;
+        }
+
+        if (sliderFill != null)
+        {
+            sliderFill.fillAmount = highlighted ? 1f : 0f;
+        }
     }
 
     private void SetFill(float target)
@@ -35,5 +64,6 @@ public class LobbyButtonHover : MonoBehaviour, IPointerEnterHandler, IPointerExi
             yield return null;
         }
         sliderFill.fillAmount = target;
+        _coroutine = null;
     }
 }
