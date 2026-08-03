@@ -949,27 +949,71 @@ public class Player : Unit
 			return;
 		}
 
+		List<int> partIds = new List<int>();
 		UnitParts unitParts = GetComponent<UnitParts>();
-		if (unitParts == null)
+		if (unitParts != null)
+		{
+			foreach (PartSlotEntry slot in unitParts.partSlots)
+			{
+				if (slot.equippedPart != null)
+				{
+					partIds.Add((int)slot.equippedPart.id);
+				}
+			}
+		}
+
+		// 스킬 구성도 같이 보냄 — 복제본 슬롯을 채우는 경로가 PlayerProfile 하나뿐인데 그게 IsMine에서만 돌아서
+		// 남의 함선 복제본은 슬롯이 전부 비어 있음. 비어 있으면 SkillSystem.RpcUseSkill이 ID로 스킬을 못 찾아
+		// 남이 쓴 스킬 연출이 아예 안 나옴.
+		List<int> skillIds = new List<int>();
+		List<int> skillSlots = new List<int>();
+		if (skillSystem != null)
+		{
+			SavedSkill[] savedSkills = skillSystem.CollectSaveData();
+			for (int i = 0; i < savedSkills.Length; i++)
+			{
+				skillIds.Add((int)savedSkills[i].skillId);
+				skillSlots.Add(savedSkills[i].slotIndex);
+			}
+		}
+
+		_photonView.RPC(nameof(RpcApplyLoadout), RpcTarget.OthersBuffered,
+			partIds.ToArray(), skillIds.ToArray(), skillSlots.ToArray());
+	}
+
+	// 남 클라 수신 — 보내온 파츠/스킬 구성으로 복제본을 같은 상태로 맞춤.
+	// 버퍼드라 나중에 들어온 사람도 이미 떠 있는 함선의 구성을 받아감.
+	[PunRPC]
+	private void RpcApplyLoadout(int[] partIds, int[] skillIds, int[] skillSlots)
+	{
+		ApplyRemoteParts(partIds);
+		ApplyRemoteSkills(skillIds, skillSlots);
+	}
+
+	// 복제본 슬롯을 쏜 사람과 같은 스킬로 채움. SkillSystem.RpcUseSkill이 SKILL_ID로 슬롯을 뒤져 찾기 때문에
+	// 여기서 안 채우면 남의 스킬 연출이 조용히 버려짐. 쿨다운·발동 판정은 쓴 쪽 권위라 여긴 연출용 인스턴스면 됨.
+	private void ApplyRemoteSkills(int[] skillIds, int[] skillSlots)
+	{
+		if (skillSystem == null || skillIds == null || skillSlots == null)
 		{
 			return;
 		}
 
-		List<int> partIds = new List<int>();
-		foreach (PartSlotEntry slot in unitParts.partSlots)
+		int count = Mathf.Min(skillIds.Length, skillSlots.Length);
+		SavedSkill[] skills = new SavedSkill[count];
+		for (int i = 0; i < count; i++)
 		{
-			if (slot.equippedPart != null)
+			skills[i] = new SavedSkill
 			{
-				partIds.Add((int)slot.equippedPart.id);
-			}
+				skillId = (SKILL_ID)skillIds[i],
+				slotIndex = skillSlots[i],
+			};
 		}
-		_photonView.RPC(nameof(RpcApplyLoadout), RpcTarget.OthersBuffered, partIds.ToArray());
+		skillSystem.LoadSaveData(skills);
 	}
 
-	// 남 클라 수신 — 보내온 파츠 ID로 복제본을 같은 구성으로 맞춤.
-	// 버퍼드라 나중에 들어온 사람도 이미 떠 있는 함선의 구성을 받아감.
-	[PunRPC]
-	private void RpcApplyLoadout(int[] partIds)
+	// 파츠 ID로 복제본의 겉모습과 발사 위치를 맞춤.
+	private void ApplyRemoteParts(int[] partIds)
 	{
 		if (partIds == null || partIds.Length == 0)
 		{

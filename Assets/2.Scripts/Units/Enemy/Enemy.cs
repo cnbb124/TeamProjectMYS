@@ -122,7 +122,39 @@ public class Enemy : Unit
 	protected override void Awake()
 	{
 		base.Awake();
-		
+		CacheSubUnits();
+	}
+
+	// 자식 서브유닛(보스·스테이션에 달린 터렛 등) 캐시. 유닛 계층은 런타임에 안 바뀌므로 Awake에서 한 번만 모음.
+	// 자식이 없으면 null로 둬서 ReviveSubUnits가 바로 빠져나가게 함 — 자식 없는 적이 대부분이라 그게 기본 경로임.
+	private void CacheSubUnits()
+	{
+		Unit[] found = GetComponentsInChildren<Unit>(true);
+
+		int count = 0;
+		for (int i = 0; i < found.Length; i++)
+		{
+			if (found[i] != this)
+			{
+				count++;
+			}
+		}
+		if (count == 0)
+		{
+			_subUnits = null;
+			return;
+		}
+
+		_subUnits = new Unit[count];
+		int index = 0;
+		for (int i = 0; i < found.Length; i++)
+		{
+			if (found[i] != this)
+			{
+				_subUnits[index] = found[i];
+				index++;
+			}
+		}
 	}
 
 	// OnEnable이 Start보다 항상 먼저 호출되므로, 등록은 여기서 — 죽어서 Unregister된 뒤
@@ -133,11 +165,33 @@ public class Enemy : Unit
 	{
 		base.OnEnable();
 		aiState = AI_STATE.STANDBY;
+		ReviveSubUnits();
 		// 캐시된 것만 씀 — 여기서 .Instance를 새로 부르면 매니저 Awake보다 먼저 instance를 선점해
 		// 매니저 초기화를 통째로 스킵시킬 수 있음(project_singleton_pattern 규칙).
 		// 최초 1회는 아직 null이라 그냥 넘어가고, 바로 뒤의 Start가 등록을 마무리함.
 		_unitManager?.RegisterEnemy(this);
 		
+	}
+
+	// 서브유닛(터렛 등)은 죽을 때 파괴가 아니라 비활성으로 남으므로, 구조물이 풀에서 다시 나올 때 되살려야 함.
+	// 안 그러면 재사용된 보스가 터렛이 꺼진 채로 등장함. 대상은 Awake에서 모아둔 자식 Unit들 —
+	// VFX/스피커처럼 런타임에 붙는 자식은 Unit이 아니라 애초에 안 들어옴.
+	private void ReviveSubUnits()
+	{
+		if (_subUnits == null)
+		{
+			return;
+		}
+
+		for (int i = 0; i < _subUnits.Length; i++)
+		{
+			// 파괴된 자식은 건너뜀 — 유니티 가짜 null로 잡힘.
+			if (_subUnits[i] == null || _subUnits[i].gameObject.activeSelf)
+			{
+				continue;
+			}
+			_subUnits[i].gameObject.SetActive(true);
+		}
 	}
 
 	protected override void Start()
@@ -365,6 +419,35 @@ public class Enemy : Unit
 		_unitManager?.UnregisterEnemy(this);
 	}
 
+	/// <summary>
+	/// 이 적이 '네트워크로 스폰된 더 큰 오브젝트의 자식'인지. 보스·스테이션에 달린 터렛이 여기 해당함.
+	/// PUN은 스폰 단위를 InstantiationId(루트 뷰의 ID)로 식별하고 계층의 모든 자식 뷰에 같은 값을 박는다 —
+	/// 그래서 자기 ViewID와 InstantiationId가 다르면 자식이라는 뜻.
+	/// InstantiationId가 0이면 스폰된 게 아니라 씬에 배치된 것이라 루트로 취급함(PUN도 그때는 ViewID로 지움).
+	/// </summary>
+	private bool IsNetworkSubUnit
+	{
+		get
+		{
+			if (_photonView == null)
+			{
+				return false;
+			}
+			return _photonView.InstantiationId != 0 && _photonView.ViewID != _photonView.InstantiationId;
+		}
+	}
+
+	// 전원이 자기 로컬에서 이 서브유닛을 끔. 파괴가 아니라 비활성이라 구조물 루트는 그대로 살아있음.
+	// 풀 재사용 시 되살리는 건 ReviveSubUnits()가 담당.
+	[PunRPC]
+	public void RpcDisableSubUnit()
+	{
+		gameObject.SetActive(false);
+	}
+
+	// 자식 서브유닛 목록. Awake에서 한 번 모으고 이후 안 바뀜. 자식이 없으면 null.
+	private Unit[] _subUnits;
+
 	// 사망 후 풀 반납까지 남은 시간. Die()에서 세팅, OnDying()에서 카운트다운.
 	// ※ Die()를 오버라이드하는 서브클래스는 반드시 base.Die()를 호출할 것 — 그래야 이 반납 타이머가 세팅됨.
 	private float _deathReturnTimer;
@@ -458,7 +541,18 @@ public class Enemy : Unit
 			{
 				if (_photonView.IsMine)
 				{
-					PhotonNetwork.Destroy(gameObject);
+					// 구조물의 서브유닛(보스·스테이션에 달린 터렛 등)은 PhotonNetwork.Destroy를 쓰면 안 됨 —
+					// PUN은 스폰된 오브젝트를 InstantiationId(=루트 뷰 ID)로 식별하는데 자식 뷰도 그 값을 그대로 갖고 있어서,
+					// 자식을 지우라고 보내면 남 클라에서 구조물 루트가 통째로 사라짐(멀쩡한 보스가 게스트 화면에서 증발).
+					// 그래서 서브유닛은 파괴 대신 전원이 자기 로컬에서 끄게 함. 실제 풀 반납은 루트가 반납될 때 같이 됨.
+					if (IsNetworkSubUnit)
+					{
+						_photonView.RPC(nameof(RpcDisableSubUnit), RpcTarget.AllBuffered);
+					}
+					else
+					{
+						PhotonNetwork.Destroy(gameObject);
+					}
 				}
 			}
 			else

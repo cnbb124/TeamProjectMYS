@@ -34,9 +34,11 @@ public class EnemyBoss : EnemyShip
     [Tooltip("패턴 하나 재생이 끝난 뒤 다음 패턴까지 대기 시간(초)")]
     [SerializeField] private float _patternCooldown = 1.5f;
 
-    [Tooltip("탄막 발사 기준 위치(총구). 비우면 보스 본체 위치에서 발사")]
-    [SerializeField] private Transform _firePoint;
-    [SerializeField] private Transform[] _firePoints;
+
+	[Tooltip("레거시, points없을때 하나 사용하던곳")]
+	[SerializeField] private Transform _firePoint;
+	[Tooltip("탄막 발사 기준 위치(총구). points가 없을시point 사용 보스 본체 위치에서 발사")]
+	[SerializeField] private Transform[] _firePoints;
 
     [Tooltip("탄막 총알의 스탯(데미지/사거리/피격VFX/사운드) 데이터. 발사 시 총알에 주입됨.\n" +
              "속도는 이 데이터 대신 패턴 포인트별 speed로 덮어씀. 반드시 지정할 것(비우면 데미지/사거리 0).")]
@@ -48,6 +50,9 @@ public class EnemyBoss : EnemyShip
     // 패턴 코루틴이 재생 중인지 — 중복 재생 방지.
     private bool _isFiringPattern;
 
+    // 재생 중인 패턴 코루틴. 남 클라에서 다음 패턴이 도착했을 때 이전 것을 끊으려고 들고 있음.
+    private Coroutine _patternRoutine;
+
     /// <summary>현재 HP 비율(0~1). 페이즈 판정용.</summary>
     public float HpRatio => maxHpRemaining > 0 ? (float)curHpRemaining / maxHpRemaining : 0f;
     public bool IsFiringPattern => _isFiringPattern;
@@ -57,6 +62,7 @@ public class EnemyBoss : EnemyShip
     {
         base.OnEnable();             // Enemy.OnEnable: RegisterEnemy + aiState 리셋
         _isFiringPattern = false;
+        _patternRoutine = null;      // 이전 생애의 코루틴은 비활성화로 이미 끊겼음
         SetPhase(new BossPhase1(this)); // 항상 1페이즈부터 시작
     }
 
@@ -106,13 +112,12 @@ public class EnemyBoss : EnemyShip
 
     // 남 클라 수신 — Master가 고른 패턴을 그대로 로컬 재생(연출). 데미지 권위는 FireOneBullet에서 IsMine으로 갈림.
     // 인덱스만 받으므로 풀 조회와 범위 검사는 여기서 함(보낸 쪽과 배열 길이가 다를 수 있음).
+    // 재생중이어도 막지 않음 — 남 클라는 RPC 지연만큼 늦게 시작해 늘 Master보다 늦게 끝나므로,
+    // 여기서 막으면 다음 패턴이 도착할 때 아직 재생중이라 그 패턴이 통째로 유실됨(Master엔 탄이 있는데 남 화면엔 없음).
+    // Master가 보낸 게 정답이라 이전 것을 끊고 새로 재생함(BeginPattern이 처리).
     [PunRPC]
     private void RpcPlayPattern(int phase, int index)
     {
-        if (_isFiringPattern)
-        {
-            return;
-        }
         BulletPatternData[] pool = GetPhasePool(phase);
         if (pool == null || index < 0 || index >= pool.Length)
         {
@@ -128,7 +133,12 @@ public class EnemyBoss : EnemyShip
         {
             return;
         }
-        StartCoroutine(PlayPatternRoutine(pattern));
+        // 이전 패턴이 아직 돌고 있으면 끊고 새로 시작 — 겹쳐 돌면 _isFiringPattern을 서로 뒤엎어 Master 게이트가 망가짐.
+        if (_patternRoutine != null)
+        {
+            StopCoroutine(_patternRoutine);
+        }
+        _patternRoutine = StartCoroutine(PlayPatternRoutine(pattern));
     }
 
     // 페이즈 번호(1~4) → 해당 패턴 풀. RPC로 넘어온 인덱스를 각 클라가 같은 풀에서 찾게 함.
@@ -163,13 +173,58 @@ public class EnemyBoss : EnemyShip
             PlayWaveShootSound(wave);
             foreach (PatternPoint point in wave.points)
             {
-                FireOneBullet(point);
+                FirePatternPoint(point);
             }
         }
 
         // 다음 패턴까지 쿨다운.
         yield return GameManager.WaitGameplaySeconds(_patternCooldown);
         _isFiringPattern = false;
+        _patternRoutine = null;
+    }
+
+    // 발사음은 총구마다 웨이브당 1회 — 한 웨이브가 총구 하나에서 여러 발을 뿌리므로 탄알마다 내면 소리가 겹침.
+    // 위치는 실제로 탄이 나가는 총구 기준이라 3D 사운드가 총구 쪽에서 들림.
+    // 소리 종류는 쏘는 총알 데이터(_bulletData.shootSoundType)가 정함 — WeaponSystem 총구 발사와 같은 컨벤션.
+    // 탄이 안 나가는 빈 웨이브는 소리도 안 냄.
+    private void PlayWaveShootSound(PatternWave wave)
+    {
+        if (_sound == null || _bulletData == null)
+        {
+            return;
+        }
+        if (wave.points == null || wave.points.Count == 0)
+        {
+            return;
+        }
+
+        if (_firePoints != null && _firePoints.Length > 0)
+        {
+            for (int i = 0; i < _firePoints.Length; ++i)
+            {
+                if (_firePoints[i] == null)
+                {
+                    continue;
+                }
+                _sound.PlaySFX3DAtUnit(_bulletData.shootSoundType, transform, _firePoints[i]);
+            }
+            return;
+        }
+
+        Transform soundPos = _firePoint != null ? _firePoint : transform;
+        _sound.PlaySFX3DAtUnit(_bulletData.shootSoundType, transform, soundPos);
+    }
+
+    // 패턴 포인트 하나를 어느 총구에서 쏠지 가름.
+    // _firePoints(복수)가 채워져 있으면 총구 전부에서 각 총구가 바라보는 방향으로, 비어 있으면 기존 단일 총구로 감.
+    private void FirePatternPoint(PatternPoint point)
+    {
+        if (_firePoints != null && _firePoints.Length > 0)
+        {
+            FireBulletsAllFirePos(point);
+            return;
+        }
+        FireOneBullet(point);
     }
 
     // PatternPoint 하나를 실제 발사. 총알 종류(풀)는 _bulletData.curProjectilePoolType이 결정(WeaponSystem과 동일 컨벤션).
@@ -209,7 +264,7 @@ public class EnemyBoss : EnemyShip
         {
             return;
         }
-        if (_firePoints.Length <= 0)
+        if (_firePoints == null || _firePoints.Length <= 0)
         {
             return;
         }

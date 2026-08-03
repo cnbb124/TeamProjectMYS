@@ -36,7 +36,8 @@ public partial class ProjectHubWindow
 		("기본 장착(레거시)", "DefaultLoadout"),
 		("자원", "ResourceData"),
 		("맵 리스트","MapListData"),
-		("적 웨이브", "WaveData")
+		("적 웨이브", "WaveData"),
+		("탄막 패턴","BulletPatternData")
 	};
 
 	private int _dataGroupIndex;
