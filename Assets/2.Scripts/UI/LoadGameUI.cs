@@ -58,18 +58,21 @@ public class LoadGameUI : MonoBehaviour
         RefreshSlots();
     }
 
-    /// <summary>서버에서 슬롯 목록을 받아 슬롯 UI를 다시 그림.</summary>
+    /// <summary>슬롯 목록을 다시 그림. 로컬 세이브를 먼저 깔고 서버 목록을 그 위에 덮음.</summary>
+    // 서버만 보면 비로그인·서버다운일 때 목록이 통째로 비어, 로컬에 세이브가 있어도 못 불러옴.
+    // 저장은 항상 로컬에 되므로 로컬을 기본으로 깔고, 서버가 응답하면 그쪽을 우선으로 씀.
     public void RefreshSlots()
     {
         if (slotPrefab == null || slotParent == null) return;
 
         if (ServerApi.Instance == null || !ServerApi.Instance.IsLoggedIn)
         {
-            SetStatus("로그인이 필요합니다.");
-            BuildSlots(null);   // 로그인 안 됐어도 빈 슬롯은 보여줌
+            BuildSlots(null);   // 로컬만으로 그림
+            SetStatus(HasAnyLocalSave() ? "" : "저장된 게임이 없습니다.");
             return;
         }
 
+        BuildSlots(null);       // 서버 응답 전에도 로컬 기준으로 먼저 보여줌
         SetStatus("불러오는 중...");
         ServerApi.Instance.StartCoroutine(ServerApi.Instance.ListSavesCo(
             summaries =>
@@ -79,9 +82,25 @@ public class LoadGameUI : MonoBehaviour
             },
             err =>
             {
-                SetStatus($"목록을 불러오지 못했습니다: {err}");
-                BuildSlots(null);   // 실패해도 빈 슬롯은 보여줌
+                SetStatus($"서버 목록을 불러오지 못했습니다(로컬만 표시): {err}");
+                BuildSlots(null);
             }));
+    }
+
+    private bool HasAnyLocalSave()
+    {
+        if (GameManager.Instance == null)
+        {
+            return false;
+        }
+        for (int i = 0; i < slotCount; i++)
+        {
+            if (GameManager.Instance.HasSave(i))
+            {
+                return true;
+            }
+        }
+        return false;
     }
 
     // 슬롯 0~(slotCount-1) 생성. summaries에서 슬롯번호가 일치하는 것만 데이터로, 나머지는 빈 슬롯.
@@ -104,13 +123,21 @@ public class LoadGameUI : MonoBehaviour
         }
     }
 
-    // 해당 슬롯 번호의 저장 요약 찾기 (없으면 null = 빈 슬롯)
+    // 해당 슬롯 번호의 저장 요약 찾기. 서버 것이 있으면 그걸, 없으면 로컬 파일에서 읽음.
+    // 둘 다 없으면 null = 빈 슬롯.
     private ServerApi.SaveSummary FindSummary(ServerApi.SaveSummary[] summaries, int slot)
     {
-        if (summaries == null) return null;
-        foreach (ServerApi.SaveSummary s in summaries)
-            if (s != null && s.slot == slot) return s;
-        return null;
+        if (summaries != null)
+        {
+            foreach (ServerApi.SaveSummary s in summaries)
+            {
+                if (s != null && s.slot == slot)
+                {
+                    return s;
+                }
+            }
+        }
+        return GameManager.Instance != null ? GameManager.Instance.GetLocalSaveSummary(slot) : null;
     }
 
     private void OnSlotLoadClicked(int slot)

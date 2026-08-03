@@ -7,7 +7,10 @@ public class LobbyUIManager : MonoBehaviour
     // 멀티 대기실 테스트용 씬 (WaitingRoomUI가 배치된 씬)
     private const string WaitingRoomSceneName = "TestMultiplayerScene_Wooseok";
 
-    private void Awake()
+    [SerializeField] private GameObject loadPanel;
+	[SerializeField] private GameObject settingPanel;
+
+	private void Awake()
     {
         if (Instance != null && Instance != this) { Destroy(gameObject); return; }
         Instance = this;
@@ -29,7 +32,7 @@ public class LobbyUIManager : MonoBehaviour
         GameManager.Instance.NewGame(SCENE_TYPE.BASE_STATION);
     }
 
-	public void OnClickLoadGame()
+	public void OnClickContinueGame()
 	{
 		if (!GameManager.Instance.HasSave(GameManager.AutoSaveSlot))
 		{
@@ -39,12 +42,27 @@ public class LobbyUIManager : MonoBehaviour
 		
 		GameManager.Instance.LoadGameWithLoading(GameManager.AutoSaveSlot, SCENE_TYPE.BASE_STATION);
 	}
+	public void OnClickLoadGame()
+	{
+		if (loadPanel == null)
+		{
+			Debug.LogWarning("[LobbyUIManager] loadPanel 미연결 — 불러오기 창 표시 불가.");
+			return;
+		}
+		loadPanel.SetActive(true);
+	}
 
 
 	public void OnClickSettings()
     {
-        GameManager.Instance.LoadScene("SettingsScene");
-    }
+		if (settingPanel == null)
+		{
+			Debug.LogWarning("[LobbyUIManager] settingPanel 미연결 — 불러오기 창 표시 불가.");
+			return;
+		}
+		settingPanel.SetActive(true);
+		//GameManager.Instance.LoadScene("SettingsScene");
+	}
 
     public void OnClickQuitGame()
     {

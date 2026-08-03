@@ -709,7 +709,7 @@ public abstract class Unit : MonoBehaviour, IDamageable, IPunObservable
 				//PlayAnim(ANIM_TYPE.DODGE_N);키입력따라 좌우 혹은 랜덤방향(키입력없을때)
 				_dodgeTimer = dodgeDuration;
 				IsInvincible = true;
-				_dodgeCooldownTimer = dodgeCoolTime;
+				_dodgeCooldownTimer = Mathf.Max(0f, dodgeCoolTime);
 				UpdateShieldHitboxState();
 				break;
 

@@ -218,6 +218,35 @@ public class Player : Unit
 		_rb.freezeRotation = true;
 		quickSlot = GetComponent<QuickSlot>();
 		//skillSystem = GetComponent<SkillSystem>();
+		CacheLevelBaseStats();
+	}
+
+	// 레벨 보너스가 건드리는 스탯의 프리팹 값. Awake 시점이라 레벨·파츠 보너스가 아직 안 붙은 값임.
+	private int _baseMaxHp;
+	private int _baseMaxShield;
+	private int _baseMaxArmor;
+	private int _baseDefense;
+	private float _baseMoveSpeedBase;
+	private float _baseMaxSpeed;
+	private float _baseBoostSpeed;
+	private float _baseMaxBoost;
+	private float _baseCriChance;
+	private float _baseCriDamageMult;
+	private float _baseDodgeCoolTime;
+
+	private void CacheLevelBaseStats()
+	{
+		_baseMaxHp = maxHpRemaining;
+		_baseMaxShield = maxShieldCapacity;
+		_baseMaxArmor = maxArmor;
+		_baseDefense = defense;
+		_baseMoveSpeedBase = baseMoveSpeed;
+		_baseMaxSpeed = maxSpeed;
+		_baseBoostSpeed = boostSpeed;
+		_baseMaxBoost = maxBoostCapacity;
+		_baseCriChance = criChance;
+		_baseCriDamageMult = criDamageMultiplier;
+		_baseDodgeCoolTime = dodgeCoolTime;
 	}
 	// Start is called before the first frame update
 	protected override void Start()
@@ -1494,30 +1523,139 @@ public class Player : Unit
 			// 다음 레벨 필요 경험치 증가
 			expToNextLevel += levelStatData.expToNextIncrease;
 
-			// 매 레벨 적용되는 보너스
+			// 슬롯 증가만 여기서 1회 처리 — 값이 아니라 개수라 재계산으로 못 다룸.
 			for (int i = 0; i < levelStatData.perLevelBonuses.Count; i++)
 			{
 				LevelBonus b = levelStatData.perLevelBonuses[i];
-				ApplyLevelBonus(b.bonusType, b.value);
+				if (!IsStatBonus(b.bonusType))
+				{
+					ApplyLevelBonus(b.bonusType, b.value);
+				}
 			}
 
-			// N레벨마다만 적용되는 보너스(미사일 슬롯 등)
 			for (int i = 0; i < levelStatData.periodicBonuses.Count; i++)
 			{
 				PeriodicBonus p = levelStatData.periodicBonuses[i];
 				bool due = p.everyNLevels <= 1 || level % p.everyNLevels == 0;
-				if (due)
+				if (due && !IsStatBonus(p.bonusType))
 				{
 					ApplyLevelBonus(p.bonusType, p.value);
 				}
 			}
 		}
 
+		// 값 스탯은 올라간 레벨 기준으로 통째로 다시 계산 — 복원 경로와 같은 식임.
+		RecalcStatsFromLevel();
+
 		// HP/실드/아머/부스트 + 파츠 HP까지 최대치로 회복(파츠 스탯 페널티도 함께 해제됨).
 		// 스탯 증가를 반영해야 하므로 보너스 적용 뒤에 호출.
 		RefillToMax();
 
 		// (레벨업 연출/HUD 갱신이 필요하면 이벤트 훅을 여기서 발행)
+	}
+
+	/// <summary>현재 level 기준으로 스탯을 다시 계산해 넣음. 프리팹 기본값 + 레벨 보너스 + 파츠 순.</summary>
+	// 최대치는 저장하지 않고 레벨과 LevelStatData로만 정함 — 세이브를 덮어써도 항상 같은 값이 나옴.
+	public void RecalcStatsFromLevel()
+	{
+		UnitParts parts = GetComponent<UnitParts>();
+
+		// 중간 단계 없이 최종값을 바로 대입함 — 잠깐이라도 최대치가 내려가면
+		// UnitParts.ClampCurrentToMax가 실드·아머·부스트 현재값을 그 값으로 깎아버림.
+		maxHpRemaining = _baseMaxHp
+			+ Mathf.RoundToInt(LevelTotal(LEVEL_BONUS_TYPE.HP_MAX) + PartsTotal(parts, STAT_TYPE.HP_MAX));
+		maxShieldCapacity = _baseMaxShield
+			+ Mathf.RoundToInt(LevelTotal(LEVEL_BONUS_TYPE.SHIELD_MAX) + PartsTotal(parts, STAT_TYPE.SHIELD_MAX));
+		maxArmor = _baseMaxArmor
+			+ Mathf.RoundToInt(LevelTotal(LEVEL_BONUS_TYPE.ARMOR_MAX) + PartsTotal(parts, STAT_TYPE.ARMOR_MAX));
+		defense = _baseDefense
+			+ Mathf.RoundToInt(LevelTotal(LEVEL_BONUS_TYPE.ARMOR_DEF) + PartsTotal(parts, STAT_TYPE.ARMOR_DEF));
+
+		baseMoveSpeed = _baseMoveSpeedBase
+			+ LevelTotal(LEVEL_BONUS_TYPE.MOVE_SPEED_BASE) + PartsTotal(parts, STAT_TYPE.MOVE_SPEED_BASE);
+		maxSpeed = _baseMaxSpeed
+			+ LevelTotal(LEVEL_BONUS_TYPE.MOVE_SPEED_MAX) + PartsTotal(parts, STAT_TYPE.MOVE_SPEED_MAX);
+		boostSpeed = _baseBoostSpeed
+			+ LevelTotal(LEVEL_BONUS_TYPE.MOVE_SPEED_BOOST) + PartsTotal(parts, STAT_TYPE.MOVE_SPEED_BOOST);
+		maxBoostCapacity = _baseMaxBoost
+			+ LevelTotal(LEVEL_BONUS_TYPE.BOOST_MAX) + PartsTotal(parts, STAT_TYPE.BOOST_MAX);
+		criChance = _baseCriChance
+			+ LevelTotal(LEVEL_BONUS_TYPE.CRI_RATE) + PartsTotal(parts, STAT_TYPE.CRI_RATE);
+		criDamageMultiplier = _baseCriDamageMult
+			+ LevelTotal(LEVEL_BONUS_TYPE.CRI_DMG_MULT) + PartsTotal(parts, STAT_TYPE.CRI_DMG_MULT);
+
+		// 감소형이라 빼는 방향. 파츠에는 이 항목이 없음.
+		dodgeCoolTime = _baseDodgeCoolTime - LevelTotal(LEVEL_BONUS_TYPE.DODGE_COOLTIME_DECREASE);
+	}
+
+	// 2레벨부터 현재 레벨까지 쌓인 그 항목의 합. 주기 보너스는 해당 레벨에서만 더함.
+	private float LevelTotal(LEVEL_BONUS_TYPE bonusType)
+	{
+		if (levelStatData == null)
+		{
+			return 0f;
+		}
+
+		float total = 0f;
+		for (int lv = 2; lv <= level; lv++)
+		{
+			for (int i = 0; i < levelStatData.perLevelBonuses.Count; i++)
+			{
+				LevelBonus b = levelStatData.perLevelBonuses[i];
+				if (b.bonusType == bonusType)
+				{
+					total += b.value;
+				}
+			}
+
+			for (int i = 0; i < levelStatData.periodicBonuses.Count; i++)
+			{
+				PeriodicBonus p = levelStatData.periodicBonuses[i];
+				bool due = p.everyNLevels <= 1 || lv % p.everyNLevels == 0;
+				if (due && p.bonusType == bonusType)
+				{
+					total += p.value;
+				}
+			}
+		}
+		return total;
+	}
+
+	// 파츠가 지금 그 스탯에 넣어둔 합. 파츠 HP가 깎여 절반만 들어간 상태도 그대로 반영됨.
+	private static float PartsTotal(UnitParts parts, STAT_TYPE statType)
+	{
+		if (parts == null || parts.partSlots == null)
+		{
+			return 0f;
+		}
+
+		float total = 0f;
+		foreach (PartSlotEntry slot in parts.partSlots)
+		{
+			if (slot == null || slot.equippedPart == null || slot.appliedStatValues == null)
+			{
+				continue;
+			}
+
+			List<PartStatBonus> bonuses = slot.equippedPart.statBonuses;
+			int count = Mathf.Min(bonuses.Count, slot.appliedStatValues.Length);
+			for (int i = 0; i < count; i++)
+			{
+				if (bonuses[i].statType == statType)
+				{
+					total += slot.appliedStatValues[i];
+				}
+			}
+		}
+		return total;
+	}
+
+	// 리셋 후 다시 계산할 수 있는 스탯인지. 슬롯 증가는 값이 아니라 '개수'라 재계산 대상이 아님
+	// (미사일 슬롯은 세이브의 슬롯 목록이 정함).
+	private static bool IsStatBonus(LEVEL_BONUS_TYPE bonusType)
+	{
+		return bonusType != LEVEL_BONUS_TYPE.MISSILE_SLOTS
+			&& bonusType != LEVEL_BONUS_TYPE.INVENTORY_SLOTS;
 	}
 
 	// 레벨업 보너스 1건 적용. 새 LEVEL_BONUS_TYPE을 추가하면 여기에도 case를 추가할 것.
@@ -1560,8 +1698,8 @@ public class Player : Unit
 				// 인벤토리 슬롯 상한 개념이 아직 없음 — 생기면 여기서 InventoryManager에 연결.
 				break;
 			case LEVEL_BONUS_TYPE.DODGE_COOLTIME_DECREASE:
-				// 감소값이라 양수를 넣으면 쿨이 줄어듦. 0 미만으로는 안 내려가게 클램프.
-				dodgeCoolTime = Mathf.Max(0f, dodgeCoolTime - v);
+				// 감소값이라 양수를 넣으면 쿨이 줄어듦. 음수 방지는 실제로 쓰는 쪽에서 함.
+				dodgeCoolTime -= v;
 				break;
 			case LEVEL_BONUS_TYPE.MISSILE_SLOTS:
 				// 슬롯 수만큼 빈 슬롯 추가 — 실제 미사일은 인벤토리/상점에서 장착해 채움.

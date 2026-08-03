@@ -264,8 +264,15 @@ public class GameManager : MonoBehaviourPunCallbacks
     // =====================================================================
     // 저장 경로 / 재시작 상태
     // =====================================================================
-    private string SavePath(int slot) =>
-        Path.Combine(Application.persistentDataPath, $"save{slot}.json");
+    // 로컬 세이브 경로. 계정별로 파일을 가름 —
+    // 안 가르면 이 PC에 남은 남의 세이브가 새 계정 슬롯 목록에 그대로 뜨고, 누르면 그게 불러와짐.
+    // 비로그인은 게스트 칸을 따로 씀. 옛 이름(save{slot}.json)은 이제 어느 경로로도 안 읽힘.
+    private string SavePath(int slot)
+    {
+        long userId = ServerApi.Instance != null ? ServerApi.Instance.UserId : 0;
+        string fileName = userId > 0 ? $"save_u{userId}_{slot}.json" : $"save_guest_{slot}.json";
+        return Path.Combine(Application.persistentDataPath, fileName);
+    }
 
     /// <summary>출격 직전 자동 저장 슬롯. 사망/재시작이 되돌아갈 지점.</summary>
     // 서버가 받는 범위가 0~9라 그 안에서 잡음. 유저 슬롯은 0~4(LoadGameUI.slotCount)라 안 겹침.
@@ -366,7 +373,9 @@ public class GameManager : MonoBehaviourPunCallbacks
         // 여러 갈래여도 씬 도착은 전부 이 지점을 지나므로 한 군데서 정하는 게 맞음.
         // 게임오버 씬은 GameOver()가 정한 값을 그대로 유지해야 하므로 제외함
         // (여기서 초기화하면 GameOverUI.Start의 IsGameOver 검사가 패널을 다시 꺼버림).
-        if (curSceneType != SCENE_TYPE.RESULT)
+        // 로딩 씬도 제외 — 잠깐 스쳐가는 곳이라 여기서 상태를 지우면 목적지(RESULT)에 도착했을 때
+        // STAGE_CLEAR/GAME_OVER가 이미 사라져 결과 UI가 안 뜸.
+        if (curSceneType != SCENE_TYPE.RESULT && curSceneType != SCENE_TYPE.LOADING_SEQUENCE)
         {
             // 게임오버 씬을 벗어나는 순간 정지 플래그도 같이 내림 — 안 내리면 IsGameplayFrozen이 계속 참이라
             // 다음 플레이에서 유닛/퀵슬롯이 전부 멈춘 상태로 시작함.
@@ -664,6 +673,41 @@ public class GameManager : MonoBehaviourPunCallbacks
         return File.Exists(SavePath(slot));
     }
 
+    /// <summary>
+    /// 로컬 세이브 파일에서 목록 표시용 요약(레벨/골드/시각)만 읽음. 파일이 없거나 깨졌으면 null.
+    /// 불러오기 창이 비로그인에서도 목록을 그릴 수 있게 하려는 것 — 서버 목록과 같은 모양으로 돌려줌.
+    /// 저장 시각은 파일 수정 시각을 씀(세이브 본문에 시각 필드가 없음).
+    /// </summary>
+    public ServerApi.SaveSummary GetLocalSaveSummary(int slot)
+    {
+        string path = SavePath(slot);
+        if (!File.Exists(path))
+        {
+            return null;
+        }
+
+        try
+        {
+            SaveData data = JsonUtility.FromJson<SaveData>(File.ReadAllText(path));
+            if (data == null)
+            {
+                return null;
+            }
+            return new ServerApi.SaveSummary
+            {
+                slot = slot,
+                level = data.level,
+                gold = data.gold,
+                updatedAt = File.GetLastWriteTime(path).ToString("yyyy-MM-ddTHH:mm:ss")
+            };
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogWarning($"[GameManager] 로컬 세이브 읽기 실패(slot {slot}): {e.Message}");
+            return null;
+        }
+    }
+
     //=================================
     // 저장/로드 처리 흐름 메모
     // [저장 흐름]
@@ -896,7 +940,8 @@ public class GameManager : MonoBehaviourPunCallbacks
         // 저장은 여기서 — 결과 씬은 함선을 안 데려가므로 도착 후엔 체력·파츠를 담을 수 없음.
         SaveData(AutoSaveSlot);
 
-        LoadSceneWithLoading(SCENE_TYPE.RESULT);
+        //LoadSceneWithLoading(SCENE_TYPE.RESULT);
+        LoadScene(SCENE_TYPE.RESULT);
     }
 
 	/// <summary>

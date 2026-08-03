@@ -252,6 +252,9 @@ public static class PlayerProfile
 			unitParts.ReloadLoadout(parts, partHps);
 		}
 
+		// 최대치는 저장하지 않고 레벨에서 다시 계산 — 파츠를 끼운 뒤에 불러야 파츠 몫까지 같이 얹힘.
+		player.RecalcStatsFromLevel();
+
 		if (player.weaponSystem != null && missiles.Count > 0 && itemDatabase != null)
 		{
 			player.weaponSystem.missileSlots = new List<MissileSlot>();

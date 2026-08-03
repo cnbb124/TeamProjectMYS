@@ -36,10 +36,37 @@ public class LoadingManager : MonoBehaviour
 
     private int _currentImageIndex = 0;
 
+    // 배열 시작 지점을 랜덤으로 옮김. 순서는 그대로 유지됨(0,1,2 → 2,0,1 같은 식).
+    private void RotateBackgroundsRandomly()
+    {
+        int count = backgroundImages.Length;
+        if (count < 2)
+        {
+            return;
+        }
+
+        int offset = Random.Range(0, count);
+        if (offset == 0)
+        {
+            return;
+        }
+
+        Sprite[] rotated = new Sprite[count];
+        for (int i = 0; i < count; i++)
+        {
+            rotated[i] = backgroundImages[(i + offset) % count];
+        }
+        backgroundImages = rotated;
+    }
+
     private void Start()
     {
         if (backgroundImages != null && backgroundImages.Length > 0)
         {
+            // 시작 이미지를 매번 다르게 — 등록 순서는 유지한 채 시작 지점만 랜덤으로 돌림.
+            // 전부 한 번씩 나오는 순환은 그대로임.
+            RotateBackgroundsRandomly();
+
             backgroundA.sprite = backgroundImages[0];
             backgroundA.color  = Color.white;
             backgroundB.color  = new Color(1f, 1f, 1f, 0f);
