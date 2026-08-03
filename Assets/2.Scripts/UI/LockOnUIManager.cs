@@ -104,12 +104,10 @@ public class LockOnUIManager : MonoBehaviour
         float progress,
         bool isLocked)
     {
-        // XR render-target pixels can differ from Screen pixels. Map the
-        // camera viewport directly to the HUD rect to avoid movement drift.
-        Vector3 viewportPos = _mainCamera.WorldToViewportPoint(
-            worldPos,
-            Camera.MonoOrStereoscopicEye.Mono);
-        if (viewportPos.z < 0f)
+        Vector3 cameraPosition = _mainCamera.transform.position;
+        Vector3 targetDirection = worldPos - cameraPosition;
+        if (targetDirection.sqrMagnitude < 0.0001f ||
+            Vector3.Dot(_mainCamera.transform.forward, targetDirection) <= 0f)
         {
             return;
         }
@@ -120,11 +118,29 @@ public class LockOnUIManager : MonoBehaviour
             return;
         }
 
+        // Project the actual camera-to-target ray onto the ship-fixed HUD
+        // plane. Viewport mapping drifts when the player turns their head.
+        Plane hudPlane = new Plane(canvasRect.forward, canvasRect.position);
+        Ray targetRay = new Ray(cameraPosition, targetDirection.normalized);
+        if (!hudPlane.Raycast(targetRay, out float enter) || enter <= 0f)
+        {
+            return;
+        }
+
+        Vector3 canvasLocalPosition =
+            canvasRect.InverseTransformPoint(targetRay.GetPoint(enter));
         Rect rect = canvasRect.rect;
-        Vector3 canvasLocalPosition = new Vector3(
-            Mathf.LerpUnclamped(rect.xMin, rect.xMax, viewportPos.x),
-            Mathf.LerpUnclamped(rect.yMin, rect.yMax, viewportPos.y),
-            0f);
+        const float markerPadding = 70f;
+        canvasLocalPosition.x = Mathf.Clamp(
+            canvasLocalPosition.x,
+            rect.xMin + markerPadding,
+            rect.xMax - markerPadding);
+        canvasLocalPosition.y = Mathf.Clamp(
+            canvasLocalPosition.y,
+            rect.yMin + markerPadding,
+            rect.yMax - markerPadding);
+        canvasLocalPosition.z = 0f;
+
         Vector3 indicatorLocalPosition = _indicatorRoot.InverseTransformPoint(
             canvasRect.TransformPoint(canvasLocalPosition));
         Vector2 localPosition = new Vector2(

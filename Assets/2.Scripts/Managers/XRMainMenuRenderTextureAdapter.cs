@@ -20,6 +20,7 @@ public sealed class XRMainMenuRenderTextureAdapter : MonoBehaviour
     private const string FixedPixelCanvasSceneName = "BASE_HANGAR";
     private const float PanelDistance = 1.25f;
     private const float ViewMargin = 0.82f;
+    private const float HangarCameraRefreshInterval = 0.25f;
     private const int RefreshFrameCount = 12;
 
     private static XRMainMenuRenderTextureAdapter _instance;
@@ -49,6 +50,7 @@ public sealed class XRMainMenuRenderTextureAdapter : MonoBehaviour
     private GameObject _manualDragTarget;
     private Vector2 _previousManualPointerPosition;
     private bool _manualDragging;
+    private float _nextHangarCameraRefreshTime;
     private int _sessionSceneHandle = -1;
 
     private struct SelectableNavigationState
@@ -97,6 +99,8 @@ public sealed class XRMainMenuRenderTextureAdapter : MonoBehaviour
 
     private void Update()
     {
+        RefreshHangarCameraBinding();
+
         if (_cursor != null && _pointerInput != null)
         {
             Vector2 pointerPosition = _pointerInput.mousePosition;
@@ -113,6 +117,39 @@ public sealed class XRMainMenuRenderTextureAdapter : MonoBehaviour
             }
 
             ProcessManualPointer(pointerPosition);
+        }
+    }
+
+    private void RefreshHangarCameraBinding()
+    {
+        Scene activeScene = SceneManager.GetActiveScene();
+        if (_panel == null ||
+            _sessionSceneHandle != activeScene.handle ||
+            !activeScene.name.Equals(
+                FixedPixelCanvasSceneName,
+                StringComparison.OrdinalIgnoreCase) ||
+            Time.unscaledTime < _nextHangarCameraRefreshTime)
+        {
+            return;
+        }
+
+        _nextHangarCameraRefreshTime =
+            Time.unscaledTime + HangarCameraRefreshInterval;
+        Camera xrCamera = FindBestActiveXrCamera();
+        if (xrCamera == null)
+        {
+            return;
+        }
+
+        AttachPanelToCamera(xrCamera);
+        if (_pointerInput != null)
+        {
+            _pointerInput.SetTargetPanel(
+                TextureWidth,
+                TextureHeight,
+                xrCamera,
+                _panel.transform,
+                ViewMargin);
         }
     }
 
@@ -412,7 +449,9 @@ public sealed class XRMainMenuRenderTextureAdapter : MonoBehaviour
             return;
         }
 
-        Camera xrCamera = FindBestSceneCamera(scene);
+        Camera xrCamera = scene.name == FixedPixelCanvasSceneName
+            ? FindBestActiveXrCamera() ?? FindBestSceneCamera(scene)
+            : FindBestSceneCamera(scene);
         Canvas[] canvases = FindSceneCanvases(scene);
         if (xrCamera == null || canvases.Length == 0)
         {
@@ -457,6 +496,7 @@ public sealed class XRMainMenuRenderTextureAdapter : MonoBehaviour
             _uiTexture != null &&
             _panel != null)
         {
+            AttachPanelToCamera(xrCamera);
             return;
         }
 
@@ -493,11 +533,7 @@ public sealed class XRMainMenuRenderTextureAdapter : MonoBehaviour
         _panel = GameObject.CreatePrimitive(PrimitiveType.Quad);
         _panel.name = "MAIN VR UI Panel";
         SceneManager.MoveGameObjectToScene(_panel, scene);
-        _panel.transform.SetParent(xrCamera.transform, false);
-        _panel.transform.localPosition =
-            new Vector3(0f, 0f, GetSafePanelDistance(xrCamera));
-        _panel.transform.localRotation = Quaternion.identity;
-        FitPanelToView(_panel.transform, xrCamera);
+        AttachPanelToCamera(xrCamera);
 
         Shader panelShader = Resources.Load<Shader>("XRAlwaysOnTopUI");
         if (panelShader == null)
@@ -812,6 +848,7 @@ public sealed class XRMainMenuRenderTextureAdapter : MonoBehaviour
         }
 
         _sessionSceneHandle = -1;
+        _nextHangarCameraRefreshTime = 0f;
     }
 
     private static Canvas[] FindSceneCanvases(Scene scene)
@@ -887,6 +924,114 @@ public sealed class XRMainMenuRenderTextureAdapter : MonoBehaviour
         }
 
         return best;
+    }
+
+    private static Camera FindBestActiveXrCamera()
+    {
+        Camera[] cameras = Resources.FindObjectsOfTypeAll<Camera>();
+        Camera best = null;
+        int bestScore = int.MinValue;
+        for (int i = 0; i < cameras.Length; i++)
+        {
+            Camera candidate = cameras[i];
+            if (candidate == null ||
+                !candidate.isActiveAndEnabled ||
+                candidate.targetTexture != null ||
+                candidate.stereoTargetEye == StereoTargetEyeMask.None)
+            {
+                continue;
+            }
+
+            int score = Mathf.RoundToInt(candidate.depth * 10f);
+            if (HasAncestorNamed(candidate.transform, "XR Origin"))
+            {
+                score += 10000;
+            }
+
+            if (candidate.CompareTag("MainCamera"))
+            {
+                score += 1000;
+            }
+
+            if (score > bestScore)
+            {
+                bestScore = score;
+                best = candidate;
+            }
+        }
+
+        return best;
+    }
+
+    private static bool HasAncestorNamed(Transform target, string name)
+    {
+        Transform current = target;
+        while (current != null)
+        {
+            if (current.name.Equals(
+                    name,
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+
+            current = current.parent;
+        }
+
+        return false;
+    }
+
+    private void AttachPanelToCamera(Camera xrCamera)
+    {
+        if (_panel == null || xrCamera == null)
+        {
+            return;
+        }
+
+        Transform panelTransform = _panel.transform;
+        Transform panelAnchor = FindPanelAnchor(xrCamera);
+        if (panelTransform.parent != panelAnchor)
+        {
+            panelTransform.SetParent(panelAnchor, false);
+        }
+
+        panelTransform.localPosition =
+            new Vector3(0f, 0f, GetSafePanelDistance(xrCamera));
+        panelTransform.localRotation = Quaternion.identity;
+        FitPanelToView(panelTransform, xrCamera);
+    }
+
+    private static Transform FindPanelAnchor(Camera xrCamera)
+    {
+        Scene activeScene = SceneManager.GetActiveScene();
+        if (!activeScene.name.Equals(
+                FixedPixelCanvasSceneName,
+                StringComparison.OrdinalIgnoreCase) ||
+            xrCamera.GetComponentInParent<CockpitViewSwitcher>(true) == null)
+        {
+            return xrCamera.transform;
+        }
+
+        Transform current = xrCamera.transform;
+        while (current != null)
+        {
+            if (current.name.Equals(
+                    "XR Origin",
+                    StringComparison.OrdinalIgnoreCase) ||
+                current.name.Equals(
+                    "XRRig",
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                // The XR Origin follows HMD tracking. Its parent (CameraPoint)
+                // follows the ship, so the hangar UI remains in the cockpit
+                // instead of turning with the player's head.
+                return current.parent != null ? current.parent : current;
+            }
+
+            current = current.parent;
+        }
+
+        return xrCamera.transform;
     }
 
     private static void FitPanelToView(Transform panel, Camera xrCamera)

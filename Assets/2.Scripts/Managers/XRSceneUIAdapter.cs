@@ -376,8 +376,9 @@ public sealed class XRSceneUIAdapter : MonoBehaviour
 /// <summary>
 /// Uses the Unity Editor Game View-local mouse coordinate for the station's
 /// single/multiplayer panel. The normal XR mouse path can report desktop/editor
-/// coordinates, so it is disabled only while this panel is visible. Controller
-/// input remains owned by XRUIInputModule.
+/// coordinates, so this pointer owns UI input while the panel is visible.
+/// This prevents a stationary XR ray from keeping the other button highlighted
+/// or overwriting the mouse hover/click target.
 /// </summary>
 [DisallowMultipleComponent]
 public sealed class XRStationGameViewPointer : MonoBehaviour
@@ -387,6 +388,7 @@ public sealed class XRStationGameViewPointer : MonoBehaviour
     private Camera _eventCamera;
     private Canvas _targetCanvas;
     private Selectable[] _selectables = Array.Empty<Selectable>();
+    private RectTransform _cursor;
     private PointerEventData _pointerData;
     private GameObject _hoverTarget;
     private GameObject _pressTarget;
@@ -397,6 +399,7 @@ public sealed class XRStationGameViewPointer : MonoBehaviour
     private bool _hasGameViewCoordinate;
     private bool _pointerInsideGameView;
     private bool _dragging;
+    private bool _manualInputWasActive;
     private bool _hasDiagnosticTarget;
     private bool _loggedGameViewCoordinate;
 
@@ -418,6 +421,7 @@ public sealed class XRStationGameViewPointer : MonoBehaviour
             _selectables = _targetCanvas != null
                 ? _targetCanvas.GetComponentsInChildren<Selectable>(true)
                 : Array.Empty<Selectable>();
+            CreateCursor();
             _hasDiagnosticTarget = false;
         }
 
@@ -459,6 +463,7 @@ public sealed class XRStationGameViewPointer : MonoBehaviour
         UpdateMouseInputOwnership(panelVisible);
         if (!panelVisible || _eventSystem == null || _eventCamera == null)
         {
+            SetCursorVisible(false);
             ClearPointerState();
             return;
         }
@@ -466,6 +471,7 @@ public sealed class XRStationGameViewPointer : MonoBehaviour
         if (!_hasGameViewCoordinate || !_pointerInsideGameView ||
             Screen.width <= 0 || Screen.height <= 0)
         {
+            SetCursorVisible(false);
             ProcessPointer(null, new Vector2(-1f, -1f));
             return;
         }
@@ -482,6 +488,7 @@ public sealed class XRStationGameViewPointer : MonoBehaviour
             canvasPosition = new Vector2(-1f, -1f);
         }
 
+        UpdateCursor(canvasPosition);
         ProcessPointer(target, canvasPosition);
     }
 
@@ -568,13 +575,64 @@ public sealed class XRStationGameViewPointer : MonoBehaviour
             }
         }
 
-        if (bestSelectable == null)
+        target = bestSelectable != null
+            ? bestSelectable.gameObject
+            : null;
+        return true;
+    }
+
+    private void CreateCursor()
+    {
+        if (_cursor != null)
         {
-            return false;
+            Destroy(_cursor.gameObject);
+            _cursor = null;
         }
 
-        target = bestSelectable.gameObject;
-        return true;
+        if (_targetCanvas == null)
+        {
+            return;
+        }
+
+        GameObject cursorObject = new GameObject(
+            "VR Mouse Cursor",
+            typeof(RectTransform),
+            typeof(CanvasRenderer),
+            typeof(RawImage));
+        cursorObject.transform.SetParent(_targetCanvas.transform, false);
+        _cursor = cursorObject.GetComponent<RectTransform>();
+        _cursor.anchorMin = Vector2.zero;
+        _cursor.anchorMax = Vector2.zero;
+        _cursor.pivot = new Vector2(0.5f, 0.5f);
+        _cursor.sizeDelta = new Vector2(18f, 18f);
+        _cursor.SetAsLastSibling();
+
+        RawImage image = cursorObject.GetComponent<RawImage>();
+        image.texture = Texture2D.whiteTexture;
+        image.color = new Color(0.25f, 0.9f, 1f, 1f);
+        image.raycastTarget = false;
+        cursorObject.SetActive(false);
+    }
+
+    private void UpdateCursor(Vector2 canvasPosition)
+    {
+        bool visible = _cursor != null &&
+                       canvasPosition.x >= 0f &&
+                       canvasPosition.y >= 0f;
+        SetCursorVisible(visible);
+        if (visible)
+        {
+            _cursor.anchoredPosition = canvasPosition;
+            _cursor.SetAsLastSibling();
+        }
+    }
+
+    private void SetCursorVisible(bool visible)
+    {
+        if (_cursor != null && _cursor.gameObject.activeSelf != visible)
+        {
+            _cursor.gameObject.SetActive(visible);
+        }
     }
 
     private void ProcessPointer(GameObject target, Vector2 pointerPosition)
@@ -742,10 +800,50 @@ public sealed class XRStationGameViewPointer : MonoBehaviour
 
     private void UpdateMouseInputOwnership(bool manualMouseActive)
     {
+        if (manualMouseActive && !_manualInputWasActive)
+        {
+            ResetSelectablePointerStates();
+        }
+
+        _manualInputWasActive = manualMouseActive;
         if (_xrInputModule != null)
         {
             _xrInputModule.enableMouseInput = !manualMouseActive;
+            _xrInputModule.enableXRInput = !manualMouseActive;
         }
+    }
+
+    private void ResetSelectablePointerStates()
+    {
+        if (_eventSystem == null)
+        {
+            return;
+        }
+
+        PointerEventData resetData = new PointerEventData(_eventSystem);
+        for (int i = 0; i < _selectables.Length; i++)
+        {
+            Selectable selectable = _selectables[i];
+            if (selectable == null)
+            {
+                continue;
+            }
+
+            ExecuteEvents.Execute(
+                selectable.gameObject,
+                resetData,
+                ExecuteEvents.pointerUpHandler);
+            ExecuteEvents.Execute(
+                selectable.gameObject,
+                resetData,
+                ExecuteEvents.pointerExitHandler);
+            ExecuteEvents.Execute(
+                selectable.gameObject,
+                resetData,
+                ExecuteEvents.deselectHandler);
+        }
+
+        _eventSystem.SetSelectedGameObject(null);
     }
 
     private void ClearPointerState()
@@ -789,10 +887,13 @@ public sealed class XRStationGameViewPointer : MonoBehaviour
 
     private void OnDisable()
     {
+        SetCursorVisible(false);
         ClearPointerState();
+        _manualInputWasActive = false;
         if (_xrInputModule != null)
         {
             _xrInputModule.enableMouseInput = true;
+            _xrInputModule.enableXRInput = true;
         }
     }
 }
