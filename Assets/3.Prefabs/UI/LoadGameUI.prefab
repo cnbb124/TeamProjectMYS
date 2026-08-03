@@ -288,7 +288,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   mode: 0
   slotPrefab: {fileID: 5554392538096319309, guid: e3f501a9592291e499c60fdde16e36bf, type: 3}
-  slotParent: {fileID: 4166374228933469287, guid: e3f501a9592291e499c60fdde16e36bf, type: 3}
+  slotParent: {fileID: 220918885602324434}
   slotCount: 5
   statusText: {fileID: 0}
   overwriteConfirm: {fileID: 2473433846484210042, guid: 9e98b1a3a339f64428677694e0146b66, type: 3}
@@ -488,10 +488,10 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1504280692223541342}
-        m_TargetAssemblyTypeName: UnityEngine.GameObject, UnityEngine
-        m_MethodName: SetActive
-        m_Mode: 6
+      - m_Target: {fileID: 0}
+        m_TargetAssemblyTypeName: PauseMenuUI, Assembly-CSharp
+        m_MethodName: CloseLoad
+        m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine

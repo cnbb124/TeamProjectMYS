@@ -51,7 +51,9 @@ public class PauseMenuUI : MonoBehaviour
     private static PauseMenuUI _instance;
     public static bool IsOpen => _instance != null && _instance.IsAnyPanelShown();
 
-    // 메뉴 계열 패널(메뉴/옵션/지도/퀘스트) 중 하나라도 표시 중인지
+    // 메뉴 계열 패널(메뉴/옵션/지도/퀘스트/세이브/로드) 중 하나라도 표시 중인지
+    // 세이브·로드도 반드시 포함해야 함 — OnSave/OnLoadGame이 메뉴 패널을 끄고 자기 패널만 켜므로,
+    // 여기서 빠지면 그 창을 띄운 동안 '아무 UI도 없음'으로 판정돼 멀티에서 함선이 조종되고 커서가 잠김.
     private bool IsAnyPanelShown()
     {
         if (IsShown() || IsOptionsShown())
@@ -62,7 +64,21 @@ public class PauseMenuUI : MonoBehaviour
         {
             return true;
         }
+        if (IsSaveShown() || IsLoadShown())
+        {
+            return true;
+        }
         return questPanel != null && questPanel.activeSelf;
+    }
+
+    private bool IsSaveShown()
+    {
+        return savePanel != null && savePanel.activeSelf;
+    }
+
+    private bool IsLoadShown()
+    {
+        return loadPanel != null && loadPanel.activeSelf;
     }
 
     private void Start()
@@ -81,8 +97,10 @@ public class PauseMenuUI : MonoBehaviour
     {
         if (InputManager.Instance != null && InputManager.Instance.pauseMenu)
         {
-            // ESC = 한 단계씩 뒤로: 세팅 창 → 메뉴 → 게임
+            // ESC = 한 단계씩 뒤로: 세팅/세이브/로드 창 → 메뉴 → 게임
             if (IsOptionsShown()) CloseOptions();   // 세팅 창 열려있으면 세팅만 닫고 메뉴 복귀
+            else if (IsSaveShown()) CloseSave();    // 세이브 창 열려있으면 그것만 닫고 메뉴 복귀
+            else if (IsLoadShown()) CloseLoad();    // 로드 창도 동일
             else if (IsShown())   CloseMenu();      // 메뉴 열려있으면 메뉴 닫고 재개
             else                  OpenMenu();       // 아무것도 없으면 메뉴 열기
         }
@@ -98,9 +116,11 @@ public class PauseMenuUI : MonoBehaviour
             return;
         }
 
-        if (_instance.IsOptionsShown()) _instance.CloseOptions();
-        else if (_instance.IsShown())   _instance.CloseMenu();
-        else                            _instance.OpenMenu();
+        if (_instance.IsOptionsShown())  _instance.CloseOptions();
+        else if (_instance.IsSaveShown()) _instance.CloseSave();
+        else if (_instance.IsLoadShown()) _instance.CloseLoad();
+        else if (_instance.IsShown())     _instance.CloseMenu();
+        else                              _instance.OpenMenu();
     }
 
     private bool IsShown()

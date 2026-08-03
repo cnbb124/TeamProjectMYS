@@ -2639,14 +2639,14 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5859887070856284534}
     m_Modifications:
+    - target: {fileID: 1265456253873404640, guid: 673a37941785fba4ea4b1d5fae40d651, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 8876599253477039237}
     - target: {fileID: 1504280692223541342, guid: 673a37941785fba4ea4b1d5fae40d651, type: 3}
       propertyPath: m_Name
       value: LoadGameUI
       objectReference: {fileID: 0}
-    - target: {fileID: 4082262122020347388, guid: 673a37941785fba4ea4b1d5fae40d651, type: 3}
-      propertyPath: slotParent
-      value: 
-      objectReference: {fileID: 1011943661903411925}
     - target: {fileID: 4802203348442873092, guid: 673a37941785fba4ea4b1d5fae40d651, type: 3}
       propertyPath: m_Pivot.x
       value: 0.5
@@ -2732,11 +2732,6 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 673a37941785fba4ea4b1d5fae40d651, type: 3}
---- !u!224 &1011943661903411925 stripped
-RectTransform:
-  m_CorrespondingSourceObject: {fileID: 220918885602324434, guid: 673a37941785fba4ea4b1d5fae40d651, type: 3}
-  m_PrefabInstance: {fileID: 944623323587122439}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1872299775077061977 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 1504280692223541342, guid: 673a37941785fba4ea4b1d5fae40d651, type: 3}
@@ -2877,14 +2872,6 @@ PrefabInstance:
       value: SaveGameUI
       objectReference: {fileID: 0}
     - target: {fileID: 4082262122020347388, guid: 26d8ffb7ab975294cb97638ab34e50ba, type: 3}
-      propertyPath: mode
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 4082262122020347388, guid: 26d8ffb7ab975294cb97638ab34e50ba, type: 3}
-      propertyPath: slotParent
-      value: 
-      objectReference: {fileID: 4953609068361392568}
-    - target: {fileID: 4082262122020347388, guid: 26d8ffb7ab975294cb97638ab34e50ba, type: 3}
       propertyPath: overwriteConfirm
       value: 
       objectReference: {fileID: 3632208000748930322}
@@ -2968,10 +2955,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 6198781025044942538, guid: 26d8ffb7ab975294cb97638ab34e50ba, type: 3}
-      propertyPath: m_Name
-      value: SavePanel
-      objectReference: {fileID: 0}
+    - target: {fileID: 5937511267152106725, guid: 26d8ffb7ab975294cb97638ab34e50ba, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 8876599253477039237}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -2980,11 +2967,6 @@ PrefabInstance:
 --- !u!224 &363321784972686190 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 4802203348442873092, guid: 26d8ffb7ab975294cb97638ab34e50ba, type: 3}
-  m_PrefabInstance: {fileID: 5165098522899762794}
-  m_PrefabAsset: {fileID: 0}
---- !u!224 &4953609068361392568 stripped
-RectTransform:
-  m_CorrespondingSourceObject: {fileID: 220918885602324434, guid: 26d8ffb7ab975294cb97638ab34e50ba, type: 3}
   m_PrefabInstance: {fileID: 5165098522899762794}
   m_PrefabAsset: {fileID: 0}
 --- !u!1 &6002835324351499828 stripped
