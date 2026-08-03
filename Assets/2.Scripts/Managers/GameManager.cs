@@ -1577,6 +1577,11 @@ public class GameManager : MonoBehaviourPunCallbacks
     /// <summary>불러온 SaveData를 Player / Loadout 등에 적용.</summary>
     private void ApplySaveData(SaveData data)
     {
+        // [진단] 로드 경로 추적용. 확인 끝나면 지울 것
+        Debug.Log($"[진단-로드] ApplySaveData 진입. data={(data == null ? "null" : "있음")} " +
+                  $"lv={data?.level} curHp={data?.curHp} partSlots={(data?.partSlots == null ? -1 : data.partSlots.Length)} " +
+                  $"playerRef={(playerRef == null ? "null" : playerRef.name)}");
+
         // 함선 종속 데이터는 프로필이 먼저 받고, 함선이 있으면 아래에서 씌움.
         PlayerProfile.InitFromSave(data, itemDatabase);
 
@@ -1610,6 +1615,10 @@ public class GameManager : MonoBehaviourPunCallbacks
 
         // 함선이 이미 있으면(같은 씬에서 불러오기) 프로필을 바로 씌움.
         // 함선이 아직 없으면 스폰 직후 Player가 스스로 PlayerProfile.ApplyTo를 부름.
+        // [진단] 로드 경로 추적용. 확인 끝나면 지울 것
+        Debug.Log($"[진단-로드] ApplySaveData 끝. 프로필 파츠={PlayerProfile.parts.Count}개 " +
+                  $"lv={PlayerProfile.level} → ApplyTo {(playerRef != null ? "호출함" : "건너뜀(함선 없음)")}");
+
         if (playerRef != null)
         {
             PlayerProfile.ApplyTo(playerRef, itemDatabase);
