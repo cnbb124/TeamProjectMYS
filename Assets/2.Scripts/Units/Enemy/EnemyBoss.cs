@@ -160,6 +160,7 @@ public class EnemyBoss : EnemyShip
             {
                 break;
             }
+            PlayWaveShootSound(wave);
             foreach (PatternPoint point in wave.points)
             {
                 FireOneBullet(point);

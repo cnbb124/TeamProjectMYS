@@ -25,7 +25,7 @@ public partial class ProjectHubWindow : EditorWindow
 		Map = 4,
 	}
 
-	private static readonly string[] TabLabels = { "데이터", "SFX,VFX,오브젝트등록", "프리팹 검사", "씬 관리", "맵 배치" };
+	private static readonly string[] TabLabels = { "데이터", "SFX,VFX,풀링 오브젝트등록", "프리팹 검사", "씬 관리", "맵 배치" };
 
 	private HubTab _tab = HubTab.Data;
 

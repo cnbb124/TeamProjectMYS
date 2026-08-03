@@ -94,9 +94,9 @@ public enum SOUND_TYPE
 	BGM_1F,             // 1층 배경음
 	BGM_B2,             // 지하2층배경음
 	BGM_MAIN,           // 메인화면
-	BGM_STAGE1,// 스테이지1 현재로선 배틀맵이 하나이므로 배틀맵에 사용
+	BGM_STAGE1=105,// 스테이지1 현재로선 배틀맵이 하나이므로 배틀맵에 사용
 	BGM_STAGE2,
-	BGM_STATION,        // 스테이션
+	BGM_STATION=107,        // 스테이션
 	BGM_GAMEOVER,       // 게임오버
 	BGM_BOSS,           // 보스전(보스 등장 시 전환)
 	BGM_MAP_SELECT,
