@@ -247,6 +247,7 @@ public static class PlayerProfile
 
 		// 최대치는 저장하지 않고 레벨에서 다시 계산 — 파츠를 끼운 뒤에 불러야 파츠 몫까지 같이 얹힘.
 		player.RecalcStatsFromLevel();
+		player.RefreshAfterLoadout();
 
 		// [진단] curHp > maxHp 추적용. 확인 끝나면 지울 것
 		Debug.Log($"[진단-복원2] 재계산 직후 lv={player.level} 파츠목록={parts.Count}개 " +

@@ -281,6 +281,10 @@ public partial class ProjectHubWindow
 		}
 		_dataSelected = asset;
 
+		// 입력 중이던 필드의 편집 버퍼가 남아 다른 에셋에 옛 값이 보이는 걸 막음
+		GUIUtility.keyboardControl = 0;
+		EditorGUIUtility.editingTextField = false;
+
 		if (_dataSelectedEditor != null)
 		{
 			DestroyImmediate(_dataSelectedEditor);
