@@ -4024,6 +4024,13 @@ MonoBehaviour:
   _vrHudPresenter: {fileID: 611234987654321001}
   _vrHudDistance: 1.5
   _vrHudScale: 0.001
+  _vrHudLocalOffset: {x: 0, y: 0, z: 0}
+  _vrHudLocalEulerAngles: {x: 0, y: 0, z: 0}
+  _vrRadarOffset: {x: 0, y: 0}
+  _vrHpOffset: {x: 0, y: 0}
+  _vrFuelOffset: {x: 0, y: 0}
+  _vrWeaponOffset: {x: 0, y: 0}
+  _vrBoosterOffset: {x: 0, y: 0}
 --- !u!114 &9002103193476883236
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4177,6 +4184,12 @@ MonoBehaviour:
   _stickMaxRoll: 20
   _throttleMaxAngle: 25
   _invertThrottle: 0
+  _invertStickPitch: 0
+  _invertVisualPitch: 0
+  _invertVisualRoll: 0
+  _stickDeadzone: 0.15
+  _lockOnRepeatDelay: 0.35
+  _boostThreshold: 0.9
 --- !u!114 &8958904905409130022
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6191,8 +6204,8 @@ Camera:
     y: 0
     width: 1
     height: 1
-  near clip plane: 0.01
-  far clip plane: 1000
+  near clip plane: 0.1
+  far clip plane: 7000
   field of view: 99.99999
   orthographic: 0
   orthographic size: 5
