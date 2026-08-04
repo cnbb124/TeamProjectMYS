@@ -12,34 +12,47 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f304ed153a86bba43ba4ab443c0c92e4, type: 3}
   m_Name: Dialogue_2
   m_EditorClassIdentifier: 
-  question: '"Oh, Thanks! Talking with you like this... it makes the outpost feel
-    less empty. What''s on your mind, pilot?"'
+  question: "\"\uC544, \uACE0\uB9C8\uC6CC\uC694! \uC774\uB807\uAC8C \uB300\uD654\uB97C
+    \uB098\uB204\uB2C8... \uC804\uCD08\uAE30\uC9C0\uAC00 \uB35C \uC370\uB801\uD558\uAC8C
+    \uB290\uAEF4\uC9C0\uB124\uC694. \uBB34\uC2A8 \uACE0\uBBFC\uC774\uB77C\uB3C4 \uC788\uB098\uC694,
+    \uD30C\uC77C\uB7FF \uB2D8?\""
   choices:
-  - choiceText: '"Tell me about this outpost. It''s an old model, isn''t it?"'
+  - choiceText: "\"\uC774 \uC804\uCD08\uAE30\uC9C0\uC5D0 \uB300\uD574 \uB9D0\uD574\uC8FC\uC138\uC694.
+      \uAD6C\uD615 \uBAA8\uB378\uC778\uAC00, \uADF8\uB807\uC8E0?\""
     affinityDelta: 2
     mood: 0
-    responseLine: "\"Sharp eye. She's older than both of us combined \u2014 but she
-      holds. Just like me.\""
+    responseLine: "\"\uB208\uC370\uBBF8\uAC00 \uC88B\uC74F\uC2DC\uB124\uC694. \uC6B0\uB9AC
+      \uB458\uC744 \uD569\uCE5C \uAC83\uBCF4\uB2E4 \uB098\uC774\uAC00 \uB9CE\uC9C0\uB9CC...
+      \uC5EC\uC804\uD788 \uAC74\uC7AC\uD574. \uAF2D \uC800\uCC98\uB7FC \uB9D0\uC774\uC8E0.\""
     oneTime: 0
     nextDialogue: {fileID: 0}
-  - choiceText: '"I was wondering how you''ve been out here, all alone."'
+  - choiceText: "\"\uC5EC\uAE30\uC11C \uD63C\uC790 \uC5B4\uB5BB\uAC8C \uC9C0\uB0B4\uACE0
+      \uACC4\uC168\uB294\uC9C0 \uAD81\uAE08\uD588\uC5B4\uC694.\""
     affinityDelta: 5
     mood: 1
-    responseLine: '"Worried about me? The station keeps me busy... but it''s nice
-      that someone finally asked."'
+    responseLine: "\"\uC800\uB97C \uAC71\uC815\uD574 \uC8FC\uC2DC\uB294 \uAC74\uAC00\uC694?
+      \uC815\uAC70\uC7A5 \uC77C\uB85C \uBC14\uC058\uAC8C \uC9C0\uB0B4\uACE0 \uC788\uC9C0\uB9CC...
+      \uADF8\uB798\uB3C4 \uB204\uAD70\uAC00 \uC774\uB807\uAC8C \uBB3C\uC5B4\uBD10
+      \uC8FC\uB2C8 \uAE30\uBD84\uC740 \uC88B\uB124\uC694.\""
     oneTime: 0
     nextDialogue: {fileID: 0}
-  - choiceText: '"Hmm...Well, After Talking to you, I don''t have any worries left!"'
+  - choiceText: "\"\uC74C... \uAE00\uC384\uC694, \uB2F9\uC2E0\uACFC \uC774\uC57C\uAE30\uB97C
+      \uB098\uB204\uACE0 \uB098\uB2C8 \uB354 \uC774\uC0C1 \uAC71\uC815\uB418\uB294
+      \uAC8C \uC5C6\uB124\uC694!\""
     affinityDelta: 8
     mood: 2
-    responseLine: '"Really?? You''re so nice guy! Come here! I''ll present our products
-      with reasonable values!'
+    responseLine: "\uC815\uB9D0\uC694? \uC815\uB9D0 \uC88B\uC740 \uBD84\uC774\uC2DC\uB124\uC694!
+      \uC774\uCABD\uC73C\uB85C \uC624\uC138\uC694. \uD569\uB9AC\uC801\uC778 \uAC00\uACA9\uC73C\uB85C
+      \uC800\uD76C \uC81C\uD488\uC744 \uC18C\uAC1C\uD574 \uB4DC\uB9B4\uAC8C\uC694!"
     oneTime: 1
     nextDialogue: {fileID: 0}
-  - choiceText: '"Nothing much. I was just killing time here."'
+  - choiceText: "\uBCC4\uC77C \uC5C6\uC5B4\uC694. \uADF8\uB0E5 \uC5EC\uAE30\uC11C
+      \uC2DC\uAC04\uC744 \uC880 \uBCF4\uB0B4\uACE0 \uC788\uC5C8\uC5B4\uC694."
     affinityDelta: -3
     mood: 3
-    responseLine: '"...Killing time. Right. Well, don''t let me keep you from something
-      more '
+    responseLine: "\"...\uC2DC\uAC04\uC774\uB098 \uB54C\uC6B0\uB294 \uC911\uC774\uB77C...
+      \uADF8\uB807\uAD70\uC694. \uADF8\uB7FC, \uB354 \uC911\uC694\uD55C \uC77C\uC744
+      \uD558\uC154\uC57C \uD560 \uD150\uB370 \uC81C\uAC00 \uBC29\uD574\uD558\uC9C0\uB294
+      \uC54A\uACA0\uC2B5\uB2C8\uB2E4.\""
     oneTime: 0
     nextDialogue: {fileID: 0}
