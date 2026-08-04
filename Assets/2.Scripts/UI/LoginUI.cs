@@ -38,6 +38,16 @@ public class LoginUI : MonoBehaviour
     [Tooltip("로그인 성공 시 이동할 씬 이름. 비우면 이동 안 함")]
     [SerializeField] private string nextSceneName = "";
 
+    [Header("━━━━━━ 오프라인 모드 (테스트용) ━━━━━━")]
+    [Tooltip("켜면 서버가 꺼진 것으로 치고 로컬 저장만 쓴다. 로그인 화면 체크박스와 연동됨.")]
+    [SerializeField] private bool offlineMode = false;
+
+    [Tooltip("직접 만든 체크박스를 쓰려면 여기에 연결. 비우면 로그인 버튼 옆에 자동 생성.")]
+    [SerializeField] private Toggle offlineToggle;
+
+    [Tooltip("체크박스를 자동으로 만들지 여부. 정식 UI가 생기면 끄면 된다.")]
+    [SerializeField] private bool createOfflineToggle = true;
+
     [Header("━━━━━━ 이벤트 ━━━━━━")]
     [Tooltip("로그인 성공 시 추가로 실행할 것 (씬 전환 외 연출 등)")]
     public UnityEvent onLoginSuccess;
@@ -60,6 +70,115 @@ public class LoginUI : MonoBehaviour
 
         if (idField == null || pwField == null || loginButton == null)
             Debug.LogWarning("[LoginUI] ID_Field/PW_Field/Button 중 못 찾은 게 있음 — 인스펙터에서 직접 연결 필요");
+
+        SetupOfflineToggle();
+    }
+
+    // =====================================================================
+    // [2026-08-04 추가] 오프라인 모드 체크박스
+    //
+    // 서버가 살아 있는지 자동으로 판정하는 대신, 사람이 직접 켜는 방식이다.
+    // 테스트할 때 서버를 실제로 끄지 않아도 되고, 판정 로직이 없어 오작동도 없다.
+    //
+    // 체크박스는 '로그인 버튼과 같은 부모' 아래에 만든다.
+    // LoginUI 자신에게 붙이면 VR에서 RenderTexture 캔버스 밖에 생겨 안 보인다.
+    // 로그인 버튼 옆이면 같은 캔버스 안이라 헤드셋에서도 그대로 보인다.
+    // =====================================================================
+    private void SetupOfflineToggle()
+    {
+        if (offlineToggle == null && createOfflineToggle && loginButton != null)
+        {
+            offlineToggle = CreateOfflineToggle(loginButton.transform.parent);
+        }
+
+        if (offlineToggle == null)
+        {
+            return;
+        }
+
+        offlineToggle.isOn = offlineMode;
+        offlineToggle.onValueChanged.AddListener(value =>
+        {
+            offlineMode = value;
+            ShowStatus(value
+                ? "오프라인 모드 — 로컬 저장만 사용합니다"
+                : "");
+        });
+    }
+
+    private Toggle CreateOfflineToggle(Transform parent)
+    {
+        if (parent == null)
+        {
+            return null;
+        }
+
+        GameObject root = new GameObject("OfflineModeToggle", typeof(RectTransform));
+        root.transform.SetParent(parent, false);
+
+        // Toggle이 붙은 오브젝트에 그래픽이 없으면 레이캐스트에 안 잡힌다.
+        // 그러면 작은 네모(28px)만 눌리고 글자를 눌러도 반응이 없다.
+        // 투명 이미지를 깔아 줄 전체를 클릭 범위로 만든다.
+        Image rootHit = root.AddComponent<Image>();
+        rootHit.color = new Color(1f, 1f, 1f, 0f);
+        rootHit.raycastTarget = true;
+
+        RectTransform rootRect = root.GetComponent<RectTransform>();
+        RectTransform buttonRect = loginButton.GetComponent<RectTransform>();
+        rootRect.anchorMin = buttonRect.anchorMin;
+        rootRect.anchorMax = buttonRect.anchorMax;
+        rootRect.pivot = buttonRect.pivot;
+        rootRect.sizeDelta = new Vector2(260f, 40f);
+        // 로그인 버튼 바로 아래에 놓는다.
+        rootRect.anchoredPosition = buttonRect.anchoredPosition +
+            new Vector2(0f, -(buttonRect.sizeDelta.y * 0.5f + 32f));
+
+        GameObject box = new GameObject("Box", typeof(RectTransform));
+        box.transform.SetParent(root.transform, false);
+        RectTransform boxRect = box.GetComponent<RectTransform>();
+        boxRect.anchorMin = new Vector2(0f, 0.5f);
+        boxRect.anchorMax = new Vector2(0f, 0.5f);
+        boxRect.pivot = new Vector2(0f, 0.5f);
+        boxRect.sizeDelta = new Vector2(28f, 28f);
+        boxRect.anchoredPosition = new Vector2(6f, 0f);
+        Image boxImage = box.AddComponent<Image>();
+        boxImage.color = new Color(0.10f, 0.13f, 0.18f, 0.95f);
+
+        GameObject check = new GameObject("Check", typeof(RectTransform));
+        check.transform.SetParent(box.transform, false);
+        RectTransform checkRect = check.GetComponent<RectTransform>();
+        checkRect.anchorMin = Vector2.zero;
+        checkRect.anchorMax = Vector2.one;
+        checkRect.offsetMin = new Vector2(5f, 5f);
+        checkRect.offsetMax = new Vector2(-5f, -5f);
+        Image checkImage = check.AddComponent<Image>();
+        checkImage.color = new Color(0.20f, 0.75f, 0.95f, 1f);
+
+        GameObject labelObject = new GameObject("Label", typeof(RectTransform));
+        labelObject.transform.SetParent(root.transform, false);
+        RectTransform labelRect = labelObject.GetComponent<RectTransform>();
+        labelRect.anchorMin = new Vector2(0f, 0.5f);
+        labelRect.anchorMax = new Vector2(1f, 0.5f);
+        labelRect.pivot = new Vector2(0f, 0.5f);
+        labelRect.offsetMin = new Vector2(42f, -18f);
+        labelRect.offsetMax = new Vector2(0f, 18f);
+
+        TextMeshProUGUI label = labelObject.AddComponent<TextMeshProUGUI>();
+        label.text = "오프라인 모드 (서버 없이 진행)";
+        label.fontSize = 20f;
+        label.alignment = TextAlignmentOptions.Left;
+        label.color = Color.white;
+        label.raycastTarget = false;
+        if (statusText != null)
+        {
+            label.font = statusText.font;
+        }
+
+        Toggle toggle = root.AddComponent<Toggle>();
+        toggle.targetGraphic = boxImage;
+        toggle.graphic = checkImage;
+        toggle.isOn = offlineMode;
+        return toggle;
     }
 
     // =====================================================================
@@ -68,6 +187,14 @@ public class LoginUI : MonoBehaviour
     public void OnClickLogin()
     {
         if (_busy) return;
+
+        // [2026-08-04] 오프라인 모드면 서버를 아예 거치지 않는다.
+        // 아이디/비밀번호도 확인하지 않는다 — 확인해 줄 서버가 없기 때문이다.
+        if (offlineMode)
+        {
+            StartOffline();
+            return;
+        }
 
         if (ServerApi.Instance == null)
         {
@@ -85,6 +212,23 @@ public class LoginUI : MonoBehaviour
         }
 
         StartCoroutine(LoginFlowCo(id, pw));
+    }
+
+    /// <summary>
+    /// [2026-08-04 추가] 서버 없이 다음 씬으로 들어간다.
+    /// 로그인 성공과 같은 경로를 타므로 씬 이동·이벤트는 그대로 동작한다.
+    /// 저장/불러오기는 OfflineSession.IsActive를 보고 로컬만 쓴다.
+    /// </summary>
+    private void StartOffline()
+    {
+        OfflineSession.Enter();
+        ShowStatus("오프라인 모드로 시작합니다 (로컬 저장)");
+
+        onLoginSuccess?.Invoke();
+        if (!string.IsNullOrEmpty(nextSceneName))
+        {
+            SceneManager.LoadScene(nextSceneName);
+        }
     }
 
     // =====================================================================

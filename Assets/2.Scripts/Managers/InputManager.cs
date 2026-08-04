@@ -1010,6 +1010,9 @@ public class InputManager : MonoBehaviour
         // 단독 키 기능을 덮어써야 하는데, 병합 전에 처리하면 뒤이어 다시 켜져버림.
         UpdateComboBindings();
 
+        // VR 콕핏 버튼은 패드처럼 OR로 얹는다 — 잠금 판정보다 먼저 해야 메뉴가 열렸을 때 같이 막힌다.
+        OverlayXrButtons();
+
         // UI/메뉴가 열려있으면(=입력 잠금) 키마+패드 병합이 끝난 최종 출력에서 게임플레이 입력만 무효화함.
         // 인벤토리/일시정지 등을 닫아야 하는 UI 토글 키는 살려둠(안 그러면 못 닫음).
         if (IsGameplayInputLocked())
@@ -1237,6 +1240,40 @@ public class InputManager : MonoBehaviour
     // 키마+패드 병합이 끝난 최종 출력에서 게임플레이 액션(이동/사격/스킬 등)만 기본값으로 되돌림.
     // UI 토글(연료/인벤토리/일시정지/맵)은 남겨둬야 패널을 닫을 수 있으므로 건드리지 않음.
     // =====================================================================
+    // =====================================================================
+    // [2026-08-04 추가] VR 콕핏 버튼 오버레이
+    //
+    // CockpitGripControls는 LateUpdate에서 값을 채우는데, Player는 Update에서
+    // 버튼을 읽는다. 그래서 LateUpdate에 직접 필드를 쓰면 다음 Update의
+    // ReadKeyboardMouse에 덮여 사라진다(조종간은 FixedUpdate에서 읽혀 살아남음).
+    //
+    // 패드 오버레이와 같은 규칙으로, VR이 채워둔 값을 여기서 OR로 합친 뒤 비운다.
+    // 이렇게 하면 스크립트 실행 순서에 기대지 않아도 된다.
+    // =====================================================================
+    public static bool xrFireBullet;
+    public static bool xrFireMissile;
+    public static bool xrDodge;
+    public static bool xrUseSkill;
+    public static bool xrSwitchMissileNext;
+    public static bool xrSwitchSkillSlot;
+
+    private void OverlayXrButtons()
+    {
+        if (xrFireBullet)         fireBullet = true;
+        if (xrFireMissile)        fireMissile = true;
+        if (xrDodge)              isDodging = true;
+        if (xrUseSkill)           useSkill = true;
+        if (xrSwitchMissileNext)  switchMissileNext = true;
+        if (xrSwitchSkillSlot)    switchSkillSlot = true;
+
+        xrFireBullet = false;
+        xrFireMissile = false;
+        xrDodge = false;
+        xrUseSkill = false;
+        xrSwitchMissileNext = false;
+        xrSwitchSkillSlot = false;
+    }
+
     private void ClearGameplayInput()
     {
         moveInput = Vector3.zero;

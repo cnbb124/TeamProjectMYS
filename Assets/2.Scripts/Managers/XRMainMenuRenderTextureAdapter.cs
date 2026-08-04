@@ -44,6 +44,8 @@ public sealed class XRMainMenuRenderTextureAdapter : MonoBehaviour
     private GameObject _lastPointerDiagnosticTarget;
     private bool _hasPointerDiagnosticTarget;
     private StandaloneInputModule _legacyPointerModule;
+    private BaseEventData _selectedUpdateData;
+    private EventSystem _selectedUpdateEventSystem;
     private bool _legacyPointerModuleWasEnabled;
     private GameObject _manualHoverTarget;
     private GameObject _manualPressTarget;
@@ -118,6 +120,45 @@ public sealed class XRMainMenuRenderTextureAdapter : MonoBehaviour
 
             ProcessManualPointer(pointerPosition);
         }
+
+        PumpSelectedObjectUpdate();
+    }
+
+    /// <summary>
+    /// [2026-08-04 추가] 선택된 UI에 매 프레임 갱신 이벤트를 보낸다.
+    ///
+    /// StandaloneInputModule을 꺼둔 상태(module.enabled = false)라
+    /// 원래 모듈이 하던 SendUpdateEventToSelectedObject가 돌지 않는다.
+    /// TMP_InputField는 이 갱신 이벤트(OnUpdateSelected) 안에서 키 입력을 읽으므로,
+    /// 이게 없으면 칸을 선택해도 글자가 하나도 안 들어간다.
+    ///
+    /// 선택된 것이 없으면 아무 일도 하지 않는다.
+    /// </summary>
+    private void PumpSelectedObjectUpdate()
+    {
+        if (_mouseOnlyEventSystem == null)
+        {
+            return;
+        }
+
+        GameObject selected = _mouseOnlyEventSystem.currentSelectedGameObject;
+        if (selected == null)
+        {
+            return;
+        }
+
+        if (_selectedUpdateData == null ||
+            _selectedUpdateEventSystem != _mouseOnlyEventSystem)
+        {
+            _selectedUpdateEventSystem = _mouseOnlyEventSystem;
+            _selectedUpdateData = new BaseEventData(_mouseOnlyEventSystem);
+        }
+
+        _selectedUpdateData.Reset();
+        ExecuteEvents.Execute(
+            selected,
+            _selectedUpdateData,
+            ExecuteEvents.updateSelectedHandler);
     }
 
     private void RefreshHangarCameraBinding()
@@ -295,6 +336,24 @@ public sealed class XRMainMenuRenderTextureAdapter : MonoBehaviour
         {
             _manualPressTarget =
                 ExecuteEvents.GetEventHandler<IPointerClickHandler>(target);
+        }
+
+        // [2026-08-04 추가] 클릭한 대상을 "선택" 상태로 만든다.
+        //
+        // StandaloneInputModule은 클릭할 때 pointerDown 말고 SetSelectedGameObject도 한다.
+        // 여기(수동 처리)는 pointerDown만 하고 있어서 버튼은 눌리는데
+        // 입력창(TMP_InputField)은 선택이 안 돼 키보드를 전혀 못 받았다.
+        // 로그인 화면에서 ID/PW 칸을 눌러도 타이핑이 안 되던 원인이다.
+        //
+        // 빈 곳을 누르면 selectHandler가 null이 되어 선택이 풀린다.
+        // 그것도 기본 동작과 같다(입력창 밖을 누르면 입력이 끝남).
+        GameObject selectHandler =
+            ExecuteEvents.GetEventHandler<ISelectHandler>(target);
+        if (selectHandler != _mouseOnlyEventSystem.currentSelectedGameObject)
+        {
+            _mouseOnlyEventSystem.SetSelectedGameObject(
+                selectHandler,
+                _pointerDiagnosticData);
         }
 
         _pointerDiagnosticData.pointerPress = _manualPressTarget;
