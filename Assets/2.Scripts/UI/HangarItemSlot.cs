@@ -1,17 +1,16 @@
 /*
  * [HangarItemSlot]
- * 격납고 파츠 리스트의 한 칸(아이템 슬롯).
- * PartData(ScriptableObject)를 참조해 실제 파츠 정보를 표시.
+ * 격납고 파츠 리스트의 한 칸(아이템 슬롯). PartData를 표시하고, 드래그로 노드에 끌어다 장착.
  *
  * [프리팹 구조]
- * ItemSlot (이 스크립트 부착)
+ * ItemSlot (이 스크립트 부착, 루트에 raycastTarget 켜진 Image 필요)
  *   ├ Icon (Image)        — 파츠 아이콘
  *   ├ NameText (TMP)      — 파츠 이름
  *   └ CountText (TMP)     — 보유 수량(1개면 숨김)
  *
- * [사용법]
- * HangarSlotList가 프리팹을 Instantiate한 뒤 Setup(partData, count) 호출.
- * 슬롯이 참조하는 파츠는 Data 프로퍼티로 외부에서 읽을 수 있음 (클릭 시 장착 등에 활용).
+ * [드래그 장착]
+ * 이 슬롯을 잡아 노드(HangarNodeDropTarget)로 드래그 → 드롭하면 그 부위에 장착.
+ * 드래그 중인 파츠는 DraggedPart(static)로 노출 — 노드 드롭 타겟이 읽어감.
  */
 
 using System;
@@ -20,36 +19,41 @@ using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using TMPro;
 
-public class HangarItemSlot : MonoBehaviour, IPointerClickHandler
+public class HangarItemSlot : MonoBehaviour,
+    IBeginDragHandler, IDragHandler, IEndDragHandler
 {
     [SerializeField] private Image    icon;
     [SerializeField] private TMP_Text nameText;
     [SerializeField] private TMP_Text countText;
 
-    // 이 슬롯이 표시 중인 파츠 데이터 (클릭/장착 처리에 활용)
+    /// <summary>이 슬롯이 표시 중인 파츠 데이터.</summary>
     public PartData Data { get; private set; }
 
-    /// <summary>슬롯 클릭 시 발행 — 담고 있는 PartData를 전달 (장착 처리용).</summary>
-    public event Action<PartData> onClicked;
+    /// <summary>현재 이 파츠가 기체에 장착된 것인지 (여분과 구분용).</summary>
+    public bool IsEquipped { get; private set; }
 
-    // 슬롯 루트에 raycastTarget 켜진 Image가 있어야 클릭이 잡힌다(보통 배경 Image).
-    public void OnPointerClick(PointerEventData eventData)
+    // 드래그 중인 파츠 — 노드 드롭 타겟이 읽는다. (드래그는 한 번에 하나뿐이라 static)
+    public static PartData DraggedPart { get; private set; }
+
+    private static GameObject _ghost;      // 커서 따라다니는 반투명 아이콘
+    private static Canvas     _rootCanvas;
+    private CanvasGroup       _canvasGroup;
+
+    private void Awake()
     {
-        if (Data != null) onClicked?.Invoke(Data);
+        _canvasGroup = GetComponent<CanvasGroup>();
+        if (_canvasGroup == null) _canvasGroup = gameObject.AddComponent<CanvasGroup>();
+        if (_rootCanvas == null)  _rootCanvas  = GetComponentInParent<Canvas>();
     }
 
-    /// <summary>
-    /// PartData를 받아 슬롯 한 칸을 채움.
-    /// </summary>
-    /// <param name="data">표시할 파츠 데이터</param>
-    /// <param name="count">보유 수량 (1이면 수량 텍스트 숨김)</param>
-    public void Setup(PartData data, int count = 1)
+    /// <summary>PartData를 받아 슬롯 한 칸을 채움. equipped면 이름에 "(장착됨)" 표시.</summary>
+    public void Setup(PartData data, int count = 1, bool equipped = false)
     {
         Data = data;
+        IsEquipped = equipped;
 
         if (data == null)
         {
-            // 빈 슬롯 처리
             if (icon != null)      { icon.sprite = null; icon.enabled = false; }
             if (nameText != null)  nameText.text  = "";
             if (countText != null) countText.text = "";
@@ -61,7 +65,50 @@ public class HangarItemSlot : MonoBehaviour, IPointerClickHandler
             icon.sprite  = data.icon;
             icon.enabled = data.icon != null;
         }
-        if (nameText != null)  nameText.text  = data.itemName;
+        if (nameText != null)
+            nameText.text = equipped ? $"{data.itemName}  (장착됨)" : data.itemName;
         if (countText != null) countText.text = count > 1 ? $"x{count}" : "";
+    }
+
+    // ── 드래그 ────────────────────────────────────────────────
+
+    public void OnBeginDrag(PointerEventData e)
+    {
+        if (Data == null) { e.pointerDrag = null; return; }
+
+        DraggedPart = Data;
+        _canvasGroup.blocksRaycasts = false;   // 커서 밑 노드가 드롭을 받도록 이 슬롯은 레이캐스트 비활성
+        _canvasGroup.alpha          = 0.5f;
+
+        // 커서 따라다닐 고스트 아이콘
+        _ghost = new GameObject("DragGhost", typeof(RectTransform), typeof(Image));
+        Image gi = _ghost.GetComponent<Image>();
+        gi.sprite        = Data.icon;
+        gi.raycastTarget = false;
+        gi.preserveAspect = true;
+        _ghost.transform.SetParent(_rootCanvas.transform, false);
+        _ghost.transform.SetAsLastSibling();
+        _ghost.GetComponent<RectTransform>().sizeDelta = new Vector2(64f, 64f);
+    }
+
+    public void OnDrag(PointerEventData e)
+    {
+        if (_ghost == null) return;
+
+        RectTransformUtility.ScreenPointToLocalPointInRectangle(
+            _rootCanvas.transform as RectTransform, e.position,
+            _rootCanvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : _rootCanvas.worldCamera,
+            out Vector2 pos);
+        _ghost.GetComponent<RectTransform>().anchoredPosition = pos;
+    }
+
+    public void OnEndDrag(PointerEventData e)
+    {
+        // OnDrop(노드)이 이 시점보다 먼저 실행되므로 DraggedPart는 드롭에서 이미 읽힘.
+        _canvasGroup.blocksRaycasts = true;
+        _canvasGroup.alpha          = 1f;
+
+        if (_ghost != null) { Destroy(_ghost); _ghost = null; }
+        DraggedPart = null;
     }
 }
