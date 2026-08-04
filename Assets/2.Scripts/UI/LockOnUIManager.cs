@@ -3,24 +3,36 @@ using UnityEngine;
 
 // 락온 마커도 전투씬 전용임 — HUD 프리팹 안에 들어 있어 씬과 함께 생기고 사라진다.
 // 싱글톤/DontDestroyOnLoad를 쓰지 않는 이유는 HUDManager와 같음.
+//
+// 화면 좌표로 찍으면 VR 콕핏 시점에서 어긋나므로, 타겟 위치에 월드 마커를 세움.
 public class LockOnUIManager : MonoBehaviour
 {
+    private const float MarkerCanvasSize = 100f;
+
     [Header("References")]
     [SerializeField] private LockOnSystem lockOnSystem;
     [SerializeField] private GameObject lockOnUIPrefab;
 
-    private Camera _mainCamera;
-    private Canvas _canvas;
-    private RectTransform _indicatorRoot;
-    private List<LockOnTargetUI> _pool = new List<LockOnTargetUI>();
-    private int _activeCount;
+    [Header("월드 마커")]
+    [Tooltip("마커 크기. 키우면 화면에서 크게 보임.")]
+    [SerializeField] private float markerSize = 0.05f;
 
-    private void Start()
+    [Tooltip("마커가 최대로 커지는 거리. 이보다 가까워져도 더 커지지 않음. 0이면 안 씀.")]
+    [SerializeField] private float markerMaxSizeDistance = 50f;
+
+    [Tooltip("마커가 최대로 작아지는 거리. 이보다 멀어져도 더 작아지지 않음. 0이면 안 씀.")]
+    [SerializeField] private float markerMinSizeDistance = 800f;
+
+    private class Marker
     {
-        _canvas = GetComponentInParent<Canvas>();
-        _indicatorRoot = transform as RectTransform;
-        RefreshCameraReference();
+        public GameObject root;
+        public Transform tr;
+        public LockOnTargetUI ui;
     }
+
+    private readonly List<Marker> _pool = new List<Marker>();
+    private Transform _markerRoot;
+    private int _activeCount;
 
     private void Update()
     {
@@ -28,9 +40,12 @@ public class LockOnUIManager : MonoBehaviour
         // 플레이어가 런타임 스폰(네트워크)이라 Start 시점엔 아직 없을 수 있어 매번 확인함.
         if (lockOnSystem == null && GameManager.Instance != null && GameManager.Instance.playerRef != null)
             lockOnSystem = GameManager.Instance.playerRef.GetComponent<LockOnSystem>();
-        RefreshCameraReference();
 
-        if (lockOnSystem == null || _mainCamera == null || _indicatorRoot == null) return;
+        if (lockOnSystem == null || lockOnUIPrefab == null)
+        {
+            HideFrom(0);
+            return;
+        }
 
         _activeCount = 0;
 
@@ -39,8 +54,21 @@ public class LockOnUIManager : MonoBehaviour
         else
             UpdateMulti();
 
-        for (int i = _activeCount; i < _pool.Count; i++)
-            _pool[i].Hide();
+        HideFrom(_activeCount);
+    }
+
+    private void OnDisable()
+    {
+        HideFrom(0);
+    }
+
+    private void OnDestroy()
+    {
+        // 마커는 HUD 밖 독립 루트에 있어서 HUD가 사라져도 남음.
+        if (_markerRoot != null)
+        {
+            Destroy(_markerRoot.gameObject);
+        }
     }
 
     private void UpdateSingle()
@@ -50,7 +78,7 @@ public class LockOnUIManager : MonoBehaviour
         {
             bool isLocked = lockOnSystem.IsLocked;
             float progress = lockOnSystem.GetLockOnProgress(lockOnSystem.LockOnCandidate);
-            ShowIndicator(lockOnSystem.LockOnCandidate.position, progress, isLocked);
+            ShowMarker(lockOnSystem.LockOnCandidate, progress, isLocked);
         }
     }
 
@@ -62,121 +90,86 @@ public class LockOnUIManager : MonoBehaviour
             if (target == null) continue;
             bool isLocked = lockOnSystem.MultiLockedTargets.Contains(target);
             float progress = lockOnSystem.GetLockOnProgress(target);
-            ShowIndicator(target.position, progress, isLocked);
+            ShowMarker(target, progress, isLocked);
         }
     }
 
-    private void ShowIndicator(Vector3 worldPos, float progress, bool isLocked)
+    private void ShowMarker(Transform target, float progress, bool isLocked)
     {
-        if (_canvas != null && _canvas.renderMode == RenderMode.WorldSpace)
+        Marker marker = GetMarker(_activeCount);
+        marker.tr.position = target.position;
+
+        if (!marker.root.activeSelf)
         {
-            ShowWorldSpaceIndicator(worldPos, progress, isLocked);
-            return;
+            marker.root.SetActive(true);
         }
 
-        Vector3 screenPos = _mainCamera.WorldToScreenPoint(
-            worldPos,
-            Camera.MonoOrStereoscopicEye.Mono);
-        if (screenPos.z < 0f) return; // 카메라 뒤면 표시 안 함
-
-        Camera uiCamera = _canvas != null &&
-                          _canvas.renderMode != RenderMode.ScreenSpaceOverlay
-            ? (_canvas.worldCamera != null ? _canvas.worldCamera : _mainCamera)
-            : null;
-
-        if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(
-                _indicatorRoot,
-                screenPos,
-                uiCamera,
-                out Vector2 localPosition))
-        {
-            return;
-        }
-
-        LockOnTargetUI ui = GetUI(_activeCount);
-        ui.Show();
-        ui.UpdateUI(localPosition, progress, isLocked);
+        marker.ui.UpdateUI(progress, isLocked);
         _activeCount++;
     }
 
-    private void ShowWorldSpaceIndicator(
-        Vector3 worldPos,
-        float progress,
-        bool isLocked)
+    private void HideFrom(int startIndex)
     {
-        Vector3 cameraPosition = _mainCamera.transform.position;
-        Vector3 targetDirection = worldPos - cameraPosition;
-        if (targetDirection.sqrMagnitude < 0.0001f ||
-            Vector3.Dot(_mainCamera.transform.forward, targetDirection) <= 0f)
+        for (int i = startIndex; i < _pool.Count; i++)
         {
-            return;
-        }
-
-        RectTransform canvasRect = _canvas.transform as RectTransform;
-        if (canvasRect == null)
-        {
-            return;
-        }
-
-        // Project the actual camera-to-target ray onto the ship-fixed HUD
-        // plane. Viewport mapping drifts when the player turns their head.
-        Plane hudPlane = new Plane(canvasRect.forward, canvasRect.position);
-        Ray targetRay = new Ray(cameraPosition, targetDirection.normalized);
-        if (!hudPlane.Raycast(targetRay, out float enter) || enter <= 0f)
-        {
-            return;
-        }
-
-        Vector3 canvasLocalPosition =
-            canvasRect.InverseTransformPoint(targetRay.GetPoint(enter));
-        Rect rect = canvasRect.rect;
-        const float markerPadding = 70f;
-        canvasLocalPosition.x = Mathf.Clamp(
-            canvasLocalPosition.x,
-            rect.xMin + markerPadding,
-            rect.xMax - markerPadding);
-        canvasLocalPosition.y = Mathf.Clamp(
-            canvasLocalPosition.y,
-            rect.yMin + markerPadding,
-            rect.yMax - markerPadding);
-        canvasLocalPosition.z = 0f;
-
-        Vector3 indicatorLocalPosition = _indicatorRoot.InverseTransformPoint(
-            canvasRect.TransformPoint(canvasLocalPosition));
-        Vector2 localPosition = new Vector2(
-            indicatorLocalPosition.x,
-            indicatorLocalPosition.y);
-
-        LockOnTargetUI ui = GetUI(_activeCount);
-        ui.Show();
-        ui.UpdateUI(localPosition, progress, isLocked);
-        _activeCount++;
-    }
-
-    private void RefreshCameraReference()
-    {
-        Camera activeMainCamera = Camera.main;
-        if (activeMainCamera != null &&
-            activeMainCamera.isActiveAndEnabled &&
-            activeMainCamera != _mainCamera)
-        {
-            _mainCamera = activeMainCamera;
-            return;
-        }
-
-        if (_mainCamera == null || !_mainCamera.isActiveAndEnabled)
-        {
-            _mainCamera = activeMainCamera;
+            Marker marker = _pool[i];
+            if (marker.root != null && marker.root.activeSelf)
+            {
+                marker.root.SetActive(false);
+            }
         }
     }
 
-    private LockOnTargetUI GetUI(int index)
+    // UI 프리팹이 RectTransform 기반이라 캔버스가 있어야 그려짐 — 월드 캔버스를 런타임에 씌움.
+    private Marker GetMarker(int index)
     {
-        if (index < _pool.Count) return _pool[index];
+        if (index < _pool.Count)
+        {
+            return _pool[index];
+        }
 
-        GameObject go = Instantiate(lockOnUIPrefab, transform);
-        LockOnTargetUI ui = go.GetComponent<LockOnTargetUI>();
-        _pool.Add(ui);
-        return ui;
+        if (_markerRoot == null)
+        {
+            _markerRoot = new GameObject("LockOnMarkers").transform;
+        }
+
+        GameObject markerObject = new GameObject(
+            "LockOnMarker",
+            typeof(RectTransform),
+            typeof(Canvas),
+            typeof(WorldBillboard));
+        markerObject.layer = lockOnUIPrefab.layer;
+        markerObject.transform.SetParent(_markerRoot, false);
+
+        RectTransform markerRect = markerObject.GetComponent<RectTransform>();
+        markerRect.sizeDelta = new Vector2(MarkerCanvasSize, MarkerCanvasSize);
+        markerRect.pivot = new Vector2(0.5f, 0.5f);
+
+        Canvas canvas = markerObject.GetComponent<Canvas>();
+        canvas.renderMode = RenderMode.WorldSpace;
+
+        WorldBillboard billboard = markerObject.GetComponent<WorldBillboard>();
+        billboard.Configure(markerSize, markerMaxSizeDistance, markerMinSizeDistance);
+
+        GameObject uiObject = Instantiate(lockOnUIPrefab, markerObject.transform);
+
+        RectTransform uiRect = uiObject.GetComponent<RectTransform>();
+        if (uiRect != null)
+        {
+            uiRect.anchorMin = new Vector2(0.5f, 0.5f);
+            uiRect.anchorMax = new Vector2(0.5f, 0.5f);
+            uiRect.pivot = new Vector2(0.5f, 0.5f);
+            uiRect.anchoredPosition = Vector2.zero;
+        }
+
+        Marker marker = new Marker
+        {
+            root = markerObject,
+            tr = markerObject.transform,
+            ui = uiObject.GetComponent<LockOnTargetUI>()
+        };
+
+        _pool.Add(marker);
+        return marker;
     }
 }

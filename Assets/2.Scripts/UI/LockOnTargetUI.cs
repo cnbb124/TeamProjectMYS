@@ -12,29 +12,58 @@ public class LockOnTargetUI : MonoBehaviour
         new Color(1f, 0.82f, 0.05f, 1f);
     private static readonly Color VrColorLocked = Color.white;
 
+    private static readonly Color CbColorCandidate =
+        new Color(1f, 0.82f, 0.05f, 1f);
+    private static readonly Color CbColorLocked = Color.white;
+    private static readonly Color CbOutlineColor =
+        new Color(0f, 0f, 0f, 0.85f);
+    private const float CbLockedScale = 1.4f;
+    private const float CbCandidateScale = 1f;
+    private const float CbLockedOutline = 4f;
+    private const float CbCandidateOutline = 2f;
+
     private RectTransform _rect;
     private RectTransform _frameRect;
     private Text _vrStatusText;
-    private Outline _vrFrameOutline;
-    private bool _vrPresentationReady;
+    private Outline _frameOutline;
+    private bool _vrStatusTextReady;
 
     private void Awake()
     {
         _rect = GetComponent<RectTransform>();
-        if (frameImage != null)
+        if (frameImage == null)
         {
-            _frameRect = frameImage.rectTransform;
+            return;
         }
+
+        _frameRect = frameImage.rectTransform;
+        _frameOutline = frameImage.GetComponent<Outline>();
+        if (_frameOutline == null)
+        {
+            _frameOutline = frameImage.gameObject.AddComponent<Outline>();
+        }
+
+        _frameOutline.useGraphicAlpha = false;
+        _frameOutline.enabled = false;
     }
 
-    public void UpdateUI(Vector2 localPosition, float progress, bool isLocked)
+    public void UpdateUI(float progress, bool isLocked)
     {
-        _rect.anchoredPosition = localPosition;
-
         bool useVrPresentation = XRRuntimeManager.IsRunning;
-        Color color = useVrPresentation
-            ? (isLocked ? VrColorLocked : VrColorCandidate)
-            : (isLocked ? ColorLocked : ColorCandidate);
+        bool colorBlind = ColorBlindSettings.Enabled;
+
+        Color normalColor;
+        if (useVrPresentation)
+        {
+            normalColor = isLocked ? VrColorLocked : VrColorCandidate;
+        }
+        else
+        {
+            normalColor = isLocked ? ColorLocked : ColorCandidate;
+        }
+
+        Color accessibleColor = isLocked ? CbColorLocked : CbColorCandidate;
+        Color color = ColorBlindSettings.Pick(normalColor, accessibleColor);
 
         if (frameImage != null)
         {
@@ -49,70 +78,115 @@ public class LockOnTargetUI : MonoBehaviour
 
         if (useVrPresentation)
         {
-            UpdateVrPresentation(progress, isLocked);
+            UpdateVrStatusText(progress, isLocked);
         }
         else
         {
-            RestoreDesktopPresentation();
+            HideVrStatusText();
         }
+
+        ApplyScale(isLocked, useVrPresentation, colorBlind);
+        ApplyFrameRotation(isLocked, useVrPresentation);
+        ApplyOutline(isLocked, useVrPresentation, colorBlind);
     }
 
-    private void UpdateVrPresentation(float progress, bool isLocked)
+    private void ApplyScale(bool isLocked, bool useVrPresentation, bool colorBlind)
     {
-        EnsureVrPresentation();
+        float scale = 1f;
 
-        float pulse = 0.5f + 0.5f *
-            Mathf.Sin(Time.unscaledTime * Mathf.PI * 3f);
-        float scale = isLocked
-            ? 1.35f
-            : Mathf.Lerp(1.08f, 1.2f, pulse);
+        if (useVrPresentation)
+        {
+            float pulse = 0.5f + 0.5f *
+                Mathf.Sin(Time.unscaledTime * Mathf.PI * 3f);
+            scale = isLocked ? 1.35f : Mathf.Lerp(1.08f, 1.2f, pulse);
+        }
+        else if (colorBlind)
+        {
+            scale = isLocked ? CbLockedScale : CbCandidateScale;
+        }
+
         _rect.localScale = Vector3.one * scale;
-
-        if (_frameRect != null)
-        {
-            _frameRect.localRotation = isLocked
-                ? Quaternion.identity
-                : Quaternion.Euler(0f, 0f, -Time.unscaledTime * 45f);
-        }
-
-        if (_vrFrameOutline != null)
-        {
-            _vrFrameOutline.enabled = true;
-            _vrFrameOutline.effectDistance = isLocked
-                ? new Vector2(4f, -4f)
-                : new Vector2(2f, -2f);
-        }
-
-        if (_vrStatusText != null)
-        {
-            _vrStatusText.gameObject.SetActive(true);
-            _vrStatusText.text = isLocked
-                ? "LOCKED"
-                : $"LOCKING {Mathf.RoundToInt(Mathf.Clamp01(progress) * 100f)}%";
-            _vrStatusText.fontSize = isLocked ? 30 : 24;
-        }
     }
 
-    private void EnsureVrPresentation()
+    private void ApplyFrameRotation(bool isLocked, bool useVrPresentation)
     {
-        if (_vrPresentationReady)
+        if (_frameRect == null)
         {
             return;
         }
 
-        _vrPresentationReady = true;
-
-        if (frameImage != null)
+        if (useVrPresentation && !isLocked)
         {
-            _vrFrameOutline = frameImage.GetComponent<Outline>();
-            if (_vrFrameOutline == null)
-            {
-                _vrFrameOutline = frameImage.gameObject.AddComponent<Outline>();
-            }
-
-            _vrFrameOutline.effectColor = Color.black;
-            _vrFrameOutline.useGraphicAlpha = false;
+            _frameRect.localRotation =
+                Quaternion.Euler(0f, 0f, -Time.unscaledTime * 45f);
         }
+        else
+        {
+            _frameRect.localRotation = Quaternion.identity;
+        }
+    }
+
+    private void ApplyOutline(bool isLocked, bool useVrPresentation, bool colorBlind)
+    {
+        if (_frameOutline == null)
+        {
+            return;
+        }
+
+        if (!colorBlind && !useVrPresentation)
+        {
+            _frameOutline.enabled = false;
+            return;
+        }
+
+        _frameOutline.enabled = true;
+
+        if (colorBlind)
+        {
+            _frameOutline.effectColor = CbOutlineColor;
+            float thickness = isLocked ? CbLockedOutline : CbCandidateOutline;
+            _frameOutline.effectDistance = new Vector2(thickness, thickness);
+        }
+        else
+        {
+            _frameOutline.effectColor = Color.black;
+            _frameOutline.effectDistance = isLocked
+                ? new Vector2(4f, -4f)
+                : new Vector2(2f, -2f);
+        }
+    }
+
+    private void UpdateVrStatusText(float progress, bool isLocked)
+    {
+        EnsureVrStatusText();
+        if (_vrStatusText == null)
+        {
+            return;
+        }
+
+        _vrStatusText.gameObject.SetActive(true);
+        _vrStatusText.text = isLocked
+            ? "LOCKED"
+            : $"LOCKING {Mathf.RoundToInt(Mathf.Clamp01(progress) * 100f)}%";
+        _vrStatusText.fontSize = isLocked ? 30 : 24;
+    }
+
+    private void HideVrStatusText()
+    {
+        if (_vrStatusText != null)
+        {
+            _vrStatusText.gameObject.SetActive(false);
+        }
+    }
+
+    private void EnsureVrStatusText()
+    {
+        if (_vrStatusTextReady)
+        {
+            return;
+        }
+
+        _vrStatusTextReady = true;
 
         Font font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
         if (font == null)
@@ -149,25 +223,6 @@ public class LockOnTargetUI : MonoBehaviour
         textOutline.effectColor = Color.black;
         textOutline.effectDistance = new Vector2(2f, -2f);
         textOutline.useGraphicAlpha = false;
-    }
-
-    private void RestoreDesktopPresentation()
-    {
-        _rect.localScale = Vector3.one;
-        if (_frameRect != null)
-        {
-            _frameRect.localRotation = Quaternion.identity;
-        }
-
-        if (_vrFrameOutline != null)
-        {
-            _vrFrameOutline.enabled = false;
-        }
-
-        if (_vrStatusText != null)
-        {
-            _vrStatusText.gameObject.SetActive(false);
-        }
     }
 
     public void Show() => gameObject.SetActive(true);
