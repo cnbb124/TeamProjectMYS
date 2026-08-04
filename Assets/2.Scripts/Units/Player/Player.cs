@@ -1070,6 +1070,14 @@ public class Player : Unit
 		CollectParticles();
 	}
 
+	/// <summary>파츠가 갈린 뒤 함선 쪽 캐시를 다시 잡음. 함선이 살아남는 재시작에서도 파티클이 나오게 함.</summary>
+	public void RefreshAfterLoadout()
+	{
+		CollectParticles();
+		_wasMoving = false;
+		_wasBoosting = false;
+	}
+
 	/// <summary>파츠 프리팹이 다시 생성되면(로드아웃 변경 등) 캐시가 죽으므로 다시 수집해야 함.</summary>
 	public void CollectParticles()
 	{

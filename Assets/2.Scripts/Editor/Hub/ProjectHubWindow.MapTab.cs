@@ -190,6 +190,8 @@ public partial class ProjectHubWindow
 		if (GUILayout.Button(isSelected ? "고름" : "고르기", EditorStyles.miniButton))
 		{
 			_paletteSelected = prefab;
+			GUIUtility.keyboardControl = 0;
+			EditorGUIUtility.editingTextField = false;
 		}
 		// 이게 뭔지 확인용 — 프로젝트 창에서 실물을 짚어줌
 		if (GUILayout.Button("보기", EditorStyles.miniButton, GUILayout.Width(38f)))
