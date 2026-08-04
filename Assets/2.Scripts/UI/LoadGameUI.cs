@@ -68,7 +68,9 @@ public class LoadGameUI : MonoBehaviour
         if (ServerApi.Instance == null || !ServerApi.Instance.IsLoggedIn)
         {
             BuildSlots(null);   // 로컬만으로 그림
-            SetStatus(HasAnyLocalSave() ? "" : "저장된 게임이 없습니다.");
+            SetStatus(HasAnyLocalSave()
+                ? (OfflineSession.IsActive ? "오프라인 저장 데이터" : "")
+                : "저장된 게임이 없습니다.");
             return;
         }
 

@@ -67,19 +67,87 @@ public sealed class CockpitViewSwitcher : MonoBehaviour
     [Tooltip("1920x1080 HUD Canvas를 VR 월드 공간에 표시할 때 사용할 크기입니다.")]
     [SerializeField] private float _vrHudScale = 0.001f;
 
+    [Tooltip("CameraPoint 기준 VR HUD의 좌우(X), 위아래(Y), 앞뒤(Z) 추가 오프셋입니다.")]
+    [SerializeField] private Vector3 _vrHudLocalOffset = Vector3.zero;
+
+    [Tooltip("CameraPoint 기준 VR HUD의 추가 회전 각도입니다.")]
+    [SerializeField] private Vector3 _vrHudLocalEulerAngles = Vector3.zero;
+
+    [Header("VR HUD Element Offsets (Canvas units)")]
+    [SerializeField] private Vector2 _vrRadarOffset = Vector2.zero;
+    [SerializeField] private Vector2 _vrHpOffset = Vector2.zero;
+    [SerializeField] private Vector2 _vrFuelOffset = Vector2.zero;
+    [SerializeField] private Vector2 _vrWeaponOffset = Vector2.zero;
+    [SerializeField] private Vector2 _vrBoosterOffset = Vector2.zero;
+
     private AudioListener _vrListener;
     private AudioListener _thirdPersonListener;
+    private readonly List<AudioListener> _suppressedListeners = new List<AudioListener>();
     private bool _isCockpitView;
     private bool _initialized;
     private readonly List<XRInputSubsystem> _xrInputSubsystems = new List<XRInputSubsystem>();
     private readonly Dictionary<Canvas, HudCanvasState> _hudCanvasStates =
         new Dictionary<Canvas, HudCanvasState>();
+    private readonly Dictionary<RectTransform, Vector2> _hudElementOriginalPositions =
+        new Dictionary<RectTransform, Vector2>();
     private readonly List<Canvas> _hudCanvases = new List<Canvas>();
     private Transform _vrHudAnchor;
     private float _nextHudRefreshTime;
     private Coroutine _seatedTrackingCoroutine;
 
     public bool IsCockpitView => _isCockpitView;
+    public float VrHudDistance => _vrHudDistance;
+    public float VrHudScale => _vrHudScale;
+    public Vector3 VrHudLocalOffset => _vrHudLocalOffset;
+    public Vector3 VrHudLocalEulerAngles => _vrHudLocalEulerAngles;
+    public Vector2 VrRadarOffset => _vrRadarOffset;
+    public Vector2 VrHpOffset => _vrHpOffset;
+    public Vector2 VrFuelOffset => _vrFuelOffset;
+    public Vector2 VrWeaponOffset => _vrWeaponOffset;
+    public Vector2 VrBoosterOffset => _vrBoosterOffset;
+
+    public void PreviewVrHudPlacement(
+        float distance,
+        float scale,
+        Vector3 localOffset,
+        Vector3 localEulerAngles)
+    {
+        _vrHudDistance = Mathf.Max(0.05f, distance);
+        _vrHudScale = Mathf.Max(0.00001f, scale);
+        _vrHudLocalOffset = localOffset;
+        _vrHudLocalEulerAngles = localEulerAngles;
+
+        if (_initialized && _isCockpitView)
+        {
+            ConfigureHudForView(true);
+            UpdateHudPose();
+        }
+    }
+
+    public void PreviewVrHudElementOffsets(
+        Vector2 radar,
+        Vector2 hp,
+        Vector2 fuel,
+        Vector2 weapon,
+        Vector2 booster)
+    {
+        _vrRadarOffset = radar;
+        _vrHpOffset = hp;
+        _vrFuelOffset = fuel;
+        _vrWeaponOffset = weapon;
+        _vrBoosterOffset = booster;
+
+        if (_initialized && _isCockpitView)
+        {
+            for (int i = 0; i < _hudCanvases.Count; i++)
+            {
+                if (_hudCanvases[i] != null)
+                {
+                    ConfigureHudElements(_hudCanvases[i], true);
+                }
+            }
+        }
+    }
 
     // 콕핏 카메라는 프리팹에서 켜진 채 MainCamera 태그를 달고 있음 — 남의 함선까지 켜지지 않게 일단 꺼둠.
     private void Awake()
@@ -229,7 +297,7 @@ public sealed class CockpitViewSwitcher : MonoBehaviour
         // 3인칭 카메라가 없어도 콕핏 시점은 되므로 초기화는 계속함. 전환만 막힘(ToggleView).
         _vrListener = GetOrAddAudioListener(_vrCamera);
         _thirdPersonListener = _thirdPersonCamera != null
-            ? GetOrAddAudioListener(_thirdPersonCamera)
+            ? ResolveThirdPersonListener(_thirdPersonCamera)
             : null;
         _initialized = true;
 
@@ -374,7 +442,7 @@ public sealed class CockpitViewSwitcher : MonoBehaviour
         }
 
         _thirdPersonListener = _thirdPersonCamera != null
-            ? GetOrAddAudioListener(_thirdPersonCamera)
+            ? ResolveThirdPersonListener(_thirdPersonCamera)
             : null;
 
         // 일반 Camera도 유효한 3인칭 출력이다. Brain은 Cinemachine 씬에서만 필수다.
@@ -401,6 +469,48 @@ public sealed class CockpitViewSwitcher : MonoBehaviour
         return listener != null
             ? listener
             : targetCamera.gameObject.AddComponent<AudioListener>();
+    }
+
+    /// <summary>
+    /// [2026-08-04 수정] 3인칭 카메라의 오디오 리스너를 찾는다.
+    ///
+    /// 예전에는 GetOrAddAudioListener를 그대로 썼는데, 고른 카메라에 리스너가 없으면
+    /// 새로 붙여 버렸다. 씬의 Main Camera에는 이미 리스너가 있으므로 결과적으로
+    /// 리스너가 2개가 되고, 3인칭에서 둘 다 켜져
+    /// "There are 2 audio listeners in the scene" 경고가 계속 떴다.
+    /// 시점을 바꿔도 사라지지 않았던 이유가 이것이다.
+    ///
+    /// 그래서 새로 만들지 않는다. 카메라에 없으면 씬에 이미 있는 리스너를 찾아
+    /// 그것을 관리 대상으로 삼는다. 없으면 null을 반환하고, 그때는 아무것도 건드리지 않는다.
+    /// </summary>
+    private AudioListener ResolveThirdPersonListener(Camera targetCamera)
+    {
+        if (targetCamera == null)
+        {
+            return null;
+        }
+
+        AudioListener listener = targetCamera.GetComponent<AudioListener>();
+        if (listener != null)
+        {
+            return listener;
+        }
+
+        AudioListener[] all = Resources.FindObjectsOfTypeAll<AudioListener>();
+        for (int i = 0; i < all.Length; i++)
+        {
+            AudioListener candidate = all[i];
+            if (candidate == null ||
+                candidate == _vrListener ||
+                !candidate.gameObject.scene.IsValid())
+            {
+                continue;
+            }
+
+            return candidate;
+        }
+
+        return null;
     }
 
     public void ToggleView()
@@ -430,6 +540,7 @@ public sealed class CockpitViewSwitcher : MonoBehaviour
 
         SetCameraActive(_vrCamera, _vrListener, cockpitView);
         SetCameraActive(_thirdPersonCamera, _thirdPersonListener, !cockpitView);
+        EnforceSingleAudioListener(cockpitView);
         ConfigureHudForView(cockpitView);
 
         if (cockpitView)
@@ -533,6 +644,8 @@ public sealed class CockpitViewSwitcher : MonoBehaviour
                 canvas.transform.localScale = originalState.localScale;
                 canvas.transform.SetSiblingIndex(originalState.siblingIndex);
             }
+
+            ConfigureHudElements(canvas, cockpitView);
         }
 
         if (cockpitView)
@@ -543,6 +656,55 @@ public sealed class CockpitViewSwitcher : MonoBehaviour
         {
             _vrHudAnchor = null;
         }
+    }
+
+    private void ConfigureHudElements(Canvas canvas, bool cockpitView)
+    {
+        ApplyHudElementOffset(canvas, "PanelRadar", _vrRadarOffset, cockpitView);
+        ApplyHudElementOffset(canvas, "HP", _vrHpOffset, cockpitView);
+        ApplyHudElementOffset(canvas, "FuelGaugePanel", _vrFuelOffset, cockpitView);
+        ApplyHudElementOffset(canvas, "WeaponSlotUI", _vrWeaponOffset, cockpitView);
+        ApplyHudElementOffset(canvas, "PanelNitro", _vrBoosterOffset, cockpitView);
+    }
+
+    private void ApplyHudElementOffset(
+        Canvas canvas,
+        string targetName,
+        Vector2 offset,
+        bool cockpitView)
+    {
+        RectTransform target = FindHudElement(canvas.transform, targetName);
+        if (target == null)
+        {
+            return;
+        }
+
+        if (!_hudElementOriginalPositions.TryGetValue(target, out Vector2 original))
+        {
+            original = target.anchoredPosition;
+            _hudElementOriginalPositions.Add(target, original);
+        }
+
+        target.anchoredPosition = cockpitView ? original + offset : original;
+    }
+
+    private static RectTransform FindHudElement(Transform parent, string targetName)
+    {
+        foreach (Transform child in parent)
+        {
+            if (child.name.Equals(targetName, StringComparison.OrdinalIgnoreCase))
+            {
+                return child as RectTransform;
+            }
+
+            RectTransform result = FindHudElement(child, targetName);
+            if (result != null)
+            {
+                return result;
+            }
+        }
+
+        return null;
     }
 
     private bool HasValidHudCanvas()
@@ -606,10 +768,13 @@ public sealed class CockpitViewSwitcher : MonoBehaviour
             }
         }
 
-        Vector3 hudPosition =
-            _vrHudAnchor.position +
-            _vrHudAnchor.forward * Mathf.Max(0.5f, _vrHudDistance);
-        Quaternion hudRotation = _vrHudAnchor.rotation;
+        Vector3 localPosition =
+            _vrHudLocalOffset +
+            Vector3.forward * Mathf.Max(0.05f, _vrHudDistance);
+        Vector3 hudPosition = _vrHudAnchor.TransformPoint(localPosition);
+        Quaternion hudRotation =
+            _vrHudAnchor.rotation *
+            Quaternion.Euler(_vrHudLocalEulerAngles);
         Vector3 hudScale =
             Vector3.one * Mathf.Max(0.0001f, _vrHudScale);
 
@@ -760,6 +925,48 @@ public sealed class CockpitViewSwitcher : MonoBehaviour
         // 평행이동해 실제 좌석 위치에서 보이게 맞춘다. (회전 보정 뒤에 해야 함)
         Vector3 positionOffset = cameraPoint.position - _vrCamera.transform.position;
         xrRig.position += positionOffset;
+    }
+
+    /// <summary>
+    /// [2026-08-04 추가] 콕핏 시점에서 오디오 리스너를 하나만 남긴다.
+    ///
+    /// 이 스크립트는 콕핏 카메라와 3인칭 카메라의 리스너만 관리하는데,
+    /// 씬에 따라 그 둘이 아닌 리스너(추적 카메라, 씬 기본 카메라 등)가 더 있어
+    /// "There are 2 audio listeners in the scene" 경고가 매 프레임 뜬다.
+    ///
+    /// 콕핏에 들어갈 때 남의 리스너를 꺼두고, 나올 때 원래대로 되돌린다.
+    /// 껐던 것만 기억했다가 되살리므로 원래 꺼져 있던 것은 건드리지 않는다.
+    /// </summary>
+    private void EnforceSingleAudioListener(bool cockpitView)
+    {
+        if (!cockpitView)
+        {
+            for (int i = 0; i < _suppressedListeners.Count; i++)
+            {
+                if (_suppressedListeners[i] != null)
+                {
+                    _suppressedListeners[i].enabled = true;
+                }
+            }
+
+            _suppressedListeners.Clear();
+            return;
+        }
+
+        _suppressedListeners.Clear();
+
+        AudioListener[] listeners = FindObjectsOfType<AudioListener>();
+        for (int i = 0; i < listeners.Length; i++)
+        {
+            AudioListener listener = listeners[i];
+            if (listener == null || listener == _vrListener || !listener.enabled)
+            {
+                continue;
+            }
+
+            listener.enabled = false;
+            _suppressedListeners.Add(listener);
+        }
     }
 
     private static void SetCameraActive(

@@ -44,6 +44,13 @@ public class PlayerButtonUI : MonoBehaviour
     /// <summary>멀티 플레이 시작 — 포톤 접속 후 멀티(대기실)로.</summary>
     public void OnClickMulti()
     {
+        // [2026-08-04] 오프라인 모드는 서버를 안 거치고 들어온 상태라 멀티는 막는다.
+        if (OfflineSession.IsActive)
+        {
+            Debug.LogWarning("[PlayerButtonUI] 오프라인 모드에서는 멀티플레이를 이용할 수 없습니다.");
+            return;
+        }
+
         AutoSave();
 
         if (NetworkManager.Instance != null)
