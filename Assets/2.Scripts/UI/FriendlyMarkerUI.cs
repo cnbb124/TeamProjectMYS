@@ -53,6 +53,16 @@ public class FriendlyMarkerUI : MonoBehaviour
     [Tooltip("닉네임이 없을 때 쓸 이름 형식. {0}에 포톤 액터번호가 들어감 (예: \"P{0}\" → P2)")]
     [SerializeField] private string fallbackNameFormat = "P{0}";
 
+    [Header("월드 마커")]
+    [Tooltip("마커 크기. 키우면 화면에서 크게 보임.")]
+    [SerializeField] private float markerSize = 0.05f;
+
+    [Tooltip("마커가 최대로 커지는 거리. 이보다 가까워져도 더 커지지 않음. 0이면 안 씀.")]
+    [SerializeField] private float markerMaxSizeDistance = 50f;
+
+    [Tooltip("마커가 최대로 작아지는 거리. 이보다 멀어져도 더 작아지지 않음. 0이면 안 씀.")]
+    [SerializeField] private float markerMinSizeDistance = 800f;
+
     [Header("색상")]
     [SerializeField] private Color markerColor = new Color(0.2f, 0.8f, 1f, 1f); // 하늘색(아군)
 
@@ -60,8 +70,12 @@ public class FriendlyMarkerUI : MonoBehaviour
     [Tooltip("체크 시 아군 탐색 결과를 Console에 출력 (누가 아군으로 잡혔는지 확인용)")]
     [SerializeField] private bool debugLog = false;
 
-    private readonly List<FriendlyMarker> _markers = new List<FriendlyMarker>();
+    private const float MarkerCanvasSize = 100f;
+
+    private readonly List<FriendlyMarker> _edgeMarkers = new List<FriendlyMarker>();
+    private readonly List<FriendlyMarker> _worldMarkers = new List<FriendlyMarker>();
     private readonly List<Player>         _allies  = new List<Player>();
+    private Transform _worldRoot;
     private float _nextRefreshTime;
 
     private void Update()
@@ -74,21 +88,21 @@ public class FriendlyMarkerUI : MonoBehaviour
             RefreshAllies();
         }
 
-        // 마커 수를 아군 수에 맞춤 (남는 건 끄기)
-        while (_markers.Count < _allies.Count) AddMarker();
-        for (int i = _allies.Count; i < _markers.Count; i++)
-            _markers[i].gameObject.SetActive(false);
-
         for (int i = 0; i < _allies.Count; i++)
         {
             Player ally = _allies[i];
             if (ally == null)
             {
-                _markers[i].gameObject.SetActive(false);
+                SetActiveAt(_edgeMarkers, i, false);
+                SetActiveAt(_worldMarkers, i, false);
                 continue;
             }
-            UpdateMarker(_markers[i], ally);
+            UpdateMarker(i, ally);
         }
+
+        // 마커 수를 아군 수에 맞춤 (남는 건 끄기)
+        HideFrom(_edgeMarkers, _allies.Count);
+        HideFrom(_worldMarkers, _allies.Count);
     }
 
     // 인스펙터 연결 우선, 비어있으면 GameManager.playerRef / Camera.main로 폴백
@@ -130,50 +144,65 @@ public class FriendlyMarkerUI : MonoBehaviour
         }
     }
 
-    private void UpdateMarker(FriendlyMarker m, Player ally)
+    private void UpdateMarker(int index, Player ally)
     {
         Vector3 originPos = playerTransform != null ? playerTransform.position : mainCam.transform.position;
         float   dist      = Vector3.Distance(originPos, ally.transform.position);
 
         if (maxDistance > 0f && dist > maxDistance)
         {
-            m.gameObject.SetActive(false);
+            SetActiveAt(_edgeMarkers, index, false);
+            SetActiveAt(_worldMarkers, index, false);
             return;
         }
 
-        Vector3 screenPos = mainCam.WorldToScreenPoint(ally.transform.position);
+        // 화면 안/밖 판정은 뷰포트(0~1) 기준. 픽셀(Screen.width)로 재면 VR에서 눈 텍스처
+        // 해상도와 창 해상도가 달라 통째로 어긋남.
+        Vector3 viewportPos = mainCam.WorldToViewportPoint(
+            ally.transform.position,
+            Camera.MonoOrStereoscopicEye.Mono);
 
-        // 화면 안/밖 판정은 픽셀 기준(screenPos가 픽셀이므로).
-        bool isOnScreen = screenPos.z > 0f
-            && screenPos.x > 0f && screenPos.x < Screen.width
-            && screenPos.y > 0f && screenPos.y < Screen.height;
+        bool isOnScreen = viewportPos.z > 0f
+            && viewportPos.x > 0f && viewportPos.x < 1f
+            && viewportPos.y > 0f && viewportPos.y < 1f;
 
         if (!isOnScreen && hideWhenOffScreen)
         {
-            m.gameObject.SetActive(false);
+            SetActiveAt(_edgeMarkers, index, false);
+            SetActiveAt(_worldMarkers, index, false);
             return;
         }
 
+        if (isOnScreen)
+        {
+            SetActiveAt(_edgeMarkers, index, false);
+
+            FriendlyMarker world = GetWorldMarker(index);
+            world.transform.parent.gameObject.SetActive(true);
+            world.transform.parent.position = ally.transform.position;
+
+            world.SetOffScreen(false, 0f);
+            world.Rect.localScale = Vector3.one * onScreenScale;
+            world.SetName(GetPlayerName(ally));
+            return;
+        }
+
+        SetActiveAt(_worldMarkers, index, false);
+
+        FriendlyMarker m = GetEdgeMarker(index);
         m.gameObject.SetActive(true);
 
         // 마커 좌표는 부모 사각형의 로컬 단위로 다룸 — CanvasScaler가 걸려 있으면 로컬 단위가
         // 픽셀과 다르므로(레퍼런스 해상도 기준), 픽셀로 계산하면 다른 해상도에서 위치가 어긋남.
         Rect parentRect = markerParent.rect;
         Vector2 center = parentRect.center;
-        RectTransformUtility.ScreenPointToLocalPointInRectangle(
-            markerParent, screenPos, null, out Vector2 localPos);
+        Vector2 localPos = new Vector2(
+            parentRect.xMin + viewportPos.x * parentRect.width,
+            parentRect.yMin + viewportPos.y * parentRect.height);
 
-        if (isOnScreen)
-        {
-            m.Rect.localPosition = localPos;
-
-            m.SetOffScreen(false, 0f);
-            m.Rect.localScale = Vector3.one * onScreenScale;
-        }
-        else
         {
             // 카메라 뒤쪽이면 투영이 반전돼서 나오므로 사각형 중심 기준으로 되뒤집음
-            if (screenPos.z < 0f)
+            if (viewportPos.z < 0f)
             {
                 localPos = center - (localPos - center);
             }
@@ -219,10 +248,62 @@ public class FriendlyMarkerUI : MonoBehaviour
         return string.Format(fallbackNameFormat, view.Owner.ActorNumber);
     }
 
-    private void AddMarker()
+    private FriendlyMarker GetEdgeMarker(int index)
     {
-        GameObject go = Instantiate(markerPrefab, markerParent);
+        while (_edgeMarkers.Count <= index)
+        {
+            GameObject go = Instantiate(markerPrefab, markerParent);
+            _edgeMarkers.Add(BuildMarker(go));
+        }
 
+        return _edgeMarkers[index];
+    }
+
+    private FriendlyMarker GetWorldMarker(int index)
+    {
+        while (_worldMarkers.Count <= index)
+        {
+            if (_worldRoot == null)
+            {
+                _worldRoot = new GameObject("FriendlyWorldMarkers").transform;
+            }
+
+            GameObject holder = new GameObject(
+                "FriendlyWorldMarker",
+                typeof(RectTransform),
+                typeof(Canvas),
+                typeof(WorldBillboard));
+            holder.layer = markerPrefab.layer;
+            holder.transform.SetParent(_worldRoot, false);
+
+            RectTransform holderRect = holder.GetComponent<RectTransform>();
+            holderRect.sizeDelta = new Vector2(MarkerCanvasSize, MarkerCanvasSize);
+            holderRect.pivot = new Vector2(0.5f, 0.5f);
+
+            holder.GetComponent<Canvas>().renderMode = RenderMode.WorldSpace;
+            holder.GetComponent<WorldBillboard>().Configure(
+                markerSize,
+                markerMaxSizeDistance,
+                markerMinSizeDistance);
+
+            GameObject go = Instantiate(markerPrefab, holder.transform);
+            RectTransform goRect = go.GetComponent<RectTransform>();
+            if (goRect != null)
+            {
+                goRect.anchorMin = new Vector2(0.5f, 0.5f);
+                goRect.anchorMax = new Vector2(0.5f, 0.5f);
+                goRect.pivot = new Vector2(0.5f, 0.5f);
+                goRect.anchoredPosition = Vector2.zero;
+            }
+
+            _worldMarkers.Add(BuildMarker(go));
+        }
+
+        return _worldMarkers[index];
+    }
+
+    private FriendlyMarker BuildMarker(GameObject go)
+    {
         FriendlyMarker marker = go.GetComponent<FriendlyMarker>();
         if (marker == null)
         {
@@ -231,6 +312,39 @@ public class FriendlyMarkerUI : MonoBehaviour
         }
 
         marker.SetColor(markerColor);
-        _markers.Add(marker);
+        return marker;
+    }
+
+    private void HideFrom(List<FriendlyMarker> list, int startIndex)
+    {
+        for (int i = startIndex; i < list.Count; i++)
+        {
+            SetActiveAt(list, i, false);
+        }
+    }
+
+    private void SetActiveAt(List<FriendlyMarker> list, int index, bool active)
+    {
+        if (index >= list.Count)
+        {
+            return;
+        }
+
+        GameObject target = list == _worldMarkers
+            ? list[index].transform.parent.gameObject
+            : list[index].gameObject;
+
+        if (target.activeSelf != active)
+        {
+            target.SetActive(active);
+        }
+    }
+
+    private void OnDestroy()
+    {
+        if (_worldRoot != null)
+        {
+            Destroy(_worldRoot.gameObject);
+        }
     }
 }

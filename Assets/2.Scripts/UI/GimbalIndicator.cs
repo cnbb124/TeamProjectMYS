@@ -185,7 +185,10 @@ public class GimbalIndicatorUI : MonoBehaviour
     // 카메라 뒤쪽 지점은 x/y가 뒤집혀 나오므로 false를 돌려줌.
     private bool TryProjectToLocal(Vector3 worldPos, out Vector2 localPos)
     {
-        Vector3 screenPos = mainCam.WorldToScreenPoint(worldPos);
+        // VR은 눈마다 투영이 달라, 지정을 안 하면 좌안 기준으로 계산돼 마커가 한쪽으로 밀림.
+        Vector3 screenPos = mainCam.WorldToScreenPoint(
+            worldPos,
+            Camera.MonoOrStereoscopicEye.Mono);
         if (screenPos.z < 0f)
         {
             localPos = Vector2.zero;
