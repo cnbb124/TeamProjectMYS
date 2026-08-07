@@ -611,7 +611,10 @@ public class Player : Unit
 		}
 
 		// 피격 카메라 흔들림 — 받은 데미지 비례(크리면 증폭). 플레이어가 맞았을 때만.
-		CameraShaker.Instance?.ShakeDamage(info.hitPosition, info.damageAmount, info.isCritical);
+		if (CameraShaker.Instance != null)
+		{
+			CameraShaker.Instance.ShakeDamage(info.hitPosition, info.damageAmount, info.isCritical);
+		}
 	}
 
 	// 함선이 사라지면 카메라용 분신도 같이 치움 — 안 그러면 빈 오브젝트가 씬에 남음

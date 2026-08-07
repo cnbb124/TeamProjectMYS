@@ -56,6 +56,15 @@ public class CameraManager : MonoBehaviour
         }
     }
 
+    private void OnDestroy()
+    {
+        // 가드 없이 지우면 중복본이 파괴될 때 정상 인스턴스 참조까지 날아감.
+        if (instance == this)
+        {
+            instance = null;
+        }
+    }
+
     // 함선이 DDOL이라 다른 씬에서 태어났으면 Player.Start의 등록이 여기선 안 돎 — 카메라가 직접 회수함.
     private void Start()
     {

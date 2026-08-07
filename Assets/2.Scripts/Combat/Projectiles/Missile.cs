@@ -349,7 +349,10 @@ public class Missile : Projectile, IExplodable
 		VFXManager.Instance.PlayEffectAtPosition(explodeEffectType, transform.position, Quaternion.identity, 0f, Vector3.one * vfxRatio);
 		SoundManager.Instance.PlaySFX3DAtPosition(explosionSoundType, transform.position);
 		// 카메라 흔들림 (폭발 반경 비례, 카메라와의 거리 감쇠는 Cinemachine이 처리)
-		CameraShaker.Instance?.ShakeExplosion(transform.position, explosionInfo.explosionRadius);
+		if (CameraShaker.Instance != null)
+		{
+			CameraShaker.Instance.ShakeExplosion(transform.position, explosionInfo.explosionRadius);
+		}
 		//맞은것들의 충돌박스 갯수 카운트
 		int hitCount = Physics.OverlapSphereNonAlloc(transform.position, explosionInfo.explosionRadius, _explosionHits, _hitBoxMask);
 

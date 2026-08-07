@@ -554,6 +554,12 @@ public class Enemy : Unit
 						PhotonNetwork.Destroy(gameObject);
 					}
 				}
+				else
+				{
+					// 죽은 뒤 소유권을 잃으면(방장 퇴장 시 컨트롤러가 0으로 돌아감) 아무도 반납하지
+					// 않아 시체가 남음 — 로컬에서라도 치움.
+					PoolManager.Instance?.Return(gameObject);
+				}
 			}
 			else
 			{

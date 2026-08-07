@@ -72,6 +72,15 @@ public class CameraShaker : MonoBehaviour
         }
     }
 
+    private void OnDestroy()
+    {
+        // 가드 없이 지우면 중복본이 파괴될 때 정상 인스턴스 참조까지 날아감.
+        if (instance == this)
+        {
+            instance = null;
+        }
+    }
+
     // 월드 위치에서 임펄스 발생. 거리 감쇠는 Cinemachine이 처리.
     public void ShakeAt(Vector3 worldPos, float strength)
     {
