@@ -141,26 +141,28 @@ public class EnemyTurretBase : Enemy
 
         Vector3 aimPoint = GetPredictedAimPoint();
 
+        // 각도는 각자 부모 로컬 공간에서 뽑음 — 월드 축을 쓰면 부모(보스 등)가 기울었을 때 조준이 어긋남.
+        float turnStep = rotateSpeed * Time.fixedDeltaTime;
+
         // 수평(Y축) — Swivel이 좌우로만 회전
         if (swivelTransform != null)
         {
-            Vector3 flatTarget = aimPoint;
-            flatTarget.y = swivelTransform.position.y;
-            Quaternion rotY = Quaternion.LookRotation(flatTarget - swivelTransform.position, swivelTransform.up);
-            swivelTransform.rotation = Quaternion.RotateTowards(
-                swivelTransform.rotation, rotY, rotateSpeed * Time.fixedDeltaTime);
-            swivelTransform.localEulerAngles = new Vector3(0f, swivelTransform.localEulerAngles.y, 0f);
+            Transform swivelSpace = swivelTransform.parent != null ? swivelTransform.parent : transform;
+            Vector3 localAim = swivelSpace.InverseTransformPoint(aimPoint);
+            float yaw = Mathf.Atan2(localAim.x, localAim.z) * Mathf.Rad2Deg;
+            swivelTransform.localRotation = Quaternion.RotateTowards(
+                swivelTransform.localRotation, Quaternion.Euler(0f, yaw, 0f), turnStep);
         }
 
         // 수직(X축) — Mount가 상하로만 회전
         if (mountTransform != null)
         {
-            Vector3 dir = aimPoint - mountTransform.position;
-            Vector3 up = swivelTransform != null ? swivelTransform.up : transform.up;
-            Quaternion rotX = Quaternion.LookRotation(dir, up);
-            mountTransform.rotation = Quaternion.RotateTowards(
-                mountTransform.rotation, rotX, rotateSpeed * Time.fixedDeltaTime);
-            mountTransform.localEulerAngles = new Vector3(mountTransform.localEulerAngles.x, 0f, 0f);
+            Transform mountSpace = mountTransform.parent != null ? mountTransform.parent : transform;
+            Vector3 localAim = mountSpace.InverseTransformPoint(aimPoint);
+            float flatDistance = new Vector2(localAim.x, localAim.z).magnitude;
+            float pitch = -Mathf.Atan2(localAim.y, flatDistance) * Mathf.Rad2Deg;
+            mountTransform.localRotation = Quaternion.RotateTowards(
+                mountTransform.localRotation, Quaternion.Euler(pitch, 0f, 0f), turnStep);
         }
     }
 }

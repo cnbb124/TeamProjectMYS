@@ -191,6 +191,7 @@ public enum SCENE_TYPE
 	STAGE3 = 55,
 	STAGE4 = 60,
 	JAYEON = 900,
+	STAGE5 = 905,
 	RESULT = 999,   // 게임오버/스테이지클리어 공용 결과 화면. 끝을 나타내는 값 — 신규 번호 계산에서 제외됨
 }
 

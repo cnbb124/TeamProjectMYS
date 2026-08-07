@@ -36,6 +36,23 @@ public partial class ProjectHubWindow
 		public FlowNode[] nodes;
 	}
 
+	// SCENE_TYPE에서 이름이 STAGE로 시작하는 값을 번호순으로 모음.
+	// 스테이지를 추가해도 흐름도를 손댈 필요가 없게 하려는 것.
+	private static SCENE_TYPE[] CollectStageScenes()
+	{
+		List<SCENE_TYPE> stages = new List<SCENE_TYPE>();
+		foreach (SCENE_TYPE type in System.Enum.GetValues(typeof(SCENE_TYPE)))
+		{
+			if (type.ToString().StartsWith("STAGE", System.StringComparison.OrdinalIgnoreCase))
+			{
+				stages.Add(type);
+			}
+		}
+
+		stages.Sort();
+		return stages.ToArray();
+	}
+
 	private static readonly FlowRow[] SceneFlowRows =
 	{
 		new FlowRow
@@ -56,8 +73,7 @@ public partial class ProjectHubWindow
 			nodes = new[]
 			{
 				FlowNode.Of(SCENE_TYPE.MAP_SELECT),
-				FlowNode.Group("스테이지",
-					SCENE_TYPE.STAGE1, SCENE_TYPE.STAGE2, SCENE_TYPE.STAGE3, SCENE_TYPE.STAGE4),
+				FlowNode.Group("스테이지", CollectStageScenes()),
 				FlowNode.Of(SCENE_TYPE.RESULT),
 			},
 		},
@@ -68,8 +84,7 @@ public partial class ProjectHubWindow
 			{
 				FlowNode.Of(SCENE_TYPE.MULTIPLAYER),
 				FlowNode.Of(SCENE_TYPE.MAP_SELECT),
-				FlowNode.Group("스테이지",
-					SCENE_TYPE.STAGE1, SCENE_TYPE.STAGE2, SCENE_TYPE.STAGE3, SCENE_TYPE.STAGE4),
+				FlowNode.Group("스테이지", CollectStageScenes()),
 				FlowNode.Of(SCENE_TYPE.RESULT),
 			},
 		},
