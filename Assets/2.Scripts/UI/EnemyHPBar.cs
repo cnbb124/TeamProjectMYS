@@ -65,9 +65,12 @@ public class EnemyHPBar : MonoBehaviour
     {
         // 카메라는 잡을 때까지만 탐색함(잡은 뒤엔 null 체크에서 바로 빠져나가 비용 0).
         // Awake에서 한 번만 잡으면 적이 카메라보다 먼저 스폰되거나, 씬 전환으로 vCam/카메라가 파괴되면 null로 굳어 바가 영영 안 뜸.
-        if (_cam == null)
+        if (_cam == null || !_cam.isActiveAndEnabled)
         {
-            _cam = Camera.main;
+            Camera activeMainCamera = Camera.main;
+            _cam = activeMainCamera != null && activeMainCamera.isActiveAndEnabled
+                ? activeMainCamera
+                : null;
         }
 
         if (_unit == null || _cam == null || hpFill == null) return;

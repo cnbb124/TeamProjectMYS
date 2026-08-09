@@ -48,6 +48,9 @@ public class LoginUI : MonoBehaviour
     [Tooltip("체크박스를 자동으로 만들지 여부. 정식 UI가 생기면 끄면 된다.")]
     [SerializeField] private bool createOfflineToggle = true;
 
+    [Tooltip("로그인 버튼 기준 위치. 상태 문구와 겹치면 Y를 더 내린다.")]
+    [SerializeField] private Vector2 offlineTogglePadding = new Vector2(0f, -70f);
+
     [Header("━━━━━━ 이벤트 ━━━━━━")]
     [Tooltip("로그인 성공 시 추가로 실행할 것 (씬 전환 외 연출 등)")]
     public UnityEvent onLoginSuccess;
@@ -128,10 +131,28 @@ public class LoginUI : MonoBehaviour
         rootRect.anchorMin = buttonRect.anchorMin;
         rootRect.anchorMax = buttonRect.anchorMax;
         rootRect.pivot = buttonRect.pivot;
-        rootRect.sizeDelta = new Vector2(260f, 40f);
-        // 로그인 버튼 바로 아래에 놓는다.
-        rootRect.anchoredPosition = buttonRect.anchoredPosition +
-            new Vector2(0f, -(buttonRect.sizeDelta.y * 0.5f + 32f));
+        // 기존 안내 문구가 줄바꿈되지 않도록 충분한 폭을 확보한다.
+        rootRect.sizeDelta = new Vector2(
+            Mathf.Max(360f, buttonRect.sizeDelta.x), 36f);
+        // 상태 문구가 버튼 바로 아래에 뜨므로 그보다 더 내려놓는다.
+        rootRect.anchoredPosition =
+            buttonRect.anchoredPosition + offlineTogglePadding;
+
+        // 표시 순서: 로그인 버튼 -> 오프라인 토글 -> 선택 상태 문구.
+        // 기존 StatusText 위치가 토글과 겹치므로 토글 바로 아래로 내린다.
+        if (statusText != null &&
+            statusText.transform.parent == root.transform.parent &&
+            statusText.transform is RectTransform statusRect)
+        {
+            const float statusGap = 10f;
+            float statusY = rootRect.anchoredPosition.y
+                - rootRect.sizeDelta.y * 0.5f
+                - statusRect.sizeDelta.y * 0.5f
+                - statusGap;
+            statusRect.anchoredPosition = new Vector2(
+                statusRect.anchoredPosition.x,
+                statusY);
+        }
 
         GameObject box = new GameObject("Box", typeof(RectTransform));
         box.transform.SetParent(root.transform, false);
@@ -160,15 +181,17 @@ public class LoginUI : MonoBehaviour
         labelRect.anchorMin = new Vector2(0f, 0.5f);
         labelRect.anchorMax = new Vector2(1f, 0.5f);
         labelRect.pivot = new Vector2(0f, 0.5f);
-        labelRect.offsetMin = new Vector2(42f, -18f);
-        labelRect.offsetMax = new Vector2(0f, 18f);
+        labelRect.offsetMin = new Vector2(38f, -16f);
+        labelRect.offsetMax = new Vector2(-4f, 16f);
 
         TextMeshProUGUI label = labelObject.AddComponent<TextMeshProUGUI>();
         label.text = "오프라인 모드 (서버 없이 진행)";
-        label.fontSize = 20f;
+        label.fontSize = 18f;
         label.alignment = TextAlignmentOptions.Left;
         label.color = Color.white;
         label.raycastTarget = false;
+        label.enableWordWrapping = false;
+        label.overflowMode = TextOverflowModes.Overflow;
         if (statusText != null)
         {
             label.font = statusText.font;
