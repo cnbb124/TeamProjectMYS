@@ -79,6 +79,11 @@ public sealed class CockpitViewSwitcher : MonoBehaviour
     [SerializeField] private Vector2 _vrFuelOffset = Vector2.zero;
     [SerializeField] private Vector2 _vrWeaponOffset = Vector2.zero;
     [SerializeField] private Vector2 _vrBoosterOffset = Vector2.zero;
+    [SerializeField] private Vector3 _vrRadarRotation = Vector3.zero;
+    [SerializeField] private Vector3 _vrHpRotation = Vector3.zero;
+    [SerializeField] private Vector3 _vrFuelRotation = Vector3.zero;
+    [SerializeField] private Vector3 _vrWeaponRotation = Vector3.zero;
+    [SerializeField] private Vector3 _vrBoosterRotation = Vector3.zero;
 
     private AudioListener _vrListener;
     private AudioListener _thirdPersonListener;
@@ -90,10 +95,13 @@ public sealed class CockpitViewSwitcher : MonoBehaviour
         new Dictionary<Canvas, HudCanvasState>();
     private readonly Dictionary<RectTransform, Vector2> _hudElementOriginalPositions =
         new Dictionary<RectTransform, Vector2>();
+    private readonly Dictionary<RectTransform, Quaternion> _hudElementOriginalRotations =
+        new Dictionary<RectTransform, Quaternion>();
     private readonly List<Canvas> _hudCanvases = new List<Canvas>();
     private Transform _vrHudAnchor;
     private float _nextHudRefreshTime;
     private Coroutine _seatedTrackingCoroutine;
+    private bool _hudPreviewRequested;
 
     public bool IsCockpitView => _isCockpitView;
     public float VrHudDistance => _vrHudDistance;
@@ -136,17 +144,38 @@ public sealed class CockpitViewSwitcher : MonoBehaviour
         _vrFuelOffset = fuel;
         _vrWeaponOffset = weapon;
         _vrBoosterOffset = booster;
+        _hudPreviewRequested = true;
 
-        if (_initialized && _isCockpitView)
+        // The placement window is itself the explicit preview request. Do not
+        // silently discard it while view initialization is between refreshes.
+        if (!HasValidHudCanvas())
         {
-            for (int i = 0; i < _hudCanvases.Count; i++)
-            {
-                if (_hudCanvases[i] != null)
-                {
-                    ConfigureHudElements(_hudCanvases[i], true);
-                }
-            }
+            CacheHudCanvases();
         }
+
+        ApplyHudElementOffsetsToCachedCanvases(true);
+    }
+
+    public void PreviewVrHudElementRotations(
+        Vector3 radar,
+        Vector3 hp,
+        Vector3 fuel,
+        Vector3 weapon,
+        Vector3 booster)
+    {
+        _vrRadarRotation = radar;
+        _vrHpRotation = hp;
+        _vrFuelRotation = fuel;
+        _vrWeaponRotation = weapon;
+        _vrBoosterRotation = booster;
+        _hudPreviewRequested = true;
+
+        if (!HasValidHudCanvas())
+        {
+            CacheHudCanvases();
+        }
+
+        ApplyHudElementOffsetsToCachedCanvases(true);
     }
 
     // 콕핏 카메라는 프리팹에서 켜진 채 MainCamera 태그를 달고 있음 — 남의 함선까지 켜지지 않게 일단 꺼둠.
@@ -158,6 +187,12 @@ public sealed class CockpitViewSwitcher : MonoBehaviour
             return;
         }
         ShutDownCockpitCamera();
+    }
+
+    private void OnEnable()
+    {
+        Canvas.willRenderCanvases -= ApplyHudElementsBeforeRender;
+        Canvas.willRenderCanvases += ApplyHudElementsBeforeRender;
     }
 
     // 내 함선만 초기화. Awake는 IsMine 확정 전이라 Start에서 함.
@@ -230,17 +265,30 @@ public sealed class CockpitViewSwitcher : MonoBehaviour
         if (_initialized && _isCockpitView)
         {
             UpdateHudPose();
+            // Some HUD layout components rebuild RectTransforms after Update.
+            // Reapply the requested VR-only offsets at the end of the frame.
+            ApplyHudElementOffsetsToCachedCanvases(true);
         }
     }
 
     private void OnDisable()
     {
+        Canvas.willRenderCanvases -= ApplyHudElementsBeforeRender;
         RestoreHudState();
     }
 
     private void OnDestroy()
     {
+        Canvas.willRenderCanvases -= ApplyHudElementsBeforeRender;
         RestoreHudState();
+    }
+
+    private void ApplyHudElementsBeforeRender()
+    {
+        if (_isCockpitView || _hudPreviewRequested)
+        {
+            ApplyHudElementOffsetsToCachedCanvases(true);
+        }
     }
 
     private void Initialize()
@@ -537,6 +585,10 @@ public sealed class CockpitViewSwitcher : MonoBehaviour
         }
 
         _isCockpitView = cockpitView;
+        if (!cockpitView)
+        {
+            _hudPreviewRequested = false;
+        }
 
         SetCameraActive(_vrCamera, _vrListener, cockpitView);
         SetCameraActive(_thirdPersonCamera, _thirdPersonListener, !cockpitView);
@@ -660,17 +712,75 @@ public sealed class CockpitViewSwitcher : MonoBehaviour
 
     private void ConfigureHudElements(Canvas canvas, bool cockpitView)
     {
-        ApplyHudElementOffset(canvas, "PanelRadar", _vrRadarOffset, cockpitView);
-        ApplyHudElementOffset(canvas, "HP", _vrHpOffset, cockpitView);
-        ApplyHudElementOffset(canvas, "FuelGaugePanel", _vrFuelOffset, cockpitView);
-        ApplyHudElementOffset(canvas, "WeaponSlotUI", _vrWeaponOffset, cockpitView);
-        ApplyHudElementOffset(canvas, "PanelNitro", _vrBoosterOffset, cockpitView);
+        ApplyHudElementTransform(canvas, "PanelRadar", _vrRadarOffset, _vrRadarRotation, cockpitView);
+        ApplyHudElementTransform(canvas, "PanelHUD", _vrHpOffset, _vrHpRotation, cockpitView);
+        ApplyHudElementTransform(canvas, "FuelGageIndicator", _vrFuelOffset, _vrFuelRotation, cockpitView);
+        ApplyHudElementTransform(canvas, "AmmoUI", _vrWeaponOffset, _vrWeaponRotation, cockpitView);
+        ApplyHudElementTransform(canvas, "QuickSlotUI", _vrWeaponOffset, _vrWeaponRotation, cockpitView);
+        ApplyHudElementTransform(canvas, "PanelNitro", _vrBoosterOffset, _vrBoosterRotation, cockpitView);
     }
 
-    private void ApplyHudElementOffset(
+    private void ApplyHudElementOffsetsToCachedCanvases(bool cockpitView)
+    {
+        for (int i = 0; i < _hudCanvases.Count; i++)
+        {
+            if (_hudCanvases[i] != null)
+            {
+                ConfigureHudElements(_hudCanvases[i], cockpitView);
+            }
+        }
+    }
+
+    public string GetVrHudElementStatus()
+    {
+        Canvas canvas = null;
+        for (int i = 0; i < _hudCanvases.Count; i++)
+        {
+            if (_hudCanvases[i] != null)
+            {
+                canvas = _hudCanvases[i];
+                break;
+            }
+        }
+
+        if (canvas == null)
+        {
+            return "HUD Canvas: not found";
+        }
+
+        return
+            HudElementStatus(canvas, "Radar", "PanelRadar") + "\n" +
+            HudElementStatus(canvas, "HP", "PanelHUD") + "\n" +
+            HudElementStatus(canvas, "Fuel", "FuelGageIndicator") + "\n" +
+            HudElementStatus(canvas, "Weapon Ammo", "AmmoUI") + "\n" +
+            HudElementStatus(canvas, "Weapon/Skill", "QuickSlotUI") + "\n" +
+            HudElementStatus(canvas, "Booster", "PanelNitro");
+    }
+
+    private static string HudElementStatus(
+        Canvas canvas,
+        string label,
+        string targetName)
+    {
+        RectTransform target = FindHudElement(canvas.transform, targetName);
+        if (target == null)
+        {
+            return label + ": missing";
+        }
+
+        Vector2 position = target.anchoredPosition;
+        Vector3 rotation = target.localEulerAngles;
+        return label + ": connected  actual X=" + position.x.ToString("0.##") +
+            " Y=" + position.y.ToString("0.##") +
+            " Rot=" + rotation.x.ToString("0.#") + "," +
+            rotation.y.ToString("0.#") + "," + rotation.z.ToString("0.#");
+    }
+
+    private void ApplyHudElementTransform(
         Canvas canvas,
         string targetName,
         Vector2 offset,
+        Vector3 rotation,
         bool cockpitView)
     {
         RectTransform target = FindHudElement(canvas.transform, targetName);
@@ -685,7 +795,16 @@ public sealed class CockpitViewSwitcher : MonoBehaviour
             _hudElementOriginalPositions.Add(target, original);
         }
 
+        if (!_hudElementOriginalRotations.TryGetValue(target, out Quaternion originalRotation))
+        {
+            originalRotation = target.localRotation;
+            _hudElementOriginalRotations.Add(target, originalRotation);
+        }
+
         target.anchoredPosition = cockpitView ? original + offset : original;
+        target.localRotation = cockpitView
+            ? originalRotation * Quaternion.Euler(rotation)
+            : originalRotation;
     }
 
     private static RectTransform FindHudElement(Transform parent, string targetName)

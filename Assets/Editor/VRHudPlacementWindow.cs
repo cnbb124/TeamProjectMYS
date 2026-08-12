@@ -1,5 +1,6 @@
 #if UNITY_EDITOR
 using UnityEditor;
+using UnityEditorInternal;
 using UnityEngine;
 
 public sealed class VRHudPlacementWindow : EditorWindow
@@ -17,6 +18,11 @@ public sealed class VRHudPlacementWindow : EditorWindow
     private Vector2 _fuelOffset = Vector2.zero;
     private Vector2 _weaponOffset = Vector2.zero;
     private Vector2 _boosterOffset = Vector2.zero;
+    private Vector3 _radarRotation = Vector3.zero;
+    private Vector3 _hpRotation = Vector3.zero;
+    private Vector3 _fuelRotation = Vector3.zero;
+    private Vector3 _weaponRotation = Vector3.zero;
+    private Vector3 _boosterRotation = Vector3.zero;
 
     [MenuItem("Tools/VR/HUD Placement")]
     private static void Open()
@@ -46,6 +52,13 @@ public sealed class VRHudPlacementWindow : EditorWindow
                 true);
         }
 
+        if (Application.isPlaying && _liveSwitcher != null)
+        {
+            EditorGUILayout.HelpBox(
+                _liveSwitcher.GetVrHudElementStatus(),
+                MessageType.None);
+        }
+
         if (GUILayout.Button("Find Live Cockpit"))
         {
             FindLiveSwitcher();
@@ -65,10 +78,21 @@ public sealed class VRHudPlacementWindow : EditorWindow
             "아래 값은 기존 HUD 요소 위치에 더해지는 VR 전용 Canvas 오프셋입니다.",
             MessageType.None);
         _radarOffset = EditorGUILayout.Vector2Field("Radar (PanelRadar)", _radarOffset);
-        _hpOffset = EditorGUILayout.Vector2Field("HP", _hpOffset);
-        _fuelOffset = EditorGUILayout.Vector2Field("Fuel", _fuelOffset);
-        _weaponOffset = EditorGUILayout.Vector2Field("Weapon", _weaponOffset);
+        _hpOffset = EditorGUILayout.Vector2Field("HP (PanelHUD)", _hpOffset);
+        _fuelOffset = EditorGUILayout.Vector2Field("Fuel (FuelGageIndicator)", _fuelOffset);
+        _weaponOffset = EditorGUILayout.Vector2Field("Weapon (AmmoUI)", _weaponOffset);
         _boosterOffset = EditorGUILayout.Vector2Field("Booster", _boosterOffset);
+
+        EditorGUILayout.Space();
+        EditorGUILayout.LabelField("Individual Rotations (degrees)", EditorStyles.boldLabel);
+        EditorGUILayout.HelpBox(
+            "Z rotates within the HUD plane. X and Y tilt the panel in 3D.",
+            MessageType.None);
+        _radarRotation = EditorGUILayout.Vector3Field("Radar Rotation", _radarRotation);
+        _hpRotation = EditorGUILayout.Vector3Field("HP Rotation", _hpRotation);
+        _fuelRotation = EditorGUILayout.Vector3Field("Fuel Rotation", _fuelRotation);
+        _weaponRotation = EditorGUILayout.Vector3Field("Weapon Rotation", _weaponRotation);
+        _boosterRotation = EditorGUILayout.Vector3Field("Booster Rotation", _boosterRotation);
 
         if (EditorGUI.EndChangeCheck() && Application.isPlaying)
         {
@@ -107,6 +131,11 @@ public sealed class VRHudPlacementWindow : EditorWindow
             _fuelOffset = Vector2.zero;
             _weaponOffset = Vector2.zero;
             _boosterOffset = Vector2.zero;
+            _radarRotation = Vector3.zero;
+            _hpRotation = Vector3.zero;
+            _fuelRotation = Vector3.zero;
+            _weaponRotation = Vector3.zero;
+            _boosterRotation = Vector3.zero;
             ApplyPreview();
         }
 
@@ -167,6 +196,35 @@ public sealed class VRHudPlacementWindow : EditorWindow
             _fuelOffset,
             _weaponOffset,
             _boosterOffset);
+        _liveSwitcher.PreviewVrHudElementRotations(
+            _radarRotation,
+            _hpRotation,
+            _fuelRotation,
+            _weaponRotation,
+            _boosterRotation);
+
+        if (EditorApplication.isPaused)
+        {
+            // A paused player does not reliably run the normal Canvas/layout and
+            // Game-view repaint cycle. Rebuild the layout first, then reapply the
+            // element overrides because a layout component may have replaced them.
+            // QueuePlayerLoopUpdate refreshes the view without stepping gameplay.
+            Canvas.ForceUpdateCanvases();
+            _liveSwitcher.PreviewVrHudElementOffsets(
+                _radarOffset,
+                _hpOffset,
+                _fuelOffset,
+                _weaponOffset,
+                _boosterOffset);
+            _liveSwitcher.PreviewVrHudElementRotations(
+                _radarRotation,
+                _hpRotation,
+                _fuelRotation,
+                _weaponRotation,
+                _boosterRotation);
+            EditorApplication.QueuePlayerLoopUpdate();
+            InternalEditorUtility.RepaintAllViews();
+        }
     }
 
     private void LoadFromPrefab()
@@ -193,6 +251,11 @@ public sealed class VRHudPlacementWindow : EditorWindow
         _fuelOffset = serialized.FindProperty("_vrFuelOffset").vector2Value;
         _weaponOffset = serialized.FindProperty("_vrWeaponOffset").vector2Value;
         _boosterOffset = serialized.FindProperty("_vrBoosterOffset").vector2Value;
+        _radarRotation = serialized.FindProperty("_vrRadarRotation").vector3Value;
+        _hpRotation = serialized.FindProperty("_vrHpRotation").vector3Value;
+        _fuelRotation = serialized.FindProperty("_vrFuelRotation").vector3Value;
+        _weaponRotation = serialized.FindProperty("_vrWeaponRotation").vector3Value;
+        _boosterRotation = serialized.FindProperty("_vrBoosterRotation").vector3Value;
         Repaint();
     }
 
@@ -221,6 +284,11 @@ public sealed class VRHudPlacementWindow : EditorWindow
             serialized.FindProperty("_vrFuelOffset").vector2Value = _fuelOffset;
             serialized.FindProperty("_vrWeaponOffset").vector2Value = _weaponOffset;
             serialized.FindProperty("_vrBoosterOffset").vector2Value = _boosterOffset;
+            serialized.FindProperty("_vrRadarRotation").vector3Value = _radarRotation;
+            serialized.FindProperty("_vrHpRotation").vector3Value = _hpRotation;
+            serialized.FindProperty("_vrFuelRotation").vector3Value = _fuelRotation;
+            serialized.FindProperty("_vrWeaponRotation").vector3Value = _weaponRotation;
+            serialized.FindProperty("_vrBoosterRotation").vector3Value = _boosterRotation;
             serialized.ApplyModifiedPropertiesWithoutUndo();
 
             PrefabUtility.SaveAsPrefabAsset(root, CockpitPrefabPath);
