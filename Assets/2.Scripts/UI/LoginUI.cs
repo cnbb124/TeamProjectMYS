@@ -101,7 +101,7 @@ public class LoginUI : MonoBehaviour
         {
             offlineMode = value;
             ShowStatus(value
-                ? "오프라인 모드 — 로컬 저장만 사용합니다"
+                ? "서버 미사용 — 로컬에만 저장합니다"
                 : "");
         });
     }
@@ -164,7 +164,7 @@ public class LoginUI : MonoBehaviour
         labelRect.offsetMax = new Vector2(0f, 18f);
 
         TextMeshProUGUI label = labelObject.AddComponent<TextMeshProUGUI>();
-        label.text = "오프라인 모드 (서버 없이 진행)";
+        label.text = "서버 미사용 (로컬 저장만)";
         label.fontSize = 20f;
         label.alignment = TextAlignmentOptions.Left;
         label.color = Color.white;
@@ -222,7 +222,11 @@ public class LoginUI : MonoBehaviour
     private void StartOffline()
     {
         OfflineSession.Enter();
-        ShowStatus("오프라인 모드로 시작합니다 (로컬 저장)");
+        // 서버 확인은 못 해도 입력한 아이디는 그대로 로컬 세이브 칸을 가르는 데 씀.
+        OfflineSession.SetAccount(idField != null ? idField.text : "");
+        ShowStatus(string.IsNullOrEmpty(OfflineSession.AccountId)
+            ? "서버 미사용으로 시작합니다 (게스트 로컬 저장)"
+            : $"서버 미사용으로 시작합니다 ({OfflineSession.AccountId} 로컬 저장)");
 
         onLoginSuccess?.Invoke();
         if (!string.IsNullOrEmpty(nextSceneName))
@@ -273,6 +277,8 @@ public class LoginUI : MonoBehaviour
 
         if (ok)
         {
+            // 로컬 세이브도 같은 아이디 칸에 쌓이게 함 — 오프라인으로 다시 들어와도 같은 파일을 씀.
+            OfflineSession.SetAccount(id);
             ShowStatus($"로그인 성공! (userId {ServerApi.Instance.UserId})");
             onLoginSuccess?.Invoke();
             if (!string.IsNullOrEmpty(nextSceneName))

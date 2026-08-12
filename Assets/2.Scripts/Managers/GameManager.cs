@@ -266,12 +266,11 @@ public class GameManager : MonoBehaviourPunCallbacks
     // =====================================================================
     // 로컬 세이브 경로. 계정별로 파일을 가름 —
     // 안 가르면 이 PC에 남은 남의 세이브가 새 계정 슬롯 목록에 그대로 뜨고, 누르면 그게 불러와짐.
-    // 비로그인은 게스트 칸을 따로 씀. 옛 이름(save{slot}.json)은 이제 어느 경로로도 안 읽힘.
+    // 가르는 기준은 로그인 화면에서 입력한 아이디(OfflineSession.AccountId) — 서버 접속 여부와 무관하게 같은 아이디면 같은 파일임.
+    // 아이디 없이 들어오면 게스트 칸을 따로 씀. 옛 이름(save{slot}.json, save_u{userId}_{slot}.json)은 이제 어느 경로로도 안 읽힘.
     private string SavePath(int slot)
     {
-        long userId = ServerApi.Instance != null ? ServerApi.Instance.UserId : 0;
-        string fileName = userId > 0 ? $"save_u{userId}_{slot}.json" : $"save_guest_{slot}.json";
-        return Path.Combine(Application.persistentDataPath, fileName);
+        return Path.Combine(Application.persistentDataPath, $"save_{OfflineSession.AccountFileKey}_{slot}.json");
     }
 
     /// <summary>출격 직전 자동 저장 슬롯. 사망/재시작이 되돌아갈 지점.</summary>
